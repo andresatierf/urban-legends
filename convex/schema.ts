@@ -1,6 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-// import { authTables } from "@convex-dev/auth/server";
+import { authTables } from "@convex-dev/auth/server";
 
 const applicationTables = {
   competitions: defineTable({
@@ -46,6 +46,6 @@ const applicationTables = {
 };
 
 export default defineSchema({
-  // ...authTables,
+  ...authTables,
   ...applicationTables,
 });
