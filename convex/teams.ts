@@ -30,7 +30,9 @@ export const listByCompetition = query({
 
     const teams = await ctx.db
       .query("teams")
-      .withIndex("by_competition", (q) => q.eq("competitionId", args.competitionId))
+      .withIndex("by_competition", (q) =>
+        q.eq("competitionId", args.competitionId),
+      )
       .collect();
 
     const teamsWithMembers = [];
@@ -99,8 +101,8 @@ export const addMember = mutation({
     // Check if user is already a member
     const existingMember = await ctx.db
       .query("teamMembers")
-      .withIndex("by_team_and_user", (q) => 
-        q.eq("teamId", args.teamId).eq("userId", user._id)
+      .withIndex("by_team_and_user", (q) =>
+        q.eq("teamId", args.teamId).eq("userId", user._id),
       )
       .first();
 
@@ -126,8 +128,8 @@ export const removeMember = mutation({
 
     const member = await ctx.db
       .query("teamMembers")
-      .withIndex("by_team_and_user", (q) => 
-        q.eq("teamId", args.teamId).eq("userId", args.userId)
+      .withIndex("by_team_and_user", (q) =>
+        q.eq("teamId", args.teamId).eq("userId", args.userId),
       )
       .first();
 
@@ -138,8 +140,8 @@ export const removeMember = mutation({
 });
 
 export const getUserTeams = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { userId: v.optional(v.id("users")) },
+  handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       return [];
@@ -147,7 +149,7 @@ export const getUserTeams = query({
 
     const memberships = await ctx.db
       .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_user", (q) => q.eq("userId", args.userId || userId))
       .collect();
 
     const teams = [];
