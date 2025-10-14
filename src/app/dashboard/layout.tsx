@@ -13,7 +13,7 @@ export default function DashboardLayout({
       <Sidebar />
       <div className="w-full min-h-screen flex flex-col bg-gray-50">
         <Navigation />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 m-4">{children}</main>
         <Toaster />
       </div>
     </SidebarProvider>

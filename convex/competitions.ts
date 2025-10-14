@@ -1,19 +1,25 @@
-import { query, mutation } from "./_generated/server";
-import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import type { GenericMutationCtx } from "convex/server";
+import { v } from "convex/values";
+import type { DataModel } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
 
-async function requireAdmin(ctx: any) {
+async function requireAdmin(ctx: GenericMutationCtx<DataModel>) {
   const userId = await getAuthUserId(ctx);
   if (!userId) {
     throw new Error("Not authenticated");
   }
 
-  const userRole = await ctx.db
+  const userRoles = await ctx.db
     .query("userRoles")
-    .withIndex("by_user", (q: any) => q.eq("userId", userId))
-    .first();
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .collect();
 
-  if (userRole?.role !== "admin") {
+  const roles = await Promise.all(
+    userRoles.map(({ roleId }) => ctx.db.get(roleId)),
+  );
+
+  if (!roles.map((r) => r?.name).includes("admin")) {
     throw new Error("Admin access required");
   }
 
@@ -35,7 +41,7 @@ export const list = query({
 export const create = mutation({
   args: {
     name: v.string(),
-    description: v.string(),
+    description: v.optional(v.string()),
     startDate: v.string(),
     endDate: v.string(),
   },
@@ -44,7 +50,7 @@ export const create = mutation({
 
     return await ctx.db.insert("competitions", {
       name: args.name,
-      description: args.description,
+      description: args.description || "",
       startDate: args.startDate,
       endDate: args.endDate,
       isActive: true,

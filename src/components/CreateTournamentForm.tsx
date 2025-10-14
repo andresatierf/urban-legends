@@ -1,0 +1,167 @@
+import { useForm } from "@tanstack/react-form";
+import { toast } from "sonner";
+import * as z from "zod";
+import { Button } from "./ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
+import { DatePicker } from "./ui/date-picker";
+import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
+import { Input } from "./ui/input";
+import { api } from "../../convex/_generated/api";
+import { useMutation } from "convex/react";
+
+const formSchema = z.object({
+  name: z.string().min(1, "Name can't be empty"),
+  startDate: z.string().min(1, "Please select a start date"),
+  endDate: z.string().min(1, "Please select an end date"),
+  userIds: z.array(z.string()).optional(),
+});
+
+export function CreateTournamentForm() {
+  const createTournament = useMutation(api.competitions.create);
+
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      startDate: "",
+      endDate: "",
+    },
+    validators: {
+      onChange: formSchema,
+      // onBlur: formSchema,
+      // onSubmit: formSchema,
+    },
+    onSubmit: async ({ value }) => {
+      toast("You submitted the following values:", {
+        description: (
+          <pre className="bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4">
+            <code>{JSON.stringify(value, null, 2)}</code>
+          </pre>
+        ),
+        position: "bottom-right",
+        classNames: {
+          content: "flex flex-col gap-2",
+        },
+        style: {
+          "--border-radius": "calc(var(--radius)  + 4px)",
+        } as React.CSSProperties,
+      });
+      await createTournament(value);
+      form.reset();
+    },
+  });
+
+  return (
+    <Card className="w-full sm:max-w-md">
+      <CardHeader>
+        <CardTitle className="text-xl">Create Tournament</CardTitle>
+        <CardDescription>Create a new tournament</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {/** biome-ignore lint/correctness/useUniqueElementIds: ignore */}
+        <form
+          id="create-tournament-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+        >
+          <FieldGroup>
+            <form.Field
+              name="name"
+              // biome-ignore lint/correctness/noChildrenProp: documentation
+              children={(field) => {
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
+
+                return (
+                  <Field data-invalid={isInvalid}>
+                    <FieldLabel html-for={field.name}>
+                      Tournament Name
+                    </FieldLabel>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      aria-invalid={isInvalid}
+                      placeholder="The name of the tournament"
+                      autoComplete="off"
+                    />
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                );
+              }}
+            />
+            <FieldGroup className="flex-row">
+              <form.Field
+                name="startDate"
+                // biome-ignore lint/correctness/noChildrenProp: documentation
+                children={(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
+
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel html-for={field.name}>Start Date</FieldLabel>
+                      <DatePicker
+                        id={field.name}
+                        value={field.state.value}
+                        onChange={(date) => field.handleChange(date)}
+                      />
+                      {isInvalid && (
+                        <FieldError errors={field.state.meta.errors} />
+                      )}
+                    </Field>
+                  );
+                }}
+              />
+              <form.Field
+                name="endDate"
+                // biome-ignore lint/correctness/noChildrenProp: documentation
+                children={(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
+
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel html-for={field.name}>End Date</FieldLabel>
+                      <DatePicker
+                        id={field.name}
+                        value={field.state.value}
+                        onChange={(date) => field.handleChange(date)}
+                      />
+                      {isInvalid && (
+                        <FieldError errors={field.state.meta.errors} />
+                      )}
+                    </Field>
+                  );
+                }}
+              />
+            </FieldGroup>
+          </FieldGroup>
+        </form>
+      </CardContent>
+      <CardFooter>
+        <Field className="flex justify-end" orientation="horizontal">
+          <Button type="button" variant="outline" onClick={() => form.reset()}>
+            Reset
+          </Button>
+          <Button type="submit" form="create-tournament-form">
+            Create
+          </Button>
+        </Field>
+      </CardFooter>
+    </Card>
+  );
+}
