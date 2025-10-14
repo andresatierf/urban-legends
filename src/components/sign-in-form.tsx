@@ -21,7 +21,7 @@ export function SignInForm() {
           const formData = new FormData(e.target as HTMLFormElement);
           formData.set("flow", flow);
           void signIn("password", formData)
-            .then(() => redirect("/home"))
+            .then(() => redirect("/dashboard"))
             .catch((error) => {
               let toastTitle = "";
               if (error.message.includes("Invalid password")) {

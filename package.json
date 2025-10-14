@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "biome lint",
+    "lint:fix": "biome lint --write",
+    "format": "biome format",
+    "format:fix": "biome format --write"
   },
   "dependencies": {
     "@auth/core": "^0.37.0",
@@ -26,6 +29,7 @@
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.2.6",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4.1.12",
     "@types/node": "^20",

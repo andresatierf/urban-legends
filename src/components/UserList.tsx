@@ -1,7 +1,7 @@
 "use client";
 
 import { UserCard } from "./UserCard";
-import { Doc } from "../../convex/_generated/dataModel";
+import type { Doc } from "../../convex/_generated/dataModel";
 
 interface UserListProps {
   users: Doc<"users">[];

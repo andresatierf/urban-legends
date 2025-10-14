@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
+import type { Id } from "../../convex/_generated/dataModel";
 
 interface UserCardProps {
   user: {
@@ -20,7 +20,10 @@ export function UserCard({ user }: UserCardProps) {
       <div className="flex items-center gap-2">
         {teams && teams.length > 0 ? (
           teams.map((team) => (
-            <span key={team._id} className="bg-gray-200 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">
+            <span
+              key={team._id}
+              className="bg-gray-200 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full"
+            >
               {team.name}
             </span>
           ))

@@ -2,14 +2,17 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Id } from "../../convex/_generated/dataModel";
+import type { Id } from "../../convex/_generated/dataModel";
 
 interface AdminDashboardProps {
   currentPage: string;
   setCurrentPage: (page: string) => void;
 }
 
-export function AdminDashboard({ currentPage, setCurrentPage }: AdminDashboardProps) {
+export function AdminDashboard({
+  currentPage,
+  setCurrentPage,
+}: AdminDashboardProps) {
   const makeFirstUserAdmin = useMutation(api.admin.makeFirstUserAdmin);
 
   useEffect(() => {
@@ -32,20 +35,28 @@ export function AdminDashboard({ currentPage, setCurrentPage }: AdminDashboardPr
   }
 }
 
-function AdminOverview({ setCurrentPage }: { setCurrentPage: (page: string) => void }) {
+function AdminOverview({
+  setCurrentPage,
+}: {
+  setCurrentPage: (page: string) => void;
+}) {
   const competitions = useQuery(api.competitions.list) || [];
   const users = useQuery(api.users.listAll) || [];
 
-  const activeCompetitions = competitions.filter(c => c.isActive);
+  const activeCompetitions = competitions.filter((c) => c.isActive);
 
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-gray-900">Admin Dashboard</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Active Competitions</h3>
-          <p className="text-3xl font-bold text-blue-600">{activeCompetitions.length}</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Active Competitions
+          </h3>
+          <p className="text-3xl font-bold text-blue-600">
+            {activeCompetitions.length}
+          </p>
           <button
             onClick={() => setCurrentPage("competitions")}
             className="mt-2 text-sm text-blue-600 hover:text-blue-800"
@@ -55,7 +66,9 @@ function AdminOverview({ setCurrentPage }: { setCurrentPage: (page: string) => v
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Users</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Total Users
+          </h3>
           <p className="text-3xl font-bold text-green-600">{users.length}</p>
           <button
             onClick={() => setCurrentPage("users")}
@@ -78,24 +91,31 @@ function AdminOverview({ setCurrentPage }: { setCurrentPage: (page: string) => v
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Competitions</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Recent Competitions
+        </h3>
         {competitions.length === 0 ? (
           <p className="text-gray-500">No competitions created yet.</p>
         ) : (
           <div className="space-y-2">
             {competitions.slice(0, 5).map((competition) => (
-              <div key={competition._id} className="flex justify-between items-center py-2 border-b">
+              <div
+                key={competition._id}
+                className="flex justify-between items-center py-2 border-b"
+              >
                 <div>
                   <h4 className="font-medium">{competition.name}</h4>
                   <p className="text-sm text-gray-500">
                     {competition.startDate} - {competition.endDate}
                   </p>
                 </div>
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  competition.isActive 
-                    ? "bg-green-100 text-green-800" 
-                    : "bg-gray-100 text-gray-800"
-                }`}>
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    competition.isActive
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
                   {competition.isActive ? "Active" : "Inactive"}
                 </span>
               </div>
@@ -164,7 +184,9 @@ function CompetitionsPage() {
         endDate: competition.endDate,
         isActive: !competition.isActive,
       });
-      toast.success(`Competition ${competition.isActive ? "deactivated" : "activated"}!`);
+      toast.success(
+        `Competition ${competition.isActive ? "deactivated" : "activated"}!`,
+      );
     } catch (error) {
       toast.error("Failed to update competition");
     }
@@ -189,20 +211,28 @@ function CompetitionsPage() {
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Name
+              </label>
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
                 required
@@ -210,21 +240,29 @@ function CompetitionsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
                 <input
                   type="date"
                   value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, startDate: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Date
+                </label>
                 <input
                   type="date"
                   value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, endDate: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -242,7 +280,12 @@ function CompetitionsPage() {
                 onClick={() => {
                   setShowForm(false);
                   setEditingCompetition(null);
-                  setFormData({ name: "", description: "", startDate: "", endDate: "" });
+                  setFormData({
+                    name: "",
+                    description: "",
+                    startDate: "",
+                    endDate: "",
+                  });
                 }}
                 className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
               >
@@ -276,19 +319,25 @@ function CompetitionsPage() {
               <tr key={competition._id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{competition.name}</div>
-                    <div className="text-sm text-gray-500">{competition.description}</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {competition.name}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {competition.description}
+                    </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {competition.startDate} - {competition.endDate}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    competition.isActive 
-                      ? "bg-green-100 text-green-800" 
-                      : "bg-gray-100 text-gray-800"
-                  }`}>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      competition.isActive
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
                     {competition.isActive ? "Active" : "Inactive"}
                   </span>
                 </td>
@@ -301,7 +350,11 @@ function CompetitionsPage() {
                   </button>
                   <button
                     onClick={() => toggleActive(competition)}
-                    className={competition.isActive ? "text-red-600 hover:text-red-900" : "text-green-600 hover:text-green-900"}
+                    className={
+                      competition.isActive
+                        ? "text-red-600 hover:text-red-900"
+                        : "text-green-600 hover:text-green-900"
+                    }
                   >
                     {competition.isActive ? "Deactivate" : "Activate"}
                   </button>
@@ -317,17 +370,21 @@ function CompetitionsPage() {
 
 function TeamsPage() {
   const competitions = useQuery(api.competitions.list) || [];
-  const [selectedCompetition, setSelectedCompetition] = useState<Id<"competitions"> | null>(null);
-  const teams = useQuery(
-    api.teams.listByCompetition,
-    selectedCompetition ? { competitionId: selectedCompetition } : "skip"
-  ) || [];
+  const [selectedCompetition, setSelectedCompetition] =
+    useState<Id<"competitions"> | null>(null);
+  const teams =
+    useQuery(
+      api.teams.listByCompetition,
+      selectedCompetition ? { competitionId: selectedCompetition } : "skip",
+    ) || [];
   const createTeam = useMutation(api.teams.create);
   const addMember = useMutation(api.teams.addMember);
   const removeMember = useMutation(api.teams.removeMember);
 
   const [showTeamForm, setShowTeamForm] = useState(false);
-  const [showMemberForm, setShowMemberForm] = useState<Id<"teams"> | null>(null);
+  const [showMemberForm, setShowMemberForm] = useState<Id<"teams"> | null>(
+    null,
+  );
   const [teamName, setTeamName] = useState("");
   const [memberEmail, setMemberEmail] = useState("");
   const [memberRole, setMemberRole] = useState<"member" | "captain">("member");
@@ -368,7 +425,10 @@ function TeamsPage() {
     }
   };
 
-  const handleRemoveMember = async (teamId: Id<"teams">, userId: Id<"users">) => {
+  const handleRemoveMember = async (
+    teamId: Id<"teams">,
+    userId: Id<"users">,
+  ) => {
     try {
       await removeMember({ teamId, userId });
       toast.success("Member removed!");
@@ -382,10 +442,16 @@ function TeamsPage() {
       <h2 className="text-3xl font-bold text-gray-900">Teams</h2>
 
       <div className="bg-white p-4 rounded-lg shadow">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Select Competition</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Select Competition
+        </label>
         <select
           value={selectedCompetition || ""}
-          onChange={(e) => setSelectedCompetition(e.target.value as Id<"competitions"> || null)}
+          onChange={(e) =>
+            setSelectedCompetition(
+              (e.target.value as Id<"competitions">) || null,
+            )
+          }
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Select a competition...</option>
@@ -414,7 +480,9 @@ function TeamsPage() {
               <h4 className="text-lg font-semibold mb-4">Create New Team</h4>
               <form onSubmit={handleCreateTeam} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Team Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Team Name
+                  </label>
                   <input
                     type="text"
                     value={teamName}
@@ -462,7 +530,9 @@ function TeamsPage() {
                   <div className="mb-4 p-4 bg-gray-50 rounded">
                     <form onSubmit={handleAddMember} className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">User Email</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          User Email
+                        </label>
                         <input
                           type="email"
                           value={memberEmail}
@@ -472,10 +542,16 @@ function TeamsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Role
+                        </label>
                         <select
                           value={memberRole}
-                          onChange={(e) => setMemberRole(e.target.value as "member" | "captain")}
+                          onChange={(e) =>
+                            setMemberRole(
+                              e.target.value as "member" | "captain",
+                            )
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="member">Member</option>
@@ -506,25 +582,34 @@ function TeamsPage() {
                 )}
 
                 <div className="space-y-2">
-                  <h5 className="font-medium text-gray-700">Members ({team.members.length})</h5>
+                  <h5 className="font-medium text-gray-700">
+                    Members ({team.members.length})
+                  </h5>
                   {team.members.length === 0 ? (
                     <p className="text-gray-500 text-sm">No members yet</p>
                   ) : (
                     <div className="space-y-1">
                       {team.members.map((member) => (
-                        <div key={member._id} className="flex justify-between items-center py-1">
+                        <div
+                          key={member._id}
+                          className="flex justify-between items-center py-1"
+                        >
                           <div className="flex items-center space-x-2">
                             <span className="text-sm">{member.user.email}</span>
-                            <span className={`px-2 py-1 text-xs rounded ${
-                              member.role === "captain" 
-                                ? "bg-blue-100 text-blue-800" 
-                                : "bg-gray-100 text-gray-800"
-                            }`}>
+                            <span
+                              className={`px-2 py-1 text-xs rounded ${
+                                member.role === "captain"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-gray-100 text-gray-800"
+                              }`}
+                            >
                               {member.role}
                             </span>
                           </div>
                           <button
-                            onClick={() => handleRemoveMember(team._id, member.userId)}
+                            onClick={() =>
+                              handleRemoveMember(team._id, member.userId)
+                            }
                             className="text-red-600 hover:text-red-800 text-sm"
                           >
                             Remove
@@ -547,7 +632,10 @@ function UsersPage() {
   const users = useQuery(api.users.listAll) || [];
   const setUserRole = useMutation(api.admin.setUserRole);
 
-  const handleRoleChange = async (userId: Id<"users">, newRole: "admin" | "user") => {
+  const handleRoleChange = async (
+    userId: Id<"users">,
+    newRole: "admin" | "user",
+  ) => {
     try {
       await setUserRole({ userId, role: newRole });
       toast.success("User role updated!");
@@ -582,18 +670,25 @@ function UsersPage() {
                   {user.email}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    user.role === "admin" 
-                      ? "bg-red-100 text-red-800" 
-                      : "bg-green-100 text-green-800"
-                  }`}>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      user.role === "admin"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-green-100 text-green-800"
+                    }`}
+                  >
                     {user.role}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <select
                     value={user.role}
-                    onChange={(e) => handleRoleChange(user._id, e.target.value as "admin" | "user")}
+                    onChange={(e) =>
+                      handleRoleChange(
+                        user._id,
+                        e.target.value as "admin" | "user",
+                      )
+                    }
                     className="text-sm border border-gray-300 rounded px-2 py-1"
                   >
                     <option value="user">User</option>

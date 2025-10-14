@@ -1,10 +1,9 @@
-import { Anonymous } from "@convex-dev/auth/providers/Anonymous";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { query } from "./_generated/server";
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-  providers: [Password, Anonymous],
+  providers: [Password],
 });
 
 export const loggedInUser = query({
@@ -18,15 +17,18 @@ export const loggedInUser = query({
       return null;
     }
 
-    // Get user role
-    const userRole = await ctx.db
+    const userRoles = await ctx.db
       .query("userRoles")
-      .withIndex("by_user", (q: any) => q.eq("userId", userId))
-      .first();
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const roles = await Promise.all(
+      userRoles.map(({ roleId }) => ctx.db.get(roleId)),
+    );
 
     return {
       ...user,
-      role: userRole?.role || "user",
+      roles: roles.map((role) => role?.name) as string[],
     };
   },
 });

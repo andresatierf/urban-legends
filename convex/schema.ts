@@ -27,10 +27,18 @@ const applicationTables = {
     .index("by_user", ["userId"])
     .index("by_team_and_user", ["teamId", "userId"]),
 
+  roles: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+  }).index("by_name", ["name"]),
+
   userRoles: defineTable({
     userId: v.id("users"),
-    role: v.union(v.literal("admin"), v.literal("user")),
-  }).index("by_user", ["userId"]),
+    roleId: v.id("roles"),
+  })
+    .index("by_user_role", ["userId", "roleId"])
+    .index("by_user", ["userId"])
+    .index("by_role", ["roleId"]),
 
   dailyCompletions: defineTable({
     userId: v.id("users"),

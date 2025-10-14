@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Sidebar,
+  Sidebar as SidebarBase,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
@@ -13,24 +13,39 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { Calendar, Home, Inbox, LucideIcon, Search } from "lucide-react";
-import { SignOutButton } from "./sign-out-button";
 import { useConvexAuth, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import {
+  BarChart2,
+  CheckSquare,
+  ClipboardCheck,
+  ClipboardList,
+  Coins,
+  FileChartLine,
+  LayoutDashboard,
+  LayoutGrid,
+  LogOut,
+  type LucideIcon,
+  PlusCircle,
+  Settings,
+  Trophy,
+  UserCircle,
+  UserCog,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { useEffect } from "react";
+import { api } from "../../convex/_generated/api";
+import { SignOutButton } from "./sign-out-button";
 
 type SidebarItem = {
   title: string;
-  role: "admin" | "user";
+  roles?: string[];
 } & (
   | {
-      type: "group";
       items: SidebarItem[];
     }
   | {
-      type: "item";
       url: string;
       icon: LucideIcon;
     }
@@ -38,84 +53,76 @@ type SidebarItem = {
 
 const sidebar: SidebarItem[] = [
   {
-    type: "group",
-    title: "Application",
-    role: "user",
+    title: "Main",
     items: [
+      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+      { title: "My Tournaments", url: "/tournaments", icon: Trophy },
       {
-        type: "item",
-        title: "Home",
-        url: "/home",
-        icon: Home,
-        role: "user",
+        title: "My Teams",
+        url: "/tournaments/:tournamentSlug/teams/:teamSlug",
+        icon: Users,
       },
+      { title: "Submissions", url: "/submissions", icon: ClipboardList },
       {
-        type: "item",
-        title: "Team",
-        url: "#",
-        icon: Inbox,
-        role: "user",
-      },
-      {
-        type: "item",
-        title: "Competition",
-        url: "#",
-        icon: Calendar,
-        role: "user",
-      },
-      {
-        type: "item",
-        title: "Users",
-        url: "#",
-        icon: Search,
-        role: "user",
+        title: "Submit Activity",
+        url: "/tournaments/:tournamentSlug/submissions/new",
+        icon: PlusCircle,
       },
     ],
   },
   {
-    type: "group",
-    title: "Management",
-    role: "admin",
+    title: "Insights",
+    roles: ["dev"],
     items: [
       {
-        type: "item",
-        title: "Competitions",
-        url: "#",
-        icon: Calendar,
-        role: "admin",
+        title: "Leaderboards",
+        url: "/tournaments/:tournamentSlug/leaderboard",
+        icon: BarChart2,
       },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      { title: "Profile", url: "/profile", icon: UserCircle },
+      { title: "Sign Out", url: "#", icon: LogOut },
+    ],
+  },
+  {
+    title: "Admin",
+    roles: ["admin"],
+    items: [
+      { title: "Dashboard", url: "/admin", icon: LayoutGrid },
+      { title: "Approvals", url: "/admin/approvals", icon: CheckSquare },
+      { title: "Manage Tournaments", url: "/admin/tournaments", icon: Trophy },
       {
-        type: "item",
-        title: "Teams",
-        url: "#",
-        icon: Inbox,
-        role: "admin",
+        title: "Activity Types",
+        url: "/admin/activity-types",
+        icon: ClipboardCheck,
       },
-      {
-        type: "item",
-        title: "Users",
-        url: "/manage/users",
-        icon: Search,
-        role: "admin",
-      },
+      { title: "Users", icon: UserCog, url: "/admin/users" },
+      { title: "Points Ledger", icon: Coins, url: "/admin/ledger" },
+      { title: "Reports", icon: FileChartLine, url: "/admin/reports" },
+      { title: "Settings", icon: Settings, url: "/admin/settings" },
     ],
   },
 ];
 
-export function AppSidebar() {
+export function Sidebar() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
-  const isAdmin = loggedInUser?.role === "admin";
   const { isAuthenticated } = useConvexAuth();
 
   useEffect(() => {
-    if (!isAuthenticated) redirect("/login");
+    if (!isAuthenticated) redirect("/auth/login");
   }, [isAuthenticated]);
 
+  const isAdmin = loggedInUser?.roles.includes("admin") || false;
+
   return (
-    <Sidebar collapsible="icon">
+    <SidebarBase collapsible="icon">
       <SidebarHeader />
       <SidebarContent>
-        {sidebar.map((item) => renderItem(item, isAdmin))}
+        {sidebar.map((item) => renderItem(item, loggedInUser?.roles || []))}
       </SidebarContent>
       <SidebarSeparator />
       <SidebarFooter className="space-y-2">
@@ -127,14 +134,16 @@ export function AppSidebar() {
         </span>
         <SignOutButton className="w-full" />
       </SidebarFooter>
-    </Sidebar>
+    </SidebarBase>
   );
 }
 
-function renderItem(item: SidebarItem, isAdmin: boolean) {
-  if (item.role === "admin" && !isAdmin) return;
+function renderItem(item: SidebarItem, userRoles: string[]) {
+  if (item?.roles && !userRoles.some((role) => item?.roles?.includes(role))) {
+    return;
+  }
 
-  if (item.type !== "group")
+  if (!("items" in item))
     return (
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton asChild>
@@ -151,7 +160,7 @@ function renderItem(item: SidebarItem, isAdmin: boolean) {
       <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {item.items.map((subItem) => renderItem(subItem, isAdmin))}
+          {item.items.map((subItem) => renderItem(subItem, userRoles))}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

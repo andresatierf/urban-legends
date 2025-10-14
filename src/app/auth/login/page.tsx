@@ -9,7 +9,7 @@ export default function LoginPage() {
   const { isAuthenticated } = useConvexAuth();
 
   useEffect(() => {
-    if (isAuthenticated) redirect("/home");
+    if (isAuthenticated) redirect("/dashboard");
   }, [isAuthenticated]);
 
   return (

@@ -97,7 +97,9 @@ export const getLeaderboard = query({
 
     const teams = await ctx.db
       .query("teams")
-      .withIndex("by_competition", (q) => q.eq("competitionId", args.competitionId))
+      .withIndex("by_competition", (q) =>
+        q.eq("competitionId", args.competitionId),
+      )
       .collect();
 
     const leaderboard = [];
@@ -110,7 +112,7 @@ export const getLeaderboard = query({
         .collect();
 
       // Group by date to count unique days
-      const uniqueDays = new Set(completions.map(c => c.date));
+      const uniqueDays = new Set(completions.map((c) => c.date));
 
       leaderboard.push({
         team,

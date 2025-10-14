@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { ConvexClientProvider } from "./ConvexClientProvider";
@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "BoolLegends",
-  description: "Bool X UrbanSports compoetition tracker.",
+  description: "Bool X UrbanSports competition tracker.",
 };
 
 export default function RootLayout({

@@ -1,5 +1,5 @@
-import { query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { query } from "./_generated/server";
 
 export const listAll = query({
   args: {},
@@ -9,31 +9,17 @@ export const listAll = query({
       return [];
     }
 
-    // Check if current user is admin
-    const userRole = await ctx.db
-      .query("userRoles")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
+    const [users, roles, userRoles] = await Promise.all([
+      ctx.db.query("users").collect(),
+      ctx.db.query("roles").collect(),
+      ctx.db.query("userRoles").collect(),
+    ]);
 
-    if (userRole?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
-    const users = await ctx.db.query("users").collect();
-    const usersWithRoles = [];
-
-    for (const user of users) {
-      const role = await ctx.db
-        .query("userRoles")
-        .withIndex("by_user", (q) => q.eq("userId", user._id))
-        .first();
-
-      usersWithRoles.push({
-        ...user,
-        role: role?.role || "user",
-      });
-    }
-
-    return usersWithRoles;
+    return users.map((user) => ({
+      ...user,
+      roles: userRoles
+        .filter((role) => role.userId === user._id)
+        .map((role) => roles.find((r) => r._id === role.roleId)?.name),
+    }));
   },
 });

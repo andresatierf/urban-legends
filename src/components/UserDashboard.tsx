@@ -2,14 +2,17 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Id } from "../../convex/_generated/dataModel";
+import type { Id } from "../../convex/_generated/dataModel";
 
 interface UserDashboardProps {
   currentPage: string;
   setCurrentPage: (page: string) => void;
 }
 
-export function UserDashboard({ currentPage, setCurrentPage }: UserDashboardProps) {
+export function UserDashboard({
+  currentPage,
+  setCurrentPage,
+}: UserDashboardProps) {
   switch (currentPage) {
     case "track":
       return <TrackProgressPage />;
@@ -20,20 +23,28 @@ export function UserDashboard({ currentPage, setCurrentPage }: UserDashboardProp
   }
 }
 
-function UserOverview({ setCurrentPage }: { setCurrentPage: (page: string) => void }) {
+function UserOverview({
+  setCurrentPage,
+}: {
+  setCurrentPage: (page: string) => void;
+}) {
   const userTeams = useQuery(api.teams.getUserTeams) || [];
   const competitions = useQuery(api.competitions.list) || [];
 
-  const activeTeams = userTeams.filter(team => team.competition?.isActive);
+  const activeTeams = userTeams.filter((team) => team.competition?.isActive);
 
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">My Active Teams</h3>
-          <p className="text-3xl font-bold text-blue-600">{activeTeams.length}</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            My Active Teams
+          </h3>
+          <p className="text-3xl font-bold text-blue-600">
+            {activeTeams.length}
+          </p>
           <button
             onClick={() => setCurrentPage("teams")}
             className="mt-2 text-sm text-blue-600 hover:text-blue-800"
@@ -43,9 +54,11 @@ function UserOverview({ setCurrentPage }: { setCurrentPage: (page: string) => vo
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Active Competitions</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Active Competitions
+          </h3>
           <p className="text-3xl font-bold text-green-600">
-            {competitions.filter(c => c.isActive).length}
+            {competitions.filter((c) => c.isActive).length}
           </p>
           <button
             onClick={() => setCurrentPage("track")}
@@ -59,22 +72,30 @@ function UserOverview({ setCurrentPage }: { setCurrentPage: (page: string) => vo
       <div className="bg-white p-6 rounded-lg shadow">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">My Teams</h3>
         {userTeams.length === 0 ? (
-          <p className="text-gray-500">You're not part of any teams yet. Contact an admin to be added to a team.</p>
+          <p className="text-gray-500">
+            You're not part of any teams yet. Contact an admin to be added to a
+            team.
+          </p>
         ) : (
           <div className="space-y-3">
             {userTeams.map((team) => (
-              <div key={team._id} className="flex justify-between items-center py-3 border-b">
+              <div
+                key={team._id}
+                className="flex justify-between items-center py-3 border-b"
+              >
                 <div>
                   <h4 className="font-medium">{team.name}</h4>
                   <p className="text-sm text-gray-500">
                     {team.competition?.name} • {team.role}
                   </p>
                 </div>
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  team.competition?.isActive 
-                    ? "bg-green-100 text-green-800" 
-                    : "bg-gray-100 text-gray-800"
-                }`}>
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    team.competition?.isActive
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
                   {team.competition?.isActive ? "Active" : "Inactive"}
                 </span>
               </div>
@@ -89,29 +110,33 @@ function UserOverview({ setCurrentPage }: { setCurrentPage: (page: string) => vo
 function TrackProgressPage() {
   const userTeams = useQuery(api.teams.getUserTeams) || [];
   const [selectedTeam, setSelectedTeam] = useState<Id<"teams"> | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
   const [selectedTeammates, setSelectedTeammates] = useState<Id<"users">[]>([]);
 
   const markCompletion = useMutation(api.completions.markCompletion);
 
-  const selectedTeamData = userTeams.find(team => team._id === selectedTeam);
-  const activeTeams = userTeams.filter(team => team.competition?.isActive);
+  const selectedTeamData = userTeams.find((team) => team._id === selectedTeam);
+  const activeTeams = userTeams.filter((team) => team.competition?.isActive);
 
   // Get completions for the selected team and date range
   const startDate = selectedTeamData?.competition?.startDate || selectedDate;
   const endDate = selectedTeamData?.competition?.endDate || selectedDate;
-  
-  const completions = useQuery(
-    api.completions.getUserCompletions,
-    selectedTeam ? { teamId: selectedTeam, startDate, endDate } : "skip"
-  ) || [];
 
-  const teamCompletions = useQuery(
-    api.completions.getTeamCompletions,
-    selectedTeam ? { teamId: selectedTeam, date: selectedDate } : "skip"
-  ) || [];
+  const completions =
+    useQuery(
+      api.completions.getUserCompletions,
+      selectedTeam ? { teamId: selectedTeam, startDate, endDate } : "skip",
+    ) || [];
 
-  const todayCompletion = completions.find(c => c.date === selectedDate);
+  const teamCompletions =
+    useQuery(
+      api.completions.getTeamCompletions,
+      selectedTeam ? { teamId: selectedTeam, date: selectedDate } : "skip",
+    ) || [];
+
+  const todayCompletion = completions.find((c) => c.date === selectedDate);
 
   const handleMarkCompletion = async (completed: boolean) => {
     if (!selectedTeam) return;
@@ -123,7 +148,11 @@ function TrackProgressPage() {
         completed,
         teammates: selectedTeammates,
       });
-      toast.success(completed ? "Task marked as completed!" : "Task marked as not completed!");
+      toast.success(
+        completed
+          ? "Task marked as completed!"
+          : "Task marked as not completed!",
+      );
     } catch (error) {
       toast.error("Failed to update completion status");
     }
@@ -133,11 +162,15 @@ function TrackProgressPage() {
     const dates = [];
     const startDate = new Date(start);
     const endDate = new Date(end);
-    
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      dates.push(new Date(d).toISOString().split('T')[0]);
+
+    for (
+      let d = new Date(startDate);
+      d <= endDate;
+      d.setDate(d.getDate() + 1)
+    ) {
+      dates.push(new Date(d).toISOString().split("T")[0]);
     }
-    
+
     return dates;
   };
 
@@ -147,15 +180,22 @@ function TrackProgressPage() {
 
       {activeTeams.length === 0 ? (
         <div className="bg-white p-6 rounded-lg shadow text-center">
-          <p className="text-gray-500">You're not part of any active teams. Contact an admin to be added to a team.</p>
+          <p className="text-gray-500">
+            You're not part of any active teams. Contact an admin to be added to
+            a team.
+          </p>
         </div>
       ) : (
         <>
           <div className="bg-white p-4 rounded-lg shadow">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Team</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Team
+            </label>
             <select
               value={selectedTeam || ""}
-              onChange={(e) => setSelectedTeam(e.target.value as Id<"teams"> || null)}
+              onChange={(e) =>
+                setSelectedTeam((e.target.value as Id<"teams">) || null)
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select a team...</option>
@@ -170,11 +210,15 @@ function TrackProgressPage() {
           {selectedTeam && selectedTeamData && (
             <>
               <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">Mark Today's Completion</h3>
-                
+                <h3 className="text-lg font-semibold mb-4">
+                  Mark Today's Completion
+                </h3>
+
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Date
+                    </label>
                     <input
                       type="date"
                       value={selectedDate}
@@ -190,7 +234,8 @@ function TrackProgressPage() {
                       Teammates who completed with you (optional)
                     </label>
                     <div className="text-sm text-gray-500 mb-2">
-                      Select teammates who completed the task with you on this day
+                      Select teammates who completed the task with you on this
+                      day
                     </div>
                     {/* Note: We'd need to fetch team members here, but for simplicity, we'll show a text input */}
                     <p className="text-sm text-gray-400">
@@ -224,11 +269,17 @@ function TrackProgressPage() {
                   {todayCompletion && (
                     <div className="mt-4 p-3 bg-gray-50 rounded">
                       <p className="text-sm">
-                        Status for {selectedDate}: 
-                        <span className={`ml-2 font-medium ${
-                          todayCompletion.completed ? "text-green-600" : "text-red-600"
-                        }`}>
-                          {todayCompletion.completed ? "Completed" : "Not Completed"}
+                        Status for {selectedDate}:
+                        <span
+                          className={`ml-2 font-medium ${
+                            todayCompletion.completed
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {todayCompletion.completed
+                            ? "Completed"
+                            : "Not Completed"}
                         </span>
                       </p>
                     </div>
@@ -237,14 +288,23 @@ function TrackProgressPage() {
               </div>
 
               <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">Team Progress for {selectedDate}</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  Team Progress for {selectedDate}
+                </h3>
                 {teamCompletions.length === 0 ? (
-                  <p className="text-gray-500">No completions recorded for this date.</p>
+                  <p className="text-gray-500">
+                    No completions recorded for this date.
+                  </p>
                 ) : (
                   <div className="space-y-2">
                     {teamCompletions.map((completion) => (
-                      <div key={completion._id} className="flex items-center justify-between py-2 border-b">
-                        <span className="font-medium">{completion.user.email}</span>
+                      <div
+                        key={completion._id}
+                        className="flex items-center justify-between py-2 border-b"
+                      >
+                        <span className="font-medium">
+                          {completion.user.email}
+                        </span>
                         <span className="text-green-600">✓ Completed</span>
                       </div>
                     ))}
@@ -253,16 +313,21 @@ function TrackProgressPage() {
               </div>
 
               <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">Your Progress Calendar</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  Your Progress Calendar
+                </h3>
                 {selectedTeamData.competition && (
                   <div className="grid grid-cols-7 gap-2">
                     {generateDateRange(
                       selectedTeamData.competition.startDate,
-                      selectedTeamData.competition.endDate
+                      selectedTeamData.competition.endDate,
                     ).map((date) => {
-                      const completion = completions.find(c => c.date === date);
-                      const isToday = date === new Date().toISOString().split('T')[0];
-                      
+                      const completion = completions.find(
+                        (c) => c.date === date,
+                      );
+                      const isToday =
+                        date === new Date().toISOString().split("T")[0];
+
                       return (
                         <div
                           key={date}
@@ -270,10 +335,10 @@ function TrackProgressPage() {
                             completion?.completed
                               ? "bg-green-100 border-green-300 text-green-800"
                               : completion && !completion.completed
-                              ? "bg-red-100 border-red-300 text-red-800"
-                              : isToday
-                              ? "bg-blue-100 border-blue-300 text-blue-800"
-                              : "bg-gray-50 border-gray-200 text-gray-600"
+                                ? "bg-red-100 border-red-300 text-red-800"
+                                : isToday
+                                  ? "bg-blue-100 border-blue-300 text-blue-800"
+                                  : "bg-gray-50 border-gray-200 text-gray-600"
                           }`}
                         >
                           {new Date(date).getDate()}
@@ -301,7 +366,10 @@ function MyTeamsPage() {
 
       {userTeams.length === 0 ? (
         <div className="bg-white p-6 rounded-lg shadow text-center">
-          <p className="text-gray-500">You're not part of any teams yet. Contact an admin to be added to a team.</p>
+          <p className="text-gray-500">
+            You're not part of any teams yet. Contact an admin to be added to a
+            team.
+          </p>
         </div>
       ) : (
         <div className="grid gap-6">
@@ -315,13 +383,14 @@ function MyTeamsPage() {
 }
 
 function TeamCard({ team }: { team: any }) {
-  const leaderboard = useQuery(
-    api.competitions.getLeaderboard,
-    { competitionId: team.competition?.id }
-  ) || [];
+  const leaderboard =
+    useQuery(api.competitions.getLeaderboard, {
+      competitionId: team.competition?.id,
+    }) || [];
 
-  const teamRank = leaderboard.findIndex(entry => entry.team._id === team._id) + 1;
-  const teamStats = leaderboard.find(entry => entry.team._id === team._id);
+  const teamRank =
+    leaderboard.findIndex((entry) => entry.team._id === team._id) + 1;
+  const teamStats = leaderboard.find((entry) => entry.team._id === team._id);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
@@ -334,11 +403,13 @@ function TeamCard({ team }: { team: any }) {
           </p>
         </div>
         <div className="text-right">
-          <span className={`px-2 py-1 text-xs rounded-full ${
-            team.competition?.isActive 
-              ? "bg-green-100 text-green-800" 
-              : "bg-gray-100 text-gray-800"
-          }`}>
+          <span
+            className={`px-2 py-1 text-xs rounded-full ${
+              team.competition?.isActive
+                ? "bg-green-100 text-green-800"
+                : "bg-gray-100 text-gray-800"
+            }`}
+          >
             {team.competition?.isActive ? "Active" : "Inactive"}
           </span>
           <p className="text-sm text-gray-500 mt-1">Your role: {team.role}</p>
@@ -351,7 +422,9 @@ function TeamCard({ team }: { team: any }) {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-gray-600">Completed Days:</span>
-              <span className="ml-2 font-semibold">{teamStats.completedDays}</span>
+              <span className="ml-2 font-semibold">
+                {teamStats.completedDays}
+              </span>
             </div>
             <div>
               <span className="text-gray-600">Team Rank:</span>

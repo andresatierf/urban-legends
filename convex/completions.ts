@@ -18,8 +18,8 @@ export const markCompletion = mutation({
     // Verify user is a member of the team
     const membership = await ctx.db
       .query("teamMembers")
-      .withIndex("by_team_and_user", (q) => 
-        q.eq("teamId", args.teamId).eq("userId", userId)
+      .withIndex("by_team_and_user", (q) =>
+        q.eq("teamId", args.teamId).eq("userId", userId),
       )
       .first();
 
@@ -36,8 +36,8 @@ export const markCompletion = mutation({
     // Check if completion already exists
     const existing = await ctx.db
       .query("dailyCompletions")
-      .withIndex("by_user_and_date", (q) => 
-        q.eq("userId", userId).eq("date", args.date)
+      .withIndex("by_user_and_date", (q) =>
+        q.eq("userId", userId).eq("date", args.date),
       )
       .filter((q) => q.eq(q.field("teamId"), args.teamId))
       .first();
@@ -61,7 +61,7 @@ export const markCompletion = mutation({
 });
 
 export const getUserCompletions = query({
-  args: { 
+  args: {
     teamId: v.id("teams"),
     startDate: v.string(),
     endDate: v.string(),
@@ -75,19 +75,19 @@ export const getUserCompletions = query({
     return await ctx.db
       .query("dailyCompletions")
       .withIndex("by_user_and_date", (q) => q.eq("userId", userId))
-      .filter((q) => 
+      .filter((q) =>
         q.and(
           q.eq(q.field("teamId"), args.teamId),
           q.gte(q.field("date"), args.startDate),
-          q.lte(q.field("date"), args.endDate)
-        )
+          q.lte(q.field("date"), args.endDate),
+        ),
       )
       .collect();
   },
 });
 
 export const getTeamCompletions = query({
-  args: { 
+  args: {
     teamId: v.id("teams"),
     date: v.string(),
   },
@@ -99,8 +99,8 @@ export const getTeamCompletions = query({
 
     const completions = await ctx.db
       .query("dailyCompletions")
-      .withIndex("by_team_and_date", (q) => 
-        q.eq("teamId", args.teamId).eq("date", args.date)
+      .withIndex("by_team_and_date", (q) =>
+        q.eq("teamId", args.teamId).eq("date", args.date),
       )
       .filter((q) => q.eq(q.field("completed"), true))
       .collect();
