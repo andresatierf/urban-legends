@@ -55,17 +55,9 @@ const sidebar: SidebarItem[] = [
     items: [
       { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
       { title: "My Tournaments", url: "/tournaments", icon: Trophy },
-      {
-        title: "My Teams",
-        url: "/tournaments/:tournamentSlug/teams/:teamSlug",
-        icon: Users,
-      },
+      { title: "My Teams", url: "/teams", icon: Users },
       { title: "Submissions", url: "/submissions", icon: ClipboardList },
-      {
-        title: "Submit Activity",
-        url: "/tournaments/:tournamentSlug/submissions/new",
-        icon: PlusCircle,
-      },
+      { title: "Submit Activity", url: "/submit", icon: PlusCircle },
     ],
   },
   {

@@ -139,9 +139,40 @@ export const removeMember = mutation({
   },
 });
 
-export const getUserTeams = query({
-  args: { userId: v.optional(v.id("users")) },
-  handler: async (ctx, args) => {
+export const list = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+
+    const allTournaments = await ctx.db.query("tournaments").collect();
+    const allTournamentMap = allTournaments.reduce((acc, t) => {
+      if (!acc.get(t._id)) acc.set(t._id, t);
+      return acc;
+    }, new Map());
+
+    const teamMembers = await ctx.db.query("teamMembers").collect();
+    const teamMembersMapByTeamId = teamMembers.reduce<
+      Record<string, typeof teamMembers>
+    >((acc, tm) => {
+      if (!acc[tm.teamId]) acc[tm.teamId] = [];
+      acc[tm.teamId].push(tm);
+      return acc;
+    }, {});
+
+    const teams = await ctx.db.query("teams").collect();
+
+    return teams.map((team) => ({
+      ...team,
+      tournament: allTournamentMap.get(team.tournamentId),
+      members: teamMembersMapByTeamId[team._id],
+    }));
+  },
+});
+
+export const listByUser = query({
+  handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       return [];
@@ -149,22 +180,70 @@ export const getUserTeams = query({
 
     const memberships = await ctx.db
       .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId || userId))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const membershipMapByTeamId = memberships.reduce<
+      Map<string, (typeof memberships)[number]>
+    >((acc, m) => {
+      if (!acc.get(m.teamId)) acc.set(m.teamId, m);
+      return acc;
+    }, new Map());
+
+    const teamIds = memberships.map((m) => m.teamId);
+    const teams = await ctx.db
+      .query("teams")
+      .filter((q) =>
+        q.or(...teamIds.map((id) => q.eq(q.field("_id"), id as string))),
+      )
       .collect();
 
-    const teams = [];
-    for (const membership of memberships) {
-      const team = await ctx.db.get(membership.teamId);
-      if (team) {
-        const tournament = await ctx.db.get(team.tournamentId);
-        teams.push({
-          ...team,
-          tournament,
-          role: membership.role,
-        });
-      }
-    }
+    const tournamentIds = teams.map((t) => t.tournamentId);
+    const tournaments = await ctx.db
+      .query("tournaments")
+      .filter((q) =>
+        q.or(...tournamentIds.map((id) => q.eq(q.field("_id"), id as string))),
+      )
+      .collect();
+    const tournamentMap = tournaments.reduce((acc, t) => {
+      if (!acc.get(t._id)) acc.set(t._id, t);
+      return acc;
+    }, new Map());
 
-    return teams;
+    const members = await ctx.db
+      .query("teamMembers")
+      .filter((q) =>
+        q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id as string))),
+      )
+      .collect();
+    const memberMapByTeamId = members.reduce<Record<string, typeof members>>(
+      (acc, m) => {
+        if (!acc[m.teamId]) acc[m.teamId] = [];
+        acc[m.teamId].push(m);
+        return acc;
+      },
+      {},
+    );
+
+    const memberIds = members.map((m) => m.userId);
+    const users = await ctx.db
+      .query("users")
+      .filter((q) =>
+        q.or(...memberIds.map((id) => q.eq(q.field("_id"), id as string))),
+      )
+      .collect();
+    const userMap = users.reduce((acc, u) => {
+      if (!acc.get(u._id)) acc.set(u._id, u);
+      return acc;
+    }, new Map());
+
+    return teams.map((t) => ({
+      ...t,
+      tournament: tournamentMap.get(t.tournamentId),
+      members: memberMapByTeamId[t._id].map((m) => ({
+        ...m,
+        email: userMap.get(m.userId)?.email,
+      })),
+      role: membershipMapByTeamId.get(t._id)?.role,
+    }));
   },
 });
