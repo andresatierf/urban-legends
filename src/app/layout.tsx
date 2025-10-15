@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "BoolLegends",
-  description: "Bool X UrbanSports competition tracker.",
+  description: "Bool X UrbanSports tournament tracker.",
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ConvexClientProvider>
-          <div className="w-full min-h-screen flex flex-col bg-gray-50">
+          <div className="flex min-h-screen w-full flex-col bg-gray-50">
             <main className="flex-1">{children}</main>
             <Toaster />
           </div>

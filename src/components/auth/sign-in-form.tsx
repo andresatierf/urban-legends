@@ -14,7 +14,7 @@ export function SignInForm() {
   return (
     <div className="w-full">
       <form
-        className="flex flex-col gap-4 items-center"
+        className="flex flex-col items-center gap-4"
         onSubmit={(e) => {
           e.preventDefault();
           setSubmitting(true);
@@ -59,7 +59,7 @@ export function SignInForm() {
         >
           {flow === "signIn" ? "Sign in" : "Sign up"}
         </Button>
-        <div className="text-center text-sm text-primary">
+        <div className="text-center text-primary text-sm">
           <span>
             {flow === "signIn"
               ? "Don't have an account? "
@@ -75,7 +75,7 @@ export function SignInForm() {
           </Button>
         </div>
       </form>
-      <div className="flex items-center justify-center my-3">
+      <div className="my-3 flex items-center justify-center">
         <Separator className="shrink" />
         <span className="mx-4 text-primary">or</span>
         <Separator className="shrink" />

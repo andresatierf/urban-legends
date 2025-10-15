@@ -14,13 +14,13 @@ export default function LoginPage() {
 
   return (
     <Unauthenticated>
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-full max-w-md mx-auto px-4">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="mx-auto w-full max-w-md px-4">
+          <div className="mb-8 text-center">
+            <h1 className="mb-4 font-bold text-4xl text-gray-900">
               BoolLegends
             </h1>
-            <p className="text-xl text-gray-600">
+            <p className="text-gray-600 text-xl">
               Sign in to track your teams progress
             </p>
           </div>

@@ -24,7 +24,7 @@ export function AdminDashboard({
   }, [makeFirstUserAdmin]);
 
   switch (currentPage) {
-    case "competitions":
+    case "tournaments":
       return <CompetitionsPage />;
     case "teams":
       return <TeamsPage />;
@@ -40,83 +40,83 @@ function AdminOverview({
 }: {
   setCurrentPage: (page: string) => void;
 }) {
-  const competitions = useQuery(api.competitions.list) || [];
+  const tournaments = useQuery(api.tournaments.list) || [];
   const users = useQuery(api.users.listAll) || [];
 
-  const activeCompetitions = competitions.filter((c) => c.isActive);
+  const activeTournaments = tournaments.filter((c) => c.isActive);
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-gray-900">Admin Dashboard</h2>
+      <h2 className="font-bold text-3xl text-gray-900">Admin Dashboard</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Active Competitions
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-2 font-semibold text-gray-900 text-lg">
+            Active tournaments
           </h3>
-          <p className="text-3xl font-bold text-blue-600">
-            {activeCompetitions.length}
+          <p className="font-bold text-3xl text-blue-600">
+            {activeTournaments.length}
           </p>
           <button
-            onClick={() => setCurrentPage("competitions")}
-            className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+            onClick={() => setCurrentPage("tournaments")}
+            className="mt-2 text-blue-600 text-sm hover:text-blue-800"
           >
-            Manage Competitions →
+            Manage tournaments →
           </button>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-2 font-semibold text-gray-900 text-lg">
             Total Users
           </h3>
-          <p className="text-3xl font-bold text-green-600">{users.length}</p>
+          <p className="font-bold text-3xl text-green-600">{users.length}</p>
           <button
             onClick={() => setCurrentPage("users")}
-            className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+            className="mt-2 text-blue-600 text-sm hover:text-blue-800"
           >
             Manage Users →
           </button>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Teams</h3>
-          <p className="text-3xl font-bold text-purple-600">-</p>
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-2 font-semibold text-gray-900 text-lg">Teams</h3>
+          <p className="font-bold text-3xl text-purple-600">-</p>
           <button
             onClick={() => setCurrentPage("teams")}
-            className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+            className="mt-2 text-blue-600 text-sm hover:text-blue-800"
           >
             Manage Teams →
           </button>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Recent Competitions
+      <div className="rounded-lg bg-white p-6 shadow">
+        <h3 className="mb-4 font-semibold text-gray-900 text-lg">
+          Recent tournaments
         </h3>
-        {competitions.length === 0 ? (
-          <p className="text-gray-500">No competitions created yet.</p>
+        {tournaments.length === 0 ? (
+          <p className="text-gray-500">No tournaments created yet.</p>
         ) : (
           <div className="space-y-2">
-            {competitions.slice(0, 5).map((competition) => (
+            {tournaments.slice(0, 5).map((tournament) => (
               <div
-                key={competition._id}
-                className="flex justify-between items-center py-2 border-b"
+                key={tournament._id}
+                className="flex items-center justify-between border-b py-2"
               >
                 <div>
-                  <h4 className="font-medium">{competition.name}</h4>
-                  <p className="text-sm text-gray-500">
-                    {competition.startDate} - {competition.endDate}
+                  <h4 className="font-medium">{tournament.name}</h4>
+                  <p className="text-gray-500 text-sm">
+                    {tournament.startDate} - {tournament.endDate}
                   </p>
                 </div>
                 <span
-                  className={`px-2 py-1 text-xs rounded-full ${
-                    competition.isActive
+                  className={`rounded-full px-2 py-1 text-xs ${
+                    tournament.isActive
                       ? "bg-green-100 text-green-800"
                       : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {competition.isActive ? "Active" : "Inactive"}
+                  {tournament.isActive ? "Active" : "Inactive"}
                 </span>
               </div>
             ))}
@@ -128,9 +128,9 @@ function AdminOverview({
 }
 
 function CompetitionsPage() {
-  const competitions = useQuery(api.competitions.list) || [];
-  const createCompetition = useMutation(api.competitions.create);
-  const updateCompetition = useMutation(api.competitions.update);
+  const tournaments = useQuery(api.tournaments.list) || [];
+  const createtournament = useMutation(api.tournaments.create);
+  const updatetournament = useMutation(api.tournaments.update);
 
   const [showForm, setShowForm] = useState(false);
   const [editingCompetition, setEditingCompetition] = useState<any>(null);
@@ -158,7 +158,7 @@ function CompetitionsPage() {
       setShowForm(false);
       setEditingCompetition(null);
       setFormData({ name: "", description: "", startDate: "", endDate: "" });
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to save competition");
     }
   };
@@ -187,31 +187,31 @@ function CompetitionsPage() {
       toast.success(
         `Competition ${competition.isActive ? "deactivated" : "activated"}!`,
       );
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to update competition");
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold text-gray-900">Competitions</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="font-bold text-3xl text-gray-900">Competitions</h2>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
         >
           Create Competition
         </button>
       </div>
 
       {showForm && (
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-4 font-semibold text-lg">
             {editingCompetition ? "Edit Competition" : "Create New Competition"}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-medium text-gray-700 text-sm">
                 Name
               </label>
               <input
@@ -220,12 +220,12 @@ function CompetitionsPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block font-medium text-gray-700 text-sm">
                 Description
               </label>
               <textarea
@@ -233,14 +233,14 @@ function CompetitionsPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
                 required
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block font-medium text-gray-700 text-sm">
                   Start Date
                 </label>
                 <input
@@ -249,12 +249,12 @@ function CompetitionsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, startDate: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block font-medium text-gray-700 text-sm">
                   End Date
                 </label>
                 <input
@@ -263,7 +263,7 @@ function CompetitionsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, endDate: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -271,7 +271,7 @@ function CompetitionsPage() {
             <div className="flex space-x-2">
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               >
                 {editingCompetition ? "Update" : "Create"}
               </button>
@@ -287,7 +287,7 @@ function CompetitionsPage() {
                     endDate: "",
                   });
                 }}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                className="rounded-md bg-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-400"
               >
                 Cancel
               </button>
@@ -296,43 +296,43 @@ function CompetitionsPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="overflow-hidden rounded-lg bg-white shadow">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left font-medium text-gray-500 text-xs uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left font-medium text-gray-500 text-xs uppercase tracking-wider">
                 Duration
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left font-medium text-gray-500 text-xs uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left font-medium text-gray-500 text-xs uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 bg-white">
             {competitions.map((competition) => (
               <tr key={competition._id}>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="whitespace-nowrap px-6 py-4">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="font-medium text-gray-900 text-sm">
                       {competition.name}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-gray-500 text-sm">
                       {competition.description}
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="whitespace-nowrap px-6 py-4 text-gray-500 text-sm">
                   {competition.startDate} - {competition.endDate}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="whitespace-nowrap px-6 py-4">
                   <span
-                    className={`px-2 py-1 text-xs rounded-full ${
+                    className={`rounded-full px-2 py-1 text-xs ${
                       competition.isActive
                         ? "bg-green-100 text-green-800"
                         : "bg-gray-100 text-gray-800"
@@ -341,7 +341,7 @@ function CompetitionsPage() {
                     {competition.isActive ? "Active" : "Inactive"}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                <td className="space-x-2 whitespace-nowrap px-6 py-4 font-medium text-sm">
                   <button
                     onClick={() => handleEdit(competition)}
                     className="text-blue-600 hover:text-blue-900"
@@ -369,13 +369,13 @@ function CompetitionsPage() {
 }
 
 function TeamsPage() {
-  const competitions = useQuery(api.competitions.list) || [];
-  const [selectedCompetition, setSelectedCompetition] =
-    useState<Id<"competitions"> | null>(null);
+  const competitions = useQuery(api.tournaments.list) || [];
+  const [selectedTournament, setSelectedTournament] =
+    useState<Id<"tournaments"> | null>(null);
   const teams =
     useQuery(
-      api.teams.listByCompetition,
-      selectedCompetition ? { competitionId: selectedCompetition } : "skip",
+      api.teams.listByTournament,
+      selectedTournament ? { tournamentId: selectedTournament } : "skip",
     ) || [];
   const createTeam = useMutation(api.teams.create);
   const addMember = useMutation(api.teams.addMember);
@@ -391,17 +391,17 @@ function TeamsPage() {
 
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCompetition) return;
+    if (!selectedTournament) return;
 
     try {
       await createTeam({
         name: teamName,
-        competitionId: selectedCompetition,
+        tournamentId: selectedTournament,
       });
       toast.success("Team created!");
       setShowTeamForm(false);
       setTeamName("");
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to create team");
     }
   };
@@ -432,27 +432,27 @@ function TeamsPage() {
     try {
       await removeMember({ teamId, userId });
       toast.success("Member removed!");
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to remove member");
     }
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-gray-900">Teams</h2>
+      <h2 className="font-bold text-3xl text-gray-900">Teams</h2>
 
-      <div className="bg-white p-4 rounded-lg shadow">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="rounded-lg bg-white p-4 shadow">
+        <label className="mb-2 block font-medium text-gray-700 text-sm">
           Select Competition
         </label>
         <select
-          value={selectedCompetition || ""}
+          value={selectedTournament || ""}
           onChange={(e) =>
-            setSelectedCompetition(
+            setSelectedTournament(
               (e.target.value as Id<"competitions">) || null,
             )
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Select a competition...</option>
           {competitions.map((competition) => (
@@ -463,38 +463,38 @@ function TeamsPage() {
         </select>
       </div>
 
-      {selectedCompetition && (
+      {selectedTournament && (
         <>
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold">Teams</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-xl">Teams</h3>
             <button
               onClick={() => setShowTeamForm(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
             >
               Create Team
             </button>
           </div>
 
           {showTeamForm && (
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h4 className="text-lg font-semibold mb-4">Create New Team</h4>
+            <div className="rounded-lg bg-white p-6 shadow">
+              <h4 className="mb-4 font-semibold text-lg">Create New Team</h4>
               <form onSubmit={handleCreateTeam} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="mb-1 block font-medium text-gray-700 text-sm">
                     Team Name
                   </label>
                   <input
                     type="text"
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
                 <div className="flex space-x-2">
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                    className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
                   >
                     Create
                   </button>
@@ -504,7 +504,7 @@ function TeamsPage() {
                       setShowTeamForm(false);
                       setTeamName("");
                     }}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                    className="rounded-md bg-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-400"
                   >
                     Cancel
                   </button>
@@ -515,34 +515,34 @@ function TeamsPage() {
 
           <div className="grid gap-6">
             {teams.map((team) => (
-              <div key={team._id} className="bg-white p-6 rounded-lg shadow">
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-lg font-semibold">{team.name}</h4>
+              <div key={team._id} className="rounded-lg bg-white p-6 shadow">
+                <div className="mb-4 flex items-center justify-between">
+                  <h4 className="font-semibold text-lg">{team.name}</h4>
                   <button
                     onClick={() => setShowMemberForm(team._id)}
-                    className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                    className="rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
                   >
                     Add Member
                   </button>
                 </div>
 
                 {showMemberForm === team._id && (
-                  <div className="mb-4 p-4 bg-gray-50 rounded">
+                  <div className="mb-4 rounded bg-gray-50 p-4">
                     <form onSubmit={handleAddMember} className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="mb-1 block font-medium text-gray-700 text-sm">
                           User Email
                         </label>
                         <input
                           type="email"
                           value={memberEmail}
                           onChange={(e) => setMemberEmail(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="mb-1 block font-medium text-gray-700 text-sm">
                           Role
                         </label>
                         <select
@@ -552,7 +552,7 @@ function TeamsPage() {
                               e.target.value as "member" | "captain",
                             )
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="member">Member</option>
                           <option value="captain">Captain</option>
@@ -561,7 +561,7 @@ function TeamsPage() {
                       <div className="flex space-x-2">
                         <button
                           type="submit"
-                          className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                          className="rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
                         >
                           Add
                         </button>
@@ -572,7 +572,7 @@ function TeamsPage() {
                             setMemberEmail("");
                             setMemberRole("member");
                           }}
-                          className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+                          className="rounded bg-gray-300 px-3 py-1 text-gray-700 text-sm hover:bg-gray-400"
                         >
                           Cancel
                         </button>
@@ -592,12 +592,12 @@ function TeamsPage() {
                       {team.members.map((member) => (
                         <div
                           key={member._id}
-                          className="flex justify-between items-center py-1"
+                          className="flex items-center justify-between py-1"
                         >
                           <div className="flex items-center space-x-2">
                             <span className="text-sm">{member.user.email}</span>
                             <span
-                              className={`px-2 py-1 text-xs rounded ${
+                              className={`rounded px-2 py-1 text-xs ${
                                 member.role === "captain"
                                   ? "bg-blue-100 text-blue-800"
                                   : "bg-gray-100 text-gray-800"
@@ -610,7 +610,7 @@ function TeamsPage() {
                             onClick={() =>
                               handleRemoveMember(team._id, member.userId)
                             }
-                            className="text-red-600 hover:text-red-800 text-sm"
+                            className="text-red-600 text-sm hover:text-red-800"
                           >
                             Remove
                           </button>
@@ -639,39 +639,39 @@ function UsersPage() {
     try {
       await setUserRole({ userId, role: newRole });
       toast.success("User role updated!");
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to update user role");
     }
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-gray-900">Users</h2>
+      <h2 className="font-bold text-3xl text-gray-900">Users</h2>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="overflow-hidden rounded-lg bg-white shadow">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left font-medium text-gray-500 text-xs uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left font-medium text-gray-500 text-xs uppercase tracking-wider">
                 Role
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left font-medium text-gray-500 text-xs uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 bg-white">
             {users.map((user) => (
               <tr key={user._id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="whitespace-nowrap px-6 py-4 text-gray-900 text-sm">
                   {user.email}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="whitespace-nowrap px-6 py-4">
                   <span
-                    className={`px-2 py-1 text-xs rounded-full ${
+                    className={`rounded-full px-2 py-1 text-xs ${
                       user.role === "admin"
                         ? "bg-red-100 text-red-800"
                         : "bg-green-100 text-green-800"
@@ -680,7 +680,7 @@ function UsersPage() {
                     {user.role}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <td className="whitespace-nowrap px-6 py-4 font-medium text-sm">
                   <select
                     value={user.role}
                     onChange={(e) =>
@@ -689,7 +689,7 @@ function UsersPage() {
                         e.target.value as "admin" | "user",
                       )
                     }
-                    className="text-sm border border-gray-300 rounded px-2 py-1"
+                    className="rounded border border-gray-300 px-2 py-1 text-sm"
                   >
                     <option value="user">User</option>
                     <option value="admin">Admin</option>

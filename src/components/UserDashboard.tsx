@@ -3,6 +3,9 @@ import { api } from "../../convex/_generated/api";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Id } from "../../convex/_generated/dataModel";
+import { UserDetailsCard } from "./UserDetailsCard";
+import { UserStatsCard } from "./UserStatsCard";
+import { TournamentTeams } from "./TournamentTeams";
 
 interface UserDashboardProps {
   currentPage: string;
@@ -29,48 +32,70 @@ function UserOverview({
   setCurrentPage: (page: string) => void;
 }) {
   const userTeams = useQuery(api.teams.getUserTeams) || [];
-  const competitions = useQuery(api.competitions.list) || [];
+  const tournaments = useQuery(api.tournaments.list) || [];
 
-  const activeTeams = userTeams.filter((team) => team.competition?.isActive);
+  const activeTeams = userTeams.filter((team) => team.tournament?.isActive);
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
+      <h2 className="font-bold text-3xl text-gray-900">Dashboard</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+      <UserDetailsCard
+        name="name"
+        email=""
+        teams={[{ teamName: "teamName", score: 5 }]}
+      />
+      <UserStatsCard
+        userName="Alex Turner"
+        totalScore={2450}
+        teams={[
+          { id: "1", name: "Frontend Wizards", score: 1200 },
+          { id: "2", name: "API Masters", score: 800 },
+          { id: "3", name: "QA Crew", score: 450 },
+        ]}
+      />
+      <TournamentTeams
+        tournamentName="Urban Legends 2025 Q4"
+        teams={[
+          { name: "Alpha Coders", members: 5, score: 1280 },
+          { name: "Bug Hunters", members: 4, score: 970 },
+          { name: "Dev Ninjas", members: 6, score: 1120 },
+        ]}
+      />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-2 font-semibold text-gray-900 text-lg">
             My Active Teams
           </h3>
-          <p className="text-3xl font-bold text-blue-600">
+          <p className="font-bold text-3xl text-blue-600">
             {activeTeams.length}
           </p>
           <button
             onClick={() => setCurrentPage("teams")}
-            className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+            className="mt-2 text-blue-600 text-sm hover:text-blue-800"
           >
             View Teams →
           </button>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Active Competitions
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h3 className="mb-2 font-semibold text-gray-900 text-lg">
+            Active Tournaments
           </h3>
-          <p className="text-3xl font-bold text-green-600">
-            {competitions.filter((c) => c.isActive).length}
+          <p className="font-bold text-3xl text-green-600">
+            {tournaments.filter((c) => c.isActive).length}
           </p>
           <button
             onClick={() => setCurrentPage("track")}
-            className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+            className="mt-2 text-blue-600 text-sm hover:text-blue-800"
           >
             Track Progress →
           </button>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">My Teams</h3>
+      <div className="rounded-lg bg-white p-6 shadow">
+        <h3 className="mb-4 font-semibold text-gray-900 text-lg">My Teams</h3>
         {userTeams.length === 0 ? (
           <p className="text-gray-500">
             You're not part of any teams yet. Contact an admin to be added to a
@@ -81,22 +106,22 @@ function UserOverview({
             {userTeams.map((team) => (
               <div
                 key={team._id}
-                className="flex justify-between items-center py-3 border-b"
+                className="flex items-center justify-between border-b py-3"
               >
                 <div>
                   <h4 className="font-medium">{team.name}</h4>
-                  <p className="text-sm text-gray-500">
-                    {team.competition?.name} • {team.role}
+                  <p className="text-gray-500 text-sm">
+                    {team.tournament?.name} • {team.role}
                   </p>
                 </div>
                 <span
-                  className={`px-2 py-1 text-xs rounded-full ${
-                    team.competition?.isActive
+                  className={`rounded-full px-2 py-1 text-xs ${
+                    team.tournament?.isActive
                       ? "bg-green-100 text-green-800"
                       : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {team.competition?.isActive ? "Active" : "Inactive"}
+                  {team.tournament?.isActive ? "Active" : "Inactive"}
                 </span>
               </div>
             ))}
@@ -113,26 +138,28 @@ function TrackProgressPage() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0],
   );
-  const [selectedTeammates, setSelectedTeammates] = useState<Id<"users">[]>([]);
+  const [selectedTeammates, _setSelectedTeammates] = useState<Id<"users">[]>(
+    [],
+  );
 
-  const markCompletion = useMutation(api.completions.markCompletion);
+  const markCompletion = useMutation(api.submissions.markCompletion);
 
   const selectedTeamData = userTeams.find((team) => team._id === selectedTeam);
-  const activeTeams = userTeams.filter((team) => team.competition?.isActive);
+  const activeTeams = userTeams.filter((team) => team.tournament?.isActive);
 
   // Get completions for the selected team and date range
-  const startDate = selectedTeamData?.competition?.startDate || selectedDate;
-  const endDate = selectedTeamData?.competition?.endDate || selectedDate;
+  const startDate = selectedTeamData?.tournament?.startDate || selectedDate;
+  const endDate = selectedTeamData?.tournament?.endDate || selectedDate;
 
   const completions =
     useQuery(
-      api.completions.getUserCompletions,
+      api.submissions.getUserCompletions,
       selectedTeam ? { teamId: selectedTeam, startDate, endDate } : "skip",
     ) || [];
 
   const teamCompletions =
     useQuery(
-      api.completions.getTeamCompletions,
+      api.submissions.getTeamCompletions,
       selectedTeam ? { teamId: selectedTeam, date: selectedDate } : "skip",
     ) || [];
 
@@ -153,7 +180,7 @@ function TrackProgressPage() {
           ? "Task marked as completed!"
           : "Task marked as not completed!",
       );
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to update completion status");
     }
   };
@@ -176,10 +203,10 @@ function TrackProgressPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-gray-900">Track Progress</h2>
+      <h2 className="font-bold text-3xl text-gray-900">Track Progress</h2>
 
       {activeTeams.length === 0 ? (
-        <div className="bg-white p-6 rounded-lg shadow text-center">
+        <div className="rounded-lg bg-white p-6 text-center shadow">
           <p className="text-gray-500">
             You're not part of any active teams. Contact an admin to be added to
             a team.
@@ -187,8 +214,8 @@ function TrackProgressPage() {
         </div>
       ) : (
         <>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="rounded-lg bg-white p-4 shadow">
+            <label className="mb-2 block font-medium text-gray-700 text-sm">
               Select Team
             </label>
             <select
@@ -196,12 +223,12 @@ function TrackProgressPage() {
               onChange={(e) =>
                 setSelectedTeam((e.target.value as Id<"teams">) || null)
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select a team...</option>
               {activeTeams.map((team) => (
                 <option key={team._id} value={team._id}>
-                  {team.name} - {team.competition?.name}
+                  {team.name} - {team.tournament?.name}
                 </option>
               ))}
             </select>
@@ -209,36 +236,36 @@ function TrackProgressPage() {
 
           {selectedTeam && selectedTeamData && (
             <>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">
+              <div className="rounded-lg bg-white p-6 shadow">
+                <h3 className="mb-4 font-semibold text-lg">
                   Mark Today's Completion
                 </h3>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block font-medium text-gray-700 text-sm">
                       Date
                     </label>
                     <input
                       type="date"
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
-                      min={selectedTeamData.competition?.startDate}
-                      max={selectedTeamData.competition?.endDate}
-                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      min={selectedTeamData.tournament?.startDate}
+                      max={selectedTeamData.tournament?.endDate}
+                      className="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="mb-2 block font-medium text-gray-700 text-sm">
                       Teammates who completed with you (optional)
                     </label>
-                    <div className="text-sm text-gray-500 mb-2">
+                    <div className="mb-2 text-gray-500 text-sm">
                       Select teammates who completed the task with you on this
                       day
                     </div>
                     {/* Note: We'd need to fetch team members here, but for simplicity, we'll show a text input */}
-                    <p className="text-sm text-gray-400">
+                    <p className="text-gray-400 text-sm">
                       Teammate selection feature coming soon...
                     </p>
                   </div>
@@ -246,7 +273,7 @@ function TrackProgressPage() {
                   <div className="flex space-x-3">
                     <button
                       onClick={() => handleMarkCompletion(true)}
-                      className={`px-4 py-2 rounded-md font-medium ${
+                      className={`rounded-md px-4 py-2 font-medium ${
                         todayCompletion?.completed
                           ? "bg-green-600 text-white"
                           : "bg-green-100 text-green-700 hover:bg-green-200"
@@ -256,7 +283,7 @@ function TrackProgressPage() {
                     </button>
                     <button
                       onClick={() => handleMarkCompletion(false)}
-                      className={`px-4 py-2 rounded-md font-medium ${
+                      className={`rounded-md px-4 py-2 font-medium ${
                         todayCompletion && !todayCompletion.completed
                           ? "bg-red-600 text-white"
                           : "bg-red-100 text-red-700 hover:bg-red-200"
@@ -267,7 +294,7 @@ function TrackProgressPage() {
                   </div>
 
                   {todayCompletion && (
-                    <div className="mt-4 p-3 bg-gray-50 rounded">
+                    <div className="mt-4 rounded bg-gray-50 p-3">
                       <p className="text-sm">
                         Status for {selectedDate}:
                         <span
@@ -287,8 +314,8 @@ function TrackProgressPage() {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">
+              <div className="rounded-lg bg-white p-6 shadow">
+                <h3 className="mb-4 font-semibold text-lg">
                   Team Progress for {selectedDate}
                 </h3>
                 {teamCompletions.length === 0 ? (
@@ -300,7 +327,7 @@ function TrackProgressPage() {
                     {teamCompletions.map((completion) => (
                       <div
                         key={completion._id}
-                        className="flex items-center justify-between py-2 border-b"
+                        className="flex items-center justify-between border-b py-2"
                       >
                         <span className="font-medium">
                           {completion.user.email}
@@ -312,15 +339,15 @@ function TrackProgressPage() {
                 )}
               </div>
 
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">
+              <div className="rounded-lg bg-white p-6 shadow">
+                <h3 className="mb-4 font-semibold text-lg">
                   Your Progress Calendar
                 </h3>
-                {selectedTeamData.competition && (
+                {selectedTeamData.tournament && (
                   <div className="grid grid-cols-7 gap-2">
                     {generateDateRange(
-                      selectedTeamData.competition.startDate,
-                      selectedTeamData.competition.endDate,
+                      selectedTeamData.tournament.startDate,
+                      selectedTeamData.tournament.endDate,
                     ).map((date) => {
                       const completion = completions.find(
                         (c) => c.date === date,
@@ -331,14 +358,14 @@ function TrackProgressPage() {
                       return (
                         <div
                           key={date}
-                          className={`p-2 text-center text-xs rounded border ${
+                          className={`rounded border p-2 text-center text-xs ${
                             completion?.completed
-                              ? "bg-green-100 border-green-300 text-green-800"
+                              ? "border-green-300 bg-green-100 text-green-800"
                               : completion && !completion.completed
-                                ? "bg-red-100 border-red-300 text-red-800"
+                                ? "border-red-300 bg-red-100 text-red-800"
                                 : isToday
-                                  ? "bg-blue-100 border-blue-300 text-blue-800"
-                                  : "bg-gray-50 border-gray-200 text-gray-600"
+                                  ? "border-blue-300 bg-blue-100 text-blue-800"
+                                  : "border-gray-200 bg-gray-50 text-gray-600"
                           }`}
                         >
                           {new Date(date).getDate()}
@@ -358,14 +385,14 @@ function TrackProgressPage() {
 
 function MyTeamsPage() {
   const userTeams = useQuery(api.teams.getUserTeams) || [];
-  const competitions = useQuery(api.competitions.list) || [];
+  const tournament = useQuery(api.tournament.list) || [];
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-gray-900">My Teams</h2>
+      <h2 className="font-bold text-3xl text-gray-900">My Teams</h2>
 
       {userTeams.length === 0 ? (
-        <div className="bg-white p-6 rounded-lg shadow text-center">
+        <div className="rounded-lg bg-white p-6 text-center shadow">
           <p className="text-gray-500">
             You're not part of any teams yet. Contact an admin to be added to a
             team.
@@ -384,8 +411,8 @@ function MyTeamsPage() {
 
 function TeamCard({ team }: { team: any }) {
   const leaderboard =
-    useQuery(api.competitions.getLeaderboard, {
-      competitionId: team.competition?.id,
+    useQuery(api.tournaments.getLeaderboard, {
+      tournamentId: team.tournament?.id,
     }) || [];
 
   const teamRank =
@@ -393,32 +420,32 @@ function TeamCard({ team }: { team: any }) {
   const teamStats = leaderboard.find((entry) => entry.team._id === team._id);
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <div className="flex justify-between items-start mb-4">
+    <div className="rounded-lg bg-white p-6 shadow">
+      <div className="mb-4 flex items-start justify-between">
         <div>
-          <h3 className="text-lg font-semibold">{team.name}</h3>
-          <p className="text-gray-600">{team.competition?.name}</p>
-          <p className="text-sm text-gray-500">
-            {team.competition?.startDate} - {team.competition?.endDate}
+          <h3 className="font-semibold text-lg">{team.name}</h3>
+          <p className="text-gray-600">{team.tournament?.name}</p>
+          <p className="text-gray-500 text-sm">
+            {team.tournament?.startDate} - {team.tournament?.endDate}
           </p>
         </div>
         <div className="text-right">
           <span
-            className={`px-2 py-1 text-xs rounded-full ${
-              team.competition?.isActive
+            className={`rounded-full px-2 py-1 text-xs ${
+              team.tournament?.isActive
                 ? "bg-green-100 text-green-800"
                 : "bg-gray-100 text-gray-800"
             }`}
           >
-            {team.competition?.isActive ? "Active" : "Inactive"}
+            {team.tournament?.isActive ? "Active" : "Inactive"}
           </span>
-          <p className="text-sm text-gray-500 mt-1">Your role: {team.role}</p>
+          <p className="mt-1 text-gray-500 text-sm">Your role: {team.role}</p>
         </div>
       </div>
 
-      {team.competition?.isActive && teamStats && (
-        <div className="bg-gray-50 p-4 rounded">
-          <h4 className="font-medium mb-2">Team Performance</h4>
+      {team.tournament?.isActive && teamStats && (
+        <div className="rounded bg-gray-50 p-4">
+          <h4 className="mb-2 font-medium">Team Performance</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-gray-600">Completed Days:</span>

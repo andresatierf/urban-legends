@@ -20,8 +20,8 @@ async function requireAdmin(ctx: any) {
   return userId;
 }
 
-export const listByCompetition = query({
-  args: { competitionId: v.id("competitions") },
+export const listByTournament = query({
+  args: { tournamentId: v.id("tournaments") },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
@@ -30,8 +30,8 @@ export const listByCompetition = query({
 
     const teams = await ctx.db
       .query("teams")
-      .withIndex("by_competition", (q) =>
-        q.eq("competitionId", args.competitionId),
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", args.tournamentId),
       )
       .collect();
 
@@ -66,14 +66,14 @@ export const listByCompetition = query({
 export const create = mutation({
   args: {
     name: v.string(),
-    competitionId: v.id("competitions"),
+    tournamentId: v.id("tournaments"),
   },
   handler: async (ctx, args) => {
     const userId = await requireAdmin(ctx);
 
     return await ctx.db.insert("teams", {
       name: args.name,
-      competitionId: args.competitionId,
+      tournamentId: args.tournamentId,
       createdBy: userId,
     });
   },
@@ -156,10 +156,10 @@ export const getUserTeams = query({
     for (const membership of memberships) {
       const team = await ctx.db.get(membership.teamId);
       if (team) {
-        const competition = await ctx.db.get(team.competitionId);
+        const tournament = await ctx.db.get(team.tournamentId);
         teams.push({
           ...team,
-          competition,
+          tournament,
           role: membership.role,
         });
       }

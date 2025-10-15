@@ -10,7 +10,7 @@ export default function UsersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Users</h1>
+      <h1 className="mb-4 font-bold text-2xl">Users</h1>
       {users ? <UserList users={users} /> : <p>Loading users...</p>}
     </div>
   );

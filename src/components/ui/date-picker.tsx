@@ -35,7 +35,7 @@ export function DatePicker({ id, value, onChange }: Props) {
             selected={new Date(value)}
             captionLayout="dropdown"
             onSelect={(date) => {
-              onChange(date?.toISOString() || "");
+              onChange(date?.toISOString().split("T")[0] || "");
               setOpen(false);
             }}
           />

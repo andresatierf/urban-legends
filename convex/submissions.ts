@@ -27,7 +27,7 @@ export const markCompletion = mutation({
       throw new Error("You are not a member of this team");
     }
 
-    // Get team to find competition
+    // Get team to find tournament
     const team = await ctx.db.get(args.teamId);
     if (!team) {
       throw new Error("Team not found");
@@ -35,7 +35,7 @@ export const markCompletion = mutation({
 
     // Check if completion already exists
     const existing = await ctx.db
-      .query("dailyCompletions")
+      .query("submissions")
       .withIndex("by_user_and_date", (q) =>
         q.eq("userId", userId).eq("date", args.date),
       )
@@ -48,10 +48,10 @@ export const markCompletion = mutation({
         teammates: args.teammates,
       });
     } else {
-      await ctx.db.insert("dailyCompletions", {
+      await ctx.db.insert("submissions", {
         userId,
         teamId: args.teamId,
-        competitionId: team.competitionId,
+        tournamentId: team.tournamentId,
         date: args.date,
         completed: args.completed,
         teammates: args.teammates,
@@ -73,7 +73,7 @@ export const getUserCompletions = query({
     }
 
     return await ctx.db
-      .query("dailyCompletions")
+      .query("submissions")
       .withIndex("by_user_and_date", (q) => q.eq("userId", userId))
       .filter((q) =>
         q.and(
@@ -98,7 +98,7 @@ export const getTeamCompletions = query({
     }
 
     const completions = await ctx.db
-      .query("dailyCompletions")
+      .query("submissions")
       .withIndex("by_team_and_date", (q) =>
         q.eq("teamId", args.teamId).eq("date", args.date),
       )

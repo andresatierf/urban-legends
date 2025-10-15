@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 
 const applicationTables = {
-  competitions: defineTable({
+  tournaments: defineTable({
     name: v.string(),
     description: v.string(),
     startDate: v.string(), // ISO date string
@@ -14,9 +14,9 @@ const applicationTables = {
 
   teams: defineTable({
     name: v.string(),
-    competitionId: v.id("competitions"),
+    tournamentId: v.id("tournaments"),
     createdBy: v.id("users"),
-  }).index("by_competition", ["competitionId"]),
+  }).index("by_tournament", ["tournamentId"]),
 
   teamMembers: defineTable({
     teamId: v.id("teams"),
@@ -40,17 +40,17 @@ const applicationTables = {
     .index("by_user", ["userId"])
     .index("by_role", ["roleId"]),
 
-  dailyCompletions: defineTable({
+  submissions: defineTable({
     userId: v.id("users"),
     teamId: v.id("teams"),
-    competitionId: v.id("competitions"),
+    tournamentId: v.id("tournaments"),
     date: v.string(), // ISO date string (YYYY-MM-DD)
     completed: v.boolean(),
     teammates: v.array(v.id("users")), // IDs of teammates who completed together
   })
     .index("by_user_and_date", ["userId", "date"])
     .index("by_team_and_date", ["teamId", "date"])
-    .index("by_competition_and_date", ["competitionId", "date"]),
+    .index("by_tournament_and_date", ["tournamentId", "date"]),
 };
 
 export default defineSchema({

@@ -55,7 +55,7 @@ export const setUserRole = mutation({
     userId: v.id("users"),
     role: v.union(v.literal("admin"), v.literal("user")),
   },
-  handler: async (ctx, args) => {
+  handler: async (_ctx, _args) => {
     // const currentUserId = await getAuthUserId(ctx);
     // if (!currentUserId) {
     //   throw new Error("Not authenticated");

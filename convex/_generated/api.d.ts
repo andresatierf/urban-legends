@@ -15,10 +15,10 @@ import type {
 } from "convex/server";
 import type * as admin from "../admin.js";
 import type * as auth from "../auth.js";
-import type * as competitions from "../competitions.js";
-import type * as completions from "../completions.js";
 import type * as http from "../http.js";
+import type * as submissions from "../submissions.js";
 import type * as teams from "../teams.js";
+import type * as tournaments from "../tournaments.js";
 import type * as users from "../users.js";
 
 /**
@@ -32,10 +32,10 @@ import type * as users from "../users.js";
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   auth: typeof auth;
-  competitions: typeof competitions;
-  completions: typeof completions;
   http: typeof http;
+  submissions: typeof submissions;
   teams: typeof teams;
+  tournaments: typeof tournaments;
   users: typeof users;
 }>;
 export declare const api: FilterApi<

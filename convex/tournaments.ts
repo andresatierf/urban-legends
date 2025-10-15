@@ -34,7 +34,34 @@ export const list = query({
       return [];
     }
 
-    return await ctx.db.query("competitions").collect();
+    const tournaments = await ctx.db.query("tournaments").collect();
+
+    const nowIso = new Date().toISOString();
+    tournaments.sort((a, b) => {
+      const isActive = (x: typeof a) =>
+        x.startDate <= nowIso && x.endDate >= nowIso;
+      const isFuture = (x: typeof a) => x.startDate > nowIso;
+      const isEnded = (x: typeof a) => x.endDate < nowIso;
+
+      if (
+        (isActive(a) && isActive(b)) ||
+        (isFuture(a) && isFuture(b)) ||
+        (isEnded(a) && isEnded(b))
+      )
+        return b.startDate.localeCompare(a.startDate);
+
+      if (isActive(a)) return -1;
+
+      if (isActive(b)) return 1;
+
+      if (isFuture(a)) return -1;
+
+      if (isFuture(b)) return 1;
+
+      return 0;
+    });
+
+    return tournaments;
   },
 });
 
@@ -48,7 +75,7 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const userId = await requireAdmin(ctx);
 
-    return await ctx.db.insert("competitions", {
+    return await ctx.db.insert("tournaments", {
       name: args.name,
       description: args.description || "",
       startDate: args.startDate,
@@ -61,7 +88,7 @@ export const create = mutation({
 
 export const update = mutation({
   args: {
-    id: v.id("competitions"),
+    id: v.id("tournaments"),
     name: v.string(),
     description: v.string(),
     startDate: v.string(),
@@ -82,7 +109,7 @@ export const update = mutation({
 });
 
 export const getById = query({
-  args: { id: v.id("competitions") },
+  args: { id: v.id("tournaments") },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
@@ -94,7 +121,7 @@ export const getById = query({
 });
 
 export const getLeaderboard = query({
-  args: { competitionId: v.id("competitions") },
+  args: { tournamentId: v.id("tournaments") },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
@@ -103,8 +130,8 @@ export const getLeaderboard = query({
 
     const teams = await ctx.db
       .query("teams")
-      .withIndex("by_competition", (q) =>
-        q.eq("competitionId", args.competitionId),
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", args.tournamentId),
       )
       .collect();
 
@@ -112,7 +139,7 @@ export const getLeaderboard = query({
 
     for (const team of teams) {
       const completions = await ctx.db
-        .query("dailyCompletions")
+        .query("submissions")
         .withIndex("by_team_and_date", (q) => q.eq("teamId", team._id))
         .filter((q) => q.eq(q.field("completed"), true))
         .collect();

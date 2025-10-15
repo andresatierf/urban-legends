@@ -33,8 +33,6 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { useEffect } from "react";
 import { api } from "../../convex/_generated/api";
 import { SignOutButton } from "./sign-out-button";
 
@@ -82,13 +80,6 @@ const sidebar: SidebarItem[] = [
     ],
   },
   {
-    title: "Account",
-    items: [
-      { title: "Profile", url: "/profile", icon: UserCircle },
-      { title: "Sign Out", url: "#", icon: LogOut },
-    ],
-  },
-  {
     title: "Admin",
     roles: ["admin"],
     items: [
@@ -106,15 +97,22 @@ const sidebar: SidebarItem[] = [
       { title: "Settings", icon: Settings, url: "/admin/settings" },
     ],
   },
+  {
+    title: "Account",
+    items: [
+      { title: "Profile", url: "/profile", icon: UserCircle },
+      { title: "Sign Out", url: "#", icon: LogOut },
+    ],
+  },
 ];
 
 export function Sidebar() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const { isAuthenticated } = useConvexAuth();
 
-  useEffect(() => {
-    if (!isAuthenticated) redirect("/auth/login");
-  }, [isAuthenticated]);
+  // useEffect(() => {
+  //   if (!isAuthenticated) redirect("/auth/login");
+  // }, [isAuthenticated]);
 
   const isAdmin = loggedInUser?.roles.includes("admin") || false;
 
@@ -127,8 +125,8 @@ export function Sidebar() {
       <SidebarSeparator />
       <SidebarFooter className="space-y-2">
         <span className="flex flex-col items-center">
-          <span className="text-sm text-gray-600">Logged in as</span>
-          <span className="text-sm text-gray-600">
+          <span className="text-gray-600 text-sm">Logged in as</span>
+          <span className="text-gray-600 text-sm">
             {loggedInUser?.email} {isAdmin && "(Admin)"}
           </span>
         </span>
