@@ -7,6 +7,16 @@ import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 import { use } from "react";
 import { PageHeader } from "@/components/page-header";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Coustard } from "next/font/google";
+import { TournamentDetailsCard } from "@/components/tournaments/tournament-details";
 
 type Props = {
   params: Promise<{ id: Id<"tournaments"> }>;
@@ -26,35 +36,7 @@ export default function TournamentDetailsPage({ params }: Props) {
         </Link>
       </PageHeader>
 
-      <div className="mb-6 flex flex-col gap-1 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="font-semibold text-gray-800 text-xl">
-          {tournament?.name}
-        </h2>
-        <div>
-          <p className="text-gray-600 leading-relaxed">
-            {tournament?.description || "No description available."}
-          </p>
-        </div>
-        <div className="grid w-fit grid-cols-1 gap-4 sm:grid-cols-3">
-          <p className="text-gray-700">
-            <strong>Start Date:</strong> {tournament?.startDate}
-          </p>
-          <p className="text-gray-700">
-            <strong>End Date:</strong> {tournament?.endDate}
-          </p>
-          <p className="text-gray-700">
-            <strong>Participants:</strong>{" "}
-            {tournament?.users?.length
-              ? tournament?.users?.join(", ")
-              : "No users assigned"}
-          </p>
-        </div>
-
-        <div className="mt-6 flex gap-3">
-          <Button>Edit Tournament</Button>
-          <Button variant="secondary">Manage Teams</Button>
-        </div>
-      </div>
+      <TournamentDetailsCard tournament={tournament} />
 
       <div className="mb-6 flex items-center justify-between">
         <h2 className="font-semibold text-gray-800 text-lg">Teams</h2>
