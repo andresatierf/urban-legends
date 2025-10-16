@@ -14,6 +14,8 @@ type Props = {
 };
 
 export function TournamentDetailsCard({ tournament, className }: Props) {
+  if (!tournament) return null; // TODO: Add skeleton
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -23,7 +25,7 @@ export function TournamentDetailsCard({ tournament, className }: Props) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid w-fit grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="flex flex-col gap-2">
           <p className="text-gray-700">
             <strong>Start Date:</strong> {tournament?.startDate}
           </p>
@@ -39,7 +41,7 @@ export function TournamentDetailsCard({ tournament, className }: Props) {
         </div>
       </CardContent>
       <CardFooter>
-        <div className="flex gap-3">
+        <div className="flex xs:flex-row flex-col gap-3">
           <Button>Edit Tournament</Button>
           <Button variant="secondary">Manage Teams</Button>
         </div>

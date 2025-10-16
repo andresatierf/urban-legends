@@ -37,7 +37,7 @@ export const list = query({
     const tournaments = await ctx.db.query("tournaments").collect();
 
     const nowIso = new Date().toISOString();
-    tournaments.sort((a, b) => {
+    return tournaments.toSorted((a, b) => {
       const isActive = (x: typeof a) =>
         x.startDate <= nowIso && x.endDate >= nowIso;
       const isFuture = (x: typeof a) => x.startDate > nowIso;
@@ -60,8 +60,6 @@ export const list = query({
 
       return 0;
     });
-
-    return tournaments;
   },
 });
 
@@ -153,6 +151,6 @@ export const getLeaderboard = query({
       });
     }
 
-    return leaderboard.sort((a, b) => b.completedDays - a.completedDays);
+    return leaderboard.toSorted((a, b) => b.completedDays - a.completedDays);
   },
 });

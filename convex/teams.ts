@@ -20,6 +20,26 @@ async function requireAdmin(ctx: any) {
   return userId;
 }
 
+export const getById = query({
+  args: { id: v.id("teams") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+
+    const team = await ctx.db.get(args.id);
+    if (!team) {
+      return null;
+    }
+
+    return {
+      ...team,
+      // TODO: add members, tournament and score
+    };
+  },
+});
+
 export const listByTournament = query({
   args: { tournamentId: v.id("tournaments") },
   handler: async (ctx, args) => {
@@ -236,14 +256,27 @@ export const listByUser = query({
       return acc;
     }, new Map());
 
-    return teams.map((t) => ({
-      ...t,
-      tournament: tournamentMap.get(t.tournamentId),
-      members: memberMapByTeamId[t._id].map((m) => ({
-        ...m,
-        email: userMap.get(m.userId)?.email,
-      })),
-      role: membershipMapByTeamId.get(t._id)?.role,
-    }));
+    return (
+      teams
+        .map((t) => ({
+          ...t,
+          tournament: tournamentMap.get(t.tournamentId),
+          members: memberMapByTeamId[t._id].map((m) => ({
+            ...m,
+            email: userMap.get(m.userId)?.email,
+          })),
+          role: membershipMapByTeamId.get(t._id)?.role,
+        }))
+        // FIX: remove, for testing purposes only
+        .concat({
+          ...teams[0],
+          tournament: tournamentMap.get(teams[0].tournamentId),
+          members: memberMapByTeamId[teams[0]._id].map((m) => ({
+            ...m,
+            email: userMap.get(m.userId)?.email,
+          })),
+          role: membershipMapByTeamId.get(teams[0]._id)?.role,
+        })
+    );
   },
 });

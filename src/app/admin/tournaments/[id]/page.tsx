@@ -1,22 +1,14 @@
 "use client";
 
+import { PageHeader } from "@/components/page-header";
+import { TournamentDetailsCard } from "@/components/tournaments/tournament-details";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "convex/react";
 import Link from "next/link";
+import { use } from "react";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
-import { use } from "react";
-import { PageHeader } from "@/components/page-header";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Coustard } from "next/font/google";
-import { TournamentDetailsCard } from "@/components/tournaments/tournament-details";
+import { SectionHeader } from "@/components/section-header";
 
 type Props = {
   params: Promise<{ id: Id<"tournaments"> }>;
@@ -29,7 +21,7 @@ export default function TournamentDetailsPage({ params }: Props) {
   });
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <PageHeader title="Tournament Details">
         <Link href="/admin/tournaments">
           <Button variant="outline">← Back</Button>
@@ -38,12 +30,11 @@ export default function TournamentDetailsPage({ params }: Props) {
 
       <TournamentDetailsCard tournament={tournament} />
 
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="font-semibold text-gray-800 text-lg">Teams</h2>
+      <SectionHeader text="Teams">
         <Button variant="outline" size="sm">
           + Add Team
         </Button>
-      </div>
+      </SectionHeader>
 
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
         <table className="w-full border-collapse text-left">
@@ -79,6 +70,6 @@ export default function TournamentDetailsPage({ params }: Props) {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 }

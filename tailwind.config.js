@@ -35,6 +35,9 @@ module.exports = {
         "form-field": "16px",
         section: "32px",
       },
+      screens: {
+        xs: "512px",
+      },
     },
   },
   variants: {

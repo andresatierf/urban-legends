@@ -31,7 +31,7 @@ function UserOverview({
 }: {
   setCurrentPage: (page: string) => void;
 }) {
-  const userTeams = useQuery(api.teams.getUserTeams) || [];
+  const userTeams = useQuery(api.teams.listByUser) || [];
   const tournaments = useQuery(api.tournaments.list) || [];
 
   const activeTeams = userTeams.filter((team) => team.tournament?.isActive);
