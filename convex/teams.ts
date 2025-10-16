@@ -1,19 +1,25 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import type { GenericMutationCtx } from "convex/server";
+import type { DataModel } from "./_generated/dataModel";
 
-async function requireAdmin(ctx: any) {
+async function requireAdmin(ctx: GenericMutationCtx<DataModel>) {
   const userId = await getAuthUserId(ctx);
   if (!userId) {
     throw new Error("Not authenticated");
   }
 
-  const userRole = await ctx.db
+  const userRoles = await ctx.db
     .query("userRoles")
-    .withIndex("by_user", (q: any) => q.eq("userId", userId))
-    .first();
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .collect();
 
-  if (userRole?.role !== "admin") {
+  const roles = await Promise.all(
+    userRoles.map(({ roleId }) => ctx.db.get(roleId)),
+  );
+
+  if (!roles.map((r) => r?.name).includes("admin")) {
     throw new Error("Admin access required");
   }
 
@@ -87,15 +93,30 @@ export const create = mutation({
   args: {
     name: v.string(),
     tournamentId: v.id("tournaments"),
+    members: v.optional(v.array(v.id("users"))),
   },
   handler: async (ctx, args) => {
     const userId = await requireAdmin(ctx);
 
-    return await ctx.db.insert("teams", {
+    const existingTeam = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament_and_name", (q) =>
+        q.eq("tournamentId", args.tournamentId).eq("name", args.name),
+      )
+      .first();
+    if (existingTeam) {
+      throw new Error("Team name already exists");
+    }
+
+    const team = await ctx.db.insert("teams", {
       name: args.name,
       tournamentId: args.tournamentId,
       createdBy: userId,
     });
+
+    // TODO: add members if provided
+
+    return team;
   },
 });
 
@@ -256,27 +277,14 @@ export const listByUser = query({
       return acc;
     }, new Map());
 
-    return (
-      teams
-        .map((t) => ({
-          ...t,
-          tournament: tournamentMap.get(t.tournamentId),
-          members: memberMapByTeamId[t._id].map((m) => ({
-            ...m,
-            email: userMap.get(m.userId)?.email,
-          })),
-          role: membershipMapByTeamId.get(t._id)?.role,
-        }))
-        // FIX: remove, for testing purposes only
-        .concat({
-          ...teams[0],
-          tournament: tournamentMap.get(teams[0].tournamentId),
-          members: memberMapByTeamId[teams[0]._id].map((m) => ({
-            ...m,
-            email: userMap.get(m.userId)?.email,
-          })),
-          role: membershipMapByTeamId.get(teams[0]._id)?.role,
-        })
-    );
+    return teams.map((t) => ({
+      ...t,
+      tournament: tournamentMap.get(t.tournamentId),
+      members: memberMapByTeamId[t._id].map((m) => ({
+        ...m,
+        email: userMap.get(m.userId)?.email,
+      })),
+      role: membershipMapByTeamId.get(t._id)?.role,
+    }));
   },
 });

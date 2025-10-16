@@ -107,14 +107,26 @@ export const update = mutation({
 });
 
 export const getById = query({
-  args: { id: v.id("tournaments") },
+  args: {
+    id: v.id("tournaments"),
+    withTeams: v.optional(v.boolean()),
+  },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       return null;
     }
 
-    return await ctx.db.get(args.id);
+    const tournament = await ctx.db.get(args.id);
+
+    if (!args.withTeams) return tournament;
+
+    const teams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.id))
+      .collect();
+
+    return { ...tournament, teams };
   },
 });
 

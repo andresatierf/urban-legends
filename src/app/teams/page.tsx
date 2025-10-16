@@ -1,25 +1,25 @@
 "use client";
 
-import { PageHeader } from "@/components/page-header";
+import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useQuery } from "convex/react";
+import { capitalize } from "lodash";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { api } from "../../../convex/_generated/api";
-import { ChevronRight } from "lucide-react";
 
 export default function UserTeamsPage() {
   const teams = useQuery(api.teams.listByUser);
 
-  console.log({ teams });
   return (
-    <div className="flex flex-col gap-4">
-      <PageHeader title="My Teams">
+    <>
+      <SectionHeader as="h1" text="My Teams">
         <Link href="/tournaments">
           <Button variant="outline">🏆 View Tournaments</Button>
         </Link>
-      </PageHeader>
+      </SectionHeader>
 
       <Card>
         <CardContent>
@@ -46,7 +46,11 @@ export default function UserTeamsPage() {
                       </span>
                     </div>
                     <p className="text-gray-500 text-sm">
-                      {team.tournament?.name} • {team.role}
+                      {[
+                        team.tournament?.name,
+                        capitalize(team.role || "member"),
+                        `${team.members.length || 0} members`,
+                      ].join(" • ")}
                     </p>
                   </div>
                   <span className="font-medium text-blue-600 text-sm">
@@ -74,6 +78,6 @@ export default function UserTeamsPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }

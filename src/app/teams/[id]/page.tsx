@@ -1,6 +1,5 @@
 "use client";
 
-import { PageHeader } from "@/components/page-header";
 import { SectionHeader } from "@/components/section-header";
 import { TeamDetailsCard } from "@/components/teams/team-details-card";
 import { Button } from "@/components/ui/button";
@@ -30,8 +29,8 @@ export default function TeamDetailsPage({ params }: Props) {
   });
 
   return (
-    <div className="flex flex-col gap-4">
-      <PageHeader title="Team Details">
+    <>
+      <SectionHeader as="h1" text="Team Details">
         <div className="flex gap-3">
           <Link href={`/tournaments/${team?.tournamentId}`}>
             <Button variant="secondary">🏆 View Tournament</Button>
@@ -40,7 +39,7 @@ export default function TeamDetailsPage({ params }: Props) {
             <Button variant="outline">← Back to My Teams</Button>
           </Link>
         </div>
-      </PageHeader>
+      </SectionHeader>
 
       <TeamDetailsCard team={team} />
 
@@ -88,6 +87,6 @@ export default function TeamDetailsPage({ params }: Props) {
         <Button>Edit Team</Button>
         <Button variant="destructive">Delete Team</Button>
       </div>
-    </div>
+    </>
   );
 }

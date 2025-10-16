@@ -28,7 +28,7 @@ export function TeamDetailsCard({ team, className }: Props) {
             <p className="text-gray-600 text-sm">
               <strong>Score:</strong>{" "}
               <span className="font-semibold text-blue-600">
-                {team?.score || "-"} pts
+                {team?.score || 0} pts
               </span>
             </p>
           </div>

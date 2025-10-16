@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -17,7 +18,7 @@ export function TournamentDetailsCard({ tournament, className }: Props) {
   if (!tournament) return null; // TODO: Add skeleton
 
   return (
-    <Card className={className}>
+    <Card className={cn("min-w-fit", className)}>
       <CardHeader>
         <CardTitle className="text-xl">{tournament?.name}</CardTitle>
         <CardDescription>
@@ -40,8 +41,8 @@ export function TournamentDetailsCard({ tournament, className }: Props) {
           </p>
         </div>
       </CardContent>
-      <CardFooter>
-        <div className="flex xs:flex-row flex-col gap-3">
+      <CardFooter className="justify-center align-center sm:justify-end">
+        <div className="flex flex-wrap justify-center gap-3">
           <Button>Edit Tournament</Button>
           <Button variant="secondary">Manage Teams</Button>
         </div>

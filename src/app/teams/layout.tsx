@@ -13,7 +13,7 @@ export default function Home({
       <Sidebar />
       <div className="flex min-h-screen w-full flex-col bg-gray-50">
         <Navigation />
-        <main className="m-4 flex-1">{children}</main>
+        <main className="m-4 flex flex-1 flex-col gap-4">{children}</main>
         <Toaster />
       </div>
     </SidebarProvider>

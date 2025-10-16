@@ -16,7 +16,9 @@ const applicationTables = {
     name: v.string(),
     tournamentId: v.id("tournaments"),
     createdBy: v.id("users"),
-  }).index("by_tournament", ["tournamentId"]),
+  })
+    .index("by_tournament", ["tournamentId"])
+    .index("by_tournament_and_name", ["tournamentId", "name"]),
 
   teamMembers: defineTable({
     teamId: v.id("teams"),
