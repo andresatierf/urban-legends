@@ -32,7 +32,7 @@ export default function UserTeamsPage() {
                     "border-t pt-3": index > 0,
                   })}
                 >
-                  <div className="flex-grow">
+                  <div className="grow">
                     <div className="flex gap-2">
                       <h4 className="font-medium">{team.name}</h4>
                       <span
