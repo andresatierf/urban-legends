@@ -47,7 +47,6 @@ export function CreateTournamentTeamForm({ tournamentId }: Props) {
         e.preventDefault();
         form.handleSubmit();
       }}
-      className="max-w-md space-y-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
     >
       <FieldGroup>
         <form.Field

@@ -29,6 +29,8 @@ export default function TournamentDetailsPage({ params }: Props) {
     withTeams: true,
   });
 
+  if (!tournament) return null; // TODO: Add skeleton
+
   return (
     <>
       <SectionHeader as="h1" text="Tournament Details">
@@ -40,7 +42,7 @@ export default function TournamentDetailsPage({ params }: Props) {
       <TournamentDetailsCard tournament={tournament} />
 
       <SectionHeader text="Teams">
-        <Link href={`/admin/tournaments/${tournament?._id}/teams/new`}>
+        <Link href={`/admin/tournaments/${tournament._id}/teams/new`}>
           <Button variant="outline" size="sm">
             + Add Team
           </Button>
@@ -56,15 +58,17 @@ export default function TournamentDetailsPage({ params }: Props) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tournament?.teams?.length > 0 ? (
-              tournament?.teams?.map((team) => (
+            {"teams" in tournament && tournament.teams.length > 0 ? (
+              tournament.teams.map((team) => (
                 <TableRow
                   key={team._id}
                   className="border-t transition hover:bg-gray-50"
                 >
-                  <TableCell className="p-3 font-medium text-gray-800">
-                    {team.name}
-                  </TableCell>
+                  <Link href={`/admin/teams/${team._id}`}>
+                    <TableCell className="p-3 font-medium text-gray-800">
+                      {team.name}
+                    </TableCell>
+                  </Link>
                   <TableCell className="p-3 text-right font-semibold text-blue-600">
                     {team.points || 0} pts
                   </TableCell>

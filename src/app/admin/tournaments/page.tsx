@@ -85,11 +85,11 @@ export default function TournamentsPage() {
                   "bg-red-50": t.endDate < isoNow,
                 })}
               >
-                <TableCell className="p-3 font-medium text-gray-800">
-                  <Link href={`/admin/tournaments/${t._id}` || ""}>
+                <Link href={`/admin/tournaments/${t._id}` || ""}>
+                  <TableCell className="p-3 font-medium text-gray-800">
                     {t.name}
-                  </Link>
-                </TableCell>
+                  </TableCell>
+                </Link>
                 <TableCell className="p-3 text-gray-600">
                   {t.startDate}
                 </TableCell>

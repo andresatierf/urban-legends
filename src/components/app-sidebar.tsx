@@ -77,7 +77,8 @@ const sidebar: SidebarItem[] = [
     items: [
       { title: "Dashboard", url: "/admin", icon: LayoutGrid },
       { title: "Approvals", url: "/admin/approvals", icon: CheckSquare },
-      { title: "Manage Tournaments", url: "/admin/tournaments", icon: Trophy },
+      { title: "Tournaments", url: "/admin/tournaments", icon: Trophy },
+      { title: "Teams", url: "/admin/teams", icon: Users },
       {
         title: "Activity Types",
         url: "/admin/activity-types",
