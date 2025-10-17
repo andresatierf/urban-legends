@@ -39,9 +39,34 @@ export const getById = query({
       return null;
     }
 
+    const tournament = await ctx.db.get(team.tournamentId);
+
+    const teamMembers = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", team._id))
+      .collect();
+    const userIds = teamMembers.map((member) => member.userId);
+
+    const users = await ctx.db
+      .query("users")
+      .filter((q) =>
+        q.or(...userIds.map((id) => q.eq(q.field("_id"), id as string))),
+      )
+      .collect();
+    const userMap = users.reduce((acc, user) => {
+      if (!acc.get(user._id)) acc.set(user._id, user);
+      return acc;
+    }, new Map());
+
     return {
       ...team,
-      // TODO: add members, tournament and score
+      tournament,
+      members: teamMembers.map((member) => ({
+        ...member,
+        user: userMap.get(member.userId),
+      })),
+      // TODO: add score
+      score: null,
     };
   },
 });
