@@ -1,7 +1,7 @@
 "use client";
 
 import { SectionHeader } from "@/components/section-header";
-import { TournamentDetailsCard } from "@/components/tournaments/tournament-details";
+import { TournamentDetailsCard } from "@/components/tournaments/tournament-details-card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "convex/react";
 import Link from "next/link";

@@ -2,60 +2,54 @@
 
 import { SectionHeader } from "@/components/section-header";
 import { TableSection } from "@/components/table-section";
+import { TeamDetailsCard } from "@/components/teams/team-details-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { use } from "react";
-import { api } from "../../../../../convex/_generated/api";
-import type { Id } from "../../../../../convex/_generated/dataModel";
-import { TeamDetailsCard } from "@/components/teams/team-details-card";
+import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 type Props = {
   params: Promise<{ teamId: Id<"teams"> }>;
 };
 
 export default function TeamDetailsPage({ params }: Props) {
-  const { teamId } = use(params);
-  const team = useQuery(api.teams.getById, { id: teamId });
+  const resolvedParams = use(params);
+  const team = useQuery(api.teams.getById, {
+    id: resolvedParams.teamId,
+  });
 
   if (!team) return null; // TODO: Add skeleton
 
   return (
     <>
       <SectionHeader as="h1" text="Team Details">
-        <div>
-          <Link href={`/admin/tournaments/${team.tournamentId}`}>
-            <Button variant="secondary">🏆 Go to Tournament</Button>
+        <div className="flex gap-3">
+          <Link href={`/tournaments/${team?.tournamentId}`}>
+            <Button variant="secondary">🏆 View Tournament</Button>
           </Link>
-          <Link href="/admin/teams">
-            <Button variant="outline">← Back to Teams</Button>
+          <Link href="/teams">
+            <Button variant="outline">← Back to My Teams</Button>
           </Link>
         </div>
       </SectionHeader>
 
-      <TeamDetailsCard team={team} enableActions />
+      <TeamDetailsCard team={team} />
 
       <TableSection
         title="Members"
-        actions={
-          <Link href={`/admin/teams/${team._id}/members/new`}>
-            <Button variant="outline" size="sm">
-              + Add Member
-            </Button>
-          </Link>
-        }
         columns={[
           {
             key: "user.email",
-            title: "Name",
+            title: "Member",
             rowClassName: "text-gray-800",
           },
           {
             key: "role",
             title: "Role",
             className: "text-right",
-            rowClassName: "text-gray-600",
+            rowClassName: "text-gray-500",
           },
         ]}
         rows={team.members}

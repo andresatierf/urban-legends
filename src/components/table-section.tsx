@@ -13,7 +13,13 @@ import {
 type Props<T> = {
   title: string;
   actions?: React.ReactNode;
-  columns: { key: keyof T; name: string; align?: string; color?: string }[];
+  columns: {
+    key: keyof T;
+    title: string;
+    className?: string;
+    headerClassName?: string;
+    rowClassName?: string;
+  }[];
   rows: T[];
   emptyMessage?: string;
 };
@@ -35,17 +41,16 @@ export function TableSection<T extends { _id: string }>({
             <TableRow>
               {columns.map((column) => {
                 const key = column.key as string;
-                const name = column.name;
-                const align = column?.align || "";
+                const name = column.title;
 
                 return (
                   <TableHead
                     key={key}
-                    className={cn("p-3", {
-                      "text-right": align === "right",
-                      "text-center": align === "center",
-                      "text-left": align === "left",
-                    })}
+                    className={cn(
+                      "p-3",
+                      column.className,
+                      column.headerClassName,
+                    )}
                   >
                     {name}
                   </TableHead>
@@ -62,20 +67,18 @@ export function TableSection<T extends { _id: string }>({
                 >
                   {columns.map((column) => {
                     const key = column.key as string;
-                    const align = column?.align || "";
                     const value = key.includes(".")
                       ? key.split(".").reduce((acc, k) => acc?.[k], row)
                       : row[column.key];
-                    const color = column.color || "";
 
                     return (
                       <TableCell
                         key={key}
-                        className={cn(`p-3 ${color}`, {
-                          "text-right": align === "right",
-                          "text-center": align === "center",
-                          "text-left": align === "left",
-                        })}
+                        className={cn(
+                          "p-3",
+                          column.className,
+                          column.rowClassName,
+                        )}
                       >
                         {value as string}
                       </TableCell>
