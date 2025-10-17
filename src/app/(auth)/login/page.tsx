@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInForm } from "@/components/sign-in-form";
+import { SignInForm } from "@/components/auth/sign-in-form";
 import { Unauthenticated, useConvexAuth } from "convex/react";
 import { redirect } from "next/navigation";
 import { useEffect } from "react";

@@ -18,7 +18,7 @@ export function SignOutButton({ className }: ButtonProps) {
       className={className}
       onClick={() => {
         void signOut();
-        redirect("/auth/login");
+        redirect("/login");
       }}
     >
       Sign out

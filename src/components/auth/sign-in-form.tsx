@@ -4,7 +4,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { redirect } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Separator } from "./ui/separator";
+import { Separator } from "../ui/separator";
 
 export function SignInForm() {
   const { signIn } = useAuthActions();

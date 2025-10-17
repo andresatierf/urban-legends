@@ -104,7 +104,7 @@ export function Sidebar() {
   const { isAuthenticated } = useConvexAuth();
 
   // useEffect(() => {
-  //   if (!isAuthenticated) redirect("/auth/login");
+  //   if (!isAuthenticated) redirect("/login");
   // }, [isAuthenticated]);
 
   const isAdmin = loggedInUser?.roles.includes("admin") || false;
