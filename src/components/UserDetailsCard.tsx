@@ -12,7 +12,7 @@ type UserDetailsCardProps = {
 export const UserDetailsCard: React.FC<UserDetailsCardProps> = ({
   name,
   email,
-  teams,
+  teams = [],
 }) => {
   return (
     <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-5 shadow-md">

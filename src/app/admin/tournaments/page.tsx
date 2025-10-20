@@ -1,7 +1,9 @@
 "use client";
 
+import { SectionHeader } from "@/components/section-header";
 import { StatCard } from "@/components/tournaments/stat-card";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -38,12 +40,11 @@ export default function TournamentsPage() {
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-semibold text-2xl text-gray-800">Tournaments</h1>
+      <SectionHeader as="h1" text="Tournaments">
         <Link href="/admin/tournaments/new">
           <Button>Add New Tournament</Button>
         </Link>
-      </div>
+      </SectionHeader>
 
       <div className="mb-4 grid grid-cols-1 gap-6 sm:grid-cols-3">
         <StatCard
@@ -63,10 +64,12 @@ export default function TournamentsPage() {
         />
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+      <Card className="overflow-hidden">
         <Table className="w-full border-collapse text-left">
-          {tournaments && tournaments?.length === 0 && (
-            <TableCaption>{tournaments?.length} tournaments</TableCaption>
+          {tournaments && tournaments?.length !== 0 && (
+            <TableCaption className="t ext-end my-0 bg-gray-50 py-2 pr-4 text-gray-600">
+              {tournaments?.length} tournaments
+            </TableCaption>
           )}
           <TableHeader className="bg-gray-50 text-gray-600 text-sm uppercase">
             <TableRow>
@@ -108,7 +111,7 @@ export default function TournamentsPage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
     </>
   );
 }
