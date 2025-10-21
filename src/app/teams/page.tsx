@@ -54,7 +54,7 @@ export default function UserTeamsPage() {
                     </p>
                   </div>
                   <span className="font-medium text-blue-600 text-sm">
-                    {team.score || 0} pts
+                    - pts
                   </span>
                   <div className="ml-2 h-full border-l">
                     <Link href={`/teams/${team._id}`}>

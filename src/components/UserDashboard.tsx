@@ -3,7 +3,7 @@ import { api } from "../../convex/_generated/api";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Id } from "../../convex/_generated/dataModel";
-import { UserDetailsCard } from "./UserDetailsCard";
+import { UserDetailsCard } from "./users/user-details-card";
 import { UserStatsCard } from "./UserStatsCard";
 import { TournamentTeams } from "./TournamentTeams";
 
@@ -133,7 +133,7 @@ function UserOverview({
 }
 
 function TrackProgressPage() {
-  const userTeams = useQuery(api.teams.getUserTeams) || [];
+  const userTeams = useQuery(api.teams.listByUser) || [];
   const [selectedTeam, setSelectedTeam] = useState<Id<"teams"> | null>(null);
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0],
@@ -384,8 +384,8 @@ function TrackProgressPage() {
 }
 
 function MyTeamsPage() {
-  const userTeams = useQuery(api.teams.getUserTeams) || [];
-  const tournament = useQuery(api.tournament.list) || [];
+  const userTeams = useQuery(api.teams.listByUser) || [];
+  const tournaments = useQuery(api.tournaments.list) || [];
 
   return (
     <div className="space-y-6">

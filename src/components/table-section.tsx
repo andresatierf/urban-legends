@@ -16,6 +16,8 @@ type Props<T> = {
   columns: {
     key: keyof T;
     title: string;
+    defaultValue?: any;
+    format?: (value: any) => string;
     className?: string;
     headerClassName?: string;
     rowClassName?: string;
@@ -80,7 +82,11 @@ export function TableSection<T extends { _id: string }>({
                           column.rowClassName,
                         )}
                       >
-                        {value as string}
+                        {column.format
+                          ? column.format(
+                              (value as string) || column.defaultValue,
+                            )
+                          : (value as string) || column.defaultValue}
                       </TableCell>
                     );
                   })}

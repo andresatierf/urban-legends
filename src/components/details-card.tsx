@@ -55,7 +55,7 @@ export function DetailsCard({
           ))}
         </div>
       </CardContent>
-      {actions && (
+      {actions.length > 0 && (
         <CardFooter className="justify-center align-center sm:justify-end">
           <div className="flex flex-wrap justify-center gap-3">
             {actions.map(({ text, linkProps, buttonProps }) =>

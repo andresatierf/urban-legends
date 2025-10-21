@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
+import { TableSection } from "@/components/table-section";
 
 type Props = {
   params: Promise<{ tournamentId: Id<"tournaments"> }>;
@@ -41,52 +42,33 @@ export default function TournamentDetailsPage({ params }: Props) {
 
       <TournamentDetailsCard tournament={tournament} />
 
-      <SectionHeader text="Teams">
-        <Link href={`/admin/tournaments/${tournament._id}/teams/new`}>
-          <Button variant="outline" size="sm">
-            + Add Team
-          </Button>
-        </Link>
-      </SectionHeader>
-
-      <Card className="overflow-clip">
-        <Table className="w-full border-collapse text-left">
-          <TableHeader className="bg-gray-50 text-gray-600 text-sm uppercase">
-            <TableRow>
-              <TableHead className="p-3">Team</TableHead>
-              <TableHead className="p-3 text-right">Points</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {"teams" in tournament && tournament.teams.length > 0 ? (
-              tournament.teams.map((team) => (
-                <TableRow
-                  key={team._id}
-                  className="border-t transition hover:bg-gray-50"
-                >
-                  <Link href={`/admin/teams/${team._id}`}>
-                    <TableCell className="p-3 font-medium text-gray-800">
-                      {team.name}
-                    </TableCell>
-                  </Link>
-                  <TableCell className="p-3 text-right font-semibold text-blue-600">
-                    {team.points || 0} pts
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={2}
-                  className="p-4 text-center text-gray-500 italic"
-                >
-                  No teams added yet.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+      <TableSection
+        title="Teams"
+        actions={
+          <Link href={`/admin/tournaments/${tournament._id}/teams/new`}>
+            <Button variant="outline" size="sm">
+              + Add Team
+            </Button>
+          </Link>
+        }
+        columns={[
+          {
+            key: "name",
+            title: "Team",
+            rowClassName: "font-medium text-gray-800",
+          },
+          {
+            key: "points",
+            title: "Points",
+            defaultValue: 0,
+            format: (v) => `${v} pts`,
+            className: "text-right",
+            rowClassName: "font-semibold text-blue-600",
+          },
+        ]}
+        rows={"teams" in tournament ? tournament.teams : []}
+        emptyMessage="No teams added yet."
+      />
     </>
   );
 }
