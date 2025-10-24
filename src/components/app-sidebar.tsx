@@ -32,39 +32,77 @@ import {
 } from "@/components/ui/sidebar";
 import { api } from "../../convex/_generated/api";
 import { Button } from "./ui/button";
+import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 
 type SidebarItem = {
   title: string;
   roles?: string[];
 } & ({ items: SidebarItem[] } | { href: string; icon: LucideIcon });
 
-const sidebar: SidebarItem[] = [
-  {
-    title: "Main",
-    items: [
-      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { title: "My Tournaments", href: "/tournaments", icon: Trophy },
-      { title: "My Teams", href: "/teams", icon: Users },
-      { title: "Submissions", href: "/submissions", icon: ClipboardList },
-      { title: "Submit Activity", href: "/submissions/new", icon: PlusCircle },
+function useSidebarItems() {
+  const tUserItems = useTranslations("sidebar.items.user");
+  const tAdminItems = useTranslations("sidebar.items.admin");
+
+  const sidebar: SidebarItem[] = useMemo(
+    () => [
+      {
+        title: tUserItems("group"),
+        items: [
+          {
+            title: tUserItems("dashboard"),
+            href: "/dashboard",
+            icon: LayoutDashboard,
+          },
+          {
+            title: tUserItems("tournaments"),
+            href: "/tournaments",
+            icon: Trophy,
+          },
+          { title: tUserItems("teams"), href: "/teams", icon: Users },
+          {
+            title: tUserItems("submissions"),
+            href: "/submissions",
+            icon: ClipboardList,
+          },
+          {
+            title: tUserItems("newSubmission"),
+            href: "/submissions/new",
+            icon: PlusCircle,
+          },
+        ],
+      },
+      {
+        title: tAdminItems("group"),
+        roles: ["admin"],
+        items: [
+          { title: tAdminItems("dashboard"), href: "/admin", icon: LayoutGrid },
+          {
+            title: tAdminItems("submissions"),
+            href: "/admin/submissions",
+            icon: CheckSquare,
+          },
+          {
+            title: tAdminItems("tournaments"),
+            href: "/admin/tournaments",
+            icon: Trophy,
+          },
+          { title: tAdminItems("teams"), href: "/admin/teams", icon: Users },
+          { title: tAdminItems("users"), icon: UserCog, href: "/admin/users" },
+        ],
+      },
     ],
-  },
-  {
-    title: "Admin",
-    roles: ["admin"],
-    items: [
-      { title: "Dashboard", href: "/admin", icon: LayoutGrid },
-      { title: "Submissions", href: "/admin/submissions", icon: CheckSquare },
-      { title: "Tournaments", href: "/admin/tournaments", icon: Trophy },
-      { title: "Teams", href: "/admin/teams", icon: Users },
-      { title: "Users", icon: UserCog, href: "/admin/users" },
-    ],
-  },
-];
+    [tUserItems, tAdminItems],
+  );
+
+  return sidebar;
+}
 
 export function Sidebar() {
+  const t = useTranslations("sidebar");
   const { signOut } = useClerk();
 
+  const sidebarItems = useSidebarItems();
   const user = useQuery(api.users.current);
   const roles = useQuery(
     api.roles.getByUserId,
@@ -75,13 +113,15 @@ export function Sidebar() {
     <SidebarBase collapsible="icon">
       <SidebarHeader />
       <SidebarContent>
-        {sidebar.map((item) => renderItem(item, roles || []))}
+        {sidebarItems.map((item) => renderItem(item, roles || []))}
       </SidebarContent>
       <SidebarSeparator />
       <SidebarFooter className="space-y-2">
         <span className="flex flex-col items-center">
           <p className="badge">
-            <span>Logged in{user?.name ? ` as ${user.name}` : ""}</span>
+            {user?.name
+              ? t("user.loggedInAs", { name: user.name })
+              : t("user.loggedIn")}
           </p>
         </span>
         <Button onClick={() => signOut()}>Sign Out</Button>

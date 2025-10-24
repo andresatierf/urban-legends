@@ -1,0 +1,26 @@
+{
+  "sidebar": {
+    "items": {
+      "user": {
+        "group": "Main",
+        "dashboard": "Dashboard",
+        "tournaments": "Tournaments",
+        "teams": "Teams",
+        "submissions": "Submissions",
+        "newSubmission": "Submit Activity"
+      },
+      "admin": {
+        "group": "Admin",
+        "dashboard": "Dashboard",
+        "submissions": "Submissions",
+        "tournaments": "Tournaments",
+        "teams": "Teams",
+        "users": "Users"
+      }
+    },
+    "user": {
+      "loggedIn": "Logged in",
+      "loggedInAs": "Logged in as {name}"
+    }
+  }
+}
