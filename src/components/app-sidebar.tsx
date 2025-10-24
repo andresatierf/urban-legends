@@ -39,34 +39,26 @@ import { SignOutButton } from "./sign-out-button";
 type SidebarItem = {
   title: string;
   roles?: string[];
-} & (
-  | {
-      items: SidebarItem[];
-    }
-  | {
-      url: string;
-      icon: LucideIcon;
-    }
-);
+} & ({ items: SidebarItem[] } | { href: string; icon: LucideIcon });
 
 const sidebar: SidebarItem[] = [
   {
     title: "Main",
     items: [
-      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-      { title: "My Tournaments", url: "/tournaments", icon: Trophy },
-      { title: "My Teams", url: "/teams", icon: Users },
-      { title: "Submissions", url: "/submissions", icon: ClipboardList },
-      { title: "Submit Activity", url: "/submissions/new", icon: PlusCircle },
+      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { title: "My Tournaments", href: "/tournaments", icon: Trophy },
+      { title: "My Teams", href: "/teams", icon: Users },
+      { title: "Submissions", href: "/submissions", icon: ClipboardList },
+      { title: "Submit Activity", href: "/submissions/new", icon: PlusCircle },
     ],
   },
   {
     title: "Insights",
-    roles: ["dev"],
+    roles: ["none"],
     items: [
       {
         title: "Leaderboards",
-        url: "/tournaments/:tournamentSlug/leaderboard",
+        href: "/tournaments/:tournamentSlug/leaderboard",
         icon: BarChart2,
       },
     ],
@@ -75,26 +67,18 @@ const sidebar: SidebarItem[] = [
     title: "Admin",
     roles: ["admin"],
     items: [
-      { title: "Dashboard", url: "/admin", icon: LayoutGrid },
-      { title: "Approvals", url: "/admin/approvals", icon: CheckSquare },
-      { title: "Tournaments", url: "/admin/tournaments", icon: Trophy },
-      { title: "Teams", url: "/admin/teams", icon: Users },
-      {
-        title: "Activity Types",
-        url: "/admin/activity-types",
-        icon: ClipboardCheck,
-      },
-      { title: "Users", icon: UserCog, url: "/admin/users" },
-      { title: "Points Ledger", icon: Coins, url: "/admin/ledger" },
-      { title: "Reports", icon: FileChartLine, url: "/admin/reports" },
-      { title: "Settings", icon: Settings, url: "/admin/settings" },
+      { title: "Dashboard", href: "/admin", icon: LayoutGrid },
+      { title: "Submissions", href: "/admin/submissions", icon: CheckSquare },
+      { title: "Tournaments", href: "/admin/tournaments", icon: Trophy },
+      { title: "Teams", href: "/admin/teams", icon: Users },
+      { title: "Users", icon: UserCog, href: "/admin/users" },
     ],
   },
   {
     title: "Account",
     items: [
-      { title: "Profile", url: "/profile", icon: UserCircle },
-      { title: "Sign Out", url: "#", icon: LogOut },
+      { title: "Profile", href: "/profile", icon: UserCircle },
+      { title: "Sign Out", href: "#", icon: LogOut },
     ],
   },
 ];
@@ -134,26 +118,26 @@ function renderItem(item: SidebarItem, userRoles: string[]) {
     return;
   }
 
-  if (!("items" in item))
+  if ("items" in item)
     return (
-      <SidebarMenuItem key={item.title}>
-        <SidebarMenuButton asChild>
-          <Link href={item.url}>
-            <item.icon />
-            <span>{item.title}</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
+      <SidebarGroup key={item.title}>
+        <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {item.items.map((subItem) => renderItem(subItem, userRoles))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
     );
 
   return (
-    <SidebarGroup key={item.title}>
-      <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {item.items.map((subItem) => renderItem(subItem, userRoles))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+    <SidebarMenuItem key={item.title}>
+      <SidebarMenuButton asChild>
+        <Link href={item.href}>
+          <item.icon />
+          <span>{item.title}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }
