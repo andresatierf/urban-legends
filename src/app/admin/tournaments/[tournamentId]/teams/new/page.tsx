@@ -1,13 +1,13 @@
 "use client";
 
-import { CreateTournamentTeamForm } from "@/components/teams/create-tournament-team-form";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "convex/react";
 import Link from "next/link";
 import { use } from "react";
-import type { Id } from "../../../../../../../convex/_generated/dataModel";
 import { SectionHeader } from "@/components/section-header";
-import { useQuery } from "convex/react";
+import { CreateTournamentTeamForm } from "@/components/teams/create-tournament-team-form";
+import { Button } from "@/components/ui/button";
 import { api } from "../../../../../../../convex/_generated/api";
+import type { Id } from "../../../../../../../convex/_generated/dataModel";
 
 type Props = {
   params: Promise<{ tournamentId: Id<"tournaments"> }>;
@@ -15,19 +15,22 @@ type Props = {
 
 export default function AddTeamPage({ params }: Props) {
   const { tournamentId } = use(params);
-  const tournament = useQuery(api.tournaments.getById, {
-    id: tournamentId,
-  });
+  const tournament = useQuery(
+    api.tournaments.getById,
+    tournamentId ? { tournamentId } : "skip",
+  );
+
+  if (!tournament) return null; // TODO: Add skeleton
 
   return (
     <>
       <SectionHeader
         as="h1"
-        text={`Create Team in ${tournament?.name || "Tournament"}`}
+        title={`Create Team in ${tournament?.name || "Tournament"}`}
       >
-        <Link href={`/admin/tournaments/${tournamentId}`}>
-          <Button variant="outline">← Back</Button>
-        </Link>
+        <Button href={`/admin/tournaments/${tournamentId}`} variant="outline">
+          ← Back
+        </Button>
       </SectionHeader>
 
       <CreateTournamentTeamForm tournamentId={tournamentId} />

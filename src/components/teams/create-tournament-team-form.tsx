@@ -1,18 +1,18 @@
-import { toastFormValues } from "@/lib/form";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { redirect } from "next/navigation";
 import z from "zod";
+import { toastFormValues } from "@/lib/form";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 
-const addTeamSchema = z.object({
+const formSchema = z.object({
   name: z.string().min(1, "Team name is required"),
   description: z.string().optional(),
-  members: z.array(z.string()).optional(),
+  members: z.array(z.string()),
 });
 
 type Props = {
@@ -26,9 +26,9 @@ export function CreateTournamentTeamForm({ tournamentId }: Props) {
     defaultValues: {
       name: "",
       members: [],
-    } as z.input<typeof addTeamSchema>,
+    } as z.input<typeof formSchema>,
     validators: {
-      onChange: addTeamSchema,
+      onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
       toastFormValues({ tournamentId, ...value });

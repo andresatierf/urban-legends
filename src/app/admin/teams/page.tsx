@@ -1,5 +1,7 @@
 "use client";
 
+import { useQuery } from "convex/react";
+import Link from "next/link";
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,8 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useQuery } from "convex/react";
-import Link from "next/link";
 import { api } from "../../../../convex/_generated/api";
 
 export default function TeamsPage() {
@@ -22,13 +22,11 @@ export default function TeamsPage() {
 
   return (
     <>
-      <SectionHeader as="h1" text="Teams">
-        {/* <Link href="/admin"> */}
-        {/*   <Button variant="outline">Add New Team</Button> */}
-        {/* </Link> */}
+      <SectionHeader as="h1" title="Teams">
+        {/* <Button href="/admin" variant="outline">Add New Team</Button> */}
       </SectionHeader>
 
-      <SectionHeader text="All Teams" />
+      <SectionHeader title="All Teams" />
 
       <Card className="overflow-clip">
         <Table className="w-full border-collapse text-left">

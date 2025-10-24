@@ -1,13 +1,12 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { redirect } from "next/navigation";
-import { toast } from "sonner";
 import * as z from "zod";
+import { toastFormValues } from "@/lib/form";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "../ui/button";
-import { Field, FieldGroup, FieldLabel, FieldError } from "../ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
-import { toastFormValues } from "@/lib/form";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name can't be empty"),
@@ -35,6 +34,7 @@ export function CreateUserForm() {
   });
 
   return (
+    // biome-ignore lint/correctness/useUniqueElementIds: <explanation>
     <form
       id="create-user-form"
       onSubmit={(e) => {
@@ -43,9 +43,8 @@ export function CreateUserForm() {
       }}
     >
       <FieldGroup>
-        <form.Field
-          name="name"
-          children={(field) => {
+        <form.Field name="name">
+          {(field) => {
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid;
 
@@ -66,10 +65,9 @@ export function CreateUserForm() {
               </Field>
             );
           }}
-        />
-        <form.Field
-          name="email"
-          children={(field) => {
+        </form.Field>
+        <form.Field name="email">
+          {(field) => {
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid;
 
@@ -90,10 +88,9 @@ export function CreateUserForm() {
               </Field>
             );
           }}
-        />
-        <form.Field
-          name="password"
-          children={(field) => {
+        </form.Field>
+        <form.Field name="password">
+          {(field) => {
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid;
 
@@ -115,7 +112,7 @@ export function CreateUserForm() {
               </Field>
             );
           }}
-        />
+        </form.Field>
       </FieldGroup>
       <Field orientation="horizontal" className="mt-8 flex justify-end">
         <Button type="button" variant="outline" onClick={() => form.reset()}>

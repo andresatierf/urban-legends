@@ -1,21 +1,28 @@
-import { DetailsCard, type DetailsCardAction } from "../details-card";
+import { DetailsCard } from "../details-card";
+import type { ButtonProps } from "../ui/button";
 
 type Props = {
   team: any;
+  tournament: any;
   enableActions?: boolean;
   className?: string;
 };
 
-export function TeamDetailsCard({ team, enableActions, className }: Props) {
+export function TeamDetailsCard({
+  team,
+  tournament,
+  enableActions,
+  className,
+}: Props) {
   if (!team) return null; // TODO: Add skeleton
 
   const details = [
-    { key: "tournament", value: team.tournament.name },
+    { key: "tournament", value: tournament.name },
     { key: "score", value: `${team.score || 0} pts` },
   ];
-  const actions: DetailsCardAction[] = [
-    { text: "Edit" },
-    { text: "Delete", buttonProps: { variant: "destructive" } },
+  const actions: ButtonProps[] = [
+    { children: "Edit" },
+    { children: "Delete", variant: "destructive" },
   ];
 
   return (

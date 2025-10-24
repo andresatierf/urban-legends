@@ -1,16 +1,16 @@
+import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { authTables } from "@convex-dev/auth/server";
 
 const applicationTables = {
   tournaments: defineTable({
     name: v.string(),
     description: v.string(),
-    startDate: v.string(), // ISO date string
-    endDate: v.string(), // ISO date string
-    isActive: v.boolean(),
+    startDate: v.string(),
+    endDate: v.string(),
+    teamMaxSize: v.optional(v.number()),
     createdBy: v.id("users"),
-  }).index("by_active", ["isActive"]),
+  }).index("by_name", ["name"]),
 
   teams: defineTable({
     name: v.string(),
@@ -47,12 +47,21 @@ const applicationTables = {
     teamId: v.id("teams"),
     tournamentId: v.id("tournaments"),
     date: v.string(), // ISO date string (YYYY-MM-DD)
-    completed: v.boolean(),
+    description: v.optional(v.string()),
     teammates: v.array(v.id("users")), // IDs of teammates who completed together
+    state: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+      v.literal("deleted"),
+    ),
   })
+    .index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "date"])
     .index("by_team_and_date", ["teamId", "date"])
-    .index("by_tournament_and_date", ["tournamentId", "date"]),
+    .index("by_tournament_and_date", ["tournamentId", "date"])
+    .index("by_state", ["state"])
+    .index("by_user_and_state", ["userId", "state"]),
 };
 
 export default defineSchema({

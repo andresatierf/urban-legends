@@ -1,23 +1,23 @@
-type Team = {
-  name: string;
-  members: number;
-  score: number;
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
+
+type Props = {
+  tournamentId: Id<"tournaments">;
 };
 
-type TournamentTeamsProps = {
-  tournamentName: string;
-  teams: Team[];
-};
+export function TournamentTeams({ tournamentId }: Props) {
+  const tournament = useQuery(api.tournaments.getById, { tournamentId });
 
-export function TournamentTeams({
-  tournamentName,
-  teams,
-}: TournamentTeamsProps) {
+  const teams = useQuery(api.teams.listByTournament, { tournamentId }) || [];
+
+  if (!tournament) return null; // TODO: add skeleton
+
   return (
     <div className="w-full rounded-xl border border-gray-200 bg-white p-6 shadow-md">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-semibold text-gray-800 text-xl">
-          {tournamentName} Teams
+          {tournament.name} Teams
         </h2>
         <span className="text-gray-500 text-sm">
           {teams.length} teams participating
@@ -40,7 +40,9 @@ export function TournamentTeams({
                 className="border-t transition hover:bg-gray-50"
               >
                 <td className="p-3 font-medium text-gray-800">{team.name}</td>
-                <td className="p-3 text-gray-600">{team.members}</td>
+                <td className="p-3 text-gray-600">
+                  {team.members.map((m) => m.user.email).join(", ")}
+                </td>
                 <td className="p-3 font-semibold text-blue-600">
                   {team.score}
                 </td>

@@ -1,28 +1,21 @@
-import { cn } from "@/lib/utils";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "./ui/card";
-import { Button, type ButtonProps } from "./ui/button";
 import { startCase } from "lodash";
 import Link from "next/link";
-
-export type DetailsCardAction = {
-  text: string;
-  variant?: ButtonProps["variant"];
-  linkProps?: React.ComponentProps<typeof Link>;
-  buttonProps?: ButtonProps;
-};
+import { cn } from "@/lib/utils";
+import { Button, type ButtonProps } from "./ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 
 type Props = {
   title: string;
   description?: string;
   details?: { key: string; value: string; className?: string }[];
-  actions?: DetailsCardAction[];
+  actions?: ButtonProps[];
   className?: string;
 };
 
@@ -58,17 +51,9 @@ export function DetailsCard({
       {actions.length > 0 && (
         <CardFooter className="justify-center align-center sm:justify-end">
           <div className="flex flex-wrap justify-center gap-3">
-            {actions.map(({ text, linkProps, buttonProps }) =>
-              linkProps ? (
-                <Link key={text} {...linkProps}>
-                  <Button {...buttonProps}>{text}</Button>
-                </Link>
-              ) : (
-                <Button key={text} {...buttonProps}>
-                  {text}
-                </Button>
-              ),
-            )}
+            {actions.map((props, index) => (
+              <Button key={index} {...props} />
+            ))}
           </div>
         </CardFooter>
       )}

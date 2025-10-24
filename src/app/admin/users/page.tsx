@@ -1,5 +1,7 @@
 "use client";
 
+import { useQuery } from "convex/react";
+import Link from "next/link";
 import { SectionHeader } from "@/components/section-header";
 import { Card } from "@/components/ui/card";
 import {
@@ -12,8 +14,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { useQuery } from "convex/react";
-import Link from "next/link";
 import { api } from "../../../../convex/_generated/api";
 
 export default function UsersPage() {
@@ -24,10 +24,8 @@ export default function UsersPage() {
 
   return (
     <>
-      <SectionHeader as="h1" text="Users">
-        {/* <Link href="/admin/users/new"> */}
-        {/*   <Button>Add New User</Button> */}
-        {/* </Link> */}
+      <SectionHeader as="h1" title="Users">
+        {/* <Button href="/admin/users/new">Add New User</Button> */}
       </SectionHeader>
 
       <Card className="overflow-hidden">

@@ -1,18 +1,5 @@
 "use client";
 
-import {
-  Sidebar as SidebarBase,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarSeparator,
-} from "@/components/ui/sidebar";
 import { useConvexAuth, useQuery } from "convex/react";
 import {
   BarChart2,
@@ -33,6 +20,19 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import {
+  Sidebar as SidebarBase,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+} from "@/components/ui/sidebar";
 import { api } from "../../convex/_generated/api";
 import { SignOutButton } from "./sign-out-button";
 
@@ -57,7 +57,7 @@ const sidebar: SidebarItem[] = [
       { title: "My Tournaments", url: "/tournaments", icon: Trophy },
       { title: "My Teams", url: "/teams", icon: Users },
       { title: "Submissions", url: "/submissions", icon: ClipboardList },
-      { title: "Submit Activity", url: "/submit", icon: PlusCircle },
+      { title: "Submit Activity", url: "/submissions/new", icon: PlusCircle },
     ],
   },
   {

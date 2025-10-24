@@ -1,48 +1,70 @@
 "use client";
 
-import { SectionHeader } from "@/components/section-header";
-import { TournamentDetailsCard } from "@/components/tournaments/tournament-details-card";
-import { Button } from "@/components/ui/button";
+import type { ColumnDef } from "@tanstack/react-table";
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { use } from "react";
+import { use, useMemo } from "react";
+import { TournamentDetailsCard } from "@/app/tournaments/tournament-details-card";
+import { SectionHeader } from "@/components/section-header";
+import { DataTableSection } from "@/components/table-section";
+import { Button } from "@/components/ui/button";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card } from "@/components/ui/card";
-import { TableSection } from "@/components/table-section";
 
 type Props = {
   params: Promise<{ tournamentId: Id<"tournaments"> }>;
 };
 
 export default function TournamentDetailsPage({ params }: Props) {
-  const resolvedParams = use(params);
-  const tournament = useQuery(api.tournaments.getById, {
-    id: resolvedParams.tournamentId,
-    withTeams: true,
-  });
+  const { tournamentId } = use(params);
+
+  const tournament = useQuery(
+    api.tournaments.getById,
+    tournamentId ? { tournamentId } : "skip",
+  );
+  const teams = useQuery(
+    api.teams.listByTournament,
+    tournamentId ? { tournamentId } : "skip",
+  );
+
+  const columns: ColumnDef<NonNullable<typeof teams>[number]>[] = useMemo(
+    () => [
+      {
+        id: "name",
+        accessorKey: "name",
+        header: "Team",
+        cell: (props) => (
+          <div className="font-medium text-gray-800">
+            {props.getValue() as string}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "points",
+        header: () => <div className="text-right">Points</div>,
+        cell: (props) => (
+          <div className="text-right font-semibold text-blue-600">
+            {(props.getValue() as string) || 0} pts
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
 
   if (!tournament) return null; // TODO: Add skeleton
 
   return (
     <>
-      <SectionHeader as="h1" text="Tournament Details">
-        <Link href="/admin/tournaments">
-          <Button variant="outline">← Back</Button>
-        </Link>
+      <SectionHeader as="h1" title="Tournament Details">
+        <Button href="/admin/tournaments" variant="outline">
+          ← Back
+        </Button>
       </SectionHeader>
 
-      <TournamentDetailsCard tournament={tournament} />
+      <TournamentDetailsCard tournament={tournament} enableActions />
 
-      <TableSection
+      <DataTableSection
         title="Teams"
         actions={
           <Link href={`/admin/tournaments/${tournament._id}/teams/new`}>
@@ -51,23 +73,10 @@ export default function TournamentDetailsPage({ params }: Props) {
             </Button>
           </Link>
         }
-        columns={[
-          {
-            key: "name",
-            title: "Team",
-            rowClassName: "font-medium text-gray-800",
-          },
-          {
-            key: "points",
-            title: "Points",
-            defaultValue: 0,
-            format: (v) => `${v} pts`,
-            className: "text-right",
-            rowClassName: "font-semibold text-blue-600",
-          },
-        ]}
-        rows={"teams" in tournament ? tournament.teams : []}
+        columns={columns}
+        data={teams ?? []}
         emptyMessage="No teams added yet."
+        enableSearch
       />
     </>
   );

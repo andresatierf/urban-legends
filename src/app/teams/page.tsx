@@ -1,13 +1,13 @@
 "use client";
 
-import { SectionHeader } from "@/components/section-header";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { useQuery } from "convex/react";
 import { capitalize } from "lodash";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { SectionHeader } from "@/components/section-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 
 export default function UserTeamsPage() {
@@ -15,10 +15,10 @@ export default function UserTeamsPage() {
 
   return (
     <>
-      <SectionHeader as="h1" text="My Teams">
-        <Link href="/tournaments">
-          <Button variant="outline">🏆 View Tournaments</Button>
-        </Link>
+      <SectionHeader as="h1" title="My Teams">
+        <Button href="/tournaments" variant="outline">
+          🏆 View Tournaments
+        </Button>
       </SectionHeader>
 
       <Card>

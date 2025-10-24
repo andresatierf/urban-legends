@@ -1,7 +1,7 @@
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 
 interface AdminDashboardProps {
@@ -128,9 +128,9 @@ function AdminOverview({
 }
 
 function CompetitionsPage() {
-  const tournaments = useQuery(api.tournaments.list) || [];
-  const createtournament = useMutation(api.tournaments.create);
-  const updatetournament = useMutation(api.tournaments.update);
+  const _tournaments = useQuery(api.tournaments.list) || [];
+  const _createtournament = useMutation(api.tournaments.create);
+  const _updatetournament = useMutation(api.tournaments.update);
 
   const [showForm, setShowForm] = useState(false);
   const [editingCompetition, setEditingCompetition] = useState<any>(null);

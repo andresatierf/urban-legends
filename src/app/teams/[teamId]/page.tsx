@@ -1,12 +1,13 @@
 "use client";
 
-import { SectionHeader } from "@/components/section-header";
-import { TableSection } from "@/components/table-section";
-import { TeamDetailsCard } from "@/components/teams/team-details-card";
-import { Button } from "@/components/ui/button";
+import type { ColumnDef } from "@tanstack/react-table";
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { use } from "react";
+import { use, useMemo } from "react";
+import { SectionHeader } from "@/components/section-header";
+import { DataTableSection } from "@/components/table-section";
+import { TeamDetailsCard } from "@/components/teams/team-details-card";
+import { Button } from "@/components/ui/button";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
@@ -15,44 +16,53 @@ type Props = {
 };
 
 export default function TeamDetailsPage({ params }: Props) {
-  const resolvedParams = use(params);
-  const team = useQuery(api.teams.getById, {
-    id: resolvedParams.teamId,
-  });
+  const { teamId } = use(params);
+  const team = useQuery(api.teams.getById, teamId ? { teamId } : "skip");
+  const tournament = useQuery(
+    api.tournaments.getById,
+    team ? { tournamentId: team.tournamentId } : "skip",
+  );
+  const members = useQuery(
+    api.teams.listTeamMembers,
+    teamId ? { teamId } : "skip",
+  );
 
-  if (!team) return null; // TODO: Add skeleton
+  const columns: ColumnDef<NonNullable<typeof members>[number]>[] = useMemo(
+    () => [
+      { id: "name", accessorKey: "email", header: "Name" },
+      {
+        accessorKey: "role",
+        header: () => <div className="text-right">Role</div>,
+        // header: "Role",
+        cell: (props) => (
+          <div className="text-right text-gray-600">
+            {props.getValue() as string}
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
+  if (!team || !tournament || !members) return null; // TODO: Add skeleton
 
   return (
     <>
-      <SectionHeader as="h1" text="Team Details">
-        <div className="flex gap-3">
-          <Link href={`/tournaments/${team?.tournamentId}`}>
-            <Button variant="secondary">🏆 View Tournament</Button>
-          </Link>
-          <Link href="/teams">
-            <Button variant="outline">← Back to My Teams</Button>
-          </Link>
-        </div>
+      <SectionHeader as="h1" title="Team Details">
+        <Button href={`/tournaments/${team?.tournamentId}`} variant="secondary">
+          🏆 View Tournament
+        </Button>
+        <Button href="/teams" variant="outline">
+          ← Back to My Teams
+        </Button>
       </SectionHeader>
 
-      <TeamDetailsCard team={team} />
+      <TeamDetailsCard team={team} tournament={tournament} />
 
-      <TableSection
+      <DataTableSection
         title="Members"
-        columns={[
-          {
-            key: "user.email",
-            title: "Member",
-            rowClassName: "text-gray-800",
-          },
-          {
-            key: "role",
-            title: "Role",
-            className: "text-right",
-            rowClassName: "text-gray-500",
-          },
-        ]}
-        rows={team.members}
+        columns={columns}
+        data={members}
         emptyMessage="No members yet."
       />
     </>

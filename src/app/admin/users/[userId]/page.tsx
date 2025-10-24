@@ -1,11 +1,11 @@
 "use client";
 
-import { SectionHeader } from "@/components/section-header";
-import { Button } from "@/components/ui/button";
-import { UserDetailsCard } from "@/components/users/user-details-card";
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { use } from "react";
+import { SectionHeader } from "@/components/section-header";
+import { Button } from "@/components/ui/button";
+import { UserDetailsCard } from "@/components/users/user-details-card";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -23,10 +23,10 @@ export default function UserDetailsPage({ params }: Props) {
 
   return (
     <>
-      <SectionHeader as="h1" text="User Details">
-        <Link href="/admin/users">
-          <Button variant="outline">← Back</Button>
-        </Link>
+      <SectionHeader as="h1" title="User Details">
+        <Button href="/admin/users" variant="outline">
+          ← Back
+        </Button>
       </SectionHeader>
       <UserDetailsCard user={user} />
       {/* TODO: Add teams table */}

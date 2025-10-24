@@ -1,5 +1,8 @@
 "use client";
 
+import { useQuery } from "convex/react";
+import Link from "next/link";
+import { useMemo } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { StatCard } from "@/components/tournaments/stat-card";
 import { Button } from "@/components/ui/button";
@@ -14,9 +17,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { useQuery } from "convex/react";
-import Link from "next/link";
-import { useMemo } from "react";
 import { api } from "../../../../convex/_generated/api";
 
 export default function TournamentsPage() {
@@ -40,10 +40,8 @@ export default function TournamentsPage() {
 
   return (
     <>
-      <SectionHeader as="h1" text="Tournaments">
-        <Link href="/admin/tournaments/new">
-          <Button>Add New Tournament</Button>
-        </Link>
+      <SectionHeader as="h1" title="Tournaments">
+        <Button href="/admin/tournaments/new">Add New Tournament</Button>
       </SectionHeader>
 
       <div className="mb-4 grid grid-cols-1 gap-6 sm:grid-cols-3">

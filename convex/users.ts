@@ -1,8 +1,7 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
-import { query, mutation, internalAction } from "./_generated/server";
+import { createAccount, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { createAccount } from "@convex-dev/auth/server";
+import { internalAction, mutation, query } from "./_generated/server";
 
 export const listAll = query({
   args: {},

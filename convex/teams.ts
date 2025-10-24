@@ -1,8 +1,8 @@
-import { query, mutation } from "./_generated/server";
-import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import type { GenericMutationCtx } from "convex/server";
+import { v } from "convex/values";
 import type { DataModel } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
 
 async function requireAdmin(ctx: GenericMutationCtx<DataModel>) {
   const userId = await getAuthUserId(ctx);
@@ -27,47 +27,77 @@ async function requireAdmin(ctx: GenericMutationCtx<DataModel>) {
 }
 
 export const getById = query({
-  args: { id: v.id("teams") },
+  args: { teamId: v.id("teams") },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       return null;
     }
 
-    const team = await ctx.db.get(args.id);
-    if (!team) {
-      return null;
+    return await ctx.db.get(args.teamId);
+  },
+});
+
+export const getUserTeamByTournament = query({
+  args: { tournamentId: v.id("tournaments") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return;
     }
 
-    const tournament = await ctx.db.get(team.tournamentId);
+    const teams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", args.tournamentId),
+      )
+      .collect();
 
+    const userTeam = await ctx.db
+      .query("teamMembers")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("userId"), userId),
+          q.or(...teams.map(({ _id }) => q.eq(q.field("teamId"), _id))),
+        ),
+      )
+      .first();
+
+    return teams.find(({ _id }) => userTeam?.teamId === _id);
+  },
+});
+
+export const listTeamMembers = query({
+  args: { teamId: v.id("teams"), excludeSelf: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return;
+    }
     const teamMembers = await ctx.db
       .query("teamMembers")
-      .withIndex("by_team", (q) => q.eq("teamId", team._id))
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
       .collect();
-    const userIds = teamMembers.map((member) => member.userId);
 
     const users = await ctx.db
       .query("users")
       .filter((q) =>
-        q.or(...userIds.map((id) => q.eq(q.field("_id"), id as string))),
+        q.or(
+          ...teamMembers.map((member) => q.eq(q.field("_id"), member.userId)),
+        ),
       )
       .collect();
-    const userMap = users.reduce((acc, user) => {
+    const userIdMap = users.reduce((acc, user) => {
       if (!acc.get(user._id)) acc.set(user._id, user);
       return acc;
     }, new Map());
 
-    return {
-      ...team,
-      tournament,
-      members: teamMembers.map((member) => ({
-        ...member,
-        user: userMap.get(member.userId),
-      })),
-      // TODO: add score
-      score: null,
-    };
+    return teamMembers
+      .map((m) => ({
+        ...m,
+        email: userIdMap.get(m.userId)?.email,
+      }))
+      .filter((m) => !args.excludeSelf || m.userId !== userId);
   },
 });
 
@@ -118,7 +148,7 @@ export const create = mutation({
   args: {
     name: v.string(),
     tournamentId: v.id("tournaments"),
-    members: v.optional(v.array(v.id("users"))),
+    members: v.array(v.id("users")),
   },
   handler: async (ctx, args) => {
     const userId = await requireAdmin(ctx);

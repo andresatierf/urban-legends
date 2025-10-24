@@ -1,9 +1,9 @@
 "use client";
 
-import { SignInForm } from "@/components/auth/sign-in-form";
 import { Unauthenticated, useConvexAuth } from "convex/react";
 import { redirect } from "next/navigation";
 import { useEffect } from "react";
+import { SignInForm } from "@/components/auth/sign-in-form";
 
 export default function LoginPage() {
   const { isAuthenticated } = useConvexAuth();

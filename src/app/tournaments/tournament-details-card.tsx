@@ -1,11 +1,17 @@
-import { DetailsCard, type DetailsCardAction } from "../details-card";
+import { DetailsCard } from "@/components/details-card";
+import type { ButtonProps } from "@/components/ui/button";
 
 type Props = {
   tournament: any;
+  enableActions?: boolean;
   className?: string;
 };
 
-export function TournamentDetailsCard({ tournament, className }: Props) {
+export function TournamentDetailsCard({
+  tournament,
+  enableActions,
+  className,
+}: Props) {
   if (!tournament) return null; // TODO: Add skeleton
 
   const details = [
@@ -18,19 +24,15 @@ export function TournamentDetailsCard({ tournament, className }: Props) {
         : "No users assigned",
     },
   ];
-  const actions: DetailsCardAction[] = [
+  const actions: ButtonProps[] = [
     {
-      text: "Edit Tournament",
-      buttonProps: {
-        onClick: () => {},
-      },
+      children: "Edit Tournament",
+      onClick: () => {},
     },
     {
-      text: "Manage Teams",
-      buttonProps: {
-        variant: "secondary",
-        onClick: () => {},
-      },
+      children: "Manage Teams",
+      variant: "secondary",
+      onClick: () => {},
     },
   ];
 
@@ -39,7 +41,7 @@ export function TournamentDetailsCard({ tournament, className }: Props) {
       title={tournament.name}
       description={tournament.description}
       details={details}
-      actions={actions}
+      actions={enableActions ? actions : []}
       className={className}
     />
   );

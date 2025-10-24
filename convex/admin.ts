@@ -55,35 +55,50 @@ export const setUserRole = mutation({
     userId: v.id("users"),
     role: v.union(v.literal("admin"), v.literal("user")),
   },
-  handler: async (_ctx, _args) => {
-    // const currentUserId = await getAuthUserId(ctx);
-    // if (!currentUserId) {
-    //   throw new Error("Not authenticated");
-    // }
-    //
-    // // Check if current user is admin
-    // const currentUserRole = await ctx.db
-    //   .query("userRoles")
-    //   .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
-    //   .first();
-    //
-    // if (currentUserRole?.role !== "admin") {
-    //   throw new Error("Admin access required");
-    // }
-    //
-    // // Update or create user role
-    // const existingRole = await ctx.db
-    //   .query("userRoles")
-    //   .withIndex("by_user", (q: any) => q.eq("userId", args.userId))
-    //   .first();
-    //
-    // if (existingRole) {
-    //   await ctx.db.patch(existingRole._id, { role: args.role });
-    // } else {
-    //   await ctx.db.insert("userRoles", {
-    //     userId: args.userId,
-    //     role: args.role,
-    //   });
-    // }
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Check if current user is admin
+    const currentUserRoles = await ctx.db
+      .query("userRoles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .collect();
+
+    const currentUserRoleNames = await Promise.all(
+      currentUserRoles.map(({ roleId }) => ctx.db.get(roleId)),
+    );
+
+    if (!currentUserRoleNames.map((r) => r?.name).includes("admin")) {
+      throw new Error("Admin access required");
+    }
+
+    // Get the role ID for the target role
+    const targetRole = await ctx.db
+      .query("roles")
+      .withIndex("by_name", (q) => q.eq("name", args.role))
+      .first();
+
+    if (!targetRole) {
+      throw new Error("Role not found");
+    }
+
+    // Remove existing roles for this user
+    const existingRoles = await ctx.db
+      .query("userRoles")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    for (const existingRole of existingRoles) {
+      await ctx.db.delete(existingRole._id);
+    }
+
+    // Add the new role
+    await ctx.db.insert("userRoles", {
+      userId: args.userId,
+      roleId: targetRole._id,
+    });
   },
 });

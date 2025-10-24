@@ -1,21 +1,18 @@
 "use client";
 
-import { CreateUserForm } from "@/components/users/create-user-form";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { SectionHeader } from "@/components/section-header";
+import { Button } from "@/components/ui/button";
+import { CreateUserForm } from "@/components/users/create-user-form";
 
 export default function NewUserPage() {
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-semibold text-2xl text-gray-800">
-          Create User
-        </h1>
-        <Link href="/admin/users">
-          <Button variant="outline">← Back</Button>
-        </Link>
-      </div>
-
+      <SectionHeader as="h1" title="Create User">
+        <Button href="/admin/users" variant="outline">
+          ← Back
+        </Button>
+      </SectionHeader>
       <CreateUserForm />
     </>
   );

@@ -78,7 +78,6 @@ export const create = mutation({
       description: args.description || "",
       startDate: args.startDate,
       endDate: args.endDate,
-      isActive: true,
       createdBy: userId,
     });
   },
@@ -101,15 +100,13 @@ export const update = mutation({
       description: args.description,
       startDate: args.startDate,
       endDate: args.endDate,
-      isActive: args.isActive,
     });
   },
 });
 
-export const getById = query({
+export const getByName = query({
   args: {
-    id: v.id("tournaments"),
-    withTeams: v.optional(v.boolean()),
+    name: v.string(),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -117,16 +114,22 @@ export const getById = query({
       return null;
     }
 
-    const tournament = await ctx.db.get(args.id);
+    return await ctx.db
+      .query("tournaments")
+      .filter((q) => q.eq(q.field("name"), args.name))
+      .first();
+  },
+});
 
-    if (!args.withTeams) return tournament;
+export const getById = query({
+  args: { tournamentId: v.id("tournaments") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
 
-    const teams = await ctx.db
-      .query("teams")
-      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.id))
-      .collect();
-
-    return { ...tournament, teams };
+    return await ctx.db.get(args.tournamentId);
   },
 });
 
@@ -148,14 +151,14 @@ export const getLeaderboard = query({
     const leaderboard = [];
 
     for (const team of teams) {
-      const completions = await ctx.db
+      const submissions = await ctx.db
         .query("submissions")
         .withIndex("by_team_and_date", (q) => q.eq("teamId", team._id))
-        .filter((q) => q.eq(q.field("completed"), true))
+        .filter((q) => q.eq(q.field("state"), "approved"))
         .collect();
 
       // Group by date to count unique days
-      const uniqueDays = new Set(completions.map((c) => c.date));
+      const uniqueDays = new Set(submissions.map((c) => c.date));
 
       leaderboard.push({
         team,
