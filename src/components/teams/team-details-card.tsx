@@ -1,9 +1,11 @@
+import type { Doc } from "../../../convex/_generated/dataModel";
 import { DetailsCard } from "../details-card";
 import type { ButtonProps } from "../ui/button";
 
 type Props = {
-  team: any;
-  tournament: any;
+  team: Doc<"teams">;
+  tournament: Doc<"tournaments">;
+  score: number;
   enableActions?: boolean;
   className?: string;
 };
@@ -11,6 +13,7 @@ type Props = {
 export function TeamDetailsCard({
   team,
   tournament,
+  score,
   enableActions,
   className,
 }: Props) {
@@ -18,7 +21,7 @@ export function TeamDetailsCard({
 
   const details = [
     { key: "tournament", value: tournament.name },
-    { key: "score", value: `${team.score || 0} pts` },
+    { key: "score", value: `${score || 0} pts` },
   ];
   const actions: ButtonProps[] = [
     { children: "Edit" },

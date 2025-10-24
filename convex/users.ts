@@ -1,15 +1,16 @@
-import { createAccount, getAuthUserId } from "@convex-dev/auth/server";
-import { v } from "convex/values";
-import { internal } from "./_generated/api";
-import { internalAction, mutation, query } from "./_generated/server";
+import type { UserJSON } from "@clerk/backend";
+import { type Validator, v } from "convex/values";
+import {
+  internalMutation,
+  mutation,
+  type QueryCtx,
+  query,
+} from "./_generated/server";
 
-export const listAll = query({
+export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return [];
-    }
+    getCurrentUserOrThrow(ctx);
 
     const [users, roles, userRoles] = await Promise.all([
       ctx.db.query("users").collect(),
@@ -29,7 +30,10 @@ export const listAll = query({
 export const getById = query({
   args: { id: v.id("users") },
   handler: async (ctx, { id }) => {
+    getCurrentUserOrThrow(ctx);
+
     const user = await ctx.db.get(id);
+
     const [roles, userRoles] = await Promise.all([
       ctx.db.query("roles").collect(),
       ctx.db
@@ -47,34 +51,94 @@ export const getById = query({
   },
 });
 
-export const create = mutation({
-  args: {
-    name: v.string(),
-    email: v.string(),
-    password: v.string(),
-  },
-  handler: async (ctx, args) => {
-    await ctx.scheduler.runAfter(0, internal.users.internalCreate, args);
-  },
-});
+export const store = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Called storeUser without authentication present");
+    }
 
-export const internalCreate = internalAction({
-  args: {
-    name: v.string(),
-    email: v.string(),
-    password: v.string(),
-  },
-  handler: async (ctx, { name, email, password }) => {
-    await createAccount(ctx, {
-      provider: "password",
-      account: {
-        id: email,
-        secret: password,
-      },
-      profile: {
-        name,
-        email,
-      },
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_external_id", (q) => q.eq("externalId", identity.subject))
+      .unique();
+
+    if (user !== null) {
+      if (user.name !== identity.name) {
+        await ctx.db.patch(user._id, {
+          email: identity.email,
+          name: identity.name,
+        });
+      }
+      return user._id;
+    }
+
+    return await ctx.db.insert("users", {
+      name: identity.name ?? "Anonymous",
+      email: identity.email ?? "no email found",
+      externalId: identity.subject,
     });
   },
 });
+
+export const current = query({
+  args: {},
+  handler: async (ctx) => {
+    return await getCurrentUser(ctx);
+  },
+});
+
+export const upsertFromClerk = internalMutation({
+  args: { data: v.any() as Validator<UserJSON> }, // no runtime validation, trust Clerk
+  async handler(ctx, { data }) {
+    const userAttributes = {
+      email: data.email_addresses[0].email_address,
+      name: `${data.first_name} ${data.last_name}`,
+      externalId: data.id,
+    };
+
+    const user = await userByExternalId(ctx, data.id);
+    if (user === null) {
+      await ctx.db.insert("users", userAttributes);
+    } else {
+      await ctx.db.patch(user._id, userAttributes);
+    }
+  },
+});
+
+export const deleteFromClerk = internalMutation({
+  args: { clerkUserId: v.string() },
+  async handler(ctx, { clerkUserId }) {
+    const user = await userByExternalId(ctx, clerkUserId);
+
+    if (user !== null) {
+      await ctx.db.delete(user._id);
+    } else {
+      console.warn(
+        `Can't delete user, there is none for Clerk user ID: ${clerkUserId}`,
+      );
+    }
+  },
+});
+
+export async function getCurrentUserOrThrow(ctx: QueryCtx) {
+  const userRecord = await getCurrentUser(ctx);
+  if (!userRecord) throw new Error("Can't get current user");
+  return userRecord;
+}
+
+export async function getCurrentUser(ctx: QueryCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (identity === null) {
+    return null;
+  }
+  return await userByExternalId(ctx, identity.subject);
+}
+
+async function userByExternalId(ctx: QueryCtx, externalId: string) {
+  return await ctx.db
+    .query("users")
+    .withIndex("by_external_id", (q) => q.eq("externalId", externalId))
+    .unique();
+}

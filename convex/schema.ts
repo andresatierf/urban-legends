@@ -1,8 +1,7 @@
-import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-const applicationTables = {
+export default defineSchema({
   tournaments: defineTable({
     name: v.string(),
     description: v.string(),
@@ -62,9 +61,12 @@ const applicationTables = {
     .index("by_tournament_and_date", ["tournamentId", "date"])
     .index("by_state", ["state"])
     .index("by_user_and_state", ["userId", "state"]),
-};
 
-export default defineSchema({
-  ...authTables,
-  ...applicationTables,
+  users: defineTable({
+    email: v.string(),
+    name: v.string(),
+    externalId: v.string(),
+  })
+    .index("by_external_id", ["externalId"])
+    .index("by_email", ["email"]),
 });

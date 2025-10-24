@@ -1,19 +1,16 @@
 "use client";
 
-import { useConvexAuth, useQuery } from "convex/react";
+import { useClerk } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
 import {
   BarChart2,
   CheckSquare,
-  ClipboardCheck,
   ClipboardList,
-  Coins,
-  FileChartLine,
   LayoutDashboard,
   LayoutGrid,
   LogOut,
   type LucideIcon,
   PlusCircle,
-  Settings,
   Trophy,
   UserCircle,
   UserCog,
@@ -34,7 +31,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { api } from "../../convex/_generated/api";
-import { SignOutButton } from "./sign-out-button";
+import { Button } from "./ui/button";
 
 type SidebarItem = {
   title: string;
@@ -53,17 +50,6 @@ const sidebar: SidebarItem[] = [
     ],
   },
   {
-    title: "Insights",
-    roles: ["none"],
-    items: [
-      {
-        title: "Leaderboards",
-        href: "/tournaments/:tournamentSlug/leaderboard",
-        icon: BarChart2,
-      },
-    ],
-  },
-  {
     title: "Admin",
     roles: ["admin"],
     items: [
@@ -74,40 +60,31 @@ const sidebar: SidebarItem[] = [
       { title: "Users", icon: UserCog, href: "/admin/users" },
     ],
   },
-  {
-    title: "Account",
-    items: [
-      { title: "Profile", href: "/profile", icon: UserCircle },
-      { title: "Sign Out", href: "#", icon: LogOut },
-    ],
-  },
 ];
 
 export function Sidebar() {
-  const loggedInUser = useQuery(api.auth.loggedInUser);
-  const { isAuthenticated } = useConvexAuth();
+  const { signOut } = useClerk();
 
-  // useEffect(() => {
-  //   if (!isAuthenticated) redirect("/login");
-  // }, [isAuthenticated]);
-
-  const isAdmin = loggedInUser?.roles.includes("admin") || false;
+  const user = useQuery(api.users.current);
+  const roles = useQuery(
+    api.roles.getByUserId,
+    user ? { userId: user._id } : "skip",
+  );
 
   return (
     <SidebarBase collapsible="icon">
       <SidebarHeader />
       <SidebarContent>
-        {sidebar.map((item) => renderItem(item, loggedInUser?.roles || []))}
+        {sidebar.map((item) => renderItem(item, roles || []))}
       </SidebarContent>
       <SidebarSeparator />
       <SidebarFooter className="space-y-2">
         <span className="flex flex-col items-center">
-          <span className="text-gray-600 text-sm">Logged in as</span>
-          <span className="text-gray-600 text-sm">
-            {loggedInUser?.email} {isAdmin && "(Admin)"}
-          </span>
+          <p className="badge">
+            <span>Logged in{user?.name ? ` as ${user.name}` : ""}</span>
+          </p>
         </span>
-        <SignOutButton className="w-full" />
+        <Button onClick={() => signOut()}>Sign Out</Button>
       </SidebarFooter>
     </SidebarBase>
   );
@@ -117,7 +94,6 @@ function renderItem(item: SidebarItem, userRoles: string[]) {
   if (item?.roles && !userRoles.some((role) => item?.roles?.includes(role))) {
     return;
   }
-
   if ("items" in item)
     return (
       <SidebarGroup key={item.title}>

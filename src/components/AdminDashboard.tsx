@@ -41,9 +41,9 @@ function AdminOverview({
   setCurrentPage: (page: string) => void;
 }) {
   const tournaments = useQuery(api.tournaments.list) || [];
-  const users = useQuery(api.users.listAll) || [];
+  const users = useQuery(api.users.list) || [];
 
-  const activeTournaments = tournaments.filter((c) => c.isActive);
+  const activeTournaments = tournaments;
 
   return (
     <div className="space-y-6">
@@ -58,6 +58,7 @@ function AdminOverview({
             {activeTournaments.length}
           </p>
           <button
+            type="button"
             onClick={() => setCurrentPage("tournaments")}
             className="mt-2 text-blue-600 text-sm hover:text-blue-800"
           >
@@ -71,6 +72,7 @@ function AdminOverview({
           </h3>
           <p className="font-bold text-3xl text-green-600">{users.length}</p>
           <button
+            type="button"
             onClick={() => setCurrentPage("users")}
             className="mt-2 text-blue-600 text-sm hover:text-blue-800"
           >
@@ -82,6 +84,7 @@ function AdminOverview({
           <h3 className="mb-2 font-semibold text-gray-900 text-lg">Teams</h3>
           <p className="font-bold text-3xl text-purple-600">-</p>
           <button
+            type="button"
             onClick={() => setCurrentPage("teams")}
             className="mt-2 text-blue-600 text-sm hover:text-blue-800"
           >
@@ -111,12 +114,12 @@ function AdminOverview({
                 </div>
                 <span
                   className={`rounded-full px-2 py-1 text-xs ${
-                    tournament.isActive
+                    tournament
                       ? "bg-green-100 text-green-800"
                       : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {tournament.isActive ? "Active" : "Inactive"}
+                  {tournament ? "Active" : "Inactive"}
                 </span>
               </div>
             ))}
@@ -629,7 +632,7 @@ function TeamsPage() {
 }
 
 function UsersPage() {
-  const users = useQuery(api.users.listAll) || [];
+  const users = useQuery(api.users.list) || [];
   const setUserRole = useMutation(api.admin.setUserRole);
 
   const handleRoleChange = async (

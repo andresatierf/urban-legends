@@ -1,13 +1,18 @@
 "use client";
 
-import { useConvexAuth } from "convex/react";
+import { RedirectToSignIn } from "@clerk/nextjs";
+import { Authenticated, Unauthenticated } from "convex/react";
+import { RedirectToDashboard } from "@/components/redirect-to-dashboard";
 
 export default function Home() {
-  const { isAuthenticated } = useConvexAuth();
-
-  // useEffect(() => {
-  //   if (!isAuthenticated) redirect("/login");
-  // }, [isAuthenticated]);
-
-  return null;
+  return (
+    <>
+      <Authenticated>
+        <RedirectToDashboard />
+      </Authenticated>
+      <Unauthenticated>
+        <RedirectToSignIn />
+      </Unauthenticated>
+    </>
+  );
 }
