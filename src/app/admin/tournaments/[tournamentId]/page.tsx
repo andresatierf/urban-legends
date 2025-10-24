@@ -67,11 +67,13 @@ export default function TournamentDetailsPage({ params }: Props) {
       <DataTableSection
         title="Teams"
         actions={
-          <Link href={`/admin/tournaments/${tournament._id}/teams/new`}>
-            <Button variant="outline" size="sm">
-              + Add Team
-            </Button>
-          </Link>
+          <Button
+            href={`/admin/tournaments/${tournament._id}/teams/new`}
+            variant="outline"
+            size="sm"
+          >
+            + Add Team
+          </Button>
         }
         columns={columns}
         data={teams ?? []}

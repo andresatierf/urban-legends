@@ -1,15 +1,14 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
-import { useQuery } from "convex/react";
-import { Pencil, Trash } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
 import { DataTableSection } from "@/components/table-section";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTableColumnHeader } from "@/components/ui/data-table/column-header";
 import { cn } from "@/lib/utils";
+import type { ColumnDef } from "@tanstack/react-table";
+import { useQuery } from "convex/react";
+import { Pencil, Trash } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -84,11 +83,13 @@ export default function Submissions() {
           const submission = row.original;
           return (
             <div className="flex justify-end gap-2">
-              <Link href={`/submissions/${submission._id}/edit`}>
-                <Button variant="secondary" size="icon">
-                  <Pencil />
-                </Button>
-              </Link>
+              <Button
+                href={`/submissions/${submission._id}/edit`}
+                variant="secondary"
+                size="icon"
+              >
+                <Pencil />
+              </Button>
               <Button
                 variant="destructive"
                 size="icon"

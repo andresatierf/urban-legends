@@ -60,11 +60,13 @@ export default function TeamsPage() {
                   </TableCell>
                   <TableCell className="p-3 text-center">
                     <div className="flex justify-center gap-2">
-                      <Link href={`/admin/teams/${team._id}`}>
-                        <Button variant="secondary" size="sm">
-                          View
-                        </Button>
-                      </Link>
+                      <Button
+                        href={`/admin/teams/${team._id}`}
+                        variant="secondary"
+                        size="sm"
+                      >
+                        View
+                      </Button>
                       <Button variant="outline" size="sm">
                         Edit
                       </Button>

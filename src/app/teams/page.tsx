@@ -57,15 +57,14 @@ export default function UserTeamsPage() {
                     - pts
                   </span>
                   <div className="ml-2 h-full border-l">
-                    <Link href={`/teams/${team._id}`}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-l-none"
-                      >
-                        <ChevronRight />
-                      </Button>
-                    </Link>
+                    <Button
+                      href={`/teams/${team._id}`}
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-l-none"
+                    >
+                      <ChevronRight />
+                    </Button>
                   </div>
                 </div>
               ))}

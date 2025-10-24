@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
@@ -26,14 +25,13 @@ export function StatCard({
       </CardContent>
       {link && (
         <CardFooter>
-          <Link href={link}>
-            <Button
-              variant="link"
-              className="h-min p-0 font-normal text-blue-600 text-sm hover:text-blue-800"
-            >
-              {linkText} →
-            </Button>
-          </Link>
+          <Button
+            href={link}
+            variant="link"
+            className="h-min p-0 font-normal text-blue-600 text-sm hover:text-blue-800"
+          >
+            {linkText} →
+          </Button>
         </CardFooter>
       )}
     </Card>
