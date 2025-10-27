@@ -19,7 +19,6 @@ import { api } from "../../../../../convex/_generated/api";
 export default function UsersPage() {
   const users = useQuery(api.users.list);
 
-  console.log(users);
   if (!users) return null; // TODO: Add skeleton
 
   return (

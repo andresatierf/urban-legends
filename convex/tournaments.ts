@@ -1,8 +1,10 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import type { GenericMutationCtx } from "convex/server";
 import { v } from "convex/values";
-import type { DataModel } from "./_generated/dataModel";
+import type { DataModel, Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
+import { getTeams } from "./teams";
+import { getCurrentUserOrThrow } from "./users";
 
 async function requireAdmin(ctx: GenericMutationCtx<DataModel>) {
   const userId = await getAuthUserId(ctx);
@@ -27,16 +29,26 @@ async function requireAdmin(ctx: GenericMutationCtx<DataModel>) {
 }
 
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return [];
+  args: { userId: v.optional(v.id("users")) },
+  handler: async (ctx, args) => {
+    // await getCurrentUserOrThrow(ctx);
+
+    let tournaments: Doc<"tournaments">[];
+    if (args.userId) {
+      const teams = await getTeams(ctx, { userId: args.userId });
+      const tournamentIds = teams.map((team) => team.tournamentId);
+      tournaments = await ctx.db
+        .query("tournaments")
+        .filter((q) =>
+          q.or(...tournamentIds.map((id) => q.eq(q.field("_id"), id))),
+        )
+        .collect();
+    } else {
+      tournaments = await ctx.db.query("tournaments").collect();
     }
 
-    const tournaments = await ctx.db.query("tournaments").collect();
-
     const nowIso = new Date().toISOString();
+
     return tournaments.toSorted((a, b) => {
       const isActive = (x: typeof a) =>
         x.startDate <= nowIso && x.endDate >= nowIso;
@@ -71,14 +83,18 @@ export const create = mutation({
     endDate: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAdmin(ctx);
+    const user = await getCurrentUserOrThrow(ctx);
+
+    if (!user.roles.includes("admin")) {
+      throw new Error("Admin access required");
+    }
 
     return await ctx.db.insert("tournaments", {
       name: args.name,
       description: args.description || "",
       startDate: args.startDate,
       endDate: args.endDate,
-      createdBy: userId,
+      createdBy: user._id,
     });
   },
 });
@@ -167,5 +183,18 @@ export const getLeaderboard = query({
     }
 
     return leaderboard.toSorted((a, b) => b.completedDays - a.completedDays);
+  },
+});
+
+export const deleteTournament = mutation({
+  args: { tournamentId: v.id("tournaments") },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    if (!user.roles.includes("admin")) {
+      throw new Error("Admin access required");
+    }
+
+    await ctx.db.delete(args.tournamentId);
   },
 });

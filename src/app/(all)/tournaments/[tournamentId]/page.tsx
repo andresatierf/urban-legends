@@ -4,7 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useQuery } from "convex/react";
 import { use, useMemo } from "react";
 import { SectionHeader } from "@/components/section-header";
-import { DataTableSection } from "@/components/table-section";
+import { DataTableSection } from "@/components/data-table-section";
 import { TournamentDetailsCard } from "@/components/tournaments/tournament-details-card";
 import { Button } from "@/components/ui/button";
 import { api } from "../../../../../convex/_generated/api";
@@ -15,6 +15,14 @@ type Props = {
 };
 
 export default function TournamentDetailsPage({ params }: Props) {
+  const user = useQuery(api.users.current);
+  const roles = useQuery(
+    api.roles.getByUserId,
+    user ? { userId: user?._id } : "skip",
+  );
+
+  const isAdmin = roles?.includes("admin");
+
   const { tournamentId } = use(params);
 
   const tournament = useQuery(
@@ -56,12 +64,16 @@ export default function TournamentDetailsPage({ params }: Props) {
   return (
     <>
       <SectionHeader as="h1" title="Tournament Details">
-        <Button href="/admin/tournaments" variant="outline">
+        <Button href="/tournaments" variant="outline">
           ← Back
         </Button>
       </SectionHeader>
 
-      <TournamentDetailsCard tournament={tournament} />
+      <TournamentDetailsCard
+        tournament={tournament}
+        enableActions={isAdmin}
+        users={[]}
+      />
 
       <DataTableSection
         title="Teams"

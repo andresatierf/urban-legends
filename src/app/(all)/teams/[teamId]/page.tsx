@@ -4,7 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useQuery } from "convex/react";
 import { use, useMemo } from "react";
 import { SectionHeader } from "@/components/section-header";
-import { DataTableSection } from "@/components/table-section";
+import { DataTableSection } from "@/components/data-table-section";
 import { TeamDetailsCard } from "@/components/teams/team-details-card";
 import { Button } from "@/components/ui/button";
 import { api } from "../../../../../convex/_generated/api";

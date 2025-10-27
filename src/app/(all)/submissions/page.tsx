@@ -4,7 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useQuery } from "convex/react";
 import { Pencil, Trash } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { DataTableSection } from "@/components/table-section";
+import { DataTableSection } from "@/components/data-table-section";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTableColumnHeader } from "@/components/ui/data-table/column-header";

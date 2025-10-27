@@ -8,7 +8,7 @@ export default function NewTournamentPage() {
   return (
     <>
       <SectionHeader as="h1" title="Create Tournament">
-        <Button href="/admin/tournaments" variant="outline">
+        <Button href="/tournaments" variant="outline">
           ← Back
         </Button>
       </SectionHeader>

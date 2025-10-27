@@ -36,7 +36,7 @@ export function CreateTournamentForm() {
     onSubmit: async ({ value }) => {
       toastFormValues(value);
       await createTournament(value);
-      redirect("/admin/tournaments");
+      redirect("/tournaments");
     },
   });
 
@@ -110,10 +110,11 @@ export function CreateTournamentForm() {
             return (
               <Field data-invalid={isInvalid}>
                 <FieldLabel html-for={field.name}>Start Date</FieldLabel>
-                <DatePicker
+                <Input
+                  type="date"
                   id={field.name}
                   value={field.state.value}
-                  onChange={(date) => field.handleChange(date)}
+                  onChange={(e) => field.handleChange(e.target.value)}
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
@@ -130,10 +131,11 @@ export function CreateTournamentForm() {
             return (
               <Field data-invalid={isInvalid}>
                 <FieldLabel html-for={field.name}>End Date</FieldLabel>
-                <DatePicker
+                <Input
+                  type="date"
                   id={field.name}
                   value={field.state.value}
-                  onChange={(date) => field.handleChange(date)}
+                  onChange={(e) => field.handleChange(e.target.value)}
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>

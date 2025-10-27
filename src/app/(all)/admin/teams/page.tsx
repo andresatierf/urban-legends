@@ -15,7 +15,7 @@ import {
 import { api } from "../../../../../convex/_generated/api";
 
 export default function TeamsPage() {
-  const teams = useQuery(api.teams.list);
+  const teams = useQuery(api.teams.list, {});
 
   if (!teams) return null; // TODO: Add skeleton
 
@@ -49,7 +49,7 @@ export default function TeamsPage() {
                     {team.name}
                   </TableCell>
                   <TableCell className="p-3 text-gray-600">
-                    {team.tournament.name}
+                    {team.tournament?.name}
                   </TableCell>
                   <TableCell className="p-3 text-right font-semibold text-blue-600">
                     {team.score || 0}

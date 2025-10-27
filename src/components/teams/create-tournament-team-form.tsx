@@ -35,7 +35,7 @@ export function CreateTournamentTeamForm({ tournamentId }: Props) {
 
       // TODO: replace with Convex mutation call, e.g.
       await createTeam({ tournamentId, ...value });
-      redirect(`/admin/tournaments/${tournamentId}`);
+      redirect(`/tournaments/${tournamentId}`);
     },
   });
 

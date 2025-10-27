@@ -8,11 +8,13 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type Row,
   type SortingState,
   type TableOptions,
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   Table,
@@ -23,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { Card } from "../card";
 import { Checkbox } from "../checkbox";
 import { Input } from "../input";
@@ -35,6 +38,8 @@ export interface DataTableProps<TData, TValue>
   data: TData[];
   enableSearch?: boolean;
   emptyMessage?: string;
+  rowClassName?: (row: Row<TData>) => string;
+  hrefFn?: (row: Row<TData>) => string;
 }
 
 export function DataTable<TData, TValue>({
@@ -42,6 +47,8 @@ export function DataTable<TData, TValue>({
   data = [],
   enableSearch,
   emptyMessage = "No results.",
+  rowClassName,
+  hrefFn,
   ...props
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -143,22 +150,19 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="border-t transition hover:bg-gray-50"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="p-3">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row) =>
+                hrefFn ? (
+                  <Link key={row.id} href={hrefFn(row)} className="contents">
+                    <InnerTableRow row={row} className={rowClassName?.(row)} />
+                  </Link>
+                ) : (
+                  <InnerTableRow
+                    key={row.id}
+                    row={row}
+                    className={rowClassName?.(row)}
+                  />
+                ),
+              )
             ) : (
               <TableRow>
                 <TableCell
@@ -174,5 +178,26 @@ export function DataTable<TData, TValue>({
       </Card>
       <DataTablePagination table={table} />
     </div>
+  );
+}
+
+type InnerTableRowProps<TData> = {
+  row: Row<TData>;
+  className?: string;
+};
+
+function InnerTableRow<TData>({ row, className }: InnerTableRowProps<TData>) {
+  return (
+    <TableRow
+      key={row.id}
+      data-state={row.getIsSelected() && "selected"}
+      className={cn("border-t transition hover:bg-gray-50", className)}
+    >
+      {row.getVisibleCells().map((cell) => (
+        <TableCell key={cell.id} className="p-3">
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
   );
 }

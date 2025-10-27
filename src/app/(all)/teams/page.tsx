@@ -6,11 +6,13 @@ import { ChevronRight } from "lucide-react";
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 import { api } from "../../../../convex/_generated/api";
 
-export default function UserTeamsPage() {
-  const teams = useQuery(api.teams.listByUser);
+export default function TeamsPage() {
+  const { user, isAdmin } = useUser();
+  const teams = useQuery(api.teams.list, !isAdmin ? { userId: user?._id } : {});
 
   return (
     <>
@@ -48,8 +50,10 @@ export default function UserTeamsPage() {
                       {[
                         team.tournament?.name,
                         capitalize(team.role || "member"),
-                        `${team.members.length || 0} members`,
-                      ].join(" • ")}
+                        `${team.members?.length || 0} members`,
+                      ]
+                        .filter((x) => x)
+                        .join(" • ")}
                     </p>
                   </div>
                   <span className="font-medium text-blue-600 text-sm">
@@ -70,8 +74,8 @@ export default function UserTeamsPage() {
             </div>
           ) : (
             <p className="text-gray-500">
-              You're not part of any teams yet. Contact an admin to be added to
-              a team.
+              You're not part of any teams yet.
+              {!isAdmin && " Contact an admin to be added to a team."}
             </p>
           )}
         </CardContent>

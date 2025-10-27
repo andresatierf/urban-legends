@@ -82,12 +82,6 @@ function useSidebarItems() {
             href: "/admin/submissions",
             icon: CheckSquare,
           },
-          {
-            title: tAdminItems("tournaments"),
-            href: "/admin/tournaments",
-            icon: Trophy,
-          },
-          { title: tAdminItems("teams"), href: "/admin/teams", icon: Users },
           { title: tAdminItems("users"), icon: UserCog, href: "/admin/users" },
         ],
       },

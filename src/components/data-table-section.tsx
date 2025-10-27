@@ -1,7 +1,10 @@
 import { SectionHeader } from "./section-header";
 import { DataTable, type DataTableProps } from "./ui/data-table/data-table";
 
-type Props<TData, TValue> = DataTableProps<TData, TValue> & {
+export type DataTableSectionProps<TData, TValue> = DataTableProps<
+  TData,
+  TValue
+> & {
   as?: keyof React.JSX.IntrinsicElements;
   title: string;
   description?: string;
@@ -14,7 +17,7 @@ export function DataTableSection<T extends { _id: string }, V>({
   description,
   actions,
   ...props
-}: Props<T, V>) {
+}: DataTableSectionProps<T, V>) {
   return (
     <>
       <SectionHeader as={as} title={title} description={description}>

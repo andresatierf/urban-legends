@@ -6,6 +6,7 @@ import {
   type QueryCtx,
   query,
 } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 
 export const list = query({
   args: {},
@@ -125,7 +126,8 @@ export const deleteFromClerk = internalMutation({
 export async function getCurrentUserOrThrow(ctx: QueryCtx) {
   const userRecord = await getCurrentUser(ctx);
   if (!userRecord) throw new Error("Can't get current user");
-  return userRecord;
+  const roles = await getRolesForUser(ctx, userRecord._id);
+  return { ...userRecord, roles };
 }
 
 export async function getCurrentUser(ctx: QueryCtx) {
@@ -141,4 +143,15 @@ async function userByExternalId(ctx: QueryCtx, externalId: string) {
     .query("users")
     .withIndex("by_external_id", (q) => q.eq("externalId", externalId))
     .unique();
+}
+
+async function getRolesForUser(ctx: QueryCtx, userId: Id<"users">) {
+  const userRoles = await ctx.db
+    .query("userRoles")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .collect();
+  const roles = await Promise.all(
+    userRoles.map(({ roleId }) => ctx.db.get(roleId)),
+  );
+  return roles.map((r) => r?.name);
 }

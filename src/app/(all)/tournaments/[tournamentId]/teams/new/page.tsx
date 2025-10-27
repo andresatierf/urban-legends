@@ -5,8 +5,8 @@ import { use } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { CreateTournamentTeamForm } from "@/components/teams/create-tournament-team-form";
 import { Button } from "@/components/ui/button";
-import { api } from "../../../../../../../../convex/_generated/api";
-import type { Id } from "../../../../../../../../convex/_generated/dataModel";
+import { api } from "../../../../../../../convex/_generated/api";
+import type { Id } from "../../../../../../../convex/_generated/dataModel";
 
 type Props = {
   params: Promise<{ tournamentId: Id<"tournaments"> }>;
@@ -27,7 +27,7 @@ export default function AddTeamPage({ params }: Props) {
         as="h1"
         title={`Create Team in ${tournament?.name || "Tournament"}`}
       >
-        <Button href={`/admin/tournaments/${tournamentId}`} variant="outline">
+        <Button href={`/tournaments/${tournamentId}`} variant="outline">
           ← Back
         </Button>
       </SectionHeader>

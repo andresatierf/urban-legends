@@ -3,6 +3,7 @@
 import { RedirectToSignIn } from "@clerk/nextjs";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { Toaster } from "sonner";
+import { Layout } from "@/components/layout";
 
 export default function AuthenticatedLayout({
   children,
@@ -11,7 +12,9 @@ export default function AuthenticatedLayout({
     <>
       <Authenticated>
         <div className="flex min-h-screen w-full flex-col bg-gray-50">
-          <main className="flex-1">{children}</main>
+          <main className="flex-1">
+            <Layout>{children}</Layout>
+          </main>
           <Toaster />
         </div>
       </Authenticated>

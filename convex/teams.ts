@@ -1,8 +1,9 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import type { GenericMutationCtx } from "convex/server";
 import { v } from "convex/values";
-import type { DataModel } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import type { DataModel, Id } from "./_generated/dataModel";
+import { mutation, query, QueryCtx } from "./_generated/server";
+import { getCurrentUserOrThrow } from "./users";
 
 async function requireAdmin(ctx: GenericMutationCtx<DataModel>) {
   const userId = await getAuthUserId(ctx);
@@ -236,110 +237,53 @@ export const removeMember = mutation({
 });
 
 export const list = query({
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return [];
-    }
-
-    const allTournaments = await ctx.db.query("tournaments").collect();
-    const allTournamentMap = allTournaments.reduce((acc, t) => {
-      if (!acc.get(t._id)) acc.set(t._id, t);
-      return acc;
-    }, new Map());
-
-    const teamMembers = await ctx.db.query("teamMembers").collect();
-    const teamMembersMapByTeamId = teamMembers.reduce<
-      Record<string, typeof teamMembers>
-    >((acc, tm) => {
-      if (!acc[tm.teamId]) acc[tm.teamId] = [];
-      acc[tm.teamId].push(tm);
-      return acc;
-    }, {});
-
-    const teams = await ctx.db.query("teams").collect();
-
-    return teams.map((team) => ({
-      ...team,
-      tournament: allTournamentMap.get(team.tournamentId),
-      members: teamMembersMapByTeamId[team._id],
-    }));
+  args: { userId: v.optional(v.id("users")) },
+  handler: async (ctx, args) => {
+    await getCurrentUserOrThrow(ctx);
+    return await getTeams(ctx, args);
   },
 });
 
 export const listByUser = query({
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return [];
-    }
+    const user = await getCurrentUserOrThrow(ctx);
+    return await getTeams(ctx, { userId: user._id });
+  },
+});
 
+type GetTeamsArgs = { userId?: Id<"users">; tournamentId?: Id<"tournaments"> };
+
+export async function getTeams(
+  ctx: QueryCtx,
+  { userId, tournamentId }: GetTeamsArgs,
+) {
+  if (!userId && !tournamentId) return await ctx.db.query("teams").collect();
+
+  const filter: { teamIds: Id<"teams">[]; tournamentId?: Id<"tournaments"> } = {
+    teamIds: [],
+  };
+
+  if (userId) {
     const memberships = await ctx.db
       .query("teamMembers")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
-    const membershipMapByTeamId = memberships.reduce<
-      Map<string, (typeof memberships)[number]>
-    >((acc, m) => {
-      if (!acc.get(m.teamId)) acc.set(m.teamId, m);
-      return acc;
-    }, new Map());
+    filter.teamIds.push(...memberships.map((m) => m.teamId));
+  }
 
-    const teamIds = memberships.map((m) => m.teamId);
-    const teams = await ctx.db
-      .query("teams")
-      .filter((q) =>
-        q.or(...teamIds.map((id) => q.eq(q.field("_id"), id as string))),
-      )
-      .collect();
+  if (tournamentId) {
+    filter.tournamentId = tournamentId;
+  }
 
-    const tournamentIds = teams.map((t) => t.tournamentId);
-    const tournaments = await ctx.db
-      .query("tournaments")
-      .filter((q) =>
-        q.or(...tournamentIds.map((id) => q.eq(q.field("_id"), id as string))),
-      )
-      .collect();
-    const tournamentMap = tournaments.reduce((acc, t) => {
-      if (!acc.get(t._id)) acc.set(t._id, t);
-      return acc;
-    }, new Map());
+  const teams = await ctx.db
+    .query("teams")
+    .filter((q) =>
+      q.and(
+        q.or(...filter.teamIds.map((id) => q.eq(q.field("_id"), id as string))),
+        // q.eq(q.field("tournamentId"), filter.tournamentId),
+      ),
+    )
+    .collect();
 
-    const members = await ctx.db
-      .query("teamMembers")
-      .filter((q) =>
-        q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id as string))),
-      )
-      .collect();
-    const memberMapByTeamId = members.reduce<Record<string, typeof members>>(
-      (acc, m) => {
-        if (!acc[m.teamId]) acc[m.teamId] = [];
-        acc[m.teamId].push(m);
-        return acc;
-      },
-      {},
-    );
-
-    const memberIds = members.map((m) => m.userId);
-    const users = await ctx.db
-      .query("users")
-      .filter((q) =>
-        q.or(...memberIds.map((id) => q.eq(q.field("_id"), id as string))),
-      )
-      .collect();
-    const userMap = users.reduce((acc, u) => {
-      if (!acc.get(u._id)) acc.set(u._id, u);
-      return acc;
-    }, new Map());
-
-    return teams.map((t) => ({
-      ...t,
-      tournament: tournamentMap.get(t.tournamentId),
-      members: memberMapByTeamId[t._id].map((m) => ({
-        ...m,
-        email: userMap.get(m.userId)?.email,
-      })),
-      role: membershipMapByTeamId.get(t._id)?.role,
-    }));
-  },
-});
+  return teams;
+}
