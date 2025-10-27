@@ -45,23 +45,25 @@ export default function TournamentsPage() {
         {isAdmin && <Button href="/tournaments/new">Add New Tournament</Button>}
       </SectionHeader>
 
-      <div className="mb-4 grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <StatCard
-          title="Active Tournaments"
-          value={active}
-          color="text-green-600"
-        />
-        <StatCard
-          title="Upcoming Tournaments"
-          value={upcoming}
-          color="text-yellow-500"
-        />
-        <StatCard
-          title="Total Tournaments"
-          value={total}
-          color="text-blue-500"
-        />
-      </div>
+      {isAdmin && (
+        <div className="mb-4 grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <StatCard
+            title="Active Tournaments"
+            value={active}
+            color="text-green-600"
+          />
+          <StatCard
+            title="Upcoming Tournaments"
+            value={upcoming}
+            color="text-yellow-500"
+          />
+          <StatCard
+            title="Total Tournaments"
+            value={total}
+            color="text-blue-500"
+          />
+        </div>
+      )}
 
       <TournamentsDataTable
         title="Your tournaments"

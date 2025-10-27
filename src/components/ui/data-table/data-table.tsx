@@ -99,6 +99,7 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    globalFilterFn: "includesString",
     state: {
       sorting,
       columnFilters,
@@ -113,14 +114,12 @@ export function DataTable<TData, TValue>({
         <div className="flex items-center py-4">
           <Input
             type="search"
-            placeholder="Filter by description..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
-            }
+            placeholder="Search..."
+            value={table.getState().globalFilter}
+            onChange={(e) => table.setGlobalFilter(String(e.target.value))}
             className="max-w-sm"
           />
-          <DataTableViewOptions table={table} />
+          {/* <DataTableViewOptions table={table} /> */}
         </div>
       )}
       <Card className="overflow-hidden">
