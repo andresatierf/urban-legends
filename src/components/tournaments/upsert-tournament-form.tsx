@@ -15,7 +15,8 @@ const formSchema = z.object({
   description: z.string().optional(),
   startDate: z.string().min(1, "Please select a start date"),
   endDate: z.string().min(1, "Please select an end date"),
-  teamMaxSize: z.number().min(1, "Team max size must be at least 1"),
+  teamMinSize: z.number().min(1, "Team minimum size must be at least 1"),
+  teamMaxSize: z.number().min(1, "Team maximum size must be at least 1"),
 });
 
 type UpsertTournamentFormProps = {
@@ -34,6 +35,7 @@ export function UpsertTournamentForm({
       description: tournament?.description ?? "",
       startDate: tournament?.startDate ?? "",
       endDate: tournament?.endDate ?? "",
+      teamMinSize: tournament?.teamMinSize ?? 1,
       teamMaxSize: tournament?.teamMaxSize ?? 5,
     } as z.input<typeof formSchema>,
     validators: {
@@ -51,17 +53,15 @@ export function UpsertTournamentForm({
   return (
     // biome-ignore lint/correctness/useUniqueElementIds: ignore
     <form
-      id="create-tournament-form"
+      id="upsert-tournament-form"
       onSubmit={(e) => {
         e.preventDefault();
         form.handleSubmit();
       }}
     >
       <FieldGroup>
-        <form.Field
-          name="name"
-          // biome-ignore lint/correctness/noChildrenProp: documentation
-          children={(field) => {
+        <form.Field name="name">
+          {(field) => {
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid;
 
@@ -82,11 +82,9 @@ export function UpsertTournamentForm({
               </Field>
             );
           }}
-        />
-        <form.Field
-          name="description"
-          // biome-ignore lint/correctness/noChildrenProp: documentation
-          children={(field) => {
+        </form.Field>
+        <form.Field name="description">
+          {(field) => {
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid;
 
@@ -107,11 +105,87 @@ export function UpsertTournamentForm({
               </Field>
             );
           }}
-        />
+        </form.Field>
+      </FieldGroup>
+      <FieldGroup className="mt-5 flex-row">
         <form.Field
-          name="startDate"
-          // biome-ignore lint/correctness/noChildrenProp: documentation
-          children={(field) => {
+          name="teamMinSize"
+          validators={{
+            onChangeListenTo: ["teamMaxSize"],
+            onChange: ({ value, fieldApi }) => {
+              if (value > fieldApi.form.getFieldValue("teamMaxSize")) {
+                return {
+                  message:
+                    "Team minimum size must be greater than team maximum size",
+                };
+              }
+            },
+          }}
+        >
+          {(field) => {
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
+
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel html-for={field.name}>Minimum Team Size</FieldLabel>
+                <Input
+                  type="number"
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(Number(e.target.value))}
+                  aria-invalid={isInvalid}
+                  placeholder="Minimum size for teams in this tournament"
+                  autoComplete="off"
+                />
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            );
+          }}
+        </form.Field>
+        <form.Field
+          name="teamMaxSize"
+          validators={{
+            onChangeListenTo: ["teamMinSize"],
+            onChange: ({ value, fieldApi }) => {
+              if (value < fieldApi.form.getFieldValue("teamMinSize")) {
+                return {
+                  message:
+                    "Team maximum size must be greater than team minimum size",
+                };
+              }
+            },
+          }}
+        >
+          {(field) => {
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
+
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel html-for={field.name}>Maximum Team Size</FieldLabel>
+                <Input
+                  type="number"
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(Number(e.target.value))}
+                  aria-invalid={isInvalid}
+                  placeholder="Maximum size for teams in this tournament"
+                  autoComplete="off"
+                />
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            );
+          }}
+        </form.Field>
+      </FieldGroup>
+      <FieldGroup className="mt-5 flex-row">
+        <form.Field name="startDate">
+          {(field) => {
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid;
 
@@ -121,18 +195,21 @@ export function UpsertTournamentForm({
                 <Input
                   type="date"
                   id={field.name}
+                  name={field.name}
                   value={field.state.value}
+                  onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
+                  aria-invalid={isInvalid}
+                  placeholder="Start date of the event"
+                  autoComplete="off"
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
             );
           }}
-        />
-        <form.Field
-          name="endDate"
-          // biome-ignore lint/correctness/noChildrenProp: documentation
-          children={(field) => {
+        </form.Field>
+        <form.Field name="endDate">
+          {(field) => {
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid;
 
@@ -142,16 +219,28 @@ export function UpsertTournamentForm({
                 <Input
                   type="date"
                   id={field.name}
+                  name={field.name}
                   value={field.state.value}
+                  onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
+                  aria-invalid={isInvalid}
+                  placeholder="End date of the event"
+                  autoComplete="off"
                 />
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
             );
           }}
-        />
+        </form.Field>
       </FieldGroup>
       <Field orientation="horizontal" className="mt-8 flex justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => toastFormValues(form.state.values)}
+        >
+          Check values
+        </Button>
         <Button type="button" variant="outline" onClick={() => form.reset()}>
           Reset
         </Button>

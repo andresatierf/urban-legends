@@ -23,7 +23,7 @@ export default function EditTournamentPage({ params }: Props) {
 
   return (
     <>
-      <SectionHeader as="h1" title="Create Tournament">
+      <SectionHeader as="h1" title="Edit Tournament">
         <Button href="/tournaments" variant="outline">
           ← Back
         </Button>

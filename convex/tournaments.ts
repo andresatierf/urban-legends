@@ -76,6 +76,7 @@ export const upsert = mutation({
     description: v.optional(v.string()),
     startDate: v.string(),
     endDate: v.string(),
+    teamMinSize: v.number(),
     teamMaxSize: v.number(),
   },
   handler: async (ctx, args) => {
@@ -84,28 +85,24 @@ export const upsert = mutation({
       throw new Error("Admin access required");
     }
 
+    const data = {
+      name: args.name,
+      description: args.description || "",
+      startDate: args.startDate,
+      endDate: args.endDate,
+      teamMinSize: args.teamMinSize,
+      teamMaxSize: args.teamMaxSize,
+    };
+
     if (args._id) {
       const tournament = await ctx.db.get(args._id);
 
       if (!tournament) throw new Error("Tournament not found");
 
-      return await ctx.db.patch(args._id, {
-        name: args.name,
-        description: args.description || "",
-        startDate: args.startDate,
-        endDate: args.endDate,
-        teamMaxSize: args.teamMaxSize,
-      });
+      return await ctx.db.patch(args._id, data);
     }
 
-    return await ctx.db.insert("tournaments", {
-      name: args.name,
-      description: args.description || "",
-      startDate: args.startDate,
-      endDate: args.endDate,
-      teamMaxSize: args.teamMaxSize,
-      createdBy: user._id,
-    });
+    return await ctx.db.insert("tournaments", { ...data, createdBy: user._id });
   },
 });
 

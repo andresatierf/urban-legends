@@ -7,6 +7,7 @@ export default defineSchema({
     description: v.string(),
     startDate: v.string(),
     endDate: v.string(),
+    teamMinSize: v.optional(v.number()),
     teamMaxSize: v.optional(v.number()),
     createdBy: v.id("users"),
   }).index("by_name", ["name"]),
