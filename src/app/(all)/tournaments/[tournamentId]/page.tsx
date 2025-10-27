@@ -26,7 +26,7 @@ export default function TournamentDetailsPage({ params }: Props) {
   const { tournamentId } = use(params);
 
   const tournament = useQuery(
-    api.tournaments.getById,
+    api.tournaments.get,
     tournamentId ? { tournamentId } : "skip",
   );
   const teams = useQuery(

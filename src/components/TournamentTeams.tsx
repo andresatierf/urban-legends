@@ -7,7 +7,7 @@ type Props = {
 };
 
 export function TournamentTeams({ tournamentId }: Props) {
-  const tournament = useQuery(api.tournaments.getById, { tournamentId });
+  const tournament = useQuery(api.tournaments.get, { tournamentId });
 
   const teams = useQuery(api.teams.listByTournament, { tournamentId }) || [];
 

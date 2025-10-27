@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import * as z from "zod";
 import { toastFormValues } from "@/lib/form";
 import { api } from "../../../convex/_generated/api";
+import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
-import { DatePicker } from "../ui/date-picker";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -15,18 +15,26 @@ const formSchema = z.object({
   description: z.string().optional(),
   startDate: z.string().min(1, "Please select a start date"),
   endDate: z.string().min(1, "Please select an end date"),
-  userIds: z.array(z.string()).optional(),
+  teamMaxSize: z.number().min(1, "Team max size must be at least 1"),
 });
 
-export function CreateTournamentForm() {
-  const createTournament = useMutation(api.tournaments.create);
+type UpsertTournamentFormProps = {
+  tournament?: Doc<"tournaments">;
+};
+
+export function UpsertTournamentForm({
+  tournament,
+}: UpsertTournamentFormProps) {
+  const upsertTournament = useMutation(api.tournaments.upsert);
 
   const form = useForm({
     defaultValues: {
-      name: "",
-      description: "",
-      startDate: "",
-      endDate: "",
+      _id: tournament?._id,
+      name: tournament?.name ?? "",
+      description: tournament?.description ?? "",
+      startDate: tournament?.startDate ?? "",
+      endDate: tournament?.endDate ?? "",
+      teamMaxSize: tournament?.teamMaxSize ?? 5,
     } as z.input<typeof formSchema>,
     validators: {
       onChange: formSchema,
@@ -35,7 +43,7 @@ export function CreateTournamentForm() {
     },
     onSubmit: async ({ value }) => {
       toastFormValues(value);
-      await createTournament(value);
+      await upsertTournament(value);
       redirect("/tournaments");
     },
   });

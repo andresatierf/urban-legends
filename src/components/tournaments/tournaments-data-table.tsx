@@ -10,6 +10,7 @@ import {
 import { Button } from "../ui/button";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { toast } from "sonner";
 
 type Props<T, V> = Pick<
   DataTableSectionProps<T, V>,
@@ -28,7 +29,7 @@ export function TournamentsDataTable<T, V>({
 }: Props<T, V>) {
   const now = new Date();
   const isoNow = now.toISOString();
-  const deleteTournament = useMutation(api.tournaments.deleteTournament);
+  const removeTournament = useMutation(api.tournaments.remove);
 
   const columns: ColumnDef<(typeof tournaments)[number]>[] = useMemo(() => {
     const cols: ColumnDef<(typeof tournaments)[number]>[] = [
@@ -66,7 +67,7 @@ export function TournamentsDataTable<T, V>({
           return (
             <div className="flex justify-end gap-2">
               <Button
-                href={`/submissions/${tournament._id}/edit`}
+                href={`/tournaments/${tournament._id}/edit`}
                 variant="secondary"
                 size="icon"
                 className="z-10"
@@ -79,7 +80,8 @@ export function TournamentsDataTable<T, V>({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  deleteTournament({ tournamentId: tournament._id });
+                  removeTournament({ tournamentId: tournament._id });
+                  toast(`The tournament '${tournament.name}' has been removed`);
                 }}
                 className="z-10"
               >
@@ -92,7 +94,7 @@ export function TournamentsDataTable<T, V>({
     }
 
     return cols;
-  }, [showActions, deleteTournament]);
+  }, [showActions, removeTournament]);
 
   return (
     <DataTableSection
@@ -105,10 +107,11 @@ export function TournamentsDataTable<T, V>({
         const startDate = row.getValue("startDate") as string;
         const endDate = row.getValue("endDate") as string;
 
-        return cn("border-t transition hover:bg-gray-50", {
-          "bg-green-50": startDate <= isoNow && endDate >= isoNow,
-          "bg-yellow-50": startDate > isoNow,
-          "bg-red-50": endDate < isoNow,
+        return cn("border-t transition", {
+          "bg-green-50 hover:bg-green-100":
+            startDate <= isoNow && endDate >= isoNow,
+          "bg-yellow-50 hover:bg-yellow-100": startDate > isoNow,
+          "bg-red-50 hover:bg-red-100": endDate < isoNow,
         });
       }}
       emptyMessage="No tournaments yet."

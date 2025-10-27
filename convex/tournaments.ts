@@ -1,32 +1,8 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
-import type { GenericMutationCtx } from "convex/server";
 import { v } from "convex/values";
-import type { DataModel, Doc } from "./_generated/dataModel";
+import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { getTeams } from "./teams";
 import { getCurrentUserOrThrow } from "./users";
-
-async function requireAdmin(ctx: GenericMutationCtx<DataModel>) {
-  const userId = await getAuthUserId(ctx);
-  if (!userId) {
-    throw new Error("Not authenticated");
-  }
-
-  const userRoles = await ctx.db
-    .query("userRoles")
-    .withIndex("by_user", (q) => q.eq("userId", userId))
-    .collect();
-
-  const roles = await Promise.all(
-    userRoles.map(({ roleId }) => ctx.db.get(roleId)),
-  );
-
-  if (!roles.map((r) => r?.name).includes("admin")) {
-    throw new Error("Admin access required");
-  }
-
-  return userId;
-}
 
 export const list = query({
   args: { userId: v.optional(v.id("users")) },
@@ -63,11 +39,8 @@ export const list = query({
         return b.startDate.localeCompare(a.startDate);
 
       if (isActive(a)) return -1;
-
       if (isActive(b)) return 1;
-
       if (isFuture(a)) return -1;
-
       if (isFuture(b)) return 1;
 
       return 0;
@@ -75,18 +48,54 @@ export const list = query({
   },
 });
 
-export const create = mutation({
+export const get = query({
   args: {
+    tournamentId: v.optional(v.id("tournaments")),
+    name: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await getCurrentUserOrThrow(ctx);
+
+    if (!args.tournamentId && !args.name)
+      throw new Error("Must provide id or name");
+
+    if (args.name)
+      return await ctx.db
+        .query("tournaments")
+        .filter((q) => q.eq(q.field("name"), args.name))
+        .first();
+
+    return await ctx.db.get(args.tournamentId!);
+  },
+});
+
+export const upsert = mutation({
+  args: {
+    _id: v.optional(v.id("tournaments")),
     name: v.string(),
     description: v.optional(v.string()),
     startDate: v.string(),
     endDate: v.string(),
+    teamMaxSize: v.number(),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-
     if (!user.roles.includes("admin")) {
       throw new Error("Admin access required");
+    }
+
+    if (args._id) {
+      const tournament = await ctx.db.get(args._id);
+
+      if (!tournament) throw new Error("Tournament not found");
+
+      return await ctx.db.patch(args._id, {
+        name: args.name,
+        description: args.description || "",
+        startDate: args.startDate,
+        endDate: args.endDate,
+        teamMaxSize: args.teamMaxSize,
+      });
     }
 
     return await ctx.db.insert("tournaments", {
@@ -94,99 +103,13 @@ export const create = mutation({
       description: args.description || "",
       startDate: args.startDate,
       endDate: args.endDate,
+      teamMaxSize: args.teamMaxSize,
       createdBy: user._id,
     });
   },
 });
 
-export const update = mutation({
-  args: {
-    id: v.id("tournaments"),
-    name: v.string(),
-    description: v.string(),
-    startDate: v.string(),
-    endDate: v.string(),
-    isActive: v.boolean(),
-  },
-  handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-
-    await ctx.db.patch(args.id, {
-      name: args.name,
-      description: args.description,
-      startDate: args.startDate,
-      endDate: args.endDate,
-    });
-  },
-});
-
-export const getByName = query({
-  args: {
-    name: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return null;
-    }
-
-    return await ctx.db
-      .query("tournaments")
-      .filter((q) => q.eq(q.field("name"), args.name))
-      .first();
-  },
-});
-
-export const getById = query({
-  args: { tournamentId: v.id("tournaments") },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return null;
-    }
-
-    return await ctx.db.get(args.tournamentId);
-  },
-});
-
-export const getLeaderboard = query({
-  args: { tournamentId: v.id("tournaments") },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return [];
-    }
-
-    const teams = await ctx.db
-      .query("teams")
-      .withIndex("by_tournament", (q) =>
-        q.eq("tournamentId", args.tournamentId),
-      )
-      .collect();
-
-    const leaderboard = [];
-
-    for (const team of teams) {
-      const submissions = await ctx.db
-        .query("submissions")
-        .withIndex("by_team_and_date", (q) => q.eq("teamId", team._id))
-        .filter((q) => q.eq(q.field("state"), "approved"))
-        .collect();
-
-      // Group by date to count unique days
-      const uniqueDays = new Set(submissions.map((c) => c.date));
-
-      leaderboard.push({
-        team,
-        completedDays: uniqueDays.size,
-      });
-    }
-
-    return leaderboard.toSorted((a, b) => b.completedDays - a.completedDays);
-  },
-});
-
-export const deleteTournament = mutation({
+export const remove = mutation({
   args: { tournamentId: v.id("tournaments") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);

@@ -1,7 +1,7 @@
 "use client";
 
 import { SectionHeader } from "@/components/section-header";
-import { CreateTournamentForm } from "@/components/tournaments/create-tournament-form";
+import { UpsertTournamentForm } from "@/components/tournaments/upsert-tournament-form";
 import { Button } from "@/components/ui/button";
 
 export default function NewTournamentPage() {
@@ -12,7 +12,7 @@ export default function NewTournamentPage() {
           ← Back
         </Button>
       </SectionHeader>
-      <CreateTournamentForm />
+      <UpsertTournamentForm />
     </>
   );
 }

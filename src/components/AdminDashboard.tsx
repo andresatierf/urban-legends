@@ -131,10 +131,6 @@ function AdminOverview({
 }
 
 function CompetitionsPage() {
-  const _tournaments = useQuery(api.tournaments.list) || [];
-  const _createtournament = useMutation(api.tournaments.create);
-  const _updatetournament = useMutation(api.tournaments.update);
-
   const [showForm, setShowForm] = useState(false);
   const [editingCompetition, setEditingCompetition] = useState<any>(null);
   const [formData, setFormData] = useState({
