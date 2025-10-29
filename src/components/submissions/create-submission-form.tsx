@@ -58,7 +58,7 @@ export function CreateSubmissionForm() {
   const team = teams.find((t) => t._id === teamId);
 
   const tournament = useQuery(
-    api.tournaments.getById,
+    api.tournaments.get,
     team ? { tournamentId: team.tournamentId } : "skip",
   );
 

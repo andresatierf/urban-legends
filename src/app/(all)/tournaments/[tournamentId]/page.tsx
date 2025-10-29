@@ -30,7 +30,7 @@ export default function TournamentDetailsPage({ params }: Props) {
     tournamentId ? { tournamentId } : "skip",
   );
   const teams = useQuery(
-    api.teams.listByTournament,
+    api.teams.list,
     tournamentId ? { tournamentId } : "skip",
   );
 

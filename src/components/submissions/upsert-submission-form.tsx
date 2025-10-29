@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { useMemo } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/hooks/useUser";
 import { toastFormValues } from "@/lib/form";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -25,14 +26,16 @@ type Props = {
   submissionId?: Id<"submissions">;
 };
 
-export function EditSubmissionForm({ submissionId }: Props) {
+export function UpsertSubmissionForm({ submissionId }: Props) {
+  const { user } = useUser();
   const submission = useQuery(
     api.submissions.getById,
     submissionId ? { id: submissionId } : "skip",
   );
   const editSubmission = useMutation(api.submissions.editSubmission);
 
-  const teams = useQuery(api.teams.listByUser) || [];
+  const teams =
+    useQuery(api.teams.list, user ? { userId: user._id } : "skip") || [];
   const teamOptions = useMemo(
     () => teams.map((t) => ({ value: t._id, label: t.name })),
     [teams],
@@ -65,7 +68,7 @@ export function EditSubmissionForm({ submissionId }: Props) {
   const team = teams.find((t) => t._id === teamId);
 
   const tournament = useQuery(
-    api.tournaments.getById,
+    api.tournaments.get,
     team ? { tournamentId: team.tournamentId } : "skip",
   );
 

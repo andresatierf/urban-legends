@@ -9,12 +9,20 @@ import {
 import { Id } from "./_generated/dataModel";
 
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
-    getCurrentUserOrThrow(ctx);
+  args: { userIds: v.optional(v.array(v.id("users"))) },
+  handler: async (ctx, args) => {
+    await getCurrentUserOrThrow(ctx);
+
+    let usersQuery = ctx.db.query("users");
+
+    if (args.userIds) {
+      usersQuery = usersQuery.filter((q) =>
+        q.or(...args.userIds!.map((u) => q.eq(q.field("_id"), u))),
+      );
+    }
 
     const [users, roles, userRoles] = await Promise.all([
-      ctx.db.query("users").collect(),
+      usersQuery.collect(),
       ctx.db.query("roles").collect(),
       ctx.db.query("userRoles").collect(),
     ]);

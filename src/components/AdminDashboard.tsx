@@ -373,7 +373,7 @@ function TeamsPage() {
     useState<Id<"tournaments"> | null>(null);
   const teams =
     useQuery(
-      api.teams.listByTournament,
+      api.teams.list,
       selectedTournament ? { tournamentId: selectedTournament } : "skip",
     ) || [];
   const createTeam = useMutation(api.teams.create);

@@ -5,9 +5,24 @@ import { getTeams } from "./teams";
 import { getCurrentUserOrThrow } from "./users";
 
 export const list = query({
-  args: { userId: v.optional(v.id("users")) },
+  args: {
+    userId: v.optional(v.id("users")),
+    tournamentIds: v.optional(v.array(v.id("tournaments"))),
+  },
   handler: async (ctx, args) => {
-    // await getCurrentUserOrThrow(ctx);
+    await getCurrentUserOrThrow(ctx);
+
+    if (args.tournamentIds)
+      return await ctx.db
+        .query("tournaments")
+        .filter((q) =>
+          q.or(
+            ...args.tournamentIds!.map((tournamentId) =>
+              q.eq(q.field("_id"), tournamentId),
+            ),
+          ),
+        )
+        .collect();
 
     let tournaments: Doc<"tournaments">[];
     if (args.userId) {
@@ -51,18 +66,21 @@ export const list = query({
 export const get = query({
   args: {
     tournamentId: v.optional(v.id("tournaments")),
-    name: v.optional(v.string()),
+    tournamentName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     await getCurrentUserOrThrow(ctx);
 
-    if (!args.tournamentId && !args.name)
-      throw new Error("Must provide id or name");
+    if (!args.tournamentId && !args.tournamentName)
+      throw new Error("Must provide either id or name");
 
-    if (args.name)
+    if (args.tournamentId && args.tournamentName)
+      throw new Error("Must provide only id or name");
+
+    if (args.tournamentName)
       return await ctx.db
         .query("tournaments")
-        .filter((q) => q.eq(q.field("name"), args.name))
+        .filter((q) => q.eq(q.field("name"), args.tournamentName))
         .first();
 
     return await ctx.db.get(args.tournamentId!);
@@ -81,6 +99,7 @@ export const upsert = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
+
     if (!user.roles.includes("admin")) {
       throw new Error("Admin access required");
     }

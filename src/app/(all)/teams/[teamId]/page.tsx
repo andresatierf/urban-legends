@@ -16,9 +16,9 @@ type Props = {
 
 export default function TeamDetailsPage({ params }: Props) {
   const { teamId } = use(params);
-  const team = useQuery(api.teams.getById, teamId ? { teamId } : "skip");
+  const team = useQuery(api.teams.get, teamId ? { teamId } : "skip");
   const tournament = useQuery(
-    api.tournaments.getById,
+    api.tournaments.get,
     team ? { tournamentId: team.tournamentId } : "skip",
   );
   const members = useQuery(

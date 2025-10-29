@@ -1,9 +1,12 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { getCurrentUserOrThrow } from "./users";
 
 export const list = query({
   args: {
+    userId: v.optional(v.id("users")),
+    teamId: v.optional(v.id("teams")),
     state: v.optional(
       v.union(
         v.literal("pending"),
@@ -12,21 +15,35 @@ export const list = query({
         v.literal("deleted"),
       ),
     ),
+    startDate: v.optional(v.string()),
+    endDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    await getCurrentUserOrThrow(ctx);
 
-    if (args.state) {
-      return await ctx.db
-        .query("submissions")
-        .withIndex("by_state", (q) => q.eq("state", args.state!))
-        .collect();
-    }
+    let query = ctx.db.query("submissions");
 
-    return await ctx.db.query("submissions").collect();
+    if (args.userId)
+      query = query.filter((q) => q.eq(q.field("userId"), args.userId));
+
+    if (args.teamId)
+      query = query.filter((q) => q.eq(q.field("teamId"), args.teamId));
+
+    if (args.state)
+      query = query.filter((q) => q.eq(q.field("state"), args.state));
+
+    if (args.startDate)
+      query = query.filter((q) => q.gte(q.field("date"), args.startDate!));
+
+    if (args.endDate)
+      query = query.filter((q) => q.lte(q.field("date"), args.endDate!));
+
+    const submissions = await query.collect();
+
+    return submissions.toSorted((a, b) => {
+      if (a.date === b.date) return 0;
+      return a.date.localeCompare(b.date);
+    });
   },
 });
 
@@ -216,5 +233,29 @@ export const getTeamSubmissions = query({
     }
 
     return submissionsWithUsers;
+  },
+});
+
+export const approve = mutation({
+  args: { submissionId: v.id("submissions") },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    if (!user.roles.includes("admin")) {
+      throw new Error("You do not have permission to approve this submission");
+    }
+
+    await ctx.db.patch(args.submissionId, { state: "approved" });
+  },
+});
+
+export const reject = mutation({
+  args: { submissionId: v.id("submissions") },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    if (!user.roles.includes("admin")) {
+      throw new Error("You do not have permission to reject this submission");
+    }
+
+    await ctx.db.patch(args.submissionId, { state: "rejected" });
   },
 });

@@ -30,7 +30,6 @@ import { Card } from "../card";
 import { Checkbox } from "../checkbox";
 import { Input } from "../input";
 import { DataTablePagination } from "./pagination";
-import { DataTableViewOptions } from "./view-options";
 
 export interface DataTableProps<TData, TValue>
   extends Partial<TableOptions<TData>> {

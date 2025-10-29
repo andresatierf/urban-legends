@@ -46,15 +46,16 @@ export default defineSchema({
     userId: v.id("users"),
     teamId: v.id("teams"),
     tournamentId: v.id("tournaments"),
-    date: v.string(), // ISO date string (YYYY-MM-DD)
+    date: v.string(),
     description: v.optional(v.string()),
-    teammates: v.array(v.id("users")), // IDs of teammates who completed together
+    teammates: v.array(v.id("users")),
     state: v.union(
       v.literal("pending"),
       v.literal("approved"),
       v.literal("rejected"),
       v.literal("deleted"),
     ),
+    managedBy: v.optional(v.id("users")),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "date"])

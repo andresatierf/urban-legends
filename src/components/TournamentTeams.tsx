@@ -9,7 +9,7 @@ type Props = {
 export function TournamentTeams({ tournamentId }: Props) {
   const tournament = useQuery(api.tournaments.get, { tournamentId });
 
-  const teams = useQuery(api.teams.listByTournament, { tournamentId }) || [];
+  const teams = useQuery(api.teams.list, { tournamentId }) || [];
 
   if (!tournament) return null; // TODO: add skeleton
 
@@ -41,7 +41,7 @@ export function TournamentTeams({ tournamentId }: Props) {
               >
                 <td className="p-3 font-medium text-gray-800">{team.name}</td>
                 <td className="p-3 text-gray-600">
-                  {team.members.map((m) => m.user.email).join(", ")}
+                  {team.members?.map((m) => m.user.email).join(", ")}
                 </td>
                 <td className="p-3 font-semibold text-blue-600">
                   {team.score}

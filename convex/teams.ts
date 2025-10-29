@@ -1,51 +1,128 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
-import type { GenericMutationCtx } from "convex/server";
 import { v } from "convex/values";
-import type { DataModel, Id } from "./_generated/dataModel";
-import { mutation, query, QueryCtx } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { mutation, type QueryCtx, query } from "./_generated/server";
 import { getCurrentUserOrThrow } from "./users";
 
-async function requireAdmin(ctx: GenericMutationCtx<DataModel>) {
-  const userId = await getAuthUserId(ctx);
-  if (!userId) {
-    throw new Error("Not authenticated");
-  }
-
-  const userRoles = await ctx.db
-    .query("userRoles")
-    .withIndex("by_user", (q) => q.eq("userId", userId))
-    .collect();
-
-  const roles = await Promise.all(
-    userRoles.map(({ roleId }) => ctx.db.get(roleId)),
-  );
-
-  if (!roles.map((r) => r?.name).includes("admin")) {
-    throw new Error("Admin access required");
-  }
-
-  return userId;
-}
-
-export const getById = query({
-  args: { teamId: v.id("teams") },
+export const list = query({
+  args: {
+    userId: v.optional(v.id("users")),
+    tournamentId: v.optional(v.id("tournaments")),
+  },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return null;
+    await getCurrentUserOrThrow(ctx);
+
+    let query = ctx.db.query("teams");
+
+    if (args.userId) {
+      const memberships = await ctx.db
+        .query("teamMembers")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId!))
+        .collect();
+
+      const teamIds = memberships.map((m) => m.teamId);
+
+      query = query.filter((q) =>
+        q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))),
+      );
     }
 
-    return await ctx.db.get(args.teamId);
+    if (args.tournamentId) {
+      query = query.filter((q) =>
+        q.eq(q.field("tournamentId"), args.tournamentId),
+      );
+    }
+
+    return await query.collect();
+  },
+});
+
+export const listMembers = query({
+  args: { teamIds: v.union(v.id("teamss"), v.array(v.id("teams"))) },
+  handler: async (ctx, args) => {
+    await getCurrentUserOrThrow(ctx);
+
+    if (!Array.isArray(args.teamIds)) {
+      return await ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) =>
+          q.eq("teamId", args.teamIds as unknown as Id<"teams">),
+        )
+        .collect();
+    }
+
+    const teamMembersPerTeam = await Promise.all(
+      args.teamIds.map((id) =>
+        ctx.db
+          .query("teamMembers")
+          .withIndex("by_team", (q) => q.eq("teamId", id))
+          .collect(),
+      ),
+    );
+
+    return teamMembersPerTeam.flat();
+  },
+});
+
+export const get = query({
+  args: {
+    userId: v.optional(v.id("users")),
+    teamId: v.optional(v.id("teams")),
+    teamName: v.optional(v.string()),
+    tournamentId: v.optional(v.id("tournaments")),
+  },
+  handler: async (ctx, args) => {
+    await getCurrentUserOrThrow(ctx);
+
+    if (!args.teamId && !args.teamName && !args.userId && !args.tournamentId)
+      throw new Error(
+        "Must provide either team id, team name and tournament id, or user and tournament ids",
+      );
+
+    if (
+      (args.teamId && (args.teamName || args.userId || args.tournamentId)) ||
+      (args.teamName && (args.userId || !args.tournamentId)) ||
+      (args.userId && !args.tournamentId) ||
+      (args.tournamentId && (!args.teamName || !args.userId))
+    )
+      throw new Error(
+        "Must provide either team id, team name and tournament id, or user and tournament ids",
+      );
+
+    if (args.teamId) return await ctx.db.get(args.teamId);
+
+    if (args.teamName && args.tournamentId)
+      return await ctx.db
+        .query("teams")
+        .withIndex("by_tournament_and_name", (q) =>
+          q.eq("tournamentId", args.tournamentId!).eq("name", args.teamName!),
+        )
+        .unique();
+
+    if (args.userId && args.tournamentId) {
+      const userTeams = await ctx.db
+        .query("teamMembers")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId!))
+        .collect();
+      const teamIds = userTeams.map((m) => m.teamId);
+      return await ctx.db
+        .query("teams")
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("tournamentId"), args.tournamentId!),
+            q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))),
+          ),
+        )
+        .unique();
+    }
+
+    throw new Error("This should never happen");
   },
 });
 
 export const getUserTeamByTournament = query({
   args: { tournamentId: v.id("tournaments") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return;
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const teams = await ctx.db
       .query("teams")
@@ -58,7 +135,7 @@ export const getUserTeamByTournament = query({
       .query("teamMembers")
       .filter((q) =>
         q.and(
-          q.eq(q.field("userId"), userId),
+          q.eq(q.field("userId"), user._id),
           q.or(...teams.map(({ _id }) => q.eq(q.field("teamId"), _id))),
         ),
       )
@@ -71,10 +148,8 @@ export const getUserTeamByTournament = query({
 export const listTeamMembers = query({
   args: { teamId: v.id("teams"), excludeSelf: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return;
-    }
+    const user = await getCurrentUserOrThrow(ctx);
+
     const teamMembers = await ctx.db
       .query("teamMembers")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
@@ -98,50 +173,7 @@ export const listTeamMembers = query({
         ...m,
         email: userIdMap.get(m.userId)?.email,
       }))
-      .filter((m) => !args.excludeSelf || m.userId !== userId);
-  },
-});
-
-export const listByTournament = query({
-  args: { tournamentId: v.id("tournaments") },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return [];
-    }
-
-    const teams = await ctx.db
-      .query("teams")
-      .withIndex("by_tournament", (q) =>
-        q.eq("tournamentId", args.tournamentId),
-      )
-      .collect();
-
-    const teamsWithMembers = [];
-    for (const team of teams) {
-      const members = await ctx.db
-        .query("teamMembers")
-        .withIndex("by_team", (q) => q.eq("teamId", team._id))
-        .collect();
-
-      const membersWithUsers = [];
-      for (const member of members) {
-        const user = await ctx.db.get(member.userId);
-        if (user) {
-          membersWithUsers.push({
-            ...member,
-            user,
-          });
-        }
-      }
-
-      teamsWithMembers.push({
-        ...team,
-        members: membersWithUsers,
-      });
-    }
-
-    return teamsWithMembers;
+      .filter((m) => !args.excludeSelf || m.userId !== user._id);
   },
 });
 
@@ -152,7 +184,11 @@ export const create = mutation({
     members: v.array(v.id("users")),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAdmin(ctx);
+    const user = await getCurrentUserOrThrow(ctx);
+
+    if (!user.roles.includes("admin")) {
+      throw new Error("Admin access required");
+    }
 
     const existingTeam = await ctx.db
       .query("teams")
@@ -167,7 +203,7 @@ export const create = mutation({
     const team = await ctx.db.insert("teams", {
       name: args.name,
       tournamentId: args.tournamentId,
-      createdBy: userId,
+      createdBy: user._id,
     });
 
     // TODO: add members if provided
@@ -183,15 +219,19 @@ export const addMember = mutation({
     role: v.union(v.literal("member"), v.literal("captain")),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
+    // const user = await getCurrentUserOrThrow(ctx);
+    //
+    // if (!user.roles.includes("admin")) {
+    //   throw new Error("Admin access required");
+    // }
 
     // Find user by email
-    const user = await ctx.db
+    const userToAdd = await ctx.db
       .query("users")
       .filter((q) => q.eq(q.field("email"), args.userEmail))
       .first();
 
-    if (!user) {
+    if (!userToAdd) {
       throw new Error("User not found");
     }
 
@@ -199,7 +239,7 @@ export const addMember = mutation({
     const existingMember = await ctx.db
       .query("teamMembers")
       .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", args.teamId).eq("userId", user._id),
+        q.eq("teamId", args.teamId).eq("userId", userToAdd._id),
       )
       .first();
 
@@ -209,7 +249,7 @@ export const addMember = mutation({
 
     await ctx.db.insert("teamMembers", {
       teamId: args.teamId,
-      userId: user._id,
+      userId: userToAdd._id,
       role: args.role,
     });
   },
@@ -221,7 +261,11 @@ export const removeMember = mutation({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
+    const user = await getCurrentUserOrThrow(ctx);
+
+    if (!user.roles.includes("admin")) {
+      throw new Error("Admin access required");
+    }
 
     const member = await ctx.db
       .query("teamMembers")
@@ -233,21 +277,6 @@ export const removeMember = mutation({
     if (member) {
       await ctx.db.delete(member._id);
     }
-  },
-});
-
-export const list = query({
-  args: { userId: v.optional(v.id("users")) },
-  handler: async (ctx, args) => {
-    await getCurrentUserOrThrow(ctx);
-    return await getTeams(ctx, args);
-  },
-});
-
-export const listByUser = query({
-  handler: async (ctx) => {
-    const user = await getCurrentUserOrThrow(ctx);
-    return await getTeams(ctx, { userId: user._id });
   },
 });
 
