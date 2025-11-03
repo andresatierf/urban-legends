@@ -1,4 +1,3 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getCurrentUserOrThrow } from "./users";
@@ -78,23 +77,20 @@ export const listUserSubmissions = query({
     ),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     if (args.state) {
       return await ctx.db
         .query("submissions")
         .withIndex("by_user_and_state", (q) =>
-          q.eq("userId", userId).eq("state", args.state!),
+          q.eq("userId", user._id).eq("state", args.state!),
         )
         .collect();
     }
 
     return await ctx.db
       .query("submissions")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
   },
 });
@@ -102,10 +98,7 @@ export const listUserSubmissions = query({
 export const getById = query({
   args: { id: v.id("submissions") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    await getCurrentUserOrThrow(ctx);
 
     return await ctx.db.get(args.id);
   },
@@ -119,15 +112,12 @@ export const createSubmission = mutation({
     teammateIds: v.array(v.id("users")),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const membership = await ctx.db
       .query("teamMembers")
       .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", args.teamId).eq("userId", userId),
+        q.eq("teamId", args.teamId).eq("userId", user._id),
       )
       .first();
 
@@ -141,7 +131,7 @@ export const createSubmission = mutation({
     }
 
     await ctx.db.insert("submissions", {
-      userId,
+      userId: user._id,
       teamId: args.teamId,
       tournamentId: team.tournamentId,
       date: args.date,
@@ -161,17 +151,14 @@ export const editSubmission = mutation({
     teammateIds: v.array(v.id("users")),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const submission = await ctx.db.get(args.id);
     if (!submission) {
       throw new Error("Submission not found");
     }
 
-    if (submission.userId !== userId) {
+    if (submission.userId !== user._id) {
       throw new Error("You do not have permission to edit this submission");
     }
 
@@ -224,14 +211,11 @@ export const getUserSubmissions = query({
     endDate: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return [];
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     return await ctx.db
       .query("submissions")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
       .filter((q) =>
         q.and(
           q.eq(q.field("teamId"), args.teamId),
@@ -249,10 +233,7 @@ export const getTeamSubmissions = query({
     date: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return [];
-    }
+    await getCurrentUserOrThrow(ctx);
 
     const submissions = await ctx.db
       .query("submissions")

@@ -1,15 +1,12 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
+import { getCurrentUserOrThrow } from "./users";
 
 export const makeFirstUserAdmin = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error("Not authenticated");
-    }
+    const user = await getCurrentUserOrThrow(ctx);
 
     const adminRole = await ctx.db
       .query("roles")
@@ -36,7 +33,7 @@ export const makeFirstUserAdmin = mutation({
       return false; // Admin already exists
     }
 
-    await ctx.db.insert("userRoles", { userId, roleId });
+    await ctx.db.insert("userRoles", { userId: user._id, roleId });
 
     return true;
   },
@@ -56,22 +53,10 @@ export const setUserRole = mutation({
     role: v.union(v.literal("admin"), v.literal("user")),
   },
   handler: async (ctx, args) => {
-    const currentUserId = await getAuthUserId(ctx);
-    if (!currentUserId) {
-      throw new Error("Not authenticated");
-    }
+    const currentUser = await getCurrentUserOrThrow(ctx);
 
     // Check if current user is admin
-    const currentUserRoles = await ctx.db
-      .query("userRoles")
-      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
-      .collect();
-
-    const currentUserRoleNames = await Promise.all(
-      currentUserRoles.map(({ roleId }) => ctx.db.get(roleId)),
-    );
-
-    if (!currentUserRoleNames.map((r) => r?.name).includes("admin")) {
+    if (!currentUser.roles.includes("admin")) {
       throw new Error("Admin access required");
     }
 
