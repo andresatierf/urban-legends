@@ -103,7 +103,7 @@ export function TournamentsDataTable<T, V>({
       columns={columns}
       data={tournaments}
       hrefFn={(row) => `/tournaments/${row.original._id}`}
-      rowClassName={(row) => {
+      rowClassNameFn={(row) => {
         const startDate = row.getValue("startDate") as string;
         const endDate = row.getValue("endDate") as string;
 

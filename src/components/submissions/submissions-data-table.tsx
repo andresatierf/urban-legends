@@ -11,6 +11,7 @@ import {
   type DataTableSectionProps,
 } from "../data-table-section";
 import { Button } from "../ui/button";
+import { useUser } from "@/hooks/useUser";
 
 type Props<T, V> = Pick<
   DataTableSectionProps<T, V>,
@@ -30,6 +31,7 @@ export function SubmissionsDataTable<T, V>({
   showActions,
   ...props
 }: Props<T, V>) {
+  const { isAdmin } = useUser();
   const approveSubmission = useMutation(api.submissions.approve);
   const rejectSubmission = useMutation(api.submissions.reject);
   const removeSubmission = useMutation(api.submissions.remove);
@@ -50,7 +52,7 @@ export function SubmissionsDataTable<T, V>({
           const submission = row.original;
           return (
             <div className="flex justify-end gap-2">
-              {submission.state === "pending" && (
+              {submission.state === "pending" && isAdmin && (
                 <>
                   <Button
                     size="icon"
@@ -113,7 +115,13 @@ export function SubmissionsDataTable<T, V>({
     }
 
     return cols;
-  }, [showActions, removeSubmission, approveSubmission, rejectSubmission]);
+  }, [
+    showActions,
+    removeSubmission,
+    approveSubmission,
+    rejectSubmission,
+    isAdmin,
+  ]);
 
   return (
     <DataTableSection
@@ -122,13 +130,14 @@ export function SubmissionsDataTable<T, V>({
       columns={columns}
       data={submissions}
       hrefFn={(row) => `/submissions/${row.original._id}`}
-      rowClassName={(row) => {
+      rowClassNameFn={(row) => {
         return cn("border-t transition", {
           "bg-green-50 hover:bg-green-100":
             row.getValue("state") === "approved",
           "bg-yellow-50 hover:bg-yellow-100":
             row.getValue("state") === "pending",
           "bg-red-50 hover:bg-red-100": row.getValue("state") === "rejected",
+          "bg-gray-200 hover:bg-gray-300": row.getValue("state") === "deleted",
         });
       }}
       emptyMessage="No submissions yet."

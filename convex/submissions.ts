@@ -13,6 +13,14 @@ export const list = query({
         v.literal("approved"),
         v.literal("rejected"),
         v.literal("deleted"),
+        v.array(
+          v.union(
+            v.literal("pending"),
+            v.literal("approved"),
+            v.literal("rejected"),
+            v.literal("deleted"),
+          ),
+        ),
       ),
     ),
     startDate: v.optional(v.string()),
@@ -29,8 +37,19 @@ export const list = query({
     if (args.teamId)
       query = query.filter((q) => q.eq(q.field("teamId"), args.teamId));
 
-    if (args.state)
-      query = query.filter((q) => q.eq(q.field("state"), args.state));
+    if (args.state) {
+      if (Array.isArray(args.state)) {
+        query = query.filter((q) =>
+          q.or(
+            ...(args.state as typeof args.state).map((s) =>
+              q.eq(q.field("state"), s),
+            ),
+          ),
+        );
+      } else {
+        query = query.filter((q) => q.eq(q.field("state"), args.state));
+      }
+    }
 
     if (args.startDate)
       query = query.filter((q) => q.gte(q.field("date"), args.startDate!));
@@ -164,6 +183,37 @@ export const editSubmission = mutation({
       description,
       teammates: teammateIds,
     });
+  },
+});
+
+export const remove = mutation({
+  args: { submissionId: v.id("submissions") },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    const isAdmin = user.roles.includes("admin");
+
+    const submission = await ctx.db.get(args.submissionId);
+    if (!submission) {
+      throw new Error("Submission not found");
+    }
+
+    if (!isAdmin && submission.userId !== user._id) {
+      throw new Error("You do not have permission to remove this submission");
+    }
+
+    if (submission.state === "deleted") {
+      throw new Error("Submission already deleted");
+    }
+
+    if (submission.state === "approved") {
+      throw new Error("Cannot remove an approved submission");
+    }
+
+    if (submission.state === "rejected") {
+      throw new Error("Cannot remove a rejected submission");
+    }
+
+    await ctx.db.patch(args.submissionId, { state: "deleted" });
   },
 });
 

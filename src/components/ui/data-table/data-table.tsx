@@ -37,7 +37,7 @@ export interface DataTableProps<TData, TValue>
   data: TData[];
   enableSearch?: boolean;
   emptyMessage?: string;
-  rowClassName?: (row: Row<TData>) => string;
+  rowClassNameFn?: (row: Row<TData>) => string;
   hrefFn?: (row: Row<TData>) => string;
 }
 
@@ -46,7 +46,7 @@ export function DataTable<TData, TValue>({
   data = [],
   enableSearch,
   emptyMessage = "No results.",
-  rowClassName,
+  rowClassNameFn,
   hrefFn,
   ...props
 }: DataTableProps<TData, TValue>) {
@@ -151,13 +151,16 @@ export function DataTable<TData, TValue>({
               table.getRowModel().rows.map((row) =>
                 hrefFn ? (
                   <Link key={row.id} href={hrefFn(row)} className="contents">
-                    <InnerTableRow row={row} className={rowClassName?.(row)} />
+                    <InnerTableRow
+                      row={row}
+                      className={rowClassNameFn?.(row)}
+                    />
                   </Link>
                 ) : (
                   <InnerTableRow
                     key={row.id}
                     row={row}
-                    className={rowClassName?.(row)}
+                    className={rowClassNameFn?.(row)}
                   />
                 ),
               )

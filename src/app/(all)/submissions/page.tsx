@@ -12,7 +12,12 @@ export default function Submissions() {
   const { user, isAdmin } = useUser();
 
   const submissions =
-    useQuery(api.submissions.list, user ? { userId: user._id } : "skip") || [];
+    useQuery(
+      api.submissions.list,
+      user
+        ? { userId: user._id, state: ["approved", "pending", "rejected"] }
+        : "skip",
+    ) || [];
   const pendingSubmissions =
     useQuery(api.submissions.list, { state: "pending" }) || [];
   const allSubmissions = useQuery(api.submissions.list, {}) || [];
@@ -40,7 +45,7 @@ export default function Submissions() {
         team: teamIdMap.get(submission.teamId)!,
         user: userIdMap.get(submission.userId)!,
       })),
-    [teamIdMap],
+    [teamIdMap, userIdMap],
   );
 
   return (
@@ -50,6 +55,7 @@ export default function Submissions() {
         <SubmissionsDataTable
           title="Your Submissions"
           submissions={augmentSubmissions(submissions)}
+          showActions
         />
         {isAdmin && (
           <>
