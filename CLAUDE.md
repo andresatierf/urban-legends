@@ -164,7 +164,6 @@ NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 
 ## Known Issues & Technical Debt
 
-- Naming inconsistency: some code references "competitions" instead of "tournaments"
 - Admin role assignment (`setUserRole`) is partially implemented/commented out
 - User-side team creation is admin-only currently
 - Submission approval workflow is incomplete

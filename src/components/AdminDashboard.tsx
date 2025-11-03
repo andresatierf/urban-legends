@@ -25,7 +25,7 @@ export function AdminDashboard({
 
   switch (currentPage) {
     case "tournaments":
-      return <CompetitionsPage />;
+      return <TournamentsPage />;
     case "teams":
       return <TeamsPage />;
     case "users":
@@ -130,9 +130,13 @@ function AdminOverview({
   );
 }
 
-function CompetitionsPage() {
+function TournamentsPage() {
+  const tournaments = useQuery(api.tournaments.list) || [];
+  const updateTournament = useMutation(api.tournaments.upsert);
+  const createTournament = useMutation(api.tournaments.upsert);
+
   const [showForm, setShowForm] = useState(false);
-  const [editingCompetition, setEditingCompetition] = useState<any>(null);
+  const [editingTournament, setEditingTournament] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -143,70 +147,70 @@ function CompetitionsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (editingCompetition) {
-        await updateCompetition({
-          id: editingCompetition._id,
+      if (editingTournament) {
+        await updateTournament({
+          id: editingTournament._id,
           ...formData,
-          isActive: editingCompetition.isActive,
+          isActive: editingTournament.isActive,
         });
-        toast.success("Competition updated!");
+        toast.success("Tournament updated!");
       } else {
-        await createCompetition(formData);
-        toast.success("Competition created!");
+        await createTournament(formData);
+        toast.success("Tournament created!");
       }
       setShowForm(false);
-      setEditingCompetition(null);
+      setEditingTournament(null);
       setFormData({ name: "", description: "", startDate: "", endDate: "" });
     } catch (_error) {
-      toast.error("Failed to save competition");
+      toast.error("Failed to save tournament");
     }
   };
 
-  const handleEdit = (competition: any) => {
-    setEditingCompetition(competition);
+  const handleEdit = (tournament: any) => {
+    setEditingTournament(tournament);
     setFormData({
-      name: competition.name,
-      description: competition.description,
-      startDate: competition.startDate,
-      endDate: competition.endDate,
+      name: tournament.name,
+      description: tournament.description,
+      startDate: tournament.startDate,
+      endDate: tournament.endDate,
     });
     setShowForm(true);
   };
 
-  const toggleActive = async (competition: any) => {
+  const toggleActive = async (tournament: any) => {
     try {
-      await updateCompetition({
-        id: competition._id,
-        name: competition.name,
-        description: competition.description,
-        startDate: competition.startDate,
-        endDate: competition.endDate,
-        isActive: !competition.isActive,
+      await updateTournament({
+        id: tournament._id,
+        name: tournament.name,
+        description: tournament.description,
+        startDate: tournament.startDate,
+        endDate: tournament.endDate,
+        isActive: !tournament.isActive,
       });
       toast.success(
-        `Competition ${competition.isActive ? "deactivated" : "activated"}!`,
+        `Tournament ${tournament.isActive ? "deactivated" : "activated"}!`,
       );
     } catch (_error) {
-      toast.error("Failed to update competition");
+      toast.error("Failed to update tournament");
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-3xl text-gray-900">Competitions</h2>
+        <h2 className="font-bold text-3xl text-gray-900">Tournaments</h2>
         <button
           onClick={() => setShowForm(true)}
           className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
         >
-          Create Competition
+          Create Tournament
         </button>
       </div>
 
       {showForm && (
         <div className="rounded-lg bg-white p-6 shadow">
           <h3 className="mb-4 font-semibold text-lg">
-            {editingCompetition ? "Edit Competition" : "Create New Competition"}
+            {editingTournament ? "Edit Tournament" : "Create New Tournament"}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -272,13 +276,13 @@ function CompetitionsPage() {
                 type="submit"
                 className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               >
-                {editingCompetition ? "Update" : "Create"}
+                {editingTournament ? "Update" : "Create"}
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setShowForm(false);
-                  setEditingCompetition(null);
+                  setEditingTournament(null);
                   setFormData({
                     name: "",
                     description: "",
@@ -314,48 +318,48 @@ function CompetitionsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
-            {competitions.map((competition) => (
-              <tr key={competition._id}>
+            {tournaments.map((tournament) => (
+              <tr key={tournament._id}>
                 <td className="whitespace-nowrap px-6 py-4">
                   <div>
                     <div className="font-medium text-gray-900 text-sm">
-                      {competition.name}
+                      {tournament.name}
                     </div>
                     <div className="text-gray-500 text-sm">
-                      {competition.description}
+                      {tournament.description}
                     </div>
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-gray-500 text-sm">
-                  {competition.startDate} - {competition.endDate}
+                  {tournament.startDate} - {tournament.endDate}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4">
                   <span
                     className={`rounded-full px-2 py-1 text-xs ${
-                      competition.isActive
+                      tournament.isActive
                         ? "bg-green-100 text-green-800"
                         : "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    {competition.isActive ? "Active" : "Inactive"}
+                    {tournament.isActive ? "Active" : "Inactive"}
                   </span>
                 </td>
                 <td className="space-x-2 whitespace-nowrap px-6 py-4 font-medium text-sm">
                   <button
-                    onClick={() => handleEdit(competition)}
+                    onClick={() => handleEdit(tournament)}
                     className="text-blue-600 hover:text-blue-900"
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => toggleActive(competition)}
+                    onClick={() => toggleActive(tournament)}
                     className={
-                      competition.isActive
+                      tournament.isActive
                         ? "text-red-600 hover:text-red-900"
                         : "text-green-600 hover:text-green-900"
                     }
                   >
-                    {competition.isActive ? "Deactivate" : "Activate"}
+                    {tournament.isActive ? "Deactivate" : "Activate"}
                   </button>
                 </td>
               </tr>
@@ -368,7 +372,7 @@ function CompetitionsPage() {
 }
 
 function TeamsPage() {
-  const competitions = useQuery(api.tournaments.list) || [];
+  const tournaments = useQuery(api.tournaments.list) || [];
   const [selectedTournament, setSelectedTournament] =
     useState<Id<"tournaments"> | null>(null);
   const teams =
@@ -442,21 +446,21 @@ function TeamsPage() {
 
       <div className="rounded-lg bg-white p-4 shadow">
         <label className="mb-2 block font-medium text-gray-700 text-sm">
-          Select Competition
+          Select Tournament
         </label>
         <select
           value={selectedTournament || ""}
           onChange={(e) =>
             setSelectedTournament(
-              (e.target.value as Id<"competitions">) || null,
+              (e.target.value as Id<"tournaments">) || null,
             )
           }
           className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="">Select a competition...</option>
-          {competitions.map((competition) => (
-            <option key={competition._id} value={competition._id}>
-              {competition.name}
+          <option value="">Select a tournament...</option>
+          {tournaments.map((tournament) => (
+            <option key={tournament._id} value={tournament._id}>
+              {tournament.name}
             </option>
           ))}
         </select>
