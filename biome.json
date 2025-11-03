@@ -27,6 +27,9 @@
             "functions": ["cn"]
           }
         }
+      },
+      "complexity": {
+        "noUselessRename": "error"
       }
     }
   },

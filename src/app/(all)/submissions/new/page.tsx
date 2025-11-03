@@ -1,5 +1,7 @@
+"use client";
+
 import { SectionHeader } from "@/components/section-header";
-import { CreateSubmissionForm } from "@/components/submissions/create-submission-form";
+import { UpsertSubmissionForm } from "@/components/submissions/upsert-submission-form";
 
 export default function NewSubmissionPage() {
   return (
@@ -9,7 +11,7 @@ export default function NewSubmissionPage() {
         title="Submit Activity"
         description="Fill out the form to submit your activity for this tournament."
       />
-      <CreateSubmissionForm />
+      <UpsertSubmissionForm />
     </>
   );
 }

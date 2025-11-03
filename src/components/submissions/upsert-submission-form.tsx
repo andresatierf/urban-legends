@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 import { toastFormValues } from "@/lib/form";
 import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Combobox } from "../combobox";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
@@ -23,16 +23,13 @@ const formSchema = z.object({
 });
 
 type Props = {
-  submissionId?: Id<"submissions">;
+  submission?: Doc<"submissions">;
 };
 
-export function UpsertSubmissionForm({ submissionId }: Props) {
+export function UpsertSubmissionForm({ submission }: Props) {
   const { user } = useUser();
-  const submission = useQuery(
-    api.submissions.getById,
-    submissionId ? { id: submissionId } : "skip",
-  );
-  const editSubmission = useMutation(api.submissions.editSubmission);
+
+  const editSubmission = useMutation(api.submissions.upsert);
 
   const teams =
     useQuery(api.teams.list, user ? { userId: user._id } : "skip") || [];
@@ -55,7 +52,7 @@ export function UpsertSubmissionForm({ submissionId }: Props) {
     },
     onSubmit: async ({ value }) => {
       toastFormValues(value);
-      await editSubmission({ ...value, id: submissionId! });
+      await editSubmission({ ...value, _id: submission?._id });
       redirect("/submissions");
     },
   });
@@ -83,12 +80,10 @@ export function UpsertSubmissionForm({ submissionId }: Props) {
     [teammates],
   );
 
-  if (submission === undefined) return null; // TODO: Add skeleton
-
   return (
     // biome-ignore lint/correctness/useUniqueElementIds: ignore
     <form
-      id="create-submission-form"
+      id="upsert-submission-form"
       onSubmit={(e) => {
         e.preventDefault();
         form.handleSubmit();
@@ -259,7 +254,7 @@ export function UpsertSubmissionForm({ submissionId }: Props) {
           {(canSubmit) => (
             <Button
               type="submit"
-              form="create-submission-form"
+              form="upsert-submission-form"
               disabled={!teamId || !canSubmit}
             >
               Submit

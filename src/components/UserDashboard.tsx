@@ -1,9 +1,10 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import Link from "next/link";
 import { useMemo } from "react";
+import { useUser } from "@/hooks/useUser";
+import { api } from "../../convex/_generated/api";
 
 interface UserDashboardProps {
   currentPage?: string;
@@ -12,17 +13,12 @@ interface UserDashboardProps {
 
 export function UserDashboard(_props: UserDashboardProps) {
   // Fetch current user
-  const currentUser = useQuery(api.users.current);
-
-  // Check if user is admin
-  const isAdmin = useMemo(() => {
-    return currentUser?.roles?.includes("admin") ?? false;
-  }, [currentUser]);
+  const { user: user, isAdmin } = useUser();
 
   // Fetch user's teams
   const userTeams = useQuery(
     api.teams.list,
-    currentUser ? { userId: currentUser._id } : "skip",
+    user ? { userId: user._id } : "skip",
   );
 
   // Fetch all tournaments
@@ -93,7 +89,11 @@ export function UserDashboard(_props: UserDashboardProps) {
   // Map tournaments by ID for easy lookup
   const tournamentMap = useMemo(() => {
     const map = new Map();
-    tournaments?.forEach((t) => map.set(t._id, t));
+    if (tournaments) {
+      for (const t of tournaments) {
+        map.set(t._id, t);
+      }
+    }
     return map;
   }, [tournaments]);
 
@@ -103,7 +103,7 @@ export function UserDashboard(_props: UserDashboardProps) {
     return userSubmissions.slice(0, 5);
   }, [userSubmissions]);
 
-  if (!currentUser) {
+  if (!user) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-gray-500">Loading...</div>
@@ -116,7 +116,7 @@ export function UserDashboard(_props: UserDashboardProps) {
       {/* Welcome Header */}
       <div>
         <h1 className="font-bold text-3xl text-gray-900">
-          Welcome back, {currentUser.name || "User"}!
+          Welcome back, {user.name || "User"}!
         </h1>
         <p className="text-gray-600">
           Here's an overview of your tournament activity
@@ -303,7 +303,9 @@ export function UserDashboard(_props: UserDashboardProps) {
 
         {!userTeams || userTeams.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="mb-4 text-gray-500">You're not part of any teams yet</p>
+            <p className="mb-4 text-gray-500">
+              You're not part of any teams yet
+            </p>
             <Link
               href="/teams"
               className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"

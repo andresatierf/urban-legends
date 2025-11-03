@@ -6,6 +6,7 @@ export const list = query({
   args: {
     userId: v.optional(v.id("users")),
     teamId: v.optional(v.id("teams")),
+    tournamentId: v.optional(v.id("tournaments")),
     state: v.optional(
       v.union(
         v.literal("pending"),
@@ -33,8 +34,22 @@ export const list = query({
     if (args.userId)
       query = query.filter((q) => q.eq(q.field("userId"), args.userId));
 
+    if (args.teamId && args.tournamentId)
+      throw new Error("teamId and tournamentId cannot be used together");
+
     if (args.teamId)
       query = query.filter((q) => q.eq(q.field("teamId"), args.teamId));
+
+    if (args.tournamentId) {
+      const teams = await ctx.db
+        .query("teams")
+        .filter((q) => q.eq(q.field("tournamentId"), args.tournamentId))
+        .collect();
+
+      query = query.filter((q) =>
+        q.or(...teams.map((t) => q.eq(q.field("teamId"), t._id))),
+      );
+    }
 
     if (args.state) {
       if (Array.isArray(args.state)) {
@@ -51,10 +66,14 @@ export const list = query({
     }
 
     if (args.startDate)
-      query = query.filter((q) => q.gte(q.field("date"), args.startDate!));
+      query = query.filter((q) =>
+        q.gte(q.field("date"), args.startDate as string),
+      );
 
     if (args.endDate)
-      query = query.filter((q) => q.lte(q.field("date"), args.endDate!));
+      query = query.filter((q) =>
+        q.lte(q.field("date"), args.endDate as string),
+      );
 
     const submissions = await query.collect();
 
@@ -62,6 +81,74 @@ export const list = query({
       if (a.date === b.date) return 0;
       return a.date.localeCompare(b.date);
     });
+  },
+});
+
+export const get = query({
+  args: { submissionId: v.id("submissions") },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    const submission = await ctx.db.get(args.submissionId);
+
+    if (!submission) throw new Error("Submission not found");
+
+    if (submission.userId !== user._id)
+      throw new Error("You are not the owner of this submission");
+
+    return submission;
+  },
+});
+
+export const upsert = mutation({
+  args: {
+    _id: v.optional(v.id("submissions")),
+    date: v.string(),
+    teamId: v.id("teams"),
+    description: v.optional(v.string()),
+    teammateIds: v.array(v.id("users")),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    const [membership, team] = await Promise.all([
+      ctx.db
+        .query("teamMembers")
+        .withIndex("by_team_and_user", (q) =>
+          q.eq("teamId", args.teamId).eq("userId", user._id),
+        )
+        .first(),
+      ctx.db.get(args.teamId),
+    ]);
+
+    if (!membership) throw new Error("You are not a member of this team");
+    if (!team) throw new Error("Team not found");
+
+    const data = {
+      date: args.date,
+      userId: user._id,
+      teamId: args.teamId,
+      tournamentId: team.tournamentId,
+      description: args.description,
+      teammates: args.teammateIds,
+    };
+
+    if (!args._id) {
+      return await ctx.db.insert("submissions", {
+        ...data,
+        state: "pending",
+        createdBy: user._id,
+      });
+    }
+
+    const submission = await ctx.db.get(args._id);
+    if (!submission) throw new Error("Submission not found");
+
+    if (submission.createdBy !== user._id) {
+      throw new Error("You do not have permission to update this submission");
+    }
+
+    return await ctx.db.patch(args._id, data);
   },
 });
 
@@ -101,75 +188,6 @@ export const getById = query({
     await getCurrentUserOrThrow(ctx);
 
     return await ctx.db.get(args.id);
-  },
-});
-
-export const createSubmission = mutation({
-  args: {
-    teamId: v.id("teams"),
-    date: v.string(),
-    description: v.optional(v.string()),
-    teammateIds: v.array(v.id("users")),
-  },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", args.teamId).eq("userId", user._id),
-      )
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
-
-    const team = await ctx.db.get(args.teamId);
-    if (!team) {
-      throw new Error("Team not found");
-    }
-
-    await ctx.db.insert("submissions", {
-      userId: user._id,
-      teamId: args.teamId,
-      tournamentId: team.tournamentId,
-      date: args.date,
-      description: args.description,
-      teammates: args.teammateIds,
-      state: "pending",
-    });
-  },
-});
-
-export const editSubmission = mutation({
-  args: {
-    id: v.id("submissions"),
-    date: v.string(),
-    teamId: v.id("teams"),
-    description: v.optional(v.string()),
-    teammateIds: v.array(v.id("users")),
-  },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    const submission = await ctx.db.get(args.id);
-    if (!submission) {
-      throw new Error("Submission not found");
-    }
-
-    if (submission.userId !== user._id) {
-      throw new Error("You do not have permission to edit this submission");
-    }
-
-    const { date, teamId, description, teammateIds } = args;
-
-    await ctx.db.patch(args.id, {
-      date,
-      teamId,
-      description,
-      teammates: teammateIds,
-    });
   },
 });
 

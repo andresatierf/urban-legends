@@ -55,6 +55,7 @@ export default defineSchema({
       v.literal("rejected"),
       v.literal("deleted"),
     ),
+    createdBy: v.id("users"),
     managedBy: v.optional(v.id("users")),
   })
     .index("by_user", ["userId"])

@@ -11,6 +11,9 @@ export const list = query({
   handler: async (ctx, args) => {
     await getCurrentUserOrThrow(ctx);
 
+    if (!args.userId && !args.tournamentId)
+      return await ctx.db.query("teams").collect();
+
     let query = ctx.db.query("teams");
 
     if (args.userId) {
@@ -37,7 +40,7 @@ export const list = query({
 });
 
 export const listMembers = query({
-  args: { teamIds: v.union(v.id("teamss"), v.array(v.id("teams"))) },
+  args: { teamIds: v.union(v.id("teams"), v.array(v.id("teams"))) },
   handler: async (ctx, args) => {
     await getCurrentUserOrThrow(ctx);
 
@@ -163,17 +166,8 @@ export const listTeamMembers = query({
         ),
       )
       .collect();
-    const userIdMap = users.reduce((acc, user) => {
-      if (!acc.get(user._id)) acc.set(user._id, user);
-      return acc;
-    }, new Map());
 
-    return teamMembers
-      .map((m) => ({
-        ...m,
-        email: userIdMap.get(m.userId)?.email,
-      }))
-      .filter((m) => !args.excludeSelf || m.userId !== user._id);
+    return users.filter((u) => !args.excludeSelf || u._id !== user._id);
   },
 });
 
@@ -219,11 +213,11 @@ export const addMember = mutation({
     role: v.union(v.literal("member"), v.literal("captain")),
   },
   handler: async (ctx, args) => {
-    // const user = await getCurrentUserOrThrow(ctx);
-    //
-    // if (!user.roles.includes("admin")) {
-    //   throw new Error("Admin access required");
-    // }
+    const user = await getCurrentUserOrThrow(ctx);
+
+    if (!user.roles.includes("admin")) {
+      throw new Error("Admin access required");
+    }
 
     // Find user by email
     const userToAdd = await ctx.db
