@@ -6,7 +6,7 @@ import {
   type QueryCtx,
   query,
 } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
+import type { Id } from "./_generated/dataModel";
 
 export const list = query({
   args: { userIds: v.optional(v.array(v.id("users"))) },

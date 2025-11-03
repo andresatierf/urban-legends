@@ -14,6 +14,11 @@ export function UserDashboard(_props: UserDashboardProps) {
   // Fetch current user
   const currentUser = useQuery(api.users.current);
 
+  // Check if user is admin
+  const isAdmin = useMemo(() => {
+    return currentUser?.roles?.includes("admin") ?? false;
+  }, [currentUser]);
+
   // Fetch user's teams
   const userTeams = useQuery(
     api.teams.list,
@@ -33,6 +38,15 @@ export function UserDashboard(_props: UserDashboardProps) {
       ? { teamIds: userTeams.map((t) => t._id) }
       : "skip",
   );
+
+  // Admin-only: Fetch all users
+  const allUsers = useQuery(api.users.list, isAdmin ? {} : "skip");
+
+  // Admin-only: Fetch all teams
+  const allTeams = useQuery(api.teams.list, isAdmin ? {} : "skip");
+
+  // Admin-only: Fetch all submissions for review
+  const allSubmissions = useQuery(api.submissions.list, isAdmin ? {} : "skip");
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -57,6 +71,24 @@ export function UserDashboard(_props: UserDashboardProps) {
       activeTournaments,
     };
   }, [userTeams, userSubmissions, tournaments]);
+
+  // Calculate admin stats
+  const adminStats = useMemo(() => {
+    if (!isAdmin) return null;
+
+    const totalTournaments = tournaments?.length || 0;
+    const totalTeams = allTeams?.length || 0;
+    const totalUsers = allUsers?.length || 0;
+    const pendingReviews =
+      allSubmissions?.filter((s) => s.state === "pending").length || 0;
+
+    return {
+      totalTournaments,
+      totalTeams,
+      totalUsers,
+      pendingReviews,
+    };
+  }, [isAdmin, tournaments, allTeams, allUsers, allSubmissions]);
 
   // Map tournaments by ID for easy lookup
   const tournamentMap = useMemo(() => {
@@ -90,6 +122,91 @@ export function UserDashboard(_props: UserDashboardProps) {
           Here's an overview of your tournament activity
         </p>
       </div>
+
+      {/* Admin Section */}
+      {isAdmin && adminStats && (
+        <div className="rounded-lg border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 p-6 shadow-md">
+          <div className="mb-4 flex items-center gap-2">
+            <svg
+              className="h-6 w-6 text-purple-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              />
+            </svg>
+            <h2 className="font-semibold text-gray-900 text-xl">
+              Admin Overview
+            </h2>
+          </div>
+
+          {/* Admin Stats Grid */}
+          <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="rounded-lg bg-white p-4 shadow-sm">
+              <p className="text-gray-600 text-xs">Total Tournaments</p>
+              <p className="font-bold text-2xl text-gray-900">
+                {adminStats.totalTournaments}
+              </p>
+            </div>
+            <div className="rounded-lg bg-white p-4 shadow-sm">
+              <p className="text-gray-600 text-xs">Total Teams</p>
+              <p className="font-bold text-2xl text-gray-900">
+                {adminStats.totalTeams}
+              </p>
+            </div>
+            <div className="rounded-lg bg-white p-4 shadow-sm">
+              <p className="text-gray-600 text-xs">Total Users</p>
+              <p className="font-bold text-2xl text-gray-900">
+                {adminStats.totalUsers}
+              </p>
+            </div>
+            <div className="rounded-lg bg-white p-4 shadow-sm">
+              <p className="text-gray-600 text-xs">Pending Reviews</p>
+              <p className="font-bold text-2xl text-purple-600">
+                {adminStats.pendingReviews}
+              </p>
+            </div>
+          </div>
+
+          {/* Admin Quick Actions */}
+          <div>
+            <p className="mb-2 font-medium text-gray-700 text-sm">
+              Admin Actions
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/admin"
+                className="rounded-md bg-purple-600 px-3 py-2 text-sm text-white transition-colors hover:bg-purple-700"
+              >
+                Admin Dashboard
+              </Link>
+              <Link
+                href="/admin/tournaments"
+                className="rounded-md bg-white px-3 py-2 text-purple-700 text-sm shadow-sm transition-shadow hover:shadow-md"
+              >
+                Manage Tournaments
+              </Link>
+              <Link
+                href="/admin/teams"
+                className="rounded-md bg-white px-3 py-2 text-purple-700 text-sm shadow-sm transition-shadow hover:shadow-md"
+              >
+                Manage Teams
+              </Link>
+              <Link
+                href="/admin/users"
+                className="rounded-md bg-white px-3 py-2 text-purple-700 text-sm shadow-sm transition-shadow hover:shadow-md"
+              >
+                Manage Users
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -175,7 +292,7 @@ export function UserDashboard(_props: UserDashboardProps) {
       {/* My Teams Section */}
       <div className="rounded-lg bg-white p-6 shadow">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold text-xl text-gray-900">My Teams</h2>
+          <h2 className="font-semibold text-gray-900 text-xl">My Teams</h2>
           <Link
             href="/teams"
             className="text-blue-600 text-sm hover:text-blue-800"
@@ -254,7 +371,7 @@ export function UserDashboard(_props: UserDashboardProps) {
       {/* Recent Submissions Section */}
       <div className="rounded-lg bg-white p-6 shadow">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold text-xl text-gray-900">
+          <h2 className="font-semibold text-gray-900 text-xl">
             Recent Submissions
           </h2>
           <Link
