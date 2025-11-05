@@ -6,7 +6,9 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../convex/_generated/api";
+import { ButtonDemo } from "./button-demo";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 
 interface UserDashboardProps {
   currentPage?: string;
@@ -115,6 +117,7 @@ export function UserDashboard(_props: UserDashboardProps) {
 
   return (
     <div className="space-y-6">
+      <ButtonDemo />
       {/* Welcome Header */}
       <div>
         <h1 className="font-bold text-3xl text-gray-900">
@@ -181,12 +184,12 @@ export function UserDashboard(_props: UserDashboardProps) {
               Admin Actions
             </p>
             <div className="flex flex-wrap gap-2">
-              <Link
-                href="/admin"
-                className="rounded-md bg-purple-600 px-3 py-2 text-sm text-white transition-colors hover:bg-purple-700"
+              <Button
+                className="bg-purple-600 text-white hover:bg-purple-700"
+                asChild
               >
-                Admin Dashboard
-              </Link>
+                <Link href="/admin">Admin Dashboard</Link>
+              </Button>
               <Link
                 href="/admin/tournaments"
                 className="rounded-md bg-white px-3 py-2 text-purple-700 text-sm shadow-sm transition-shadow hover:shadow-md"
