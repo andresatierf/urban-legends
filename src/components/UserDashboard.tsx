@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../convex/_generated/api";
+import { Badge } from "./ui/badge";
 
 interface UserDashboardProps {
   currentPage?: string;
@@ -13,7 +14,7 @@ interface UserDashboardProps {
 
 export function UserDashboard(_props: UserDashboardProps) {
   // Fetch current user
-  const { user: user, isAdmin } = useUser();
+  const { user, isAdmin } = useUser();
 
   // Fetch user's teams
   const userTeams = useQuery(
@@ -420,19 +421,9 @@ export function UserDashboard(_props: UserDashboardProps) {
                       {submission.description || "-"}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3">
-                      <span
-                        className={`rounded-full px-2 py-1 text-xs ${
-                          submission.state === "approved"
-                            ? "bg-green-100 text-green-800"
-                            : submission.state === "pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : submission.state === "rejected"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
+                      <Badge variant={submission.state}>
                         {submission.state}
-                      </span>
+                      </Badge>
                     </td>
                   </tr>
                 ))}

@@ -3,9 +3,5 @@
 import { UserDashboard } from "@/components/UserDashboard";
 
 export default function Dashboard() {
-  return (
-    <div>
-      <UserDashboard />
-    </div>
-  );
+  return <UserDashboard />;
 }

@@ -3,15 +3,15 @@ import { useMutation } from "convex/react";
 import { Check, Pencil, Trash, X } from "lucide-react";
 import { useMemo } from "react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { useUser } from "@/hooks/useUser";
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import {
   DataTableSection,
   type DataTableSectionProps,
 } from "../data-table-section";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { useUser } from "@/hooks/useUser";
 
 type Props<T, V> = Pick<
   DataTableSectionProps<T, V>,
@@ -39,7 +39,14 @@ export function SubmissionsDataTable<T, V>({
   const columns: ColumnDef<(typeof submissions)[number]>[] = useMemo(() => {
     const cols: ColumnDef<(typeof submissions)[number]>[] = [
       { accessorKey: "date", header: "Date" },
-      { accessorKey: "state", header: "State" },
+      {
+        accessorKey: "state",
+        header: "State",
+        cell: (props) => {
+          const state = props.getValue() as Doc<"submissions">["state"];
+          return <Badge variant={state}>{state}</Badge>;
+        },
+      },
       { accessorKey: "team.name", header: "Team" },
       { accessorKey: "user.email", header: "Submitted by" },
       { accessorKey: "description", header: "Description" },
@@ -130,16 +137,6 @@ export function SubmissionsDataTable<T, V>({
       columns={columns}
       data={submissions}
       hrefFn={(row) => `/submissions/${row.original._id}`}
-      rowClassNameFn={(row) => {
-        return cn("border-t transition", {
-          "bg-green-50 hover:bg-green-100":
-            row.getValue("state") === "approved",
-          "bg-yellow-50 hover:bg-yellow-100":
-            row.getValue("state") === "pending",
-          "bg-red-50 hover:bg-red-100": row.getValue("state") === "rejected",
-          "bg-gray-200 hover:bg-gray-300": row.getValue("state") === "deleted",
-        });
-      }}
       emptyMessage="No submissions yet."
     />
   );
