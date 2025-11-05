@@ -11,7 +11,11 @@ import { useUser } from "@/hooks/useUser";
 import { toastFormValues } from "@/lib/form";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
-import { Combobox } from "../combobox";
+import { ArrayField, ArrayItemField } from "../form/array-field";
+import { ComboboxField } from "../form/combobox-field";
+import { DateField } from "../form/date-field";
+import { TextField } from "../form/text-field";
+import { Combobox } from "../ui/combobox";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 
@@ -91,67 +95,28 @@ export function UpsertSubmissionForm({ submission }: Props) {
     >
       <FieldGroup>
         <form.Field name="teamId">
-          {(field) => {
-            const isInvalid =
-              field.state.meta.isTouched && !field.state.meta.isValid;
-
-            return (
-              <Field data-invalid={isInvalid}>
-                <FieldLabel html-for={field.name}>Team</FieldLabel>
-                <Combobox
-                  value={field.state.value}
-                  setValue={(value) => {
-                    field.handleChange(value);
-                    form.clearFieldValues("teammateIds");
-                  }}
-                  options={teamOptions}
-                />
-                {isInvalid && <FieldError errors={field.state.meta.errors} />}
-              </Field>
-            );
-          }}
+          {(field) => (
+            <ComboboxField
+              field={field}
+              label="Team"
+              options={teamOptions}
+              onChange={() => {
+                form.clearFieldValues("teammateIds");
+              }}
+            />
+          )}
         </form.Field>
         <form.Field name="description">
-          {(field) => {
-            const isInvalid =
-              field.state.meta.isTouched && !field.state.meta.isValid;
-
-            return (
-              <Field data-invalid={isInvalid}>
-                <FieldLabel html-for={field.name}>Description</FieldLabel>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  aria-invalid={isInvalid}
-                  placeholder="An optional description of the activity"
-                  autoComplete="off"
-                />
-                {isInvalid && <FieldError errors={field.state.meta.errors} />}
-              </Field>
-            );
-          }}
+          {(field) => (
+            <TextField
+              field={field}
+              label="Description"
+              placeholder="An optional description of the activity"
+            />
+          )}
         </form.Field>
         <form.Field name="date">
-          {(field) => {
-            const isInvalid =
-              field.state.meta.isTouched && !field.state.meta.isValid;
-
-            return (
-              <Field data-invalid={isInvalid}>
-                <FieldLabel html-for={field.name}>Date</FieldLabel>
-                <Input
-                  type="date"
-                  id={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                />
-                {isInvalid && <FieldError errors={field.state.meta.errors} />}
-              </Field>
-            );
-          }}
+          {(field) => <DateField field={field} label="Date" />}
         </form.Field>
       </FieldGroup>
       {teammates.length > 0 && (
@@ -199,7 +164,7 @@ export function UpsertSubmissionForm({ submission }: Props) {
 
                           return (
                             <Field>
-                              <FieldLabel>Email:</FieldLabel>
+                              <FieldLabel>Email</FieldLabel>
                               <div className="flex gap-2">
                                 <Combobox
                                   value={subField.state.value}
