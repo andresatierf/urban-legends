@@ -1,6 +1,8 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { use } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { UpsertTournamentForm } from "@/components/tournaments/upsert-tournament-form";
@@ -24,8 +26,11 @@ export default function EditTournamentPage({ params }: Props) {
   return (
     <>
       <SectionHeader as="h1" title="Edit Tournament">
-        <Button href="/tournaments" variant="outline">
-          ← Back
+        <Button variant="outline" asChild>
+          <Link href="/tournaments">
+            <ArrowLeft />
+            Back
+          </Link>
         </Button>
       </SectionHeader>
       <UpsertTournamentForm tournament={tournament} />

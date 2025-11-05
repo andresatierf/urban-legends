@@ -1,6 +1,8 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { Plus } from "lucide-react";
+import Link from "next/link";
 import { useMemo } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { StatCard } from "@/components/tournaments/stat-card";
@@ -42,7 +44,14 @@ export default function TournamentsPage() {
   return (
     <>
       <SectionHeader as="h1" title="Tournaments">
-        {isAdmin && <Button href="/tournaments/new">Add New Tournament</Button>}
+        {isAdmin && (
+          <Button asChild>
+            <Link href="/tournaments/new">
+              <Plus />
+              Add New Tournament
+            </Link>
+          </Button>
+        )}
       </SectionHeader>
 
       {isAdmin && (

@@ -1,7 +1,8 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMutation } from "convex/react";
 import { capitalize } from "lodash";
-import { Pencil, Trash } from "lucide-react";
+import { Crown, Pencil, Trash } from "lucide-react";
+import Link from "next/link";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/useUser";
@@ -47,8 +48,11 @@ export function TeamsDataTable<T, V>({
           return (
             <ul>
               {cell.getValue()?.map((x) => (
-                <li key={x.userId}>
-                  {x.user?.email} {x.role === "captain" && "🎖"}
+                <li key={x.userId} className="flex items-center gap-1">
+                  {x.user?.email}{" "}
+                  {x.role === "captain" && (
+                    <Crown className="h-4 w-4 text-yellow-500" />
+                  )}
                 </li>
               ))}
             </ul>
@@ -72,12 +76,14 @@ export function TeamsDataTable<T, V>({
           return (
             <div className="flex justify-end gap-2">
               <Button
-                href={`/teams/${team._id}/edit`}
                 variant="secondary"
                 size="icon"
                 className="z-10"
+                asChild
               >
-                <Pencil />
+                <Link href={`/teams/${team._id}/edit`}>
+                  <Pencil />
+                </Link>
               </Button>
               <Button
                 variant="destructive"

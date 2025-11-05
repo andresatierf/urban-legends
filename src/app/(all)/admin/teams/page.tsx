@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import Link from "next/link";
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,7 +23,9 @@ export default function TeamsPage() {
   return (
     <>
       <SectionHeader as="h1" title="Teams">
-        {/* <Button href="/admin" variant="outline">Add New Team</Button> */}
+        {/* <Button variant="outline" asChild> */}
+        {/*   <Link href="/admin">Add New Team</Link> */}
+        {/* </Button> */}
       </SectionHeader>
 
       <SectionHeader title="All Teams" />
@@ -59,12 +62,8 @@ export default function TeamsPage() {
                   </TableCell>
                   <TableCell className="p-3 text-center">
                     <div className="flex justify-center gap-2">
-                      <Button
-                        href={`/admin/teams/${team._id}`}
-                        variant="secondary"
-                        size="sm"
-                      >
-                        View
+                      <Button variant="secondary" size="sm" asChild>
+                        <Link href={`/admin/teams/${team._id}`}>View</Link>
                       </Button>
                       <Button variant="outline" size="sm">
                         Edit

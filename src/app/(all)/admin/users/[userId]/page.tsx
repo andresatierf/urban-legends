@@ -1,6 +1,8 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { use } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
@@ -23,8 +25,11 @@ export default function UserDetailsPage({ params }: Props) {
   return (
     <>
       <SectionHeader as="h1" title="User Details">
-        <Button href="/admin/users" variant="outline">
-          ← Back
+        <Button variant="outline" asChild>
+          <Link href="/admin/users">
+            <ArrowLeft />
+            Back
+          </Link>
         </Button>
       </SectionHeader>
       <UserDetailsCard user={user} />

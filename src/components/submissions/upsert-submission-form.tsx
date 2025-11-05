@@ -2,7 +2,7 @@
 
 import { useForm, useStore } from "@tanstack/react-form";
 import { useMutation, useQuery } from "convex/react";
-import { CircleX } from "lucide-react";
+import { CircleX, Plus } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useMemo } from "react";
 import { z } from "zod";
@@ -150,6 +150,7 @@ export function UpsertSubmissionForm({ submission }: Props) {
                       }
                       type="button"
                     >
+                      <Plus />
                       Add teammate
                     </Button>
                   </div>

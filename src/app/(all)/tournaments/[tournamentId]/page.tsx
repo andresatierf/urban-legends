@@ -2,9 +2,11 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { useQuery } from "convex/react";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { use, useMemo } from "react";
-import { SectionHeader } from "@/components/section-header";
 import { DataTableSection } from "@/components/data-table-section";
+import { SectionHeader } from "@/components/section-header";
 import { TournamentDetailsCard } from "@/components/tournaments/tournament-details-card";
 import { Button } from "@/components/ui/button";
 import { api } from "../../../../../convex/_generated/api";
@@ -64,8 +66,11 @@ export default function TournamentDetailsPage({ params }: Props) {
   return (
     <>
       <SectionHeader as="h1" title="Tournament Details">
-        <Button href="/tournaments" variant="outline">
-          ← Back
+        <Button variant="outline" asChild>
+          <Link href="/tournaments">
+            <ArrowLeft />
+            Back
+          </Link>
         </Button>
       </SectionHeader>
 

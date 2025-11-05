@@ -3,20 +3,19 @@
 import { useClerk } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import {
-  BarChart2,
   CheckSquare,
   ClipboardList,
   LayoutDashboard,
   LayoutGrid,
-  LogOut,
   type LucideIcon,
   PlusCircle,
   Trophy,
-  UserCircle,
   UserCog,
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 import {
   Sidebar as SidebarBase,
   SidebarContent,
@@ -32,8 +31,6 @@ import {
 } from "@/components/ui/sidebar";
 import { api } from "../../convex/_generated/api";
 import { Button } from "./ui/button";
-import { useTranslations } from "next-intl";
-import { useMemo } from "react";
 
 type SidebarItem = {
   title: string;

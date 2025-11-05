@@ -2,7 +2,8 @@
 
 import { useQuery } from "convex/react";
 import { capitalize } from "lodash";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Trophy } from "lucide-react";
+import Link from "next/link";
 import { useMemo } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { TeamsDataTable } from "@/components/teams/teams-data-table";
@@ -94,8 +95,11 @@ export default function TeamsPage() {
   return (
     <>
       <SectionHeader as="h1" title="My Teams">
-        <Button href="/tournaments" variant="outline">
-          🏆 View Tournaments
+        <Button asChild variant="outline">
+          <Link href="/tournaments">
+            <Trophy />
+            View Tournaments
+          </Link>
         </Button>
       </SectionHeader>
 
@@ -149,12 +153,14 @@ export default function TeamsPage() {
                   </span>
                   <div className="ml-2 h-full border-l">
                     <Button
-                      href={`/teams/${team._id}`}
                       variant="ghost"
                       size="icon"
                       className="rounded-l-none"
+                      asChild
                     >
-                      <ChevronRight />
+                      <Link href={`/teams/${team._id}`}>
+                        <ChevronRight />
+                      </Link>
                     </Button>
                   </div>
                 </div>

@@ -2,6 +2,8 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { useQuery } from "convex/react";
+import { ArrowLeft, Plus, Trophy } from "lucide-react";
+import Link from "next/link";
 import { use, useMemo } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { DataTableSection } from "@/components/data-table-section";
@@ -48,14 +50,17 @@ export default function TeamDetailsPage({ params }: Props) {
   return (
     <>
       <SectionHeader as="h1" title="Team Details">
-        <Button
-          href={`/admin/tournaments/${team.tournamentId}`}
-          variant="secondary"
-        >
-          🏆 Go to Tournament
+        <Button variant="secondary" asChild>
+          <Link href={`/admin/tournaments/${team.tournamentId}`}>
+            <Trophy />
+            Go to Tournament
+          </Link>
         </Button>
-        <Button href="/admin/teams" variant="outline">
-          ← Back to Teams
+        <Button variant="outline" asChild>
+          <Link href="/admin/teams">
+            <ArrowLeft />
+            Back to Teams
+          </Link>
         </Button>
       </SectionHeader>
 
@@ -69,12 +74,11 @@ export default function TeamDetailsPage({ params }: Props) {
       <DataTableSection
         title="Members"
         actions={
-          <Button
-            href={`/admin/teams/${team._id}/members/new`}
-            variant="outline"
-            size="sm"
-          >
-            + Add Member
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/admin/teams/${team._id}/members/new`}>
+              <Plus />
+              Add Member
+            </Link>
           </Button>
         }
         columns={columns}

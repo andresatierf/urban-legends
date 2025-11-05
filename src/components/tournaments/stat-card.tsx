@@ -1,3 +1,5 @@
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
@@ -26,11 +28,14 @@ export function StatCard({
       {link && (
         <CardFooter>
           <Button
-            href={link}
             variant="link"
             className="h-min p-0 font-normal text-blue-600 text-sm hover:text-blue-800"
+            asChild
           >
-            {linkText} →
+            <Link href={link}>
+              {linkText}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </Button>
         </CardFooter>
       )}

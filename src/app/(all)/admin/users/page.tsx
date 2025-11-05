@@ -24,7 +24,7 @@ export default function UsersPage() {
   return (
     <>
       <SectionHeader as="h1" title="Users">
-        {/* <Button href="/admin/users/new">Add New User</Button> */}
+        {/* <Button asChild><Link href="/admin/users/new">Add New User</Link></Button> */}
       </SectionHeader>
 
       <Card className="overflow-hidden">

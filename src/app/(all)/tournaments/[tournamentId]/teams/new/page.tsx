@@ -1,6 +1,8 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { use } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { CreateTournamentTeamForm } from "@/components/teams/create-tournament-team-form";
@@ -27,8 +29,11 @@ export default function AddTeamPage({ params }: Props) {
         as="h1"
         title={`Create Team in ${tournament?.name || "Tournament"}`}
       >
-        <Button href={`/tournaments/${tournamentId}`} variant="outline">
-          ← Back
+        <Button variant="outline" asChild>
+          <Link href={`/tournaments/${tournamentId}`}>
+            <ArrowLeft />
+            Back
+          </Link>
         </Button>
       </SectionHeader>
 

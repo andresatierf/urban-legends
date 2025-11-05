@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useUser } from "@/hooks/useUser";
@@ -296,9 +297,10 @@ export function UserDashboard(_props: UserDashboardProps) {
           <h2 className="font-semibold text-gray-900 text-xl">My Teams</h2>
           <Link
             href="/teams"
-            className="text-blue-600 text-sm hover:text-blue-800"
+            className="flex items-center gap-1 text-blue-600 text-sm hover:text-blue-800"
           >
-            View all →
+            View all
+            <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
@@ -359,9 +361,10 @@ export function UserDashboard(_props: UserDashboardProps) {
                     </div>
                     <Link
                       href={`/teams/${team._id}`}
-                      className="text-blue-600 text-sm hover:text-blue-800"
+                      className="flex items-center gap-1 text-blue-600 text-sm hover:text-blue-800"
                     >
-                      View →
+                      View
+                      <ArrowRight className="h-4 w-4" />
                     </Link>
                   </div>
                 </div>
@@ -379,9 +382,10 @@ export function UserDashboard(_props: UserDashboardProps) {
           </h2>
           <Link
             href="/submissions"
-            className="text-blue-600 text-sm hover:text-blue-800"
+            className="flex items-center gap-1 text-blue-600 text-sm hover:text-blue-800"
           >
-            View all →
+            View all
+            <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 

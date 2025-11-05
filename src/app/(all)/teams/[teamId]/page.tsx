@@ -2,9 +2,11 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { useQuery } from "convex/react";
+import { ArrowLeft, Trophy } from "lucide-react";
+import Link from "next/link";
 import { use, useMemo } from "react";
-import { SectionHeader } from "@/components/section-header";
 import { DataTableSection } from "@/components/data-table-section";
+import { SectionHeader } from "@/components/section-header";
 import { TeamDetailsCard } from "@/components/teams/team-details-card";
 import { Button } from "@/components/ui/button";
 import { api } from "../../../../../convex/_generated/api";
@@ -48,11 +50,17 @@ export default function TeamDetailsPage({ params }: Props) {
   return (
     <>
       <SectionHeader as="h1" title="Team Details">
-        <Button href={`/tournaments/${team?.tournamentId}`} variant="secondary">
-          🏆 View Tournament
+        <Button variant="secondary" asChild>
+          <Link href={`/tournaments/${team?.tournamentId}`}>
+            <Trophy />
+            View Tournament
+          </Link>
         </Button>
-        <Button href="/teams" variant="outline">
-          ← Back to My Teams
+        <Button variant="outline" asChild>
+          <Link href="/teams">
+            <ArrowLeft />
+            Back to My Teams
+          </Link>
         </Button>
       </SectionHeader>
 
