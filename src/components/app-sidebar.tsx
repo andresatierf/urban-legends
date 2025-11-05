@@ -67,19 +67,11 @@ function useSidebarItems() {
             href: "/submissions/new",
             icon: PlusCircle,
           },
-        ],
-      },
-      {
-        title: tAdminItems("group"),
-        roles: ["admin"],
-        items: [
-          { title: tAdminItems("dashboard"), href: "/admin", icon: LayoutGrid },
           {
-            title: tAdminItems("submissions"),
-            href: "/admin/submissions",
-            icon: CheckSquare,
+            title: tAdminItems("users"),
+            icon: UserCog,
+            href: "/users",
           },
-          { title: tAdminItems("users"), icon: UserCog, href: "/admin/users" },
         ],
       },
     ],

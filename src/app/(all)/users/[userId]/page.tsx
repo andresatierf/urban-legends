@@ -7,8 +7,8 @@ import { use } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
 import { UserDetailsCard } from "@/components/users/user-details-card";
-import { api } from "../../../../../../convex/_generated/api";
-import type { Id } from "../../../../../../convex/_generated/dataModel";
+import { api } from "../../../../../convex/_generated/api";
+import type { Id } from "../../../../../convex/_generated/dataModel";
 
 type Props = {
   params: Promise<{ userId: Id<"users"> }>;
@@ -26,7 +26,7 @@ export default function UserDetailsPage({ params }: Props) {
     <>
       <SectionHeader as="h1" title="User Details">
         <Button variant="outline" asChild>
-          <Link href="/admin/users">
+          <Link href="/users">
             <ArrowLeft />
             Back
           </Link>

@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { api } from "../../../../../convex/_generated/api";
+import { api } from "../../../../convex/_generated/api";
 
 export default function UsersPage() {
   const users = useQuery(api.users.list);
@@ -23,9 +23,7 @@ export default function UsersPage() {
 
   return (
     <>
-      <SectionHeader as="h1" title="Users">
-        {/* <Button asChild><Link href="/admin/users/new">Add New User</Link></Button> */}
-      </SectionHeader>
+      <SectionHeader as="h1" title="Users" />
 
       <Card className="overflow-hidden">
         <Table className="w-full border-collapse text-left">
@@ -50,7 +48,7 @@ export default function UsersPage() {
                 <TableCell className="p-3 font-medium text-gray-800">
                   {user.name}
                 </TableCell>
-                <Link href={`/admin/users/${user._id}` || ""}>
+                <Link href={`/users/${user._id}` || ""}>
                   <TableCell className="p-3 text-gray-600">
                     {user.email}
                   </TableCell>

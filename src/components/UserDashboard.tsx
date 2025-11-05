@@ -117,7 +117,6 @@ export function UserDashboard(_props: UserDashboardProps) {
 
   return (
     <div className="space-y-6">
-      <ButtonDemo />
       {/* Welcome Header */}
       <div>
         <h1 className="font-bold text-3xl text-gray-900">
@@ -188,13 +187,13 @@ export function UserDashboard(_props: UserDashboardProps) {
                 <Link href="/admin">Admin Dashboard</Link>
               </Button>
               <Button variant="outline" color="purple" asChild>
-                <Link href="/admin/tournaments">Manage Tournaments</Link>
+                <Link href="/tournaments">Manage Tournaments</Link>
               </Button>
               <Button variant="outline" color="purple" asChild>
-                <Link href="/admin/teams">Manage Teams</Link>
+                <Link href="/teams">Manage Teams</Link>
               </Button>
               <Button variant="outline" color="purple" asChild>
-                <Link href="/admin/users">Manage Users</Link>
+                <Link href="/users">Manage Users</Link>
               </Button>
             </div>
           </div>
@@ -286,13 +285,12 @@ export function UserDashboard(_props: UserDashboardProps) {
       <div className="rounded-lg bg-white p-6 shadow">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-semibold text-gray-900 text-xl">My Teams</h2>
-          <Link
-            href="/teams"
-            className="flex items-center gap-1 text-blue-600 text-sm hover:text-blue-800"
-          >
-            View all
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <Button variant="link" color="blue" asChild>
+            <Link href="/teams">
+              View all
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </div>
 
         {!userTeams || userTeams.length === 0 ? (
@@ -347,13 +345,12 @@ export function UserDashboard(_props: UserDashboardProps) {
                         )}
                       </div>
                     </div>
-                    <Link
-                      href={`/teams/${team._id}`}
-                      className="flex items-center gap-1 text-blue-600 text-sm hover:text-blue-800"
-                    >
-                      View
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
+                    <Button variant="link" color="blue" asChild>
+                      <Link href={`/teams/${team._id}`}>
+                        View
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               );
@@ -368,13 +365,12 @@ export function UserDashboard(_props: UserDashboardProps) {
           <h2 className="font-semibold text-gray-900 text-xl">
             Recent Submissions
           </h2>
-          <Link
-            href="/submissions"
-            className="flex items-center gap-1 text-blue-600 text-sm hover:text-blue-800"
-          >
-            View all
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <Button variant="link" color="blue" asChild>
+            <Link href="/submissions">
+              View all
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </div>
 
         {!recentSubmissions || recentSubmissions.length === 0 ? (
