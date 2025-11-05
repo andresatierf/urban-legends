@@ -30,6 +30,9 @@ export const buttonVariants = cva(
         destructive: "",
         secondary: "",
         purple: "",
+        blue: "",
+        green: "",
+        orange: "",
       } satisfies Record<ButtonColorValues, string>,
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -148,6 +151,85 @@ export const buttonVariants = cva(
         color: "purple",
         className: "text-purple-700",
       },
+      // Solid + Blue
+      {
+        variant: "solid",
+        color: "blue",
+        className:
+          "bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-600/20 dark:focus-visible:ring-blue-600/40",
+      },
+      // Outline + Blue
+      {
+        variant: "outline",
+        color: "blue",
+        className:
+          "border-blue-600 text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950",
+      },
+      // Ghost + Blue
+      {
+        variant: "ghost",
+        color: "blue",
+        className: "text-blue-700 hover:bg-blue-100 dark:hover:bg-blue-950",
+      },
+      // Link + Blue
+      {
+        variant: "link",
+        color: "blue",
+        className: "text-blue-700",
+      },
+      // Solid + Green
+      {
+        variant: "solid",
+        color: "green",
+        className:
+          "bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/20 dark:focus-visible:ring-green-600/40",
+      },
+      // Outline + Green
+      {
+        variant: "outline",
+        color: "green",
+        className:
+          "border-green-600 text-green-700 hover:bg-green-50 dark:hover:bg-green-950",
+      },
+      // Ghost + Green
+      {
+        variant: "ghost",
+        color: "green",
+        className: "text-green-700 hover:bg-green-100 dark:hover:bg-green-950",
+      },
+      // Link + Green
+      {
+        variant: "link",
+        color: "green",
+        className: "text-green-700",
+      },
+      // Solid + Orange
+      {
+        variant: "solid",
+        color: "orange",
+        className:
+          "bg-orange-600 text-white hover:bg-orange-700 focus-visible:ring-orange-600/20 dark:focus-visible:ring-orange-600/40",
+      },
+      // Outline + Orange
+      {
+        variant: "outline",
+        color: "orange",
+        className:
+          "border-orange-600 text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950",
+      },
+      // Ghost + Orange
+      {
+        variant: "ghost",
+        color: "orange",
+        className:
+          "text-orange-700 hover:bg-orange-100 dark:hover:bg-orange-950",
+      },
+      // Link + Orange
+      {
+        variant: "link",
+        color: "orange",
+        className: "text-orange-700",
+      },
     ],
     defaultVariants: {
       variant: "solid",
@@ -158,7 +240,7 @@ export const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends Omit<React.ComponentProps<"button">, "size">,
+  extends Omit<React.ComponentProps<"button">, "size" | "color">,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }

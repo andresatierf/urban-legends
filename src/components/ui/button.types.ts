@@ -10,6 +10,9 @@ export const BUTTON_COLORS = {
   DESTRUCTIVE: "destructive",
   SECONDARY: "secondary",
   PURPLE: "purple",
+  BLUE: "blue",
+  GREEN: "green",
+  ORANGE: "orange",
 } as const;
 
 export const BUTTON_SIZES = {

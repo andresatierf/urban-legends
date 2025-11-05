@@ -62,6 +62,8 @@ export function SubmissionsDataTable<T, V>({
               {submission.state === "pending" && isAdmin && (
                 <>
                   <Button
+                    variant="solid"
+                    color="green"
                     size="icon"
                     onClick={(e) => {
                       e.preventDefault();
@@ -71,12 +73,13 @@ export function SubmissionsDataTable<T, V>({
                         `The submission by '${submission.user?.email}' on '${submission.date}' has been approved`,
                       );
                     }}
-                    className="z-10 bg-green-500"
+                    className="z-10"
                   >
                     <Check />
                   </Button>
                   <Button
-                    variant="destructive"
+                    variant="solid"
+                    color="orange"
                     size="icon"
                     onClick={(e) => {
                       e.preventDefault();
@@ -94,14 +97,16 @@ export function SubmissionsDataTable<T, V>({
               )}
               <Button
                 href={`/submissions/${submission._id}/edit`}
-                variant="secondary"
+                variant="solid"
+                color="secondary"
                 size="icon"
                 className="z-10"
               >
                 <Pencil />
               </Button>
               <Button
-                variant="destructive"
+                variant="solid"
+                color="destructive"
                 size="icon"
                 onClick={(e) => {
                   e.preventDefault();

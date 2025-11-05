@@ -300,12 +300,9 @@ export function UserDashboard(_props: UserDashboardProps) {
             <p className="mb-4 text-gray-500">
               You're not part of any teams yet
             </p>
-            <Link
-              href="/teams"
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-            >
-              Browse Teams
-            </Link>
+            <Button variant="solid" color="blue" asChild>
+              <Link href="/teams">Browse Teams</Link>
+            </Button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -383,12 +380,9 @@ export function UserDashboard(_props: UserDashboardProps) {
         {!recentSubmissions || recentSubmissions.length === 0 ? (
           <div className="py-8 text-center">
             <p className="mb-4 text-gray-500">No submissions yet</p>
-            <Link
-              href="/submissions"
-              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-            >
-              Create Submission
-            </Link>
+            <Button variant="solid" color="blue" asChild>
+              <Link href="/submissions">Create Submission</Link>
+            </Button>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -432,24 +426,15 @@ export function UserDashboard(_props: UserDashboardProps) {
       <div className="rounded-lg bg-blue-50 p-6">
         <h3 className="mb-4 font-medium text-gray-900">Quick Actions</h3>
         <div className="flex flex-wrap gap-3">
-          <Link
-            href="/tournaments"
-            className="rounded-md bg-white px-4 py-2 text-gray-700 shadow-sm transition-shadow hover:shadow-md"
-          >
-            Browse Tournaments
-          </Link>
-          <Link
-            href="/teams"
-            className="rounded-md bg-white px-4 py-2 text-gray-700 shadow-sm transition-shadow hover:shadow-md"
-          >
-            Manage Teams
-          </Link>
-          <Link
-            href="/submissions"
-            className="rounded-md bg-white px-4 py-2 text-gray-700 shadow-sm transition-shadow hover:shadow-md"
-          >
-            My Submissions
-          </Link>
+          <Button variant="outline" asChild>
+            <Link href="/tournaments">Browse Tournaments</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/teams">Manage Teams</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/submissions">My Submissions</Link>
+          </Button>
         </div>
       </div>
     </div>
