@@ -57,7 +57,7 @@ export const buttonVariants = cva(
         variant: "solid",
         color: "destructive",
         className:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-destructive/80 text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
       },
       // Solid + Secondary
       {
@@ -71,7 +71,7 @@ export const buttonVariants = cva(
         variant: "solid",
         color: "purple",
         className:
-          "bg-purple-600 text-white hover:bg-purple-700 focus-visible:ring-purple-600/20 dark:focus-visible:ring-purple-600/40",
+          "bg-purple-600/80 text-white hover:bg-purple-700 focus-visible:ring-purple-600/20 dark:focus-visible:ring-purple-600/40",
       },
       // Outline + Default
       {
@@ -98,7 +98,7 @@ export const buttonVariants = cva(
         variant: "outline",
         color: "purple",
         className:
-          "bg-white text-purple-700 shadow-sm hover:shadow-md transition-shadow focus-visible:ring-purple-600/20",
+          "bg-white text-purple-700/80 border-purple-600/80 shadow-sm hover:shadow-md hover:text-purple-700 hover:border-purple-600 transition-shadow focus-visible:ring-purple-600/20",
       },
       // Ghost + Default
       {
@@ -125,7 +125,7 @@ export const buttonVariants = cva(
         variant: "ghost",
         color: "purple",
         className:
-          "text-purple-700 hover:bg-purple-100 dark:hover:bg-purple-950",
+          "text-purple-700/80 hover:text-purple-700 hover:bg-purple-100 dark:hover:bg-purple-950",
       },
       // Link + Default
       {
@@ -149,86 +149,88 @@ export const buttonVariants = cva(
       {
         variant: "link",
         color: "purple",
-        className: "text-purple-700",
+        className: "text-purple-700/80 hover:text-purple-700",
       },
       // Solid + Blue
       {
         variant: "solid",
         color: "blue",
         className:
-          "bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-600/20 dark:focus-visible:ring-blue-600/40",
+          "bg-blue-600/80 text-white hover:bg-blue-700 focus-visible:ring-blue-600/20 dark:focus-visible:ring-blue-600/40",
       },
       // Outline + Blue
       {
         variant: "outline",
         color: "blue",
         className:
-          "border-blue-600 text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950",
+          "border-blue-600/80 text-blue-700/80 hover:text-blue-700 hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950",
       },
       // Ghost + Blue
       {
         variant: "ghost",
         color: "blue",
-        className: "text-blue-700 hover:bg-blue-100 dark:hover:bg-blue-950",
+        className:
+          "text-blue-700/80 hover:text-blue-700 hover:bg-blue-100 dark:hover:bg-blue-950",
       },
       // Link + Blue
       {
         variant: "link",
         color: "blue",
-        className: "text-blue-700",
+        className: "text-blue-700/80 hover:text-blue-700",
       },
       // Solid + Green
       {
         variant: "solid",
         color: "green",
         className:
-          "bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600/20 dark:focus-visible:ring-green-600/40",
+          "bg-green-600/80 text-white hover:bg-green-700 focus-visible:ring-green-600/20 dark:focus-visible:ring-green-600/40",
       },
       // Outline + Green
       {
         variant: "outline",
         color: "green",
         className:
-          "border-green-600 text-green-700 hover:bg-green-50 dark:hover:bg-green-950",
+          "border-green-600/80 text-green-700/80 hover:text-green-700 hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-950",
       },
       // Ghost + Green
       {
         variant: "ghost",
         color: "green",
-        className: "text-green-700 hover:bg-green-100 dark:hover:bg-green-950",
+        className:
+          "text-green-700/80 hover:text-green-700 hover:bg-green-100 dark:hover:bg-green-950",
       },
       // Link + Green
       {
         variant: "link",
         color: "green",
-        className: "text-green-700",
+        className: "text-green-700/80 hover:text-green-700",
       },
       // Solid + Orange
       {
         variant: "solid",
         color: "orange",
         className:
-          "bg-orange-600 text-white hover:bg-orange-700 focus-visible:ring-orange-600/20 dark:focus-visible:ring-orange-600/40",
+          "bg-orange-600/80 text-white hover:bg-orange-700 focus-visible:ring-orange-600/20 dark:focus-visible:ring-orange-600/40",
       },
       // Outline + Orange
       {
         variant: "outline",
         color: "orange",
         className:
-          "border-orange-600 text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950",
+          "border-orange-600/80 text-orange-700/80 hover:text-orange-700 hover:border-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950",
       },
       // Ghost + Orange
       {
         variant: "ghost",
         color: "orange",
         className:
-          "text-orange-700 hover:bg-orange-100 dark:hover:bg-orange-950",
+          "text-orange-700/80 hover:text-orange-700 hover:bg-orange-100 dark:hover:bg-orange-950",
       },
       // Link + Orange
       {
         variant: "link",
         color: "orange",
-        className: "text-orange-700",
+        className: "text-orange-700/80 hover:text-orange-700",
       },
     ],
     defaultVariants: {
