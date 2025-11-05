@@ -1,10 +1,15 @@
 export const BUTTON_VARIANTS = {
-  DEFAULT: "default",
-  DESTRUCTIVE: "destructive",
+  SOLID: "solid",
   OUTLINE: "outline",
-  SECONDARY: "secondary",
   GHOST: "ghost",
   LINK: "link",
+} as const;
+
+export const BUTTON_COLORS = {
+  DEFAULT: "default",
+  DESTRUCTIVE: "destructive",
+  SECONDARY: "secondary",
+  PURPLE: "purple",
 } as const;
 
 export const BUTTON_SIZES = {
@@ -20,5 +25,7 @@ export const BUTTON_SIZES = {
 
 export type ButtonVariantValues =
   (typeof BUTTON_VARIANTS)[keyof typeof BUTTON_VARIANTS];
+export type ButtonColorValues =
+  (typeof BUTTON_COLORS)[keyof typeof BUTTON_COLORS];
 export type ButtonSizeValues =
   (typeof BUTTON_SIZES)[keyof typeof BUTTON_SIZES];

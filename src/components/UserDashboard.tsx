@@ -184,30 +184,18 @@ export function UserDashboard(_props: UserDashboardProps) {
               Admin Actions
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button
-                className="bg-purple-600 text-white hover:bg-purple-700"
-                asChild
-              >
+              <Button variant="solid" color="purple" asChild>
                 <Link href="/admin">Admin Dashboard</Link>
               </Button>
-              <Link
-                href="/admin/tournaments"
-                className="rounded-md bg-white px-3 py-2 text-purple-700 text-sm shadow-sm transition-shadow hover:shadow-md"
-              >
-                Manage Tournaments
-              </Link>
-              <Link
-                href="/admin/teams"
-                className="rounded-md bg-white px-3 py-2 text-purple-700 text-sm shadow-sm transition-shadow hover:shadow-md"
-              >
-                Manage Teams
-              </Link>
-              <Link
-                href="/admin/users"
-                className="rounded-md bg-white px-3 py-2 text-purple-700 text-sm shadow-sm transition-shadow hover:shadow-md"
-              >
-                Manage Users
-              </Link>
+              <Button variant="outline" color="purple" asChild>
+                <Link href="/admin/tournaments">Manage Tournaments</Link>
+              </Button>
+              <Button variant="outline" color="purple" asChild>
+                <Link href="/admin/teams">Manage Teams</Link>
+              </Button>
+              <Button variant="outline" color="purple" asChild>
+                <Link href="/admin/users">Manage Users</Link>
+              </Button>
             </div>
           </div>
         </div>
