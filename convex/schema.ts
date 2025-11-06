@@ -16,6 +16,8 @@ export default defineSchema({
     name: v.string(),
     tournamentId: v.id("tournaments"),
     createdBy: v.id("users"),
+    visibility: v.union(v.literal("public"), v.literal("private")),
+    maxMembers: v.optional(v.number()),
   })
     .index("by_tournament", ["tournamentId"])
     .index("by_tournament_and_name", ["tournamentId", "name"]),
@@ -72,4 +74,45 @@ export default defineSchema({
   })
     .index("by_external_id", ["externalId"])
     .index("by_email", ["email"]),
+
+  teamInvitations: defineTable({
+    teamId: v.id("teams"),
+    invitedUserId: v.id("users"),
+    invitedEmail: v.string(),
+    invitedBy: v.id("users"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("rejected"),
+      v.literal("cancelled"),
+      v.literal("expired"),
+    ),
+    expiresAt: v.string(), // ISO date
+    createdAt: v.string(),
+    respondedAt: v.optional(v.string()),
+  })
+    .index("by_team", ["teamId"])
+    .index("by_user", ["invitedUserId"])
+    .index("by_email", ["invitedEmail"])
+    .index("by_status", ["status"])
+    .index("by_team_and_status", ["teamId", "status"]),
+
+  joinRequests: defineTable({
+    teamId: v.id("teams"),
+    userId: v.id("users"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+      v.literal("cancelled"),
+    ),
+    message: v.optional(v.string()), // User's message to team
+    createdAt: v.string(),
+    respondedAt: v.optional(v.string()),
+    respondedBy: v.optional(v.id("users")),
+  })
+    .index("by_team", ["teamId"])
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_team_and_status", ["teamId", "status"]),
 });
