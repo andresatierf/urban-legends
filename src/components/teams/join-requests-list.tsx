@@ -111,11 +111,11 @@ export function JoinRequestsList({ teamId }: Props) {
                 <Badge variant="secondary">{request.user?.email}</Badge>
               </div>
               {request.message && (
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-muted-foreground text-sm">
                   {request.message}
                 </p>
               )}
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-muted-foreground text-xs">
                 Requested {new Date(request.createdAt).toLocaleDateString()}
               </p>
             </div>

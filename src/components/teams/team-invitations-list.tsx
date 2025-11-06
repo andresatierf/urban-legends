@@ -109,10 +109,10 @@ export function TeamInvitationsList() {
                   </Badge>
                   {isExpired && <Badge variant="destructive">Expired</Badge>}
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-muted-foreground text-sm">
                   Invited by {invitation.invitedByUser?.name}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-muted-foreground text-xs">
                   Expires{" "}
                   {new Date(invitation.expiresAt).toLocaleDateString()}
                 </p>
