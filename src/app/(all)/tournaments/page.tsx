@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { SectionHeader } from "@/components/section-header";
-import { StatCard } from "@/components/tournaments/stat-card";
+import { StatCard } from "@/components/stat-card";
 import { TournamentsDataTable } from "@/components/tournaments/tournaments-data-table";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
@@ -56,21 +56,13 @@ export default function TournamentsPage() {
 
       {isAdmin && (
         <div className="mb-4 grid grid-cols-1 gap-6 sm:grid-cols-3">
-          <StatCard
-            title="Active Tournaments"
-            value={active}
-            color="text-green-600"
-          />
+          <StatCard title="Active Tournaments" value={active} color="green" />
           <StatCard
             title="Upcoming Tournaments"
             value={upcoming}
-            color="text-yellow-500"
+            color="yellow"
           />
-          <StatCard
-            title="Total Tournaments"
-            value={total}
-            color="text-blue-500"
-          />
+          <StatCard title="Total Tournaments" value={total} color="blue" />
         </div>
       )}
 

@@ -3,10 +3,8 @@
 import { useClerk } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import {
-  CheckSquare,
   ClipboardList,
   LayoutDashboard,
-  LayoutGrid,
   type LucideIcon,
   PlusCircle,
   Trophy,
