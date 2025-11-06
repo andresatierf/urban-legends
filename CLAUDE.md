@@ -33,7 +33,12 @@ bun run format          # Check code formatting
 bun run format:fix      # Auto-format code
 ```
 
-**Important**: This project uses **Biome** (not ESLint/Prettier) for linting and formatting. Always use the bun scripts above, not direct biome CLI commands.
+**Important**: This project uses **Biome** (not ESLint/Prettier) for linting and formatting. Always use the bun scripts above, not direct biome CLI commands. Biome is configured to:
+
+- Enforce sorted Tailwind classes (via `useSortedClasses` rule) in both `className` attributes and `cn()` function calls
+- Exclude `convex/_generated/**` from linting and formatting
+- Use double quotes for JavaScript/TypeScript strings
+- Auto-organize imports when using assist mode
 
 ## Architecture Overview
 
@@ -173,7 +178,8 @@ NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 
 - Always run both `bun run dev` AND `bunx convex dev` during development
 - Route groups `(auth)` and `(all)` don't affect URLs but organize code
-- Convex functions auto-generate TypeScript types in `convex/_generated/`
+- Convex functions auto-generate TypeScript types in `convex/_generated/` (excluded from linting)
 - Use `@/` path alias for imports from `src/` directory
-- Biome enforces sorted Tailwind classes via `cn()` function
+- The `cn()` utility (in `src/lib/utils.ts`) combines `clsx` + `tailwind-merge` for optimal class merging
 - Component styling follows Tailwind + CVA (class-variance-authority) patterns
+- UI components are built with Radix UI primitives following shadcn/ui conventions
