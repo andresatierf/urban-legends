@@ -176,6 +176,7 @@ export const create = mutation({
     name: v.string(),
     tournamentId: v.id("tournaments"),
     members: v.array(v.id("users")),
+    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -194,10 +195,17 @@ export const create = mutation({
       throw new Error("Team name already exists");
     }
 
+    const tournament = await ctx.db.get(args.tournamentId);
+    if (!tournament) {
+      throw new Error("Tournament not found");
+    }
+
     const team = await ctx.db.insert("teams", {
       name: args.name,
       tournamentId: args.tournamentId,
       createdBy: user._id,
+      visibility: args.visibility ?? "public",
+      maxMembers: tournament.teamMaxSize,
     });
 
     // TODO: add members if provided
