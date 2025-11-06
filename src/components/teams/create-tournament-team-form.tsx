@@ -1,18 +1,24 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import z from "zod";
-import { toastFormValues } from "@/lib/form";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 const formSchema = z.object({
   name: z.string().min(1, "Team name is required"),
-  description: z.string().optional(),
-  members: z.array(z.string()),
+  visibility: z.enum(["public", "private"]),
 });
 
 type Props = {
@@ -20,22 +26,27 @@ type Props = {
 };
 
 export function CreateTournamentTeamForm({ tournamentId }: Props) {
-  const createTeam = useMutation(api.teams.create);
+  const createUserTeam = useMutation(api.teams.createUserTeam);
+  const router = useRouter();
 
   const form = useForm({
     defaultValues: {
       name: "",
-      members: [],
+      visibility: "public" as "public" | "private",
     } as z.input<typeof formSchema>,
     validators: {
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
-      toastFormValues({ tournamentId, ...value });
-
-      // TODO: replace with Convex mutation call, e.g.
-      await createTeam({ tournamentId, ...value });
-      redirect(`/tournaments/${tournamentId}`);
+      try {
+        const teamId = await createUserTeam({ tournamentId, ...value });
+        toast.success("Team created successfully!");
+        router.push(`/tournaments/${tournamentId}`);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to create team",
+        );
+      }
     },
   });
 
@@ -58,7 +69,7 @@ export function CreateTournamentTeamForm({ tournamentId }: Props) {
 
             return (
               <Field data-invalid={isInvalid}>
-                <FieldLabel html-for={field.name}>Name</FieldLabel>
+                <FieldLabel html-for={field.name}>Team Name</FieldLabel>
                 <Input
                   id={field.name}
                   name={field.name}
@@ -66,9 +77,37 @@ export function CreateTournamentTeamForm({ tournamentId }: Props) {
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   aria-invalid={isInvalid}
-                  placeholder="The name of the team"
+                  placeholder="Enter a unique team name"
                   autoComplete="off"
                 />
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            );
+          }}
+        />
+
+        <form.Field
+          name="visibility"
+          // biome-ignore lint/correctness/noChildrenProp: documentation
+          children={(field) => {
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
+
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel html-for={field.name}>Visibility</FieldLabel>
+                <Select
+                  value={field.state.value}
+                  onValueChange={(value) => field.handleChange(value as "public" | "private")}
+                >
+                  <SelectTrigger id={field.name}>
+                    <SelectValue placeholder="Select visibility" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">Public - Anyone can request to join</SelectItem>
+                    <SelectItem value="private">Private - Invitation only</SelectItem>
+                  </SelectContent>
+                </Select>
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
             );
