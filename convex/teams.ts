@@ -319,15 +319,27 @@ export async function getTeams(
   return teams;
 }
 
-// New user-facing team creation
-export const createUserTeam = mutation({
+export const upsertUserTeam = mutation({
   args: {
+    _id: v.optional(v.id("teams")),
     name: v.string(),
     tournamentId: v.id("tournaments"),
     visibility: v.union(v.literal("public"), v.literal("private")),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
+
+    if (args._id) {
+      const team = await ctx.db.get(args._id);
+      if (!team) {
+        throw new Error("Team not found");
+      }
+
+      return await ctx.db.patch(args._id, {
+        name: args.name,
+        visibility: args.visibility,
+      });
+    }
 
     // Validate tournament exists
     const tournament = await ctx.db.get(args.tournamentId);

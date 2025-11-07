@@ -6,6 +6,7 @@ import Link from "next/link";
 import { use } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { JoinTeamButton } from "@/components/teams/join-team-button";
+import { UpsertTeamButton } from "@/components/teams/upsert-team-button";
 import { TournamentDetailsCard } from "@/components/tournaments/tournament-details-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -91,29 +92,46 @@ export default function TournamentDetailsPage({ params }: Props) {
 
       <SectionHeader title="Teams" />
 
-      {userTeam && (
-        <Card variant="info">
-          <CardHeader>
-            <CardTitle>Your Team</CardTitle>
-            <CardDescription>
-              You are already part of a team in this tournament
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">{userTeam.name}</p>
-                <Badge variant="secondary">
-                  {teamMemberCounts?.[userTeam._id]?.length || 0} members
-                </Badge>
+      {teams &&
+        teams.length !== 0 &&
+        (userTeam ? (
+          <Card variant="info">
+            <CardHeader>
+              <CardTitle>Your Team</CardTitle>
+              <CardDescription>
+                You are already part of a team in this tournament
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{userTeam.name}</p>
+                  <Badge variant="secondary">
+                    {teamMemberCounts?.[userTeam._id]?.length || 0} members
+                  </Badge>
+                </div>
+                <Button asChild variant="outline">
+                  <Link href={`/teams/${userTeam._id}`}>View Team</Link>
+                </Button>
               </div>
-              <Button asChild variant="outline">
-                <Link href={`/teams/${userTeam._id}`}>View Team</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card variant="info">
+            <CardContent>
+              <Empty className="gap-3 py-2!">
+                <EmptyHeader>Join a Team</EmptyHeader>
+                <EmptyDescription>
+                  You can join a team by clicking the button below or you can
+                  create your own.
+                </EmptyDescription>
+                <EmptyContent>
+                  <UpsertTeamButton tournamentId={tournamentId} />
+                </EmptyContent>
+              </Empty>
+            </CardContent>
+          </Card>
+        ))}
 
       <div className="space-y-4">
         {teams && teams.length !== 0 ? (
@@ -175,11 +193,7 @@ export default function TournamentDetailsPage({ params }: Props) {
                   Be the first to create a team for this tournament!
                 </EmptyDescription>
                 <EmptyContent>
-                  <Button asChild>
-                    <Link href={`/teams/new?tournamentId=${tournamentId}`}>
-                      Create Team
-                    </Link>
-                  </Button>
+                  <UpsertTeamButton tournamentId={tournamentId} />
                 </EmptyContent>
               </Empty>
             </CardContent>

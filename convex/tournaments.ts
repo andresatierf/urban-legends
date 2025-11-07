@@ -81,7 +81,7 @@ export const get = query({
       return await ctx.db
         .query("tournaments")
         .filter((q) => q.eq(q.field("name"), args.tournamentName))
-        .first();
+        .unique();
 
     return await ctx.db.get(args.tournamentId!);
   },

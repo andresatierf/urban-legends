@@ -10,9 +10,7 @@ import { NumberField } from "../form/number-field";
 import { TextField } from "../form/text-field";
 import { TextareaField } from "../form/textarea-field";
 import { Button } from "../ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
+import { Field, FieldGroup } from "../ui/field";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name can't be empty"),
