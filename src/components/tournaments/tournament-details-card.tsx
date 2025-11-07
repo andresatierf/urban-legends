@@ -1,17 +1,18 @@
+import Link from "next/link";
 import { DetailsCard } from "@/components/details-card";
-import type { ButtonProps } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import type { Doc } from "../../../convex/_generated/dataModel";
 
 type Props = {
   tournament: Doc<"tournaments">;
-  users: Doc<"users">[];
+  teams: Doc<"teams">[];
   enableActions?: boolean;
   className?: string;
 };
 
 export function TournamentDetailsCard({
   tournament,
-  users,
+  teams,
   enableActions,
   className,
 }: Props) {
@@ -20,21 +21,7 @@ export function TournamentDetailsCard({
   const details = [
     { key: "startDate", value: tournament.startDate },
     { key: "endDate", value: tournament.endDate },
-    {
-      key: "participants",
-      value: users?.length ? users?.join(", ") : "No users assigned",
-    },
-  ];
-  const actions: ButtonProps[] = [
-    {
-      children: "Edit Tournament",
-      onClick: () => {},
-    },
-    {
-      children: "Manage Teams",
-      variant: "secondary",
-      onClick: () => {},
-    },
+    { key: "Teams", value: `${teams?.length ?? "0"}` },
   ];
 
   return (
@@ -42,8 +29,15 @@ export function TournamentDetailsCard({
       title={tournament.name}
       description={tournament.description}
       details={details}
-      actions={enableActions ? actions : []}
       className={className}
-    />
+    >
+      {enableActions && (
+        <Button variant="outline" asChild>
+          <Link href={`/tournaments/${tournament._id}/edit`}>
+            Edit Tournament
+          </Link>
+        </Button>
+      )}
+    </DetailsCard>
   );
 }

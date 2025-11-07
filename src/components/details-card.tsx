@@ -1,6 +1,5 @@
 import { startCase } from "lodash";
 import { cn } from "@/lib/utils";
-import { Button, type ButtonProps } from "./ui/button";
 import {
   Card,
   CardContent,
@@ -14,16 +13,16 @@ type Props = {
   title: string;
   description?: string;
   details?: { key: string; value: string; className?: string }[];
-  actions?: ButtonProps[];
   className?: string;
+  children?: React.ReactNode;
 };
 
 export function DetailsCard({
   title,
   description,
   details = [],
-  actions = [],
   className,
+  children,
 }: Props) {
   return (
     <Card className={cn("min-w-fit", className)}>
@@ -47,13 +46,9 @@ export function DetailsCard({
           ))}
         </div>
       </CardContent>
-      {actions.length > 0 && (
+      {children && (
         <CardFooter className="justify-center align-center sm:justify-end">
-          <div className="flex flex-wrap justify-center gap-3">
-            {actions.map((props, index) => (
-              <Button key={index} {...props} />
-            ))}
-          </div>
+          <div className="flex flex-wrap justify-center gap-3">{children}</div>
         </CardFooter>
       )}
     </Card>

@@ -32,14 +32,14 @@ export function CreateTournamentTeamForm({ tournamentId }: Props) {
   const form = useForm({
     defaultValues: {
       name: "",
-      visibility: "public" as "public" | "private",
+      visibility: "public",
     } as z.input<typeof formSchema>,
     validators: {
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
       try {
-        const teamId = await createUserTeam({ tournamentId, ...value });
+        await createUserTeam({ tournamentId, ...value });
         toast.success("Team created successfully!");
         router.push(`/tournaments/${tournamentId}`);
       } catch (error) {
@@ -60,10 +60,8 @@ export function CreateTournamentTeamForm({ tournamentId }: Props) {
       }}
     >
       <FieldGroup>
-        <form.Field
-          name="name"
-          // biome-ignore lint/correctness/noChildrenProp: documentation
-          children={(field) => {
+        <form.Field name="name">
+          {(field) => {
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid;
 
@@ -84,12 +82,9 @@ export function CreateTournamentTeamForm({ tournamentId }: Props) {
               </Field>
             );
           }}
-        />
-
-        <form.Field
-          name="visibility"
-          // biome-ignore lint/correctness/noChildrenProp: documentation
-          children={(field) => {
+        </form.Field>
+        <form.Field name="visibility">
+          {(field) => {
             const isInvalid =
               field.state.meta.isTouched && !field.state.meta.isValid;
 
@@ -98,21 +93,27 @@ export function CreateTournamentTeamForm({ tournamentId }: Props) {
                 <FieldLabel html-for={field.name}>Visibility</FieldLabel>
                 <Select
                   value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value as "public" | "private")}
+                  onValueChange={(value) =>
+                    field.handleChange(value as "public" | "private")
+                  }
                 >
                   <SelectTrigger id={field.name}>
                     <SelectValue placeholder="Select visibility" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="public">Public - Anyone can request to join</SelectItem>
-                    <SelectItem value="private">Private - Invitation only</SelectItem>
+                    <SelectItem value="public">
+                      Public - Anyone can request to join
+                    </SelectItem>
+                    <SelectItem value={"private" as const}>
+                      Private - Invitation only
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
             );
           }}
-        />
+        </form.Field>
       </FieldGroup>
       <Field orientation="horizontal" className="mt-8 flex justify-end">
         <Button type="button" variant="outline" onClick={() => form.reset()}>

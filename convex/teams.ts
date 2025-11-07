@@ -85,7 +85,7 @@ export const get = query({
       (args.teamId && (args.teamName || args.userId || args.tournamentId)) ||
       (args.teamName && (args.userId || !args.tournamentId)) ||
       (args.userId && !args.tournamentId) ||
-      (args.tournamentId && (!args.teamName || !args.userId))
+      (args.tournamentId && !args.teamName && !args.userId)
     )
       throw new Error(
         "Must provide either team id, team name and tournament id, or user and tournament ids",
@@ -890,7 +890,10 @@ export const transferCaptaincy = mutation({
       )
       .first();
 
-    if (!currentCaptainMembership || currentCaptainMembership.role !== "captain") {
+    if (
+      !currentCaptainMembership ||
+      currentCaptainMembership.role !== "captain"
+    ) {
       throw new Error("Only the team captain can transfer captaincy");
     }
 

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { use, useMemo } from "react";
 import { DataTableSection } from "@/components/data-table-section";
 import { SectionHeader } from "@/components/section-header";
+import { JoinRequestsList } from "@/components/teams/join-requests-list";
 import { TeamDetailsCard } from "@/components/teams/team-details-card";
 import { Button } from "@/components/ui/button";
 import { api } from "../../../../../convex/_generated/api";
@@ -50,7 +51,7 @@ export default function TeamDetailsPage({ params }: Props) {
   return (
     <>
       <SectionHeader as="h1" title="Team Details">
-        <Button variant="secondary" asChild>
+        <Button variant="outline" asChild>
           <Link href={`/tournaments/${team?.tournamentId}`}>
             <Trophy />
             View Tournament
@@ -72,6 +73,8 @@ export default function TeamDetailsPage({ params }: Props) {
         data={members}
         emptyMessage="No members yet."
       />
+
+      <JoinRequestsList teamId={teamId} />
     </>
   );
 }
