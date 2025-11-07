@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, type QueryCtx, query } from "./_generated/server";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -181,19 +181,12 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!user.roles.includes("admin")) {
-      throw new Error("Admin access required");
-    }
+    validateIsAdmin(user);
 
-    const existingTeam = await ctx.db
-      .query("teams")
-      .withIndex("by_tournament_and_name", (q) =>
-        q.eq("tournamentId", args.tournamentId).eq("name", args.name),
-      )
-      .first();
-    if (existingTeam) {
-      throw new Error("Team name already exists");
-    }
+    await validateUniqueTeamName(ctx, {
+      tournamentId: args.tournamentId,
+      name: args.name,
+    });
 
     const tournament = await ctx.db.get(args.tournamentId);
     if (!tournament) {
@@ -223,9 +216,7 @@ export const addMember = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!user.roles.includes("admin")) {
-      throw new Error("Admin access required");
-    }
+    validateIsAdmin(user);
 
     // Find user by email
     const userToAdd = await ctx.db
@@ -265,9 +256,7 @@ export const removeMember = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!user.roles.includes("admin")) {
-      throw new Error("Admin access required");
-    }
+    validateIsAdmin(user);
 
     const member = await ctx.db
       .query("teamMembers")
@@ -347,38 +336,15 @@ export const upsertUserTeam = mutation({
       throw new Error("Tournament not found");
     }
 
-    // Check if user already has a team in this tournament
-    const userTeams = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
+    await validateUserNotInTournamentTeam(ctx, {
+      userId: user._id,
+      tournamentId: args.tournamentId,
+    });
 
-    const teamIds = userTeams.map((m) => m.teamId);
-    const existingTeamInTournament = await ctx.db
-      .query("teams")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("tournamentId"), args.tournamentId),
-          q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))),
-        ),
-      )
-      .first();
-
-    if (existingTeamInTournament) {
-      throw new Error("You already have a team in this tournament");
-    }
-
-    // Validate team name uniqueness within tournament
-    const existingTeamName = await ctx.db
-      .query("teams")
-      .withIndex("by_tournament_and_name", (q) =>
-        q.eq("tournamentId", args.tournamentId).eq("name", args.name),
-      )
-      .first();
-
-    if (existingTeamName) {
-      throw new Error("Team name already exists in this tournament");
-    }
+    await validateUniqueTeamName(ctx, {
+      tournamentId: args.tournamentId,
+      name: args.name,
+    });
 
     // Create team with user as captain
     const teamId = await ctx.db.insert("teams", {
@@ -445,26 +411,10 @@ export const requestToJoin = mutation({
       throw new Error("You already have a pending join request for this team");
     }
 
-    // Check if user already in a team for this tournament
-    const userTeamsInTournament = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-
-    const teamIds = userTeamsInTournament.map((m) => m.teamId);
-    const teamsInSameTournament = await ctx.db
-      .query("teams")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("tournamentId"), team.tournamentId),
-          q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))),
-        ),
-      )
-      .first();
-
-    if (teamsInSameTournament) {
-      throw new Error("You already have a team in this tournament");
-    }
+    await validateUserNotInTournamentTeam(ctx, {
+      userId: user._id,
+      tournamentId: team.tournamentId,
+    });
 
     // Check team has space
     const currentMembers = await ctx.db
@@ -513,20 +463,12 @@ export const approveJoinRequest = mutation({
       throw new Error("Team not found");
     }
 
-    // Check if user is captain or admin
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", request.teamId).eq("userId", user._id),
-      )
-      .first();
-
-    const isCaptain = membership?.role === "captain";
-    const isAdmin = user.roles.includes("admin");
-
-    if (!isCaptain && !isAdmin) {
-      throw new Error("Only team captain or admin can approve join requests");
-    }
+    validateIsAdmin(user);
+    await validateIsTeamMember(ctx, {
+      teamId: request.teamId,
+      userId: user._id,
+      captain: true,
+    });
 
     // Check team still has space
     const currentMembers = await ctx.db
@@ -572,20 +514,12 @@ export const rejectJoinRequest = mutation({
       throw new Error("Join request is not pending");
     }
 
-    // Check if user is captain or admin
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", request.teamId).eq("userId", user._id),
-      )
-      .first();
-
-    const isCaptain = membership?.role === "captain";
-    const isAdmin = user.roles.includes("admin");
-
-    if (!isCaptain && !isAdmin) {
-      throw new Error("Only team captain or admin can reject join requests");
-    }
+    validateIsAdmin(user);
+    await validateIsTeamMember(ctx, {
+      teamId: request.teamId,
+      userId: user._id,
+      captain: true,
+    });
 
     // Update request status
     await ctx.db.patch(args.requestId, {
@@ -641,20 +575,12 @@ export const inviteMember = mutation({
       throw new Error("Team not found");
     }
 
-    // Check if user is captain or admin
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", args.teamId).eq("userId", user._id),
-      )
-      .first();
-
-    const isCaptain = membership?.role === "captain";
-    const isAdmin = user.roles.includes("admin");
-
-    if (!isCaptain && !isAdmin) {
-      throw new Error("Only team captain or admin can invite members");
-    }
+    validateIsAdmin(user);
+    await validateIsTeamMember(ctx, {
+      userId: user._id,
+      teamId: team._id,
+      captain: true,
+    });
 
     // Look up user by email
     const invitedUser = await ctx.db
@@ -894,32 +820,16 @@ export const transferCaptaincy = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Validate current user is captain
-    const currentCaptainMembership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", args.teamId).eq("userId", user._id),
-      )
-      .first();
+    const currentCaptainMembership = await validateIsTeamMember(ctx, {
+      teamId: args.teamId,
+      userId: user._id,
+      captain: true,
+    });
 
-    if (
-      !currentCaptainMembership ||
-      currentCaptainMembership.role !== "captain"
-    ) {
-      throw new Error("Only the team captain can transfer captaincy");
-    }
-
-    // Validate new captain is team member
-    const newCaptainMembership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", args.teamId).eq("userId", args.newCaptainId),
-      )
-      .first();
-
-    if (!newCaptainMembership) {
-      throw new Error("New captain must be a team member");
-    }
+    const newCaptainMembership = await validateIsTeamMember(ctx, {
+      teamId: args.teamId,
+      userId: args.newCaptainId,
+    });
 
     // Update both roles
     await ctx.db.patch(currentCaptainMembership._id, { role: "member" });
@@ -943,20 +853,12 @@ export const listJoinRequests = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Check if user is captain or admin
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", args.teamId).eq("userId", user._id),
-      )
-      .first();
-
-    const isCaptain = membership?.role === "captain";
-    const isAdmin = user.roles.includes("admin");
-
-    if (!isCaptain && !isAdmin) {
-      throw new Error("Only team captain or admin can view join requests");
-    }
+    validateIsAdmin(user);
+    await validateIsTeamMember(ctx, {
+      teamId: args.teamId,
+      userId: user._id,
+      captain: true,
+    });
 
     // Get join requests
     let requests = await ctx.db
@@ -1000,21 +902,27 @@ export const listUserInvitations = query({
     const user = await getCurrentUserOrThrow(ctx);
 
     // Get invitations
-    let invitations = await ctx.db
+    let invitationsQuery = ctx.db
       .query("teamInvitations")
-      .withIndex("by_user", (q) => q.eq("invitedUserId", user._id))
-      .collect();
+      .withIndex("by_user", (q) => q.eq("invitedUserId", user._id));
 
     if (args.status) {
-      invitations = invitations.filter((i) => i.status === args.status);
+      invitationsQuery = invitationsQuery.filter((q) =>
+        q.eq(q.field("status"), args.status),
+      );
     }
+
+    const invitations = await invitationsQuery.collect();
 
     // Fetch team and tournament details for each invitation
     const invitationsWithDetails = await Promise.all(
       invitations.map(async (invitation) => {
-        const team = await ctx.db.get(invitation.teamId);
+        const [team, invitedBy] = await Promise.all([
+          ctx.db.get(invitation.teamId),
+          ctx.db.get(invitation.invitedBy),
+        ]);
+
         const tournament = team ? await ctx.db.get(team.tournamentId) : null;
-        const invitedBy = await ctx.db.get(invitation.invitedBy);
         return {
           ...invitation,
           team,
@@ -1045,3 +953,105 @@ export const getUserJoinRequest = query({
     return request;
   },
 });
+
+function validateIsAdmin(
+  user: Awaited<ReturnType<typeof getCurrentUserOrThrow>>,
+) {
+  if (!user.roles.includes("admin")) {
+    throw new Error("Admin access required");
+  }
+}
+
+type ValidateIsTeamMemberArgs = {
+  userId: Id<"users">;
+  teamId: Id<"teams">;
+  captain?: boolean;
+  invert?: boolean;
+};
+
+async function validateIsTeamMember(
+  ctx: QueryCtx,
+  args: ValidateIsTeamMemberArgs,
+): ValidateIsTeamMemberArgs["invert"] extends true
+  ? Promise<null>
+  : Promise<Doc<"teamMembers">> {
+  const membership = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_team_and_user", (q) =>
+      q.eq("teamId", args.teamId).eq("userId", args.userId),
+    )
+    .first();
+
+  if (args.invert && args.captain) {
+    throw new Error("Can't invert and check for captain at the same time");
+  }
+
+  if (!args.invert && !membership) {
+    throw new Error("Team membership required");
+  }
+
+  if (args.invert && membership) {
+    throw new Error("User already part of team");
+  }
+
+  if (args.captain && membership?.role !== "captain") {
+    throw new Error("Captain access required");
+  }
+
+  return membership as ValidateIsTeamMemberArgs["invert"] extends true
+    ? null
+    : Doc<"teamMembers">;
+}
+
+type ValidateUserInTournamentTeamArgs = {
+  userId: Id<"users">;
+  tournamentId: Id<"tournaments">;
+};
+
+async function validateUserNotInTournamentTeam(
+  ctx: QueryCtx,
+  args: ValidateUserInTournamentTeamArgs,
+) {
+  // Check if user already has a team in this tournament
+  const userTeams = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_user", (q) => q.eq("userId", args.userId))
+    .collect();
+
+  const teamIds = userTeams.map((m) => m.teamId);
+  const existingTeamInTournament = await ctx.db
+    .query("teams")
+    .filter((q) =>
+      q.and(
+        q.eq(q.field("tournamentId"), args.tournamentId),
+        q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))),
+      ),
+    )
+    .first();
+
+  if (existingTeamInTournament) {
+    throw new Error("You already have a team in this tournament");
+  }
+}
+
+type ValidateUniqueTeamNameArgs = {
+  tournamentId: Id<"tournaments">;
+  name: string;
+};
+
+async function validateUniqueTeamName(
+  ctx: QueryCtx,
+  args: ValidateUniqueTeamNameArgs,
+) {
+  // Validate team name uniqueness within tournament
+  const existingTeamName = await ctx.db
+    .query("teams")
+    .withIndex("by_tournament_and_name", (q) =>
+      q.eq("tournamentId", args.tournamentId).eq("name", args.name),
+    )
+    .first();
+
+  if (existingTeamName) {
+    throw new Error("Team name already exists in this tournament");
+  }
+}
