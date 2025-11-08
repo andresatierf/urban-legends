@@ -954,6 +954,100 @@ export const getUserJoinRequest = query({
   },
 });
 
+// List team invitations (captain/admin only)
+export const listTeamInvitations = query({
+  args: {
+    teamId: v.id("teams"),
+    status: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("accepted"),
+        v.literal("rejected"),
+        v.literal("cancelled"),
+        v.literal("expired"),
+      ),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    validateIsAdmin(user);
+    await validateIsTeamMember(ctx, {
+      teamId: args.teamId,
+      userId: user._id,
+      captain: true,
+    });
+
+    // Get invitations
+    let invitationsQuery = ctx.db
+      .query("teamInvitations")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId));
+
+    if (args.status) {
+      invitationsQuery = invitationsQuery.filter((q) =>
+        q.eq(q.field("status"), args.status),
+      );
+    }
+
+    const invitations = await invitationsQuery.collect();
+
+    // Fetch invited user details for each invitation
+    const invitationsWithDetails = await Promise.all(
+      invitations.map(async (invitation) => {
+        const invitedUser = await ctx.db.get(invitation.invitedUserId);
+        const invitedByUser = await ctx.db.get(invitation.invitedBy);
+
+        return {
+          ...invitation,
+          invitedUser,
+          invitedByUser,
+        };
+      }),
+    );
+
+    return invitationsWithDetails;
+  },
+});
+
+// Get users not in any team for a given tournament
+export const getAvailableUsersForTournament = query({
+  args: {
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    await getCurrentUserOrThrow(ctx);
+
+    // Get all teams in this tournament
+    const teams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .collect();
+
+    // Get all team members in this tournament
+    const teamMembers = await Promise.all(
+      teams.map((team) =>
+        ctx.db
+          .query("teamMembers")
+          .withIndex("by_team", (q) => q.eq("teamId", team._id))
+          .collect(),
+      ),
+    );
+
+    const allTeamMembers = teamMembers.flat();
+    const userIdsInTeams = new Set(allTeamMembers.map((m) => m.userId));
+
+    // Get all users
+    const allUsers = await ctx.db.query("users").collect();
+
+    // Filter out users who are already in a team
+    const availableUsers = allUsers.filter(
+      (user) => !userIdsInTeams.has(user._id),
+    );
+
+    return availableUsers;
+  },
+});
+
 function validateIsAdmin(
   user: Awaited<ReturnType<typeof getCurrentUserOrThrow>>,
 ) {

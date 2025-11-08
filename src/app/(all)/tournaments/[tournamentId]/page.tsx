@@ -133,7 +133,7 @@ export default function TournamentDetailsPage({ params }: Props) {
           </Card>
         ))}
 
-      <div className="space-y-4">
+      <div className="grid min-w-max grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {teams && teams.length !== 0 ? (
           teams.map((team) => {
             const members = teamMemberCounts?.[team._id] || [];
@@ -186,8 +186,8 @@ export default function TournamentDetailsPage({ params }: Props) {
           })
         ) : (
           <Card>
-            <CardContent className="py-12">
-              <Empty>
+            <CardContent className="py-6">
+              <Empty className="gap-3 py-2!">
                 <EmptyHeader>No teams yet</EmptyHeader>
                 <EmptyDescription>
                   Be the first to create a team for this tournament!

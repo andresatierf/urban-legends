@@ -37,12 +37,12 @@ export function DetailsCard({
       <CardContent>
         <div className="flex flex-col gap-2">
           {details.map((detail) => (
-            <p
-              key={detail.key}
-              className={cn("text-gray-700", detail.className)}
-            >
-              <strong>{startCase(detail.key)}:</strong> {detail.value}
-            </p>
+            <div key={detail.key} className="flex gap-2">
+              <strong>{startCase(detail.key)}:</strong>
+              <p className={cn("text-gray-700", detail.className)}>
+                {detail.value}
+              </p>
+            </div>
           ))}
         </div>
       </CardContent>
