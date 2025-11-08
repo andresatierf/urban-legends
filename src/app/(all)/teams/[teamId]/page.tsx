@@ -6,7 +6,9 @@ import { ArrowLeft, Trophy } from "lucide-react";
 import Link from "next/link";
 import { use, useMemo } from "react";
 import { DataTableSection } from "@/components/data-table-section";
+import { InviteMemberFormButton } from "@/components/form/invite-member-form-button";
 import { SectionHeader } from "@/components/section-header";
+import { InvitedUsersList } from "@/components/teams/invited-users-list";
 import { JoinRequestsList } from "@/components/teams/join-requests-list";
 import { TeamDetailsCard } from "@/components/teams/team-details-card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +21,11 @@ type Props = {
 
 export default function TeamDetailsPage({ params }: Props) {
   const { teamId } = use(params);
+  const user = useQuery(api.users.current);
+  const roles = useQuery(
+    api.roles.getByUserId,
+    user ? { userId: user._id } : "skip",
+  );
   const team = useQuery(api.teams.get, teamId ? { teamId } : "skip");
   const tournament = useQuery(
     api.tournaments.get,
@@ -28,6 +35,16 @@ export default function TeamDetailsPage({ params }: Props) {
     api.teams.listTeamMembers,
     teamId ? { teamId } : "skip",
   );
+  const teamMembers = useQuery(
+    api.teams.listMembers,
+    teamId ? { teamIds: teamId } : "skip",
+  );
+
+  // Check if user is captain or admin
+  const isAdmin = roles?.includes("admin");
+  const userMembership = teamMembers?.find((m) => m.userId === user?._id);
+  const isCaptain = userMembership?.role === "captain";
+  const canInviteMembers = isAdmin || isCaptain;
 
   const columns: ColumnDef<NonNullable<typeof members>[number]>[] = useMemo(
     () => [
@@ -51,6 +68,12 @@ export default function TeamDetailsPage({ params }: Props) {
   return (
     <>
       <SectionHeader as="h1" title="Team Details">
+        {canInviteMembers && (
+          <InviteMemberFormButton
+            teamId={teamId}
+            tournamentId={team.tournamentId}
+          />
+        )}
         <Button variant="outline" asChild>
           <Link href={`/tournaments/${team?.tournamentId}`}>
             <Trophy />
@@ -73,6 +96,8 @@ export default function TeamDetailsPage({ params }: Props) {
         data={members}
         emptyMessage="No members yet."
       />
+
+      <InvitedUsersList teamId={teamId} />
 
       <JoinRequestsList teamId={teamId} />
     </>

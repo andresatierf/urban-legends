@@ -1,9 +1,10 @@
+import { useStore } from "@tanstack/react-form";
 import { useCallback } from "react";
-import { Combobox } from "../ui/combobox";
-import { Field, FieldError, FieldLabel } from "../ui/field";
+import { useFieldContext } from "@/hooks/form-context";
+import { Combobox } from "../../ui/combobox";
+import { Field, FieldError, FieldLabel } from "../../ui/field";
 
 type Props<T> = {
-  field: any;
   label: string;
   options: { value: T; label: string }[];
   onChange?: (value: T) => void;
@@ -11,15 +12,19 @@ type Props<T> = {
   children?: React.ReactNode;
 };
 
-export function ComboboxField<T>({
-  field,
+export default function ComboboxField<T extends string>({
   label,
   options,
   onChange,
   placeholder,
   children,
 }: Props<T>) {
-  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+  const field = useFieldContext<T>();
+
+  const [isInvalid, errors] = useStore(field.store, (state) => [
+    state.meta.isTouched && !state.meta.isValid,
+    state.meta.errors,
+  ]);
 
   const handleOnChange = useCallback(
     (value: T) => {
@@ -42,7 +47,7 @@ export function ComboboxField<T>({
         aria-invalid={isInvalid}
       />
       {children}
-      {isInvalid && <FieldError errors={field.state.meta.errors} />}
+      {isInvalid && <FieldError errors={errors} />}
     </Field>
   );
 }

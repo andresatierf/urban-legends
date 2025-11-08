@@ -1,16 +1,17 @@
 "use client";
 
-import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "convex/react";
 import { Loader2, UserPlus } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
+import { useAppForm } from "@/hooks/form";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -18,8 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
-import { Textarea } from "../ui/textarea";
+import { FieldGroup } from "../ui/field";
 
 const formSchema = z.object({
   message: z.string().optional(),
@@ -37,15 +37,15 @@ type Props = {
   isUserMember: boolean;
 };
 
-export function JoinTeamButton({
+export function JoinTeamFormButton({
   teamId,
   team,
   currentMemberCount,
   isUserInTeam,
   isUserMember,
 }: Props) {
+  const formId = useId();
   const [open, setOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const joinRequest = useQuery(api.teams.getUserJoinRequest, { teamId });
   const requestToJoin = useMutation(api.teams.requestToJoin);
@@ -55,7 +55,7 @@ export function JoinTeamButton({
   const isPrivate = team.visibility === "private";
   const hasPendingRequest = joinRequest?.status === "pending";
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       message: "",
     } as z.input<typeof formSchema>,
@@ -63,7 +63,6 @@ export function JoinTeamButton({
       onChange: formSchema,
     },
     onSubmit: async ({ value: { message } }) => {
-      setIsSubmitting(true);
       try {
         await requestToJoin({
           teamId,
@@ -77,7 +76,6 @@ export function JoinTeamButton({
             : "Failed to send join request",
         );
       } finally {
-        setIsSubmitting(false);
       }
     },
   });
@@ -85,7 +83,6 @@ export function JoinTeamButton({
   const handleCancelRequest = async () => {
     if (!joinRequest) return;
 
-    setIsSubmitting(true);
     try {
       await cancelRequest({ requestId: joinRequest._id });
       toast.success("Join request cancelled");
@@ -94,7 +91,6 @@ export function JoinTeamButton({
         error instanceof Error ? error.message : "Failed to cancel request",
       );
     } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -137,35 +133,33 @@ export function JoinTeamButton({
   // Pending request - show cancel option
   if (hasPendingRequest) {
     return (
-      <Button
-        variant="outline"
-        onClick={handleCancelRequest}
-        disabled={isSubmitting}
-      >
-        {isSubmitting && <Loader2 className="animate-spin" />}
+      <Button variant="outline" onClick={handleCancelRequest}>
         Cancel Request
       </Button>
     );
   }
 
-  // Can request to join
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <UserPlus />
-          Request to Join
-        </Button>
-      </DialogTrigger>
-
-      {/** biome-ignore lint/correctness/useUniqueElementIds: explanation */}
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        setOpen(newOpen);
+        form.reset();
+      }}
+    >
       <form
-        id="join-team-form"
+        id={formId}
         onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();
         }}
       >
+        <DialogTrigger asChild>
+          <Button>
+            <UserPlus />
+            Request to Join
+          </Button>
+        </DialogTrigger>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Request to Join {team.name}</DialogTitle>
@@ -176,53 +170,55 @@ export function JoinTeamButton({
           </DialogHeader>
 
           <FieldGroup>
-            <form.Field name="message">
-              {(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid;
-
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <FieldLabel html-for={field.name}>
-                      Message (optional)
-                    </FieldLabel>
-                    <Textarea
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      aria-invalid={isInvalid}
-                      placeholder="Introduce yourself or explain why you want to join..."
-                      autoComplete="off"
-                      rows={4}
-                    />
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                );
-              }}
-            </form.Field>
+            <form.AppField name="message">
+              {(field) => (
+                <field.TextareaField
+                  label="Message (optional)"
+                  placeholder="Introduce yourself or explain why you want to join..."
+                  rows={4}
+                />
+              )}
+            </form.AppField>
           </FieldGroup>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setOpen(false);
-                form.reset();
-              }}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" form="join-team-form" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="animate-spin" />}
-              Send Request
-            </Button>
-          </DialogFooter>
+          <form.Subscribe
+            selector={(state) => [
+              state.isPristine,
+              state.canSubmit,
+              state.isSubmitting,
+            ]}
+          >
+            {([isPristine, canSubmit, isSubmitting]) => (
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => form.reset()}
+                  disabled={isPristine || isSubmitting}
+                  className="mr-auto"
+                >
+                  Reset
+                </Button>
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  type="submit"
+                  form={formId}
+                  disabled={isSubmitting || isPristine || !canSubmit}
+                >
+                  {isSubmitting && <Loader2 className="animate-spin" />}
+                  Send Request
+                </Button>
+              </DialogFooter>
+            )}
+          </form.Subscribe>
         </DialogContent>
       </form>
     </Dialog>

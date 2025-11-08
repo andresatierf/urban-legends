@@ -2,6 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { useCallback, useMemo } from "react";
+import { UpsertSubmissionFormButton } from "@/components/form/upsert-submission-form-button";
 import { SectionHeader } from "@/components/section-header";
 import { SubmissionsDataTable } from "@/components/submissions/submissions-data-table";
 import { useUser } from "@/hooks/useUser";
@@ -50,7 +51,9 @@ export default function Submissions() {
 
   return (
     <>
-      <SectionHeader as="h1" title="Submissions"></SectionHeader>
+      <SectionHeader as="h1" title="Submissions">
+        <UpsertSubmissionFormButton />
+      </SectionHeader>
       <div className="space-y-6">
         <SubmissionsDataTable
           title="Your Submissions"

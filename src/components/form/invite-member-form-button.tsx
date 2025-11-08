@@ -1,17 +1,17 @@
 "use client";
 
-import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery } from "convex/react";
 import { Loader2, UserPlus } from "lucide-react";
-import { useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
+import { useAppForm } from "@/hooks/form";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { ComboboxField } from "../form/combobox-field";
 import { Button } from "../ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -30,22 +30,25 @@ type Props = {
   tournamentId: Id<"tournaments">;
 };
 
-export function InviteMemberDialog({ teamId, tournamentId }: Props) {
+export function InviteMemberFormButton({ teamId, tournamentId }: Props) {
+  const formId = useId();
   const [open, setOpen] = useState(false);
 
+  const inviteMember = useMutation(api.teams.inviteMember);
   const availableUsers = useQuery(
     api.teams.getAvailableUsersForTournament,
     tournamentId ? { tournamentId } : "skip",
   );
-  const userOptions =
-    availableUsers?.map((user) => ({
-      value: user.email,
-      label: `${user.name} (${user.email})`,
-    })) ?? [];
+  const userOptions = useMemo(
+    () =>
+      availableUsers?.map((user) => ({
+        value: user.email,
+        label: `${user.name} (${user.email})`,
+      })) ?? [],
+    [availableUsers],
+  );
 
-  const inviteMember = useMutation(api.teams.inviteMember);
-
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       email: "",
     } as z.input<typeof formSchema>,
@@ -55,8 +58,8 @@ export function InviteMemberDialog({ teamId, tournamentId }: Props) {
     onSubmit: async ({ value: { email } }) => {
       try {
         await inviteMember({ teamId, email: email.trim() });
-        setOpen(false);
         toast.success("Invitation sent successfully!");
+        setOpen(false);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to send invitation",
@@ -65,28 +68,28 @@ export function InviteMemberDialog({ teamId, tournamentId }: Props) {
     },
   });
 
-  const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
-    !newOpen && form.reset();
-  };
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button>
-          <UserPlus />
-          Invite Member
-        </Button>
-      </DialogTrigger>
-
-      {/** biome-ignore lint/correctness/useUniqueElementIds: explanation */}
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        setOpen(newOpen);
+        form.reset();
+      }}
+    >
       <form
-        id="invite-member-form"
+        id={formId}
         onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();
         }}
       >
+        <DialogTrigger asChild>
+          <Button>
+            <UserPlus />
+            Invite Member
+          </Button>
+        </DialogTrigger>
+
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Invite Team Member</DialogTitle>
@@ -98,47 +101,42 @@ export function InviteMemberDialog({ teamId, tournamentId }: Props) {
           </DialogHeader>
 
           <FieldGroup>
-            <form.Field name="email">
+            <form.AppField name="email">
               {(field) => (
-                <ComboboxField
-                  field={field}
-                  label="User"
-                  options={userOptions}
-                />
+                <field.ComboboxField label="User" options={userOptions} />
               )}
-            </form.Field>
+            </form.AppField>
           </FieldGroup>
 
-          <DialogFooter>
-            <form.Subscribe
-              selector={(state) => [
-                state.isPristine,
-                state.canSubmit,
-                state.isSubmitting,
-              ]}
-            >
-              {([isPristine, canSubmit, isSubmitting]) => (
-                <>
+          <form.Subscribe
+            selector={(state) => [
+              state.isPristine,
+              state.canSubmit,
+              state.isSubmitting,
+            ]}
+          >
+            {([isPristine, canSubmit, isSubmitting]) => (
+              <DialogFooter>
+                <DialogClose asChild>
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => handleOpenChange(false)}
                     disabled={isSubmitting}
                   >
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    form="invite-member-form"
-                    disabled={isSubmitting || isPristine || !canSubmit}
-                  >
-                    {isSubmitting && <Loader2 className="animate-spin" />}
-                    Send Invitation
-                  </Button>
-                </>
-              )}
-            </form.Subscribe>
-          </DialogFooter>
+                </DialogClose>
+                <Button
+                  type="submit"
+                  form={formId}
+                  disabled={isSubmitting || isPristine || !canSubmit}
+                >
+                  {isSubmitting && <Loader2 className="animate-spin" />}
+                  Send Invitation
+                </Button>
+              </DialogFooter>
+            )}
+          </form.Subscribe>
         </DialogContent>
       </form>
     </Dialog>

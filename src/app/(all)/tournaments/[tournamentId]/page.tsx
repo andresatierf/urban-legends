@@ -4,9 +4,9 @@ import { useQuery } from "convex/react";
 import { ArrowLeft, Users } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
+import { JoinTeamFormButton } from "@/components/form/join-team-form-button";
+import { UpsertTeamFormButton } from "@/components/form/upsert-team-form-button";
 import { SectionHeader } from "@/components/section-header";
-import { JoinTeamButton } from "@/components/teams/join-team-button";
-import { UpsertTeamButton } from "@/components/teams/upsert-team-button";
 import { TournamentDetailsCard } from "@/components/tournaments/tournament-details-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,7 @@ export default function TournamentDetailsPage({ params }: Props) {
   return (
     <>
       <SectionHeader as="h1" title="Tournament Details">
+        <UpsertTeamFormButton tournamentId={tournamentId} />
         <Button variant="outline" asChild>
           <Link href="/tournaments">
             <ArrowLeft />
@@ -126,7 +127,7 @@ export default function TournamentDetailsPage({ params }: Props) {
                   create your own.
                 </EmptyDescription>
                 <EmptyContent>
-                  <UpsertTeamButton tournamentId={tournamentId} />
+                  <UpsertTeamFormButton tournamentId={tournamentId} />
                 </EmptyContent>
               </Empty>
             </CardContent>
@@ -170,7 +171,7 @@ export default function TournamentDetailsPage({ params }: Props) {
                     </div>
                     <div className="flex gap-2">
                       {user && (
-                        <JoinTeamButton
+                        <JoinTeamFormButton
                           teamId={team._id}
                           team={team}
                           currentMemberCount={memberCount}
@@ -193,7 +194,7 @@ export default function TournamentDetailsPage({ params }: Props) {
                   Be the first to create a team for this tournament!
                 </EmptyDescription>
                 <EmptyContent>
-                  <UpsertTeamButton tournamentId={tournamentId} />
+                  <UpsertTeamFormButton tournamentId={tournamentId} />
                 </EmptyContent>
               </Empty>
             </CardContent>
