@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { RequestCard } from "../teams/request-card";
 import {
   Card,
   CardContent,
@@ -13,7 +14,6 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Empty, EmptyDescription, EmptyTitle } from "../ui/empty";
-import { RequestCard } from "./request-card";
 
 type Props = {
   teamId: Id<"teams">;

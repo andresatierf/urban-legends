@@ -1,10 +1,13 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { Mail, Calendar, Check, X, Clock } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { Calendar, Check, Clock, Loader2, Mail, X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
@@ -19,9 +22,29 @@ type Props = {
 };
 
 export function InvitedUsersList({ teamId }: Props) {
+  const [cancellingId, setCancellingId] =
+    useState<Id<"teamInvitations"> | null>(null);
+
   const invitations = useQuery(api.teams.listTeamInvitations, {
     teamId,
   });
+  const cancelInvitation = useMutation(api.teams.cancelInvitation);
+
+  const handleCancelInvitation = async (
+    invitationId: Id<"teamInvitations">,
+  ) => {
+    setCancellingId(invitationId);
+    try {
+      await cancelInvitation({ invitationId });
+      toast.success("Invitation cancelled");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to cancel invitation",
+      );
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   if (invitations === undefined) {
     return (
@@ -98,14 +121,10 @@ export function InvitedUsersList({ teamId }: Props) {
               <div className="space-y-3">
                 <h3 className="font-medium text-sm">Pending Invitations</h3>
                 {pendingInvitations.map((invitation) => {
-                  const isExpired =
-                    new Date(invitation.expiresAt) < new Date();
+                  const isExpired = new Date(invitation.expiresAt) < new Date();
 
                   return (
-                    <div
-                      key={invitation._id}
-                      className="rounded-lg border p-4"
-                    >
+                    <div key={invitation._id} className="rounded-lg border p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
@@ -133,6 +152,23 @@ export function InvitedUsersList({ teamId }: Props) {
                             </span>
                           </div>
                         </div>
+                        {!isExpired && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              handleCancelInvitation(invitation._id)
+                            }
+                            disabled={cancellingId === invitation._id}
+                          >
+                            {cancellingId === invitation._id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <X className="h-4 w-4" />
+                            )}
+                            Cancel
+                          </Button>
+                        )}
                       </div>
                     </div>
                   );

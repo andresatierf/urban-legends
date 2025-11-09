@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/empty";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../convex/_generated/api";
-import { Id } from "../../../../convex/_generated/dataModel";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 export default function TournamentsPage() {
   const { user, isAdmin } = useUser();

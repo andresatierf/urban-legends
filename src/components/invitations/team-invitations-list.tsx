@@ -15,12 +15,11 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import { Empty } from "../ui/empty";
+import { Empty, EmptyDescription, EmptyTitle } from "../ui/empty";
 
 export function TeamInvitationsList() {
-  const [processingId, setProcessingId] = useState<
-    Id<"teamInvitations"> | null
-  >(null);
+  const [processingId, setProcessingId] =
+    useState<Id<"teamInvitations"> | null>(null);
 
   const invitations = useQuery(api.teams.listUserInvitations, {
     status: "pending",
@@ -74,10 +73,13 @@ export function TeamInvitationsList() {
           <CardDescription>View your pending team invitations</CardDescription>
         </CardHeader>
         <CardContent>
-          <Empty
-            title="No pending invitations"
-            description="When team captains invite you to join their team, invitations will appear here."
-          />
+          <Empty>
+            <EmptyTitle>No pending invitations</EmptyTitle>
+            <EmptyDescription>
+              When team captains invite you to join their team, invitations will
+              appear here.
+            </EmptyDescription>
+          </Empty>
         </CardContent>
       </Card>
     );
@@ -88,13 +90,13 @@ export function TeamInvitationsList() {
       <CardHeader>
         <CardTitle>Team Invitations</CardTitle>
         <CardDescription>
-          {invitations.length} pending invitation{invitations.length !== 1 ? "s" : ""}
+          {invitations.length} pending invitation
+          {invitations.length !== 1 ? "s" : ""}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {invitations.map((invitation) => {
-          const isExpired =
-            new Date(invitation.expiresAt) < new Date();
+          const isExpired = new Date(invitation.expiresAt) < new Date();
 
           return (
             <div
@@ -113,8 +115,7 @@ export function TeamInvitationsList() {
                   Invited by {invitation.invitedByUser?.name}
                 </p>
                 <p className="mt-1 text-muted-foreground text-xs">
-                  Expires{" "}
-                  {new Date(invitation.expiresAt).toLocaleDateString()}
+                  Expires {new Date(invitation.expiresAt).toLocaleDateString()}
                 </p>
               </div>
               {!isExpired && (

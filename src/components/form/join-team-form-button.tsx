@@ -69,6 +69,7 @@ export function JoinTeamFormButton({
           message: message?.trim() || undefined,
         });
         toast.success("Join request sent successfully!");
+        setOpen(false);
       } catch (error) {
         toast.error(
           error instanceof Error

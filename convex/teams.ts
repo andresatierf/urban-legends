@@ -645,6 +645,40 @@ export const inviteMember = mutation({
   },
 });
 
+// Cancel an invitation (captain/admin only)
+export const cancelInvitation = mutation({
+  args: {
+    invitationId: v.id("teamInvitations"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    // Get invitation
+    const invitation = await ctx.db.get(args.invitationId);
+    if (!invitation) {
+      throw new Error("Invitation not found");
+    }
+
+    if (invitation.status !== "pending") {
+      throw new Error("Invitation is not pending");
+    }
+
+    // Validate user is captain/admin
+    validateIsAdmin(user);
+    await validateIsTeamMember(ctx, {
+      teamId: invitation.teamId,
+      userId: user._id,
+      captain: true,
+    });
+
+    // Update invitation status
+    await ctx.db.patch(args.invitationId, {
+      status: "cancelled",
+      respondedAt: new Date().toISOString(),
+    });
+  },
+});
+
 // Respond to an invitation (accept or reject)
 export const respondToInvitation = mutation({
   args: {
