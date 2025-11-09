@@ -88,7 +88,7 @@ export default function TeamDetailsPage({ params }: Props) {
         </Button>
       </SectionHeader>
 
-      <TeamDetailsCard team={team} tournament={tournament} />
+      <TeamDetailsCard team={team} tournament={tournament} enableActions />
 
       <DataTableSection
         title="Members"

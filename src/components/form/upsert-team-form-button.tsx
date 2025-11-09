@@ -1,3 +1,5 @@
+"use client";
+
 import { useMutation, useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -29,7 +31,7 @@ const formSchema = z.object({
 });
 
 type Props = {
-  tournamentId: Id<"tournaments">;
+  tournamentId?: Id<"tournaments">;
   team?: Doc<"teams">;
 };
 
@@ -66,9 +68,12 @@ export function UpsertTeamFormButton({ tournamentId, team }: Props) {
     },
     onSubmit: async ({ value }) => {
       try {
-        await upsertUserTeam({ _id: team?._id, ...value });
+        const upsertedTeamId = await upsertUserTeam({
+          _id: team?._id,
+          ...value,
+        });
         toast.success(`Team ${team ? "updated" : "created"} successfully!`);
-        router.push(`/tournaments/${tournamentId}`);
+        router.push(`/teams/${upsertedTeamId}`);
         setOpen(false);
       } catch (error) {
         toast.error(
@@ -180,7 +185,7 @@ export function UpsertTeamFormButton({ tournamentId, team }: Props) {
                   disabled={isSubmitting || isPristine || !canSubmit}
                 >
                   {isSubmitting && <Loader2 className="animate-spin" />}
-                  Create Team
+                  {team ? "Update Team" : "Create Team"}
                 </Button>
               </DialogFooter>
             )}

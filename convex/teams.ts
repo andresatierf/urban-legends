@@ -324,10 +324,12 @@ export const upsertUserTeam = mutation({
         throw new Error("Team not found");
       }
 
-      return await ctx.db.patch(args._id, {
+      await ctx.db.patch(args._id, {
         name: args.name,
         visibility: args.visibility,
       });
+
+      return args._id;
     }
 
     // Validate tournament exists
@@ -346,7 +348,6 @@ export const upsertUserTeam = mutation({
       name: args.name,
     });
 
-    // Create team with user as captain
     const teamId = await ctx.db.insert("teams", {
       name: args.name,
       tournamentId: args.tournamentId,
@@ -355,7 +356,6 @@ export const upsertUserTeam = mutation({
       maxMembers: tournament.teamMaxSize,
     });
 
-    // Add user as captain
     await ctx.db.insert("teamMembers", {
       teamId,
       userId: user._id,
@@ -1020,7 +1020,9 @@ export const getAvailableUsersForTournament = query({
     // Get all teams in this tournament
     const teams = await ctx.db
       .query("teams")
-      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", args.tournamentId),
+      )
       .collect();
 
     // Get all team members in this tournament

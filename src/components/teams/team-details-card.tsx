@@ -1,6 +1,6 @@
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { DetailsCard } from "../details-card";
-import type { ButtonProps } from "../ui/button";
+import { UpsertTeamFormButton } from "../form/upsert-team-form-button";
 
 type Props = {
   team: Doc<"teams">;
@@ -23,17 +23,12 @@ export function TeamDetailsCard({
     { key: "tournament", value: tournament.name },
     { key: "score", value: `${score || 0} pts` },
   ];
-  const actions: ButtonProps[] = [
-    { children: "Edit" },
-    { children: "Delete", variant: "destructive" },
-  ];
 
   return (
-    <DetailsCard
-      title={team.name}
-      details={details}
-      actions={enableActions ? actions : []}
-      className={className}
-    />
+    <DetailsCard title={team.name} details={details} className={className}>
+      {enableActions && (
+        <UpsertTeamFormButton tournamentId={tournament._id} team={team} />
+      )}
+    </DetailsCard>
   );
 }
