@@ -26,7 +26,6 @@ export function JoinRequestsList({ teamId }: Props) {
 
   const requests = useQuery(api.joinRequests.listJoinRequests, {
     teamId,
-    status: "pending",
   });
   const respondToRequest = useMutation(api.joinRequests.respondToJoinRequest);
 
@@ -40,6 +39,9 @@ export function JoinRequestsList({ teamId }: Props) {
       </Card>
     );
   }
+
+  const pendindRequests = requests.filter((req) => req.status === "pending");
+  const otherRequests = requests.filter((req) => req.status !== "pending");
 
   const handleApprove = async (requestId: Id<"joinRequests">) => {
     setProcessingId(requestId);
@@ -97,19 +99,42 @@ export function JoinRequestsList({ teamId }: Props) {
       <CardHeader>
         <CardTitle>Join Requests</CardTitle>
         <CardDescription>
-          {requests.length} pending request{requests.length !== 1 ? "s" : ""}
+          {pendindRequests.length} pending request
+          {pendindRequests.length !== 1 ? "s" : ""}
+          {otherRequests.length > 0 &&
+            ` · ${otherRequests.length} past request${otherRequests.length !== 1 ? "s" : ""}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {requests.map((request) => (
-          <JoinRequestCard
-            key={request._id}
-            request={request}
-            processing={processingId === request._id}
-            onApprove={() => handleApprove(request._id)}
-            onReject={() => handleReject(request._id)}
-          />
-        ))}
+        {pendindRequests.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="font-medium text-sm">Pending Requests</h3>
+            {pendindRequests.map((request) => (
+              <JoinRequestCard
+                key={request._id}
+                request={request}
+                processing={processingId === request._id}
+                onApprove={() => handleApprove(request._id)}
+                onReject={() => handleReject(request._id)}
+              />
+            ))}
+          </div>
+        )}
+
+        {otherRequests.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="font-medium text-sm">Past Requests</h3>
+            {otherRequests.map((request) => (
+              <JoinRequestCard
+                key={request._id}
+                request={request}
+                processing={processingId === request._id}
+                onApprove={() => handleApprove(request._id)}
+                onReject={() => handleReject(request._id)}
+              />
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

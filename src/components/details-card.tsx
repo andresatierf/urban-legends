@@ -1,5 +1,5 @@
 import { startCase } from "lodash";
-import { MoreHorizontalIcon } from "lucide-react";
+import { type LucideIcon, MoreHorizontalIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { ButtonGroup } from "./ui/button-group";
@@ -13,6 +13,8 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
@@ -20,6 +22,13 @@ type Props = {
   title: string;
   description?: string;
   details?: { key: string; value: string; className?: string }[];
+  actions?: {
+    label: string;
+    onClick: () => void;
+    icon: LucideIcon;
+    condition: boolean;
+    separator?: "after" | "before";
+  }[];
   className?: string;
   children?: React.ReactNode;
 };
@@ -28,8 +37,8 @@ export function DetailsCard({
   title,
   description,
   details = [],
+  actions,
   className,
-  children,
 }: Props) {
   return (
     <Card className={cn("min-w-fit", className)}>
@@ -44,7 +53,26 @@ export function DetailsCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
-                {children}
+                {actions?.map(
+                  (action) =>
+                    action.condition && (
+                      <>
+                        {action.separator === "before" && (
+                          <DropdownMenuSeparator />
+                        )}
+                        <DropdownMenuItem
+                          key={action.label}
+                          onSelect={action.onClick}
+                        >
+                          <action.icon className="h-4 w-4" />
+                          {action.label}
+                        </DropdownMenuItem>
+                        {action.separator === "after" && (
+                          <DropdownMenuSeparator />
+                        )}
+                      </>
+                    ),
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </ButtonGroup>

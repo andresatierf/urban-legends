@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { useMemo } from "react";
-import { UpsertTeamFormButton } from "@/components/form/upsert-team-form-button";
+import { UpsertTeamFormDialog } from "@/components/form/upsert-team-form";
 import { UpsertTournamentFormButton } from "@/components/form/upsert-tournament-form-button";
 import { SectionHeader } from "@/components/section-header";
 import { TournamentCard } from "@/components/tournaments/tournament-card";
@@ -62,7 +62,7 @@ export default function TournamentsPage() {
                   own.
                 </EmptyDescription>
                 <EmptyContent>
-                  <UpsertTeamFormButton />
+                  <UpsertTeamFormDialog />
                 </EmptyContent>
               </Empty>
             </CardContent>

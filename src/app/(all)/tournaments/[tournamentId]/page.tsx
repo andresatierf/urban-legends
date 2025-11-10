@@ -1,11 +1,10 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { ArrowLeft, Users } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
-import { JoinTeamFormButton } from "@/components/form/join-team-form-button";
-import { UpsertTeamFormButton } from "@/components/form/upsert-team-form-button";
+import { UpsertTeamFormDialog } from "@/components/form/upsert-team-form";
 import { SectionHeader } from "@/components/section-header";
 import { JoinTeamCard } from "@/components/teams/join-team-card";
 import { TeamCard } from "@/components/teams/team-card";
@@ -26,7 +25,7 @@ import {
   EmptyHeader,
 } from "@/components/ui/empty";
 import { api } from "../../../../../convex/_generated/api";
-import type { Doc, Id } from "../../../../../convex/_generated/dataModel";
+import type { Id } from "../../../../../convex/_generated/dataModel";
 
 type Props = {
   params: Promise<{ tournamentId: Id<"tournaments"> }>;
@@ -78,7 +77,7 @@ export default function TournamentDetailsPage({ params }: Props) {
   return (
     <>
       <SectionHeader as="h1" title="Tournament Details">
-        <UpsertTeamFormButton tournamentId={tournamentId} />
+        {!userTeam && <UpsertTeamFormDialog tournamentId={tournamentId} />}
         <Button variant="outline" asChild>
           <Link href="/tournaments">
             <ArrowLeft />
@@ -145,7 +144,7 @@ export default function TournamentDetailsPage({ params }: Props) {
                   Be the first to create a team for this tournament!
                 </EmptyDescription>
                 <EmptyContent>
-                  <UpsertTeamFormButton tournamentId={tournamentId} />
+                  <UpsertTeamFormDialog tournamentId={tournamentId} />
                 </EmptyContent>
               </Empty>
             </CardContent>

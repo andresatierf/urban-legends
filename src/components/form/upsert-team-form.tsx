@@ -31,14 +31,26 @@ const formSchema = z.object({
 });
 
 type Props = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   tournamentId?: Id<"tournaments">;
   team?: Doc<"teams">;
+  children?: React.ReactNode;
 };
 
-export function UpsertTeamFormButton({ tournamentId, team }: Props) {
+export function UpsertTeamFormDialog({
+  open: controlledOpen,
+  onOpenChange,
+  tournamentId,
+  team,
+  children,
+}: Props) {
   const formId = useId();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
 
   const upsertUserTeam = useMutation(api.teams.upsertUserTeam);
   const tournament = useQuery(
@@ -100,9 +112,16 @@ export function UpsertTeamFormButton({ tournamentId, team }: Props) {
           form.handleSubmit();
         }}
       >
-        <DialogTrigger asChild>
-          <Button>{team ? "Update Team" : "Create Team"}</Button>
-        </DialogTrigger>
+        {children ? (
+          <DialogTrigger asChild>{children}</DialogTrigger>
+        ) : (
+          controlledOpen === undefined &&
+          onOpenChange === undefined && (
+            <DialogTrigger asChild>
+              <Button>{team ? "Update Team" : "Create Team"}</Button>
+            </DialogTrigger>
+          )
+        )}
         <DialogContent>
           <DialogHeader>
             <DialogTitle>

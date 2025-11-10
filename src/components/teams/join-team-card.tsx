@@ -1,4 +1,4 @@
-import { UpsertTeamFormButton } from "../form/upsert-team-form-button";
+import { UpsertTeamFormDialog } from "../form/upsert-team-form";
 import { Card, CardContent } from "../ui/card";
 import {
   Empty,
@@ -18,7 +18,7 @@ export function JoinTeamCard() {
             create your own.
           </EmptyDescription>
           <EmptyContent>
-            <UpsertTeamFormButton />
+            <UpsertTeamFormDialog />
           </EmptyContent>
         </Empty>
       </CardContent>

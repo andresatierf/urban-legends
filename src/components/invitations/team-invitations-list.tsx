@@ -19,9 +19,7 @@ export function TeamInvitationsList() {
   const [processingId, setProcessingId] =
     useState<Id<"teamInvitations"> | null>(null);
 
-  const invitations = useQuery(api.teamInvitations.listUserInvitations, {
-    status: "pending",
-  });
+  const invitations = useQuery(api.teamInvitations.listUserInvitations, {});
   const respondToInvitation = useMutation(
     api.teamInvitations.respondToInvitation,
   );
@@ -36,6 +34,13 @@ export function TeamInvitationsList() {
       </Card>
     );
   }
+
+  const pendingInvitations = invitations.filter(
+    (inv) => inv.status === "pending",
+  );
+  const otherInvitations = invitations.filter(
+    (inv) => inv.status !== "pending",
+  );
 
   const handleAccept = async (invitationId: Id<"teamInvitations">) => {
     setProcessingId(invitationId);
@@ -90,20 +95,42 @@ export function TeamInvitationsList() {
       <CardHeader>
         <CardTitle>Team Invitations</CardTitle>
         <CardDescription>
-          {invitations.length} pending invitation
-          {invitations.length !== 1 ? "s" : ""}
+          {pendingInvitations.length} pending invitation
+          {pendingInvitations.length !== 1 ? "s" : ""}
+          {otherInvitations.length > 0 &&
+            ` · ${otherInvitations.length} past invitation${otherInvitations.length !== 1 ? "s" : ""}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {invitations.map((invitation) => (
-          <TeamInvitationCard
-            key={invitation._id}
-            invitation={invitation}
-            processing={processingId === invitation._id}
-            onAccept={() => handleAccept(invitation._id)}
-            onReject={() => handleReject(invitation._id)}
-          />
-        ))}
+        {pendingInvitations.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="font-medium text-sm">Pending Invitations</h3>
+            {pendingInvitations.map((invitation) => (
+              <TeamInvitationCard
+                key={invitation._id}
+                invitation={invitation}
+                processing={processingId === invitation._id}
+                onAccept={() => handleAccept(invitation._id)}
+                onReject={() => handleReject(invitation._id)}
+              />
+            ))}
+          </div>
+        )}
+
+        {otherInvitations.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="font-medium text-sm">Past Invitations</h3>
+            {otherInvitations.map((invitation) => (
+              <TeamInvitationCard
+                key={invitation._id}
+                invitation={invitation}
+                processing={processingId === invitation._id}
+                onAccept={() => handleAccept(invitation._id)}
+                onReject={() => handleReject(invitation._id)}
+              />
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

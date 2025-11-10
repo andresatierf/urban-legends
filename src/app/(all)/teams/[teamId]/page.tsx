@@ -7,6 +7,7 @@ import { use } from "react";
 import { InvitedUsersList } from "@/components/invitations/invited-users-list";
 import { JoinRequestsList } from "@/components/invitations/join-requests-list";
 import { SectionHeader } from "@/components/section-header";
+import { InviteMemberCard } from "@/components/teams/invite-member-card";
 import { TeamDetailsCard } from "@/components/teams/team-details-card";
 import { TeamMemberCard } from "@/components/teams/team-member-card";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,6 @@ export default function TeamDetailsPage({ params }: Props) {
   const { teamId } = use(params);
   const { user, isAdmin } = useUser();
   const team = useQuery(api.teams.get, teamId ? { teamId } : "skip");
-  const tournament = useQuery(
-    api.tournaments.get,
-    team ? { tournamentId: team.tournamentId } : "skip",
-  );
   const members =
     useQuery(api.teams.listTeamMembers, teamId ? { teamId } : "skip") || [];
   const teamMembers =
@@ -47,7 +44,7 @@ export default function TeamDetailsPage({ params }: Props) {
     return memberRole === "member";
   });
 
-  if (!team || !tournament || !members) return null; // TODO: Add skeleton
+  if (!team || !members) return null; // TODO: Add skeleton
 
   return (
     <>
@@ -66,15 +63,20 @@ export default function TeamDetailsPage({ params }: Props) {
         </Button>
       </SectionHeader>
 
-      <TeamDetailsCard team={team} tournament={tournament} enableActions />
+      <TeamDetailsCard team={team} />
 
-      <SectionHeader title="Captain" />
-      <TeamMemberCard member={captain} memberRole="captain" canRemove={false} />
-
-      <SectionHeader title="Members" />
-      {regularMembers.length === 0 ? (
-        <p className="text-muted-foreground">No members yet.</p>
+      <SectionHeader title="Team" />
+      {captain ? (
+        <TeamMemberCard
+          member={captain}
+          memberRole="captain"
+          canRemove={false}
+        />
       ) : (
+        <p className="text-muted-foreground">No captain yet.</p>
+      )}
+
+      {regularMembers.length !== 0 ? (
         <div className="space-y-3">
           {regularMembers.map((member) => {
             const canRemoveMember =
@@ -96,6 +98,8 @@ export default function TeamDetailsPage({ params }: Props) {
             );
           })}
         </div>
+      ) : (
+        <InviteMemberCard team={team} isCaptain={isCaptain} />
       )}
 
       <SectionHeader title="Invites and Requests" />

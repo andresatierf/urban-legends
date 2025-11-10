@@ -1,49 +1,9 @@
 import { capitalize } from "lodash";
-import {
-  Calendar,
-  Check,
-  Clock,
-  Loader2,
-  Mail,
-  UserPlus,
-  X,
-} from "lucide-react";
+import { Calendar, Loader2, Mail, UserPlus, X } from "lucide-react";
 import type { Doc } from "../../../convex/_generated/dataModel";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
-
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case "pending":
-      return (
-        <Badge variant="pending">
-          <Clock className="h-3 w-3" />
-          Pending
-        </Badge>
-      );
-    case "accepted":
-      return (
-        <Badge variant="approved">
-          <Check className="h-3 w-3" />
-          Accepted
-        </Badge>
-      );
-    case "rejected":
-      return (
-        <Badge variant="rejected">
-          <X className="h-3 w-3" />
-          Declined
-        </Badge>
-      );
-    case "cancelled":
-      return <Badge variant="outline">Cancelled</Badge>;
-    case "expired":
-      return <Badge variant="outline">Expired</Badge>;
-    default:
-      return <Badge>{status}</Badge>;
-  }
-};
+import { getStatusBadge } from "./utils";
 
 type InvitedUserCardProps = {
   invitation: Doc<"teamInvitations"> & {
@@ -67,7 +27,7 @@ export function InvitedUserCard({
 
   return (
     <Card className={className}>
-      <CardContent className="flex xs:flex-row flex-col xs:items-center justify-between gap-4 xs:gap-16">
+      <CardContent className="flex xs:flex-row flex-col xs:items-center justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <p className="font-medium">{invitation.invitedUser?.name}</p>
