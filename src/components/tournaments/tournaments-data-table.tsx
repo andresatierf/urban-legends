@@ -67,13 +67,13 @@ export function TournamentsDataTable<T, V>({
           const tournament = row.original;
           return (
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="icon" className="z-10">
+              <Button variant="outline" size="icon" className="z-10" asChild>
                 <Link href={`/tournaments/${tournament._id}/edit`}>
                   <Pencil />
                 </Link>
               </Button>
               <Button
-                variant="outline"
+                color="destructive"
                 size="icon"
                 onClick={(e) => {
                   e.preventDefault();

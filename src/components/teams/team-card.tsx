@@ -58,7 +58,7 @@ export function TeamCard({
             isUserMember={isUserMember}
             isUserInTeam={isUserInTeam}
           />
-          <Button variant="outline">
+          <Button variant="outline" asChild>
             <Link href={`/teams/${team._id}`}>View</Link>
           </Button>
         </div>

@@ -103,7 +103,7 @@ export const listUserInvitations = query({
   },
 });
 
-// Invite a member to the team (captain or admin only)
+// Invite a member to the team (captain only)
 export const inviteMember = mutation({
   args: {
     teamId: v.id("teams"),

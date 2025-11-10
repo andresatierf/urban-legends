@@ -191,7 +191,12 @@ export const respondToJoinRequest = mutation({
     });
 
     if (args.approve) {
-      await validateTeamHasSpace(ctx, { teamId: request.teamId });
+      const team = await validateTeamHasSpace(ctx, { teamId: request.teamId });
+
+      await validateUserNotInTournamentTeam(ctx, {
+        userId: request.userId,
+        tournamentId: team.tournamentId,
+      });
 
       await ctx.db.insert("teamMembers", {
         teamId: request.teamId,

@@ -124,9 +124,9 @@ export function TeamInvitationsList() {
               <TeamInvitationCard
                 key={invitation._id}
                 invitation={invitation}
-                processing={processingId === invitation._id}
-                onAccept={() => handleAccept(invitation._id)}
-                onReject={() => handleReject(invitation._id)}
+                processing={false}
+                onAccept={() => {}}
+                onReject={() => {}}
               />
             ))}
           </div>

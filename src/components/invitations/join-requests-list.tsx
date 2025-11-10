@@ -40,7 +40,7 @@ export function JoinRequestsList({ teamId }: Props) {
     );
   }
 
-  const pendindRequests = requests.filter((req) => req.status === "pending");
+  const pendingRequests = requests.filter((req) => req.status === "pending");
   const otherRequests = requests.filter((req) => req.status !== "pending");
 
   const handleApprove = async (requestId: Id<"joinRequests">) => {
@@ -99,17 +99,17 @@ export function JoinRequestsList({ teamId }: Props) {
       <CardHeader>
         <CardTitle>Join Requests</CardTitle>
         <CardDescription>
-          {pendindRequests.length} pending request
-          {pendindRequests.length !== 1 ? "s" : ""}
+          {pendingRequests.length} pending request
+          {pendingRequests.length !== 1 ? "s" : ""}
           {otherRequests.length > 0 &&
             ` · ${otherRequests.length} past request${otherRequests.length !== 1 ? "s" : ""}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {pendindRequests.length > 0 && (
+        {pendingRequests.length > 0 && (
           <div className="space-y-3">
             <h3 className="font-medium text-sm">Pending Requests</h3>
-            {pendindRequests.map((request) => (
+            {pendingRequests.map((request) => (
               <JoinRequestCard
                 key={request._id}
                 request={request}

@@ -68,6 +68,7 @@ export function Combobox<T extends string>({
             name={name}
             placeholder={placeholder}
             className="h-9"
+            aria-invalid={ariaInvalid}
           />
           <CommandList>
             <CommandEmpty>No options found.</CommandEmpty>
