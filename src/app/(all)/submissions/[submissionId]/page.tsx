@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
-import { UpsertSubmissionFormButton } from "@/components/form/upsert-submission-form-button";
+import { UpsertSubmissionFormDialog } from "@/components/form/upsert-submission-form";
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
 import { api } from "../../../../../convex/_generated/api";
@@ -33,7 +33,7 @@ export default function SubmissionDetailsPage({ params }: Props) {
           </Link>
         </Button>
       </SectionHeader>
-      <UpsertSubmissionFormButton submission={submission} />
+      <UpsertSubmissionFormDialog submission={submission} />
     </>
   );
 }

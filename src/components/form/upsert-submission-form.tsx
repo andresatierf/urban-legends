@@ -38,14 +38,25 @@ const formSchema = z.object({
 });
 
 type Props = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   submission?: Doc<"submissions">;
+  children?: React.ReactNode;
 };
 
-export function UpsertSubmissionFormButton({ submission }: Props) {
-  const { user } = useUser();
+export function UpsertSubmissionFormDialog({
+  open: controlledOpen,
+  onOpenChange,
+  submission,
+  children,
+}: Props) {
+  const { user, isAdmin } = useUser();
   const formId = useId();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
 
   const upsertSubmission = useMutation(api.submissions.upsert);
 
@@ -124,11 +135,18 @@ export function UpsertSubmissionFormButton({ submission }: Props) {
           form.handleSubmit();
         }}
       >
-        <DialogTrigger asChild>
-          <Button>
-            {submission ? "Edit Submission" : "Create Submission"}
-          </Button>
-        </DialogTrigger>
+        {children ? (
+          <DialogTrigger asChild>{children}</DialogTrigger>
+        ) : (
+          controlledOpen === undefined &&
+          onOpenChange === undefined && (
+            <DialogTrigger asChild>
+              <Button>
+                {submission ? "Edit Submission" : "Create Submission"}
+              </Button>
+            </DialogTrigger>
+          )
+        )}
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -259,13 +277,15 @@ export function UpsertSubmissionFormButton({ submission }: Props) {
           >
             {([isPristine, canSubmit, isSubmitting]) => (
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => toastFormValues(form.state.values)}
-                >
-                  Check values
-                </Button>
+                {isAdmin && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => toastFormValues(form.state.values)}
+                  >
+                    Check values
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="outline"

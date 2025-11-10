@@ -7,6 +7,8 @@ import { useId, useMemo, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
 import { useAppForm } from "@/hooks/form";
+import { useUser } from "@/hooks/useUser";
+import { toastFormValues } from "@/lib/form";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -45,6 +47,7 @@ export function UpsertTeamFormDialog({
   team,
   children,
 }: Props) {
+  const { isAdmin } = useUser();
   const formId = useId();
   const router = useRouter();
   const [internalOpen, setInternalOpen] = useState(false);
@@ -180,6 +183,15 @@ export function UpsertTeamFormDialog({
           >
             {([isPristine, canSubmit, isSubmitting]) => (
               <DialogFooter>
+                {isAdmin && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => toastFormValues(form.state.values)}
+                  >
+                    Check values
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="outline"

@@ -41,37 +41,39 @@ export default function TournamentsPage() {
         {isAdmin && <UpsertTournamentFormButton />}
       </SectionHeader>
 
-      <SectionHeader title="Your Tournaments" />
-
-      <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
-        {userTournaments && userTournaments.length !== 0 ? (
-          userTournaments.map((tournament) => (
-            <TournamentCard
-              key={tournament._id}
-              tournament={tournament}
-              teamCount={teamCount.get(tournament._id) ?? 0}
-            />
-          ))
-        ) : (
-          <Card>
-            <CardContent>
-              <Empty>
-                <EmptyHeader>No tournaments yet</EmptyHeader>
-                <EmptyDescription>
-                  Join a team to start playing in tournaments or create your
-                  own.
-                </EmptyDescription>
-                <EmptyContent>
-                  <UpsertTeamFormDialog />
-                </EmptyContent>
-              </Empty>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      {allTournaments && allTournaments.length !== 0 && (
+        <>
+          <SectionHeader title="Your Tournaments" />
+          <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
+            {userTournaments && userTournaments.length !== 0 ? (
+              userTournaments.map((tournament) => (
+                <TournamentCard
+                  key={tournament._id}
+                  tournament={tournament}
+                  teamCount={teamCount.get(tournament._id) ?? 0}
+                />
+              ))
+            ) : (
+              <Card>
+                <CardContent>
+                  <Empty className="gap-3 py-2!">
+                    <EmptyHeader>No tournaments yet</EmptyHeader>
+                    <EmptyDescription>
+                      Join a team to start playing in tournaments or create your
+                      own.
+                    </EmptyDescription>
+                    <EmptyContent>
+                      <UpsertTeamFormDialog />
+                    </EmptyContent>
+                  </Empty>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </>
+      )}
 
       <SectionHeader title="All Tournaments" />
-
       <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
         {allTournaments && allTournaments.length !== 0 ? (
           allTournaments.map((tournament) => (
@@ -83,8 +85,8 @@ export default function TournamentsPage() {
           ))
         ) : (
           <Card>
-            <CardContent className="py-12">
-              <Empty>
+            <CardContent>
+              <Empty className="gap-3 py-2!">
                 <EmptyHeader>No tournaments yet</EmptyHeader>
                 <EmptyDescription>
                   Please contact your tournament organizer to create a
