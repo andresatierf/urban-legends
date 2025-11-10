@@ -47,9 +47,9 @@ export function JoinTeamFormButton({
   const formId = useId();
   const [open, setOpen] = useState(false);
 
-  const joinRequest = useQuery(api.teams.getUserJoinRequest, { teamId });
-  const requestToJoin = useMutation(api.teams.requestToJoin);
-  const cancelRequest = useMutation(api.teams.cancelJoinRequest);
+  const joinRequest = useQuery(api.joinRequests.getUserJoinRequest, { teamId });
+  const requestToJoin = useMutation(api.joinRequests.requestToJoin);
+  const cancelRequest = useMutation(api.joinRequests.cancelJoinRequest);
 
   const isFull = team.maxMembers && currentMemberCount >= team.maxMembers;
   const isPrivate = team.visibility === "private";

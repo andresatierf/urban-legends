@@ -12,7 +12,7 @@ interface UserCardProps {
 }
 
 export function UserCard({ user }: UserCardProps) {
-  const teams = useQuery(api.teams.getUserTeams, { userId: user._id });
+  const teams = useQuery(api.teams.list, { userId: user._id });
 
   return (
     <div className="flex items-center justify-between rounded-lg border p-4 shadow-sm transition-shadow duration-200 hover:shadow-md">

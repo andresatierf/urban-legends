@@ -95,7 +95,12 @@ export default defineSchema({
     .index("by_user", ["invitedUserId"])
     .index("by_email", ["invitedEmail"])
     .index("by_status", ["status"])
-    .index("by_team_and_status", ["teamId", "status"]),
+    .index("by_user_and_status", ["invitedUserId", "status"])
+    .index("by_team_and_user_and_status", [
+      "teamId",
+      "invitedUserId",
+      "status",
+    ]),
 
   joinRequests: defineTable({
     teamId: v.id("teams"),
@@ -114,5 +119,6 @@ export default defineSchema({
     .index("by_team", ["teamId"])
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
-    .index("by_team_and_status", ["teamId", "status"]),
+    .index("by_team_and_user", ["teamId", "userId"])
+    .index("by_team_and_user_and_status", ["teamId", "userId", "status"]),
 });

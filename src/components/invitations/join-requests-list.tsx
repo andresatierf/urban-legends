@@ -5,7 +5,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { RequestCard } from "../teams/request-card";
 import {
   Card,
   CardContent,
@@ -14,6 +13,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Empty, EmptyDescription, EmptyTitle } from "../ui/empty";
+import { JoinRequestCard } from "./join-request-card";
 
 type Props = {
   teamId: Id<"teams">;
@@ -24,12 +24,11 @@ export function JoinRequestsList({ teamId }: Props) {
     null,
   );
 
-  const requests = useQuery(api.teams.listJoinRequests, {
+  const requests = useQuery(api.joinRequests.listJoinRequests, {
     teamId,
     status: "pending",
   });
-  const approveRequest = useMutation(api.teams.approveJoinRequest);
-  const rejectRequest = useMutation(api.teams.rejectJoinRequest);
+  const respondToRequest = useMutation(api.joinRequests.respondToJoinRequest);
 
   if (requests === undefined) {
     return (
@@ -45,7 +44,7 @@ export function JoinRequestsList({ teamId }: Props) {
   const handleApprove = async (requestId: Id<"joinRequests">) => {
     setProcessingId(requestId);
     try {
-      await approveRequest({ requestId });
+      await respondToRequest({ requestId, approve: true });
       toast.success("Join request approved!");
     } catch (error) {
       toast.error(
@@ -61,7 +60,7 @@ export function JoinRequestsList({ teamId }: Props) {
   const handleReject = async (requestId: Id<"joinRequests">) => {
     setProcessingId(requestId);
     try {
-      await rejectRequest({ requestId });
+      await respondToRequest({ requestId, approve: false });
       toast.success("Join request rejected");
     } catch (error) {
       toast.error(
@@ -74,6 +73,25 @@ export function JoinRequestsList({ teamId }: Props) {
     }
   };
 
+  if (requests.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Join Requests</CardTitle>
+          <CardDescription>No pending requests</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Empty>
+            <EmptyTitle>No pending requests</EmptyTitle>
+            <EmptyDescription>
+              When users request to join your team, they'll appear here.
+            </EmptyDescription>
+          </Empty>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -83,24 +101,15 @@ export function JoinRequestsList({ teamId }: Props) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {requests.length !== 0 ? (
-          requests.map((request) => (
-            <RequestCard
-              key={request._id}
-              request={request}
-              processing={processingId === request._id}
-              onApprove={() => handleApprove(request._id)}
-              onReject={() => handleReject(request._id)}
-            />
-          ))
-        ) : (
-          <Empty>
-            <EmptyTitle>No pending requests</EmptyTitle>
-            <EmptyDescription>
-              When users request to join your team, they'll appear here.
-            </EmptyDescription>
-          </Empty>
-        )}
+        {requests.map((request) => (
+          <JoinRequestCard
+            key={request._id}
+            request={request}
+            processing={processingId === request._id}
+            onApprove={() => handleApprove(request._id)}
+            onReject={() => handleReject(request._id)}
+          />
+        ))}
       </CardContent>
     </Card>
   );

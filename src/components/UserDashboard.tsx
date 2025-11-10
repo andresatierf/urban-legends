@@ -36,7 +36,7 @@ export function UserDashboard(_props: UserDashboardProps) {
   );
 
   // Fetch all tournaments
-  const tournaments = useQuery(api.tournaments.list);
+  const tournaments = useQuery(api.tournaments.list, {});
 
   // Fetch user's submissions
   const userSubmissions = useQuery(api.submissions.listUserSubmissions, {});

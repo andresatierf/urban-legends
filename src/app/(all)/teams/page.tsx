@@ -90,7 +90,7 @@ export default function TeamsPage() {
         members: members?.map((m) => ({ ...m, user: userMap.get(m.userId) })),
       };
     });
-  }, [allTeams, tournamentIdMap, teamMembersPerTeamMap, userMap, user?._id]);
+  }, [allTeams, tournamentIdMap, teamMembersPerTeamMap, userMap]);
 
   return (
     <>

@@ -1,24 +1,18 @@
 import { Check, Loader2, X } from "lucide-react";
-import type { Id } from "../../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 
 type RequestCardProps = {
-  request: {
-    user: {
-      name: string;
-      email: string;
-    };
-    message: string;
-    createdAt: string;
-    _id: Id<"joinRequests">;
+  request: Doc<"joinRequests"> & {
+    user: Doc<"users"> | null;
   };
   processing: boolean;
   onApprove: () => void;
   onReject: () => void;
 };
 
-export function RequestCard({
+export function JoinRequestCard({
   request,
   processing,
   onApprove,

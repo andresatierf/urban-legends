@@ -1,6 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMutation } from "convex/react";
 import { Check, Pencil, Trash, X } from "lucide-react";
+import Link from "next/link";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/useUser";
@@ -96,13 +97,15 @@ export function SubmissionsDataTable<T, V>({
                 </>
               )}
               <Button
-                href={`/submissions/${submission._id}/edit`}
                 variant="solid"
                 color="secondary"
                 size="icon"
                 className="z-10"
+                asChild
               >
-                <Pencil />
+                <Link href={`/submissions/${submission._id}/edit`}>
+                  <Pencil />
+                </Link>
               </Button>
               <Button
                 variant="solid"

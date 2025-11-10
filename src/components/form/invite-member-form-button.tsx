@@ -34,9 +34,9 @@ export function InviteMemberFormButton({ teamId, tournamentId }: Props) {
   const formId = useId();
   const [open, setOpen] = useState(false);
 
-  const inviteMember = useMutation(api.teams.inviteMember);
+  const inviteMember = useMutation(api.invitations.inviteMember);
   const availableUsers = useQuery(
-    api.teams.getAvailableUsersForTournament,
+    api.tournaments.getAvailableUsersForTournament,
     tournamentId ? { tournamentId } : "skip",
   );
   const userOptions = useMemo(
