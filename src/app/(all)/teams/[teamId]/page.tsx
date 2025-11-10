@@ -1,17 +1,16 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { ArrowLeft, Trophy } from "lucide-react";
 import Link from "next/link";
-import { use, useMemo } from "react";
-import { DataTableSection } from "@/components/data-table-section";
-import { InviteMemberFormButton } from "@/components/form/invite-member-form-button";
+import { use } from "react";
 import { InvitedUsersList } from "@/components/invitations/invited-users-list";
 import { JoinRequestsList } from "@/components/invitations/join-requests-list";
 import { SectionHeader } from "@/components/section-header";
 import { TeamDetailsCard } from "@/components/teams/team-details-card";
+import { TeamMemberCard } from "@/components/teams/team-member-card";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -21,59 +20,38 @@ type Props = {
 
 export default function TeamDetailsPage({ params }: Props) {
   const { teamId } = use(params);
-  const user = useQuery(api.users.current);
-  const roles = useQuery(
-    api.roles.getByUserId,
-    user ? { userId: user._id } : "skip",
-  );
+  const { user, isAdmin } = useUser();
   const team = useQuery(api.teams.get, teamId ? { teamId } : "skip");
   const tournament = useQuery(
     api.tournaments.get,
     team ? { tournamentId: team.tournamentId } : "skip",
   );
-  const members = useQuery(
-    api.teams.listTeamMembers,
-    teamId ? { teamId } : "skip",
-  );
-  const teamMembers = useQuery(
-    api.teams.listMembers,
-    teamId ? { teamIds: teamId } : "skip",
-  );
+  const members =
+    useQuery(api.teams.listTeamMembers, teamId ? { teamId } : "skip") || [];
+  const teamMembers =
+    useQuery(api.teams.listMembers, teamId ? { teamIds: teamId } : "skip") ||
+    [];
+  const removeMember = useMutation(api.teams.removeMember);
 
-  // Check if user is captain or admin
-  const isAdmin = roles?.includes("admin");
   const userMembership = teamMembers?.find((m) => m.userId === user?._id);
   const isCaptain = userMembership?.role === "captain";
-  const canInviteMembers = isAdmin || isCaptain;
 
-  const columns: ColumnDef<NonNullable<typeof members>[number]>[] = useMemo(
-    () => [
-      { id: "name", accessorKey: "email", header: "Name" },
-      {
-        accessorKey: "role",
-        header: () => <div className="text-right">Role</div>,
-        // header: "Role",
-        cell: (props) => (
-          <div className="text-right text-gray-600">
-            {props.getValue() as string}
-          </div>
-        ),
-      },
-    ],
-    [],
-  );
+  // Separate captain and regular members
+  const captain = members.find((member) => {
+    const memberRole = teamMembers.find((m) => m.userId === member._id)?.role;
+    return memberRole === "captain";
+  });
+
+  const regularMembers = members.filter((member) => {
+    const memberRole = teamMembers.find((m) => m.userId === member._id)?.role;
+    return memberRole === "member";
+  });
 
   if (!team || !tournament || !members) return null; // TODO: Add skeleton
 
   return (
     <>
       <SectionHeader as="h1" title="Team Details">
-        {canInviteMembers && (
-          <InviteMemberFormButton
-            teamId={teamId}
-            tournamentId={team.tournamentId}
-          />
-        )}
         <Button variant="outline" asChild>
           <Link href={`/tournaments/${team?.tournamentId}`}>
             <Trophy />
@@ -90,16 +68,39 @@ export default function TeamDetailsPage({ params }: Props) {
 
       <TeamDetailsCard team={team} tournament={tournament} enableActions />
 
-      <DataTableSection
-        title="Members"
-        columns={columns}
-        data={members}
-        emptyMessage="No members yet."
-      />
+      <SectionHeader title="Captain" />
+      <TeamMemberCard member={captain} memberRole="captain" canRemove={false} />
 
-      <InvitedUsersList teamId={teamId} />
+      <SectionHeader title="Members" />
+      {regularMembers.length === 0 ? (
+        <p className="text-muted-foreground">No members yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {regularMembers.map((member) => {
+            const canRemoveMember =
+              (isCaptain || isAdmin) && member._id !== user?._id;
 
-      <JoinRequestsList teamId={teamId} />
+            return (
+              <TeamMemberCard
+                key={member._id}
+                member={member}
+                memberRole="member"
+                canRemove={canRemoveMember}
+                onRemove={() =>
+                  removeMember({
+                    teamId: teamId,
+                    userId: member._id,
+                  })
+                }
+              />
+            );
+          })}
+        </div>
+      )}
+
+      <SectionHeader title="Invites and Requests" />
+      <InvitedUsersList teamId={teamId} canCancel={isCaptain} />
+      {team.visibility !== "private" && <JoinRequestsList teamId={teamId} />}
     </>
   );
 }

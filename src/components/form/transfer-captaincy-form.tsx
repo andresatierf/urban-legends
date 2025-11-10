@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
@@ -22,47 +22,63 @@ import {
 import { FieldGroup } from "../ui/field";
 
 const formSchema = z.object({
-  email: z.email("Please select a valid user"),
+  newCaptainId: z.string().min(1, "Please select a new captain"),
 });
 
 type Props = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   teamId: Id<"teams">;
-  tournamentId: Id<"tournaments">;
+  children?: React.ReactNode;
 };
 
-export function InviteMemberFormButton({ teamId, tournamentId }: Props) {
+export function TransferCaptaincyFormDialog({
+  open: controlledOpen,
+  onOpenChange,
+  teamId,
+  children,
+}: Props) {
   const formId = useId();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
 
-  const inviteMember = useMutation(api.teamInvitations.inviteMember);
-  const availableUsers = useQuery(
-    api.tournaments.getAvailableUsersForTournament,
-    tournamentId ? { tournamentId } : "skip",
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
+
+  const transferCaptaincy = useMutation(api.teams.transferCaptaincy);
+  const teamMembers = useQuery(
+    api.teams.listTeamMembers,
+    teamId ? { teamId, excludeSelf: true } : "skip",
   );
-  const userOptions = useMemo(
+
+  const memberOptions = useMemo(
     () =>
-      availableUsers?.map((user) => ({
-        value: user.email,
-        label: `${user.name} (${user.email})`,
+      teamMembers?.map((member) => ({
+        value: member._id,
+        label: `${member.name} (${member.email})`,
       })) ?? [],
-    [availableUsers],
+    [teamMembers],
   );
 
   const form = useAppForm({
     defaultValues: {
-      email: "",
+      newCaptainId: "",
     } as z.input<typeof formSchema>,
     validators: {
       onChange: formSchema,
     },
-    onSubmit: async ({ value: { email } }) => {
+    onSubmit: async ({ value: { newCaptainId } }) => {
       try {
-        await inviteMember({ teamId, email: email.trim() });
-        toast.success("Invitation sent successfully!");
+        await transferCaptaincy({
+          teamId,
+          newCaptainId: newCaptainId as Id<"users">,
+        });
+        toast.success("Captaincy transferred successfully!");
         setOpen(false);
       } catch (error) {
         toast.error(
-          error instanceof Error ? error.message : "Failed to send invitation",
+          error instanceof Error
+            ? error.message
+            : "Failed to transfer captaincy",
         );
       }
     },
@@ -83,27 +99,24 @@ export function InviteMemberFormButton({ teamId, tournamentId }: Props) {
           form.handleSubmit();
         }}
       >
-        <DialogTrigger asChild>
-          <Button>
-            <UserPlus />
-            Invite Member
-          </Button>
-        </DialogTrigger>
-
+        {children && <DialogTrigger asChild>{children}</DialogTrigger>}
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Invite Team Member</DialogTitle>
+            <DialogTitle>Transfer Captaincy</DialogTitle>
             <DialogDescription>
-              Select a user from the list below who is not yet part of any team
-              in this tournament. They will receive an invitation that expires
-              in 7 days.
+              Select a team member to transfer the captain role to. Once
+              transferred, you will become a regular member and lose captain
+              privileges.
             </DialogDescription>
           </DialogHeader>
 
           <FieldGroup>
-            <form.AppField name="email">
+            <form.AppField name="newCaptainId">
               {(field) => (
-                <field.ComboboxField label="User" options={userOptions} />
+                <field.ComboboxField
+                  label="New Captain"
+                  options={memberOptions}
+                />
               )}
             </form.AppField>
           </FieldGroup>
@@ -132,7 +145,7 @@ export function InviteMemberFormButton({ teamId, tournamentId }: Props) {
                   disabled={isSubmitting || isPristine || !canSubmit}
                 >
                   {isSubmitting && <Loader2 className="animate-spin" />}
-                  Send Invitation
+                  Transfer Captaincy
                 </Button>
               </DialogFooter>
             )}

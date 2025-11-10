@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
-import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
+import { getCurrentUserOrThrow } from "./users";
 
 // List join requests for a team
 export const listJoinRequests = query({
@@ -18,14 +18,7 @@ export const listJoinRequests = query({
     ),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    validateIsAdmin(user);
-    await validateIsTeamMember(ctx, {
-      teamId: args.teamId,
-      userId: user._id,
-      captain: true,
-    });
+    await getCurrentUserOrThrow(ctx);
 
     // Get join requests
     let requests = await ctx.db

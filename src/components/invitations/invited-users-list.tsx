@@ -17,9 +17,10 @@ import { InvitedUserCard } from "./invited-user-card";
 
 type Props = {
   teamId: Id<"teams">;
+  canCancel: boolean;
 };
 
-export function InvitedUsersList({ teamId }: Props) {
+export function InvitedUsersList({ teamId, canCancel }: Props) {
   const [processingId, setProcessingId] =
     useState<Id<"teamInvitations"> | null>(null);
 
@@ -102,6 +103,7 @@ export function InvitedUsersList({ teamId }: Props) {
                 invitation={invitation}
                 processing={processingId === invitation._id}
                 onClick={() => handleCancelInvitation(invitation._id)}
+                canCancel={canCancel}
               />
             ))}
           </div>

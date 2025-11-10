@@ -2,12 +2,13 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { Loader2, UserPlus } from "lucide-react";
+import Link from "next/link";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
 import { useAppForm } from "@/hooks/form";
 import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -27,11 +28,7 @@ const formSchema = z.object({
 
 type Props = {
   teamId: Id<"teams">;
-  team: {
-    name: string;
-    visibility: "public" | "private";
-    maxMembers?: number;
-  };
+  team: Doc<"teams">;
   currentMemberCount: number;
   isUserInTeam: boolean;
   isUserMember: boolean;

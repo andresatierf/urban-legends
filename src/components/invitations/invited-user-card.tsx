@@ -8,10 +8,10 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -52,6 +52,7 @@ type InvitedUserCardProps = {
   };
   processing: boolean;
   onClick: () => void;
+  canCancel?: boolean;
   className?: string;
 };
 
@@ -59,16 +60,14 @@ export function InvitedUserCard({
   invitation,
   processing,
   onClick,
+  canCancel = false,
   className,
 }: InvitedUserCardProps) {
   const isExpired = new Date(invitation.expiresAt) < new Date();
 
   return (
-    <div
-      key={invitation._id}
-      className={cn("rounded-lg border p-4", className)}
-    >
-      <div className="flex items-start justify-between">
+    <Card className={className}>
+      <CardContent className="flex xs:flex-row flex-col xs:items-center justify-between gap-4 xs:gap-16">
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <p className="font-medium">{invitation.invitedUser?.name}</p>
@@ -78,8 +77,7 @@ export function InvitedUserCard({
             <Mail className="h-3 w-3" />
             {invitation.invitedEmail}
           </div>
-
-          <div className="mt-1 flex items-center gap-4 text-muted-foreground text-xs">
+          <div className="mt-1 flex flex-col items-start text-muted-foreground text-xs">
             <span className="flex items-center gap-1">
               <UserPlus className="h-3 w-3" />
               Invited by {invitation.invitedByUser?.name} on{" "}
@@ -93,12 +91,13 @@ export function InvitedUserCard({
             </span>
           </div>
         </div>
-        {!isExpired && (
+        {!isExpired && canCancel && (
           <Button
             size="sm"
             variant="outline"
             onClick={onClick}
             disabled={processing}
+            className="flex gap-2 xs:self-auto self-end"
           >
             {processing ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -108,7 +107,7 @@ export function InvitedUserCard({
             Cancel
           </Button>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

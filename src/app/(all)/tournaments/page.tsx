@@ -1,19 +1,12 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { Calendar, ChevronRight, Plus, Users } from "lucide-react";
-import Link from "next/link";
 import { useMemo } from "react";
+import { UpsertTeamFormButton } from "@/components/form/upsert-team-form-button";
+import { UpsertTournamentFormButton } from "@/components/form/upsert-tournament-form-button";
 import { SectionHeader } from "@/components/section-header";
-import { TournamentsDataTable } from "@/components/tournaments/tournaments-data-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
-} from "@/components/ui/card";
+import { TournamentCard } from "@/components/tournaments/tournament-card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
   EmptyContent,
@@ -45,99 +38,57 @@ export default function TournamentsPage() {
   return (
     <>
       <SectionHeader as="h1" title="Tournaments">
-        {isAdmin && (
-          <Button asChild>
-            <Link href="/tournaments/new">
-              <Plus />
-              Add New Tournament
-            </Link>
-          </Button>
-        )}
+        {isAdmin && <UpsertTournamentFormButton />}
       </SectionHeader>
 
-      <TournamentsDataTable
-        title="Your tournaments"
-        tournaments={userTournaments}
-      />
+      <SectionHeader title="Your Tournaments" />
+
+      <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
+        {userTournaments && userTournaments.length !== 0 ? (
+          userTournaments.map((tournament) => (
+            <TournamentCard
+              key={tournament._id}
+              tournament={tournament}
+              teamCount={teamCount.get(tournament._id) ?? 0}
+            />
+          ))
+        ) : (
+          <Card>
+            <CardContent>
+              <Empty>
+                <EmptyHeader>No tournaments yet</EmptyHeader>
+                <EmptyDescription>
+                  Join a team to start playing in tournaments or create your
+                  own.
+                </EmptyDescription>
+                <EmptyContent>
+                  <UpsertTeamFormButton />
+                </EmptyContent>
+              </Empty>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       <SectionHeader title="All Tournaments" />
 
-      <div className="grid min-w-max grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
         {allTournaments && allTournaments.length !== 0 ? (
-          allTournaments.map((tournament) => {
-            const now = new Date();
-            const isActive =
-              new Date(tournament.startDate) <= now &&
-              now <= new Date(tournament.endDate);
-            const isEnded = new Date(tournament.endDate) <= now;
-            const isUpcoming = new Date(tournament.startDate) > now;
-
-            return (
-              <Card key={tournament._id}>
-                <CardContent>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <CardTitle>
-                          <Button
-                            variant="link"
-                            className="h-min cursor-pointer p-0 font-semibold text-md leading-none tracking-tight"
-                            asChild
-                          >
-                            <div>{tournament.name}</div>
-                          </Button>
-                        </CardTitle>
-                        <Badge
-                          variant={
-                            isActive
-                              ? "approved"
-                              : isUpcoming
-                                ? "pending"
-                                : "rejected"
-                          }
-                        >
-                          {isActive
-                            ? "Active"
-                            : isUpcoming
-                              ? "Upcoming"
-                              : isEnded
-                                ? "Ended"
-                                : "Unknown"}
-                        </Badge>
-                      </div>
-                      <CardDescription className="mt-2">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {`${teamCount.get(tournament._id) ?? 0} teams`}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {tournament.startDate} to {tournament.endDate}
-                        </div>
-                      </CardDescription>
-                    </div>
-                    <div className="flex gap-2">
-                      {user && (
-                        <Button asChild>
-                          <Link href={`/tournaments/${tournament._id}`}>
-                            View
-                            <ChevronRight />
-                          </Link>
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
+          allTournaments.map((tournament) => (
+            <TournamentCard
+              key={tournament._id}
+              tournament={tournament}
+              teamCount={teamCount.get(tournament._id) ?? 0}
+            />
+          ))
         ) : (
           <Card>
             <CardContent className="py-12">
               <Empty>
-                <EmptyHeader>No teams yet</EmptyHeader>
+                <EmptyHeader>No tournaments yet</EmptyHeader>
                 <EmptyDescription>
-                  Be the first to create a team for this tournament!
+                  Please contact your tournament organizer to create a
+                  tournament
                 </EmptyDescription>
                 <EmptyContent></EmptyContent>
               </Empty>

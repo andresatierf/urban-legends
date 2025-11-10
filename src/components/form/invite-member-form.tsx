@@ -26,13 +26,25 @@ const formSchema = z.object({
 });
 
 type Props = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   teamId: Id<"teams">;
   tournamentId: Id<"tournaments">;
+  children?: React.ReactNode;
 };
 
-export function InviteMemberFormButton({ teamId, tournamentId }: Props) {
+export function InviteMemberFormDialog({
+  open: controlledOpen,
+  onOpenChange,
+  teamId,
+  tournamentId,
+  children,
+}: Props) {
   const formId = useId();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
 
   const inviteMember = useMutation(api.teamInvitations.inviteMember);
   const availableUsers = useQuery(
@@ -83,13 +95,7 @@ export function InviteMemberFormButton({ teamId, tournamentId }: Props) {
           form.handleSubmit();
         }}
       >
-        <DialogTrigger asChild>
-          <Button>
-            <UserPlus />
-            Invite Member
-          </Button>
-        </DialogTrigger>
-
+        {children && <DialogTrigger asChild>{children}</DialogTrigger>}
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Invite Team Member</DialogTitle>

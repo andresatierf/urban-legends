@@ -19,14 +19,7 @@ export const listTeamInvitations = query({
     ),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    validateIsAdmin(user);
-    await validateIsTeamMember(ctx, {
-      teamId: args.teamId,
-      userId: user._id,
-      captain: true,
-    });
+    await getCurrentUserOrThrow(ctx);
 
     // Get invitations
     let invitationsQuery = ctx.db

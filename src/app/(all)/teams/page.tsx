@@ -6,7 +6,8 @@ import { ChevronRight, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { SectionHeader } from "@/components/section-header";
-import { TeamsDataTable } from "@/components/teams/teams-data-table";
+import { JoinTeamCard } from "@/components/teams/join-team-card";
+import { TeamCard } from "@/components/teams/team-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useUser } from "@/hooks/useUser";
@@ -17,7 +18,7 @@ import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 export default function TeamsPage() {
   const { user, isAdmin } = useUser();
   const userTeams = useQuery(api.teams.list, { userId: user?._id }) || [];
-  const allTeams = useQuery(api.teams.list, isAdmin ? {} : "skip") || [];
+  const allTeams = useQuery(api.teams.list, {}) || [];
 
   const tournamentIds = useMemo(() => {
     const userTournamentIds = userTeams.map((team) => team.tournamentId);
@@ -103,16 +104,23 @@ export default function TeamsPage() {
         </Button>
       </SectionHeader>
 
-      <TeamsDataTable title="Your teams" teams={userTeamsTableData} showRole />
+      <SectionHeader title="Your teams"></SectionHeader>
 
-      {isAdmin && (
-        <TeamsDataTable
-          title="All teams"
-          teams={allTeamsTableData}
-          showActions
-          enableSearch
-        />
+      {userTeams.length > 0 ? (
+        userTeams.map((team) => (
+          <TeamCard
+            key={team._id}
+            team={team}
+            memberCount={0}
+            isUserMember={true}
+            isUserInTeam={true}
+          />
+        ))
+      ) : (
+        <JoinTeamCard />
       )}
+
+      <SectionHeader title="All teams"></SectionHeader>
 
       <Card>
         <CardContent>

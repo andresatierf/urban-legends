@@ -251,7 +251,15 @@ export const removeMember = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateIsAdmin(user);
+    await validateIsTeamMember(ctx, {
+      teamId: args.teamId,
+      userId: user._id,
+      captain: true,
+    });
+    await validateIsTeamMember(ctx, {
+      teamId: args.teamId,
+      userId: args.userId,
+    });
 
     const member = await ctx.db
       .query("teamMembers")

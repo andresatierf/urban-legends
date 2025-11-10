@@ -7,6 +7,8 @@ import { use } from "react";
 import { JoinTeamFormButton } from "@/components/form/join-team-form-button";
 import { UpsertTeamFormButton } from "@/components/form/upsert-team-form-button";
 import { SectionHeader } from "@/components/section-header";
+import { JoinTeamCard } from "@/components/teams/join-team-card";
+import { TeamCard } from "@/components/teams/team-card";
 import { TournamentDetailsCard } from "@/components/tournaments/tournament-details-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +26,7 @@ import {
   EmptyHeader,
 } from "@/components/ui/empty";
 import { api } from "../../../../../convex/_generated/api";
-import type { Id } from "../../../../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../../../../convex/_generated/dataModel";
 
 type Props = {
   params: Promise<{ tournamentId: Id<"tournaments"> }>;
@@ -103,88 +105,37 @@ export default function TournamentDetailsPage({ params }: Props) {
                 You are already part of a team in this tournament
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{userTeam.name}</p>
-                  <Badge variant="secondary">
-                    {teamMemberCounts?.[userTeam._id]?.length || 0} members
-                  </Badge>
-                </div>
-                <Button asChild variant="outline">
-                  <Link href={`/teams/${userTeam._id}`}>View Team</Link>
-                </Button>
+            <CardContent className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">{userTeam.name}</p>
+                <Badge variant="secondary">
+                  {teamMemberCounts?.[userTeam._id]?.length || 0} members
+                </Badge>
               </div>
+              <Button
+                asChild
+                variant="outline"
+                className="flex gap-2 xs:self-auto self-end"
+              >
+                <Link href={`/teams/${userTeam._id}`}>View Team</Link>
+              </Button>
             </CardContent>
           </Card>
         ) : (
-          <Card variant="info">
-            <CardContent>
-              <Empty className="gap-3 py-2!">
-                <EmptyHeader>Join a Team</EmptyHeader>
-                <EmptyDescription>
-                  You can join a team by clicking the button below or you can
-                  create your own.
-                </EmptyDescription>
-                <EmptyContent>
-                  <UpsertTeamFormButton tournamentId={tournamentId} />
-                </EmptyContent>
-              </Empty>
-            </CardContent>
-          </Card>
+          <JoinTeamCard />
         ))}
 
-      <div className="grid min-w-max grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
         {teams && teams.length !== 0 ? (
-          teams.map((team) => {
-            const members = teamMemberCounts?.[team._id] || [];
-            const memberCount = members.length;
-            const isUserMember = userTeam?._id === team._id;
-            const isFull = team.maxMembers && memberCount >= team.maxMembers;
-
-            return (
-              <Card key={team._id}>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <CardTitle>{team.name}</CardTitle>
-                        <Badge
-                          variant={
-                            team.visibility === "public"
-                              ? "default"
-                              : "secondary"
-                          }
-                        >
-                          {team.visibility}
-                        </Badge>
-                        {isFull && <Badge variant="destructive">Full</Badge>}
-                      </div>
-                      <CardDescription className="mt-2">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {memberCount}
-                          {team.maxMembers ? ` / ${team.maxMembers} ` : " "}
-                          members
-                        </div>
-                      </CardDescription>
-                    </div>
-                    <div className="flex gap-2">
-                      {user && (
-                        <JoinTeamFormButton
-                          teamId={team._id}
-                          team={team}
-                          currentMemberCount={memberCount}
-                          isUserMember={isUserMember}
-                          isUserInTeam={!!userTeam}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
+          teams.map((team) => (
+            <TeamCard
+              key={team._id}
+              team={team}
+              memberCount={teamMemberCounts?.[team._id]?.length || 0}
+              isUserMember={userTeam?._id === team._id}
+              isUserInTeam={!!userTeam}
+            />
+          ))
         ) : (
           <Card>
             <CardContent className="py-6">
