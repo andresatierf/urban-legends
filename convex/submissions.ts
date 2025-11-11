@@ -170,7 +170,7 @@ export const listUserSubmissions = query({
       return await ctx.db
         .query("submissions")
         .withIndex("by_user_and_state", (q) =>
-          q.eq("userId", user._id).eq("state", args.state),
+          q.eq("userId", user._id).eq("state", args.state as typeof args.state),
         )
         .collect();
     }

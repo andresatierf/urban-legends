@@ -17,7 +17,11 @@ export const list = query({
 
     if (args.userIds && args.userIds.length > 0) {
       usersQuery = usersQuery.filter((q) =>
-        q.or(...args.userIds.map((u) => q.eq(q.field("_id"), u))),
+        q.or(
+          ...(args.userIds as typeof args.userIds).map((u) =>
+            q.eq(q.field("_id"), u),
+          ),
+        ),
       );
     }
 
@@ -43,6 +47,10 @@ export const getById = query({
 
     const user = await ctx.db.get(id);
 
+    if (!user) {
+      throw new Error("User not found");
+    }
+
     const [roles, userRoles] = await Promise.all([
       ctx.db.query("roles").collect(),
       ctx.db
@@ -53,9 +61,9 @@ export const getById = query({
 
     return {
       ...user,
-      roles: userRoles.map(
-        (role) => roles.find((r) => r._id === role.roleId)?.name,
-      ),
+      roles: userRoles
+        .map((role) => roles.find((r) => r._id === role.roleId)?.name)
+        .filter((role) => role) as string[],
     };
   },
 });

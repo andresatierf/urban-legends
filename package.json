@@ -10,6 +10,7 @@
     "lint:fix": "biome lint --write",
     "format": "biome format",
     "format:fix": "biome format --write",
+    "typecheck": "tsc --noEmit",
     "ci": "biome ci"
   },
   "dependencies": {

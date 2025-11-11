@@ -17,8 +17,8 @@ export const list = query({
         .query("tournaments")
         .filter((q) =>
           q.or(
-            ...args.tournamentIds.map((tournamentId) =>
-              q.eq(q.field("_id"), tournamentId),
+            ...(args.tournamentIds as typeof args.tournamentIds).map(
+              (tournamentId) => q.eq(q.field("_id"), tournamentId),
             ),
           ),
         )
@@ -80,10 +80,14 @@ export const get = query({
     if (args.tournamentName)
       return await ctx.db
         .query("tournaments")
-        .withIndex("by_name", (q) => q.eq("name", args.tournamentName))
+        .withIndex("by_name", (q) =>
+          q.eq("name", args.tournamentName as typeof args.tournamentName),
+        )
         .unique();
 
-    return await ctx.db.get(args.tournamentId);
+    return await ctx.db.get(
+      args.tournamentId as NonNullable<typeof args.tournamentId>,
+    );
   },
 });
 
