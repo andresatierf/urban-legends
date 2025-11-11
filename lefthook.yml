@@ -1,0 +1,8 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome-check:
+      glob: "*.{js,ts,jsx,tsx,json,jsonc}"
+      exclude: "convex/_generated/**"
+      run: bun --bun biome check --write --unsafe --files-ignore-unknown=true --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
