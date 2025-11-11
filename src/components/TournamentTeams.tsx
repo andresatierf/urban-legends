@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -8,8 +9,32 @@ type Props = {
 
 export function TournamentTeams({ tournamentId }: Props) {
   const tournament = useQuery(api.tournaments.get, { tournamentId });
-
   const teams = useQuery(api.teams.list, { tournamentId }) || [];
+  const teamIds = teams.map((t) => t._id);
+  const teamMembers = useQuery(
+    api.teams.listMembers,
+    teamIds.length > 0 ? { teamIds } : "skip",
+  );
+  const allUsers = useQuery(api.users.list, {});
+
+  const teamsWithMembers = useMemo(() => {
+    if (!teamMembers || !allUsers) return teams.map((t) => ({ ...t, memberEmails: [] }));
+
+    return teams.map((team) => {
+      const members = teamMembers.filter((m) => m.teamId === team._id);
+      const memberEmails = members
+        .map((m) => {
+          const user = allUsers.find((u) => u._id === m.userId);
+          return user?.email;
+        })
+        .filter((email): email is string => email !== undefined);
+
+      return {
+        ...team,
+        memberEmails,
+      };
+    });
+  }, [teams, teamMembers, allUsers]);
 
   if (!tournament) return null; // TODO: add skeleton
 
@@ -34,14 +59,14 @@ export function TournamentTeams({ tournamentId }: Props) {
             </tr>
           </thead>
           <tbody>
-            {teams.map((team) => (
+            {teamsWithMembers.map((team) => (
               <tr
                 key={team.name}
                 className="border-t transition hover:bg-gray-50"
               >
                 <td className="p-3 font-medium text-gray-800">{team.name}</td>
                 <td className="p-3 text-gray-600">
-                  {team.members?.map((m) => m.user.email).join(", ")}
+                  {team.memberEmails.join(", ")}
                 </td>
                 <td className="p-3 font-semibold text-blue-600">
                   {team.score}

@@ -41,11 +41,26 @@ export default function Submissions() {
 
   const augmentSubmissions = useCallback(
     (subs: Doc<"submissions">[]) =>
-      subs.map((submission) => ({
-        ...submission,
-        team: teamIdMap.get(submission.teamId)!,
-        user: userIdMap.get(submission.userId)!,
-      })),
+      subs
+        .map((submission) => {
+          const team = teamIdMap.get(submission.teamId);
+          const user = userIdMap.get(submission.userId);
+
+          if (!team || !user) {
+            console.error(
+              "Missing team or user for submission",
+              submission._id,
+            );
+            return null;
+          }
+
+          return {
+            ...submission,
+            team,
+            user,
+          };
+        })
+        .filter((s): s is NonNullable<typeof s> => s !== null),
     [teamIdMap, userIdMap],
   );
 
