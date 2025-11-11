@@ -128,7 +128,7 @@ export const upsert = mutation({
 // TODO: deleting a tournament should delete all associated teams, submissions, invites, etc
 export const remove = mutation({
   args: { tournamentId: v.id("tournaments") },
-  handler: async (ctx, args) => {
+  handler: async (_ctx, _args) => {
     throw new Error("Not implemented");
   },
 });

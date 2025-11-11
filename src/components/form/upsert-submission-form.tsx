@@ -116,7 +116,11 @@ export function UpsertSubmissionFormDialog({
     ) || [];
 
   const teammateOptions = useMemo(
-    () => teammates?.map((t) => ({ value: t._id, label: t.email! })) ?? [],
+    () =>
+      teammates?.map((t) => ({
+        value: t._id,
+        label: t.email || "Unknown",
+      })) ?? [],
     [teammates],
   );
 

@@ -18,7 +18,8 @@ export function TournamentTeams({ tournamentId }: Props) {
   const allUsers = useQuery(api.users.list, {});
 
   const teamsWithMembers = useMemo(() => {
-    if (!teamMembers || !allUsers) return teams.map((t) => ({ ...t, memberEmails: [] }));
+    if (!teamMembers || !allUsers)
+      return teams.map((t) => ({ ...t, memberEmails: [] }));
 
     return teams.map((team) => {
       const members = teamMembers.filter((m) => m.teamId === team._id);

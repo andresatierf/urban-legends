@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { Loader2, UserPlus } from "lucide-react";
-import Link from "next/link";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import z from "zod";

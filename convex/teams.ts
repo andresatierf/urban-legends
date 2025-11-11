@@ -98,7 +98,7 @@ export const get = query({
       return await ctx.db
         .query("teams")
         .withIndex("by_tournament_and_name", (q) =>
-          q.eq("tournamentId", args.tournamentId!).eq("name", args.teamName!),
+          q.eq("tournamentId", args.tournamentId).eq("name", args.teamName),
         )
         .unique();
 

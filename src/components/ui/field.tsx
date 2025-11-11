@@ -83,6 +83,7 @@ function Field({
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: Field component uses role="group" for form field grouping
     <div
       role="group"
       data-slot="field"
@@ -206,9 +207,7 @@ function FieldError({
     return (
       <ul className="ml-4 flex list-disc flex-col gap-1">
         {errors.map((error) =>
-          error?.message ? (
-            <li key={error.message}>{error.message}</li>
-          ) : null,
+          error?.message ? <li key={error.message}>{error.message}</li> : null,
         )}
       </ul>
     );
