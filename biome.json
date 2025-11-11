@@ -6,16 +6,15 @@
     "useIgnoreFile": true
   },
   "files": {
+    "includes": ["**", "!convex/_generated"],
     "ignoreUnknown": false
   },
   "formatter": {
     "enabled": true,
-    "includes": ["**", "!convex/_generated/**"],
     "indentStyle": "space"
   },
   "linter": {
     "enabled": true,
-    "includes": ["**", "!convex/_generated/**"],
     "rules": {
       "recommended": true,
       "nursery": {
