@@ -30,6 +30,9 @@
       },
       "complexity": {
         "noUselessRename": "error"
+      },
+      "suspicious": {
+        "noUnknownAtRules": "off"
       }
     }
   },

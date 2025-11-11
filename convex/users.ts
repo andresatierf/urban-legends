@@ -17,7 +17,7 @@ export const list = query({
 
     if (args.userIds && args.userIds.length > 0) {
       usersQuery = usersQuery.filter((q) =>
-        q.or(...args.userIds!.map((u) => q.eq(q.field("_id"), u))),
+        q.or(...args.userIds.map((u) => q.eq(q.field("_id"), u))),
       );
     }
 
