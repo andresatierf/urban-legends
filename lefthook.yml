@@ -6,3 +6,7 @@ pre-commit:
       exclude: "convex/_generated/**"
       run: bun --bun biome check --write --unsafe --files-ignore-unknown=true --no-errors-on-unmatched {staged_files}
       stage_fixed: true
+    typecheck:
+      glob: "*.{js,ts,jsx,tsx}"
+      exclude: "convex/_generated/**"
+      run: bun --bun tsc-files --noEmit {staged_files}

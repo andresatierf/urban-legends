@@ -1,16 +1,16 @@
 import type { ColumnDef } from "@tanstack/react-table";
+import { useMutation } from "convex/react";
 import { Pencil, Trash } from "lucide-react";
 import { useMemo } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import {
   DataTableSection,
   type DataTableSectionProps,
 } from "../data-table-section";
 import { Button } from "../ui/button";
-import { useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { toast } from "sonner";
 
 type Props<T, V> = Pick<
   DataTableSectionProps<T, V>,

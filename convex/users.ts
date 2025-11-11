@@ -1,12 +1,12 @@
 import type { UserJSON } from "@clerk/backend";
 import { type Validator, v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import {
   internalMutation,
   mutation,
   type QueryCtx,
   query,
 } from "./_generated/server";
-import type { Id } from "./_generated/dataModel";
 
 export const list = query({
   args: { userIds: v.optional(v.array(v.id("users"))) },
@@ -15,7 +15,7 @@ export const list = query({
 
     let usersQuery = ctx.db.query("users");
 
-    if (args.userIds) {
+    if (args.userIds && args.userIds.length > 0) {
       usersQuery = usersQuery.filter((q) =>
         q.or(...args.userIds!.map((u) => q.eq(q.field("_id"), u))),
       );

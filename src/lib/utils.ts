@@ -1,9 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Doc } from "../../convex/_generated/dataModel";
-import { GenericDoc } from "@convex-dev/auth/dist/server";
 
 export function cn(...inputs: ClassValue[]) {
+  inputs.upper();
   return twMerge(clsx(inputs));
 }
 
@@ -16,7 +15,7 @@ export function cn(...inputs: ClassValue[]) {
 //     new Map(),
 //   );
 // }
-
+//
 // export function toDictionary<TOriginal, TKey extends keyof TOriginal, TValue>(
 //   array: Array<TOriginal>,
 //   key: TKey,
@@ -32,7 +31,7 @@ export function cn(...inputs: ClassValue[]) {
 //     {} as Record<TKey, TOriginal>,
 //   );
 // }
-
+//
 // export function toDictionary<
 //   TOriginal,
 //   TKey extends string | number | symbol,
