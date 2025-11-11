@@ -148,26 +148,21 @@ export const removeUserTeam = mutation({
       .query("joinRequests")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
       .collect();
-    for (const joinRequest of joinRequests) {
-      await ctx.db.delete(joinRequest._id);
-    }
 
     const teamMembers = await ctx.db
       .query("teamMembers")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
       .collect();
-    for (const member of teamMembers) {
-      await ctx.db.delete(member._id);
-    }
 
-    await Promise.all([
-      submissions.map(({ _id }) => ctx.db.delete(_id)),
-      invitations.map(({ _id }) => ctx.db.delete(_id)),
-      joinRequests.map(({ _id }) => ctx.db.delete(_id)),
-      teamMembers.map(({ _id }) => ctx.db.delete(_id)),
-    ]);
+    await Promise.all(
+      [
+        submissions.map(({ _id }) => ctx.db.delete(_id)),
+        invitations.map(({ _id }) => ctx.db.delete(_id)),
+        joinRequests.map(({ _id }) => ctx.db.delete(_id)),
+        teamMembers.map(({ _id }) => ctx.db.delete(_id)),
+      ].flat(),
+    );
 
-    // Finally, delete the team itself
     return await ctx.db.delete(args.teamId);
   },
 });

@@ -34,7 +34,7 @@ export function TeamDetailsCard({ team, score, className }: Props) {
     team ? { teamIds: team._id } : "skip",
   );
 
-  const deleteTeam = useMutation(api.teams.remove);
+  const deleteTeam = useMutation(api.teams.removeUserTeam);
   const leaveTeam = useMutation(api.teams.leaveTeam);
 
   const userMembership = teamMembers?.find((m) => m.userId === user?._id);

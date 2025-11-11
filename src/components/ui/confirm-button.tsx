@@ -30,14 +30,7 @@ export function ConfirmButton({
   }, []);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    if (isConfirming) {
-      // Second click - execute the action
-      setIsConfirming(false);
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      onClick?.(event);
-    } else {
+    if (!isConfirming) {
       // First click - enter confirmation state
       setIsConfirming(true);
       onConfirm?.(event);
@@ -46,7 +39,16 @@ export function ConfirmButton({
       timeoutRef.current = setTimeout(() => {
         setIsConfirming(false);
       }, confirmTimeout);
+
+      return;
     }
+
+    // Second click - execute the action
+    setIsConfirming(false);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    onClick?.(event);
   };
 
   return (
