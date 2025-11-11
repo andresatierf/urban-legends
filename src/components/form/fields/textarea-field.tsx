@@ -19,7 +19,7 @@ export default function TextareaField({ label, placeholder, ...props }: Props) {
 
   return (
     <Field data-invalid={isInvalid}>
-      <FieldLabel html-for={field.name}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Textarea
         {...props}
         id={field.name}

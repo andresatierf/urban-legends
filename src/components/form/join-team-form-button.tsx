@@ -92,6 +92,15 @@ export function JoinTeamFormButton({
     }
   };
 
+  // Pending request - show cancel option
+  if (hasPendingRequest) {
+    return (
+      <Button variant="outline" onClick={handleCancelRequest}>
+        Cancel Request
+      </Button>
+    );
+  }
+
   // Don't show button if user is already a member
   if (isUserMember) {
     return (
@@ -124,15 +133,6 @@ export function JoinTeamFormButton({
     return (
       <Button variant="outline" disabled>
         Team Full
-      </Button>
-    );
-  }
-
-  // Pending request - show cancel option
-  if (hasPendingRequest) {
-    return (
-      <Button variant="outline" onClick={handleCancelRequest}>
-        Cancel Request
       </Button>
     );
   }

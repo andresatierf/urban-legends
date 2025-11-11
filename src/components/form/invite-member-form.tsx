@@ -22,7 +22,7 @@ import {
 import { FieldGroup } from "../ui/field";
 
 const formSchema = z.object({
-  email: z.email("Please select a valid user"),
+  email: z.email(),
 });
 
 type Props = {
@@ -49,7 +49,7 @@ export function InviteMemberFormDialog({
   const inviteMember = useMutation(api.teamInvitations.inviteMember);
   const availableUsers = useQuery(
     api.tournaments.getAvailableUsersForTournament,
-    tournamentId ? { tournamentId } : "skip",
+    { tournamentId },
   );
   const userOptions = useMemo(
     () =>

@@ -141,7 +141,7 @@ export function UpsertSubmissionFormDialog({
           controlledOpen === undefined &&
           onOpenChange === undefined && (
             <DialogTrigger asChild>
-              <Button>
+              <Button type="button">
                 {submission ? "Edit Submission" : "Create Submission"}
               </Button>
             </DialogTrigger>
@@ -242,6 +242,7 @@ export function UpsertSubmissionFormDialog({
                                       disabled={teamId === ""}
                                     />
                                     <Button
+                                      type="button"
                                       variant="solid"
                                       color="destructive"
                                       size="icon"

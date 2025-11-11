@@ -1,5 +1,6 @@
 import { startCase } from "lodash";
 import { type LucideIcon, MoreHorizontalIcon } from "lucide-react";
+import { Fragment } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { ButtonGroup } from "./ui/button-group";
@@ -56,7 +57,7 @@ export function DetailsCard({
                 {actions?.map(
                   (action) =>
                     action.condition && (
-                      <>
+                      <Fragment key={action.label}>
                         {action.separator === "before" && (
                           <DropdownMenuSeparator />
                         )}
@@ -70,7 +71,7 @@ export function DetailsCard({
                         {action.separator === "after" && (
                           <DropdownMenuSeparator />
                         )}
-                      </>
+                      </Fragment>
                     ),
                 )}
               </DropdownMenuContent>

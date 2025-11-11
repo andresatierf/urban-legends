@@ -17,7 +17,7 @@ export default function NumberField({ label }: Props) {
 
   return (
     <Field data-invalid={isInvalid}>
-      <FieldLabel html-for={field.name}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Input
         type="number"
         id={field.name}

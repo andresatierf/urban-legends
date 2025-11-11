@@ -129,8 +129,8 @@ export function JoinRequestsList({ teamId }: Props) {
                 key={request._id}
                 request={request}
                 processing={processingId === request._id}
-                onApprove={() => handleApprove(request._id)}
-                onReject={() => handleReject(request._id)}
+                onApprove={() => {}}
+                onReject={() => {}}
               />
             ))}
           </div>

@@ -29,7 +29,7 @@ export default function SelectField<T extends string>({
 
   return (
     <Field data-invalid={isInvalid}>
-      <FieldLabel html-for={field.name}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Select
         value={field.state.value}
         onValueChange={(value) => field.handleChange(value)}

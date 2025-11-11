@@ -36,7 +36,7 @@ export default function ComboboxField<T extends string>({
 
   return (
     <Field data-invalid={isInvalid}>
-      <FieldLabel html-for={field.name}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Combobox
         id={field.name}
         name={field.name}

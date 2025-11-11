@@ -17,12 +17,15 @@ export default function DateField({ label }: Props) {
 
   return (
     <Field data-invalid={isInvalid}>
-      <FieldLabel html-for={field.name}>{label}</FieldLabel>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Input
         type="date"
         id={field.name}
+        name={field.name}
+        onBlur={field.handleBlur}
         value={field.state.value}
         onChange={(e) => field.handleChange(e.target.value)}
+        aria-invalid={isInvalid}
       />
       {isInvalid && <FieldError errors={errors} />}
     </Field>

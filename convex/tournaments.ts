@@ -80,7 +80,7 @@ export const get = query({
     if (args.tournamentName)
       return await ctx.db
         .query("tournaments")
-        .filter((q) => q.eq(q.field("name"), args.tournamentName))
+        .withIndex("by_name", (q) => q.eq("name", args.tournamentName!))
         .unique();
 
     return await ctx.db.get(args.tournamentId!);
@@ -194,7 +194,12 @@ export async function validateUserNotInTournamentTeam(
     .withIndex("by_user", (q) => q.eq("userId", args.userId))
     .collect();
 
+  if (userTeams.length === 0) {
+    return;
+  }
+
   const teamIds = userTeams.map((m) => m.teamId);
+
   const existingTeamInTournament = await ctx.db
     .query("teams")
     .filter((q) =>

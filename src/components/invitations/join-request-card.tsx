@@ -52,21 +52,23 @@ export function JoinRequestCard({
             )}
           </div>
         </div>
-        <div className="flex gap-2 self-end sm:self-auto">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onReject}
-            disabled={processing}
-          >
-            {processing ? <Loader2 className="animate-spin" /> : <X />}
-            Reject
-          </Button>
-          <Button size="sm" onClick={onApprove} disabled={processing}>
-            {processing ? <Loader2 className="animate-spin" /> : <Check />}
-            Approve
-          </Button>
-        </div>
+        {request.status === "pending" && (
+          <div className="flex gap-2 self-end sm:self-auto">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onReject}
+              disabled={processing}
+            >
+              {processing ? <Loader2 className="animate-spin" /> : <X />}
+              Reject
+            </Button>
+            <Button size="sm" onClick={onApprove} disabled={processing}>
+              {processing ? <Loader2 className="animate-spin" /> : <Check />}
+              Approve
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

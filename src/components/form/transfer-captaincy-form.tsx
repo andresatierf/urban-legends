@@ -22,7 +22,10 @@ import {
 import { FieldGroup } from "../ui/field";
 
 const formSchema = z.object({
-  newCaptainId: z.string().min(1, "Please select a new captain"),
+  newCaptainId: z.custom<Id<"users">>(
+    (val) => typeof val === "string" && val.length >= 1,
+    "Please select a new captain",
+  ),
 });
 
 type Props = {
@@ -70,7 +73,7 @@ export function TransferCaptaincyFormDialog({
       try {
         await transferCaptaincy({
           teamId,
-          newCaptainId: newCaptainId as Id<"users">,
+          newCaptainId: newCaptainId,
         });
         toast.success("Captaincy transferred successfully!");
         setOpen(false);

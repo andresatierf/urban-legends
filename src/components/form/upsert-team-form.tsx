@@ -74,7 +74,7 @@ export function UpsertTeamFormDialog({
 
   const form = useAppForm({
     defaultValues: {
-      tournamentId: tournamentId || "",
+      tournamentId: tournamentId || team?.tournamentId || "",
       name: team?.name || "",
       visibility: team?.visibility || "public",
     } as z.input<typeof formSchema>,
