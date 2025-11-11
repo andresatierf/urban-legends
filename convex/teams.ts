@@ -123,6 +123,55 @@ export const get = query({
   },
 });
 
+export const removeUserTeam = mutation({
+  args: { teamId: v.id("teams") },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    await validateIsTeamMember(ctx, {
+      teamId: args.teamId,
+      userId: user._id,
+      captain: true,
+    });
+
+    const submissions = await ctx.db
+      .query("submissions")
+      .filter((q) => q.eq(q.field("teamId"), args.teamId))
+      .collect();
+
+    const invitations = await ctx.db
+      .query("teamInvitations")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .collect();
+
+    const joinRequests = await ctx.db
+      .query("joinRequests")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .collect();
+    for (const joinRequest of joinRequests) {
+      await ctx.db.delete(joinRequest._id);
+    }
+
+    const teamMembers = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .collect();
+    for (const member of teamMembers) {
+      await ctx.db.delete(member._id);
+    }
+
+    await Promise.all([
+      submissions.map(({ _id }) => ctx.db.delete(_id)),
+      invitations.map(({ _id }) => ctx.db.delete(_id)),
+      joinRequests.map(({ _id }) => ctx.db.delete(_id)),
+      teamMembers.map(({ _id }) => ctx.db.delete(_id)),
+    ]);
+
+    // Finally, delete the team itself
+    return await ctx.db.delete(args.teamId);
+  },
+});
+
 export const getUserTeamByTournament = query({
   args: { tournamentId: v.id("tournaments") },
   handler: async (ctx, args) => {
