@@ -51,7 +51,7 @@ export function InvitedUserCard({
             </span>
           </div>
         </div>
-        {!isExpired && canCancel && (
+        {!isExpired && invitation.status === "pending" && canCancel && (
           <Button
             size="sm"
             variant="outline"

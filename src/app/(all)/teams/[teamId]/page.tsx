@@ -56,42 +56,41 @@ export default function TeamDetailsPage({ params }: Props) {
 
       <TeamDetailsCard team={team} />
 
-      {captain ||
-        (regularMembers.length !== 0 && (
-          <>
-            <SectionHeader title="Team" />
-            {captain ? (
-              <TeamMemberCard
-                member={captain}
-                memberRole="captain"
-                canRemove={false}
-              />
-            ) : (
-              <p className="text-muted-foreground">No captain yet.</p>
-            )}
+      {(captain || regularMembers.length !== 0) && (
+        <>
+          <SectionHeader title="Team" />
+          {captain ? (
+            <TeamMemberCard
+              member={captain}
+              memberRole="captain"
+              canRemove={false}
+            />
+          ) : (
+            <p className="text-muted-foreground">No captain yet.</p>
+          )}
 
-            {regularMembers.length !== 0 ? (
-              <div className="space-y-3">
-                {regularMembers.map((member) => (
-                  <TeamMemberCard
-                    key={member._id}
-                    member={member}
-                    memberRole="member"
-                    canRemove={isCaptain && member._id !== user?._id}
-                    onRemove={() =>
-                      removeMember({
-                        teamId: teamId,
-                        userId: member._id,
-                      })
-                    }
-                  />
-                ))}
-              </div>
-            ) : (
-              <InviteMemberCard team={team} isCaptain={isCaptain} />
-            )}
-          </>
-        ))}
+          {regularMembers.length !== 0 ? (
+            <div className="space-y-3">
+              {regularMembers.map((member) => (
+                <TeamMemberCard
+                  key={member._id}
+                  member={member}
+                  memberRole="member"
+                  canRemove={isCaptain && member._id !== user?._id}
+                  onRemove={() =>
+                    removeMember({
+                      teamId: teamId,
+                      userId: member._id,
+                    })
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <InviteMemberCard team={team} isCaptain={isCaptain} />
+          )}
+        </>
+      )}
 
       <SectionHeader title="Invites and Requests" />
       <InvitedUsersList teamId={teamId} canCancel={isCaptain} />

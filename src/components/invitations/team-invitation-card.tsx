@@ -1,3 +1,4 @@
+import { capitalize } from "lodash";
 import { Calendar, Check, Loader2, UserPlus, X } from "lucide-react";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Badge } from "../ui/badge";
@@ -41,11 +42,13 @@ export function TeamInvitationCard({
             </span>
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              Expires {new Date(invitation.expiresAt).toLocaleDateString()}
+              {invitation.respondedAt
+                ? `${capitalize(invitation.status)} ${new Date(invitation.respondedAt).toLocaleDateString()}`
+                : `Expires ${new Date(invitation.expiresAt).toLocaleDateString()}`}
             </span>
           </div>
         </div>
-        {!isExpired && (
+        {!isExpired && invitation.status === "pending" && (
           <div className="flex gap-2 self-end sm:self-auto">
             <Button
               size="sm"

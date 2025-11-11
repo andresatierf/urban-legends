@@ -131,6 +131,7 @@ export function JoinRequestsList({ teamId }: Props) {
                 processing={processingId === request._id}
                 onApprove={() => {}}
                 onReject={() => {}}
+                className="bg-muted/50"
               />
             ))}
           </div>

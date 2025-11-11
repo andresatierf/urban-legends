@@ -127,6 +127,7 @@ export function TeamInvitationsList() {
                 processing={false}
                 onAccept={() => {}}
                 onReject={() => {}}
+                className="bg-muted/50"
               />
             ))}
           </div>
