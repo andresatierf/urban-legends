@@ -60,10 +60,7 @@ export function DetailsCard({
                         {action.separator === "before" && (
                           <DropdownMenuSeparator />
                         )}
-                        <DropdownMenuItem
-                          key={action.label}
-                          onSelect={action.onClick}
-                        >
+                        <DropdownMenuItem onSelect={action.onClick}>
                           <action.icon className="h-4 w-4" />
                           {action.label}
                         </DropdownMenuItem>

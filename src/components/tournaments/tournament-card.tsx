@@ -19,7 +19,7 @@ export function TournamentCard({ tournament, teamCount }: Props) {
   const isUpcoming = new Date(tournament.startDate) > now;
 
   return (
-    <Card key={tournament._id}>
+    <Card>
       <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4 xs:gap-16">
         <div className="flex-1 xs:self-auto self-start">
           <div className="flex items-center gap-4">

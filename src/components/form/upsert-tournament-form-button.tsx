@@ -99,11 +99,6 @@ export function UpsertTournamentFormButton({
           form.handleSubmit();
         }}
       >
-        <DialogTrigger asChild>
-          <Button>
-            {tournament ? "Edit Tournament" : "Create Tournament"}
-          </Button>
-        </DialogTrigger>
         {children ? (
           <DialogTrigger asChild>{children}</DialogTrigger>
         ) : (
@@ -179,10 +174,36 @@ export function UpsertTournamentFormButton({
               </form.AppField>
             </FieldGroup>
             <FieldGroup className="flex-row">
-              <form.AppField name="startDate">
+              <form.AppField
+                name="startDate"
+                validators={{
+                  onChangeListenTo: ["endDate"],
+                  onChange: ({ value, fieldApi }) => {
+                    const endDate = fieldApi.form.getFieldValue("endDate");
+                    if (endDate && new Date(value) >= new Date(endDate)) {
+                      return {
+                        message: "Start date must be before end date",
+                      };
+                    }
+                  },
+                }}
+              >
                 {(field) => <field.DateField label="Start Date" />}
               </form.AppField>
-              <form.AppField name="endDate">
+              <form.AppField
+                name="endDate"
+                validators={{
+                  onChangeListenTo: ["startDate"],
+                  onChange: ({ value, fieldApi }) => {
+                    const startDate = fieldApi.form.getFieldValue("startDate");
+                    if (startDate && new Date(value) >= new Date(startDate)) {
+                      return {
+                        message: "End date must be before start date",
+                      };
+                    }
+                  },
+                }}
+              >
                 {(field) => <field.DateField label="End Date" />}
               </form.AppField>
             </FieldGroup>
