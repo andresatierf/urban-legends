@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button, type ButtonProps } from "./button";
 
 export interface ConfirmButtonProps extends ButtonProps {
-  onConfirm: () => void;
+  onConfirm?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   confirmText?: string;
   confirmTimeout?: number;
 }
@@ -15,7 +15,6 @@ export function ConfirmButton({
   confirmText = "Are you sure?",
   confirmTimeout = 3000,
   onClick,
-  disabled,
   ...props
 }: ConfirmButtonProps) {
   const [isConfirming, setIsConfirming] = useState(false);
@@ -31,27 +30,29 @@ export function ConfirmButton({
   }, []);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    if (isConfirming) {
-      // Second click - execute the action
-      setIsConfirming(false);
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      onConfirm();
-    } else {
+    if (!isConfirming) {
       // First click - enter confirmation state
       setIsConfirming(true);
-      onClick?.(event);
+      onConfirm?.(event);
 
       // Reset after timeout
       timeoutRef.current = setTimeout(() => {
         setIsConfirming(false);
       }, confirmTimeout);
+
+      return;
     }
+
+    // Second click - execute the action
+    setIsConfirming(false);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    onClick?.(event);
   };
 
   return (
-    <Button {...props} onClick={handleClick} disabled={disabled}>
+    <Button {...props} onClick={handleClick}>
       {isConfirming ? confirmText : children}
     </Button>
   );

@@ -34,7 +34,7 @@ export function TeamsDataTable<T, V>({
   showRole,
   ...props
 }: Props<T, V>) {
-  const removeTeam = useMutation(api.teams.remove);
+  const removeTeam = useMutation(api.teams.removeUserTeam);
 
   const columns: ColumnDef<(typeof teams)[number]>[] = useMemo(() => {
     const cols: ColumnDef<(typeof teams)[number]>[] = [
