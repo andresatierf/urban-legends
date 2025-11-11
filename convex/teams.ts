@@ -168,7 +168,12 @@ export const listTeamMembers = query({
       )
       .collect();
 
-    return users.filter((u) => !args.excludeSelf || u._id !== user._id);
+    return users
+      .filter((u) => !args.excludeSelf || u._id !== user._id)
+      .map((u) => ({
+        ...u,
+        role: teamMembers.find((m) => m.userId === u._id)?.role,
+      }));
   },
 });
 
@@ -472,10 +477,16 @@ type ValidateIsTeamMemberArgs = {
 
 export async function validateIsTeamMember(
   ctx: QueryCtx,
+  args: ValidateIsTeamMemberArgs & { invert: true },
+): Promise<null>;
+export async function validateIsTeamMember(
+  ctx: QueryCtx,
+  args: ValidateIsTeamMemberArgs & { invert?: false },
+): Promise<Doc<"teamMembers">>;
+export async function validateIsTeamMember(
+  ctx: QueryCtx,
   args: ValidateIsTeamMemberArgs,
-): ValidateIsTeamMemberArgs["invert"] extends true
-  ? Promise<null>
-  : Promise<Doc<"teamMembers">> {
+): Promise<Doc<"teamMembers"> | null> {
   const membership = await ctx.db
     .query("teamMembers")
     .withIndex("by_team_and_user", (q) =>
@@ -499,9 +510,7 @@ export async function validateIsTeamMember(
     throw new Error("Captain access required");
   }
 
-  return membership as ValidateIsTeamMemberArgs["invert"] extends true
-    ? null
-    : Doc<"teamMembers">;
+  return membership;
 }
 
 type ValidateUniqueTeamNameArgs = {

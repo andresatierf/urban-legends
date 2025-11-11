@@ -112,7 +112,7 @@ export const inviteMember = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    await validateTeamHasSpace(ctx, { teamId: args.teamId });
+    const team = await validateTeamHasSpace(ctx, { teamId: args.teamId });
 
     await validateIsTeamMember(ctx, {
       userId: user._id,
@@ -130,10 +130,10 @@ export const inviteMember = mutation({
       throw new Error("User not found with this email");
     }
 
-    await validateIsTeamMember(ctx, {
-      teamId: args.teamId,
+    // Check invited user isn't already in another team in this tournament
+    await validateUserNotInTournamentTeam(ctx, {
       userId: invitedUser._id,
-      invert: true,
+      tournamentId: team.tournamentId,
     });
 
     // Check if user already has pending invitation
