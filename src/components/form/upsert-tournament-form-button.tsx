@@ -196,9 +196,9 @@ export function UpsertTournamentFormButton({
                   onChangeListenTo: ["startDate"],
                   onChange: ({ value, fieldApi }) => {
                     const startDate = fieldApi.form.getFieldValue("startDate");
-                    if (startDate && new Date(value) >= new Date(startDate)) {
+                    if (startDate && new Date(value) <= new Date(startDate)) {
                       return {
-                        message: "End date must be before start date",
+                        message: "End date must be after start date",
                       };
                     }
                   },

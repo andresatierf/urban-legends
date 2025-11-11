@@ -55,7 +55,7 @@ export function TournamentCard({ tournament, teamCount }: Props) {
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              {tournament.startDate} to {tournament.endDate}
+              {`${new Date(tournament.startDate).toLocaleDateString()} to ${new Date(tournament.endDate).toLocaleDateString()}`}
             </div>
           </CardDescription>
         </div>

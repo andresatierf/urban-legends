@@ -45,34 +45,40 @@ export function DetailsCard({
       <CardHeader>
         <CardTitle className="flex justify-between text-xl">
           {title}
-          <ButtonGroup>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" aria-label="More Options">
-                  <MoreHorizontalIcon />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                {actions?.map(
-                  (action) =>
-                    action.condition && (
-                      <Fragment key={action.label}>
-                        {action.separator === "before" && (
-                          <DropdownMenuSeparator />
-                        )}
-                        <DropdownMenuItem onSelect={action.onClick}>
-                          <action.icon className="h-4 w-4" />
-                          {action.label}
-                        </DropdownMenuItem>
-                        {action.separator === "after" && (
-                          <DropdownMenuSeparator />
-                        )}
-                      </Fragment>
-                    ),
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </ButtonGroup>
+          {actions?.some((action) => action.condition) && (
+            <ButtonGroup>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="More Options"
+                  >
+                    <MoreHorizontalIcon />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  {actions?.map(
+                    (action) =>
+                      action.condition && (
+                        <Fragment key={action.label}>
+                          {action.separator === "before" && (
+                            <DropdownMenuSeparator />
+                          )}
+                          <DropdownMenuItem onSelect={action.onClick}>
+                            <action.icon className="h-4 w-4" />
+                            {action.label}
+                          </DropdownMenuItem>
+                          {action.separator === "after" && (
+                            <DropdownMenuSeparator />
+                          )}
+                        </Fragment>
+                      ),
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </ButtonGroup>
+          )}
         </CardTitle>
         {description && (
           <CardDescription>
