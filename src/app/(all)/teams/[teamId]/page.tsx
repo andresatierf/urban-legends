@@ -21,7 +21,8 @@ type Props = {
 
 export default function TeamDetailsPage({ params }: Props) {
   const { teamId } = use(params);
-  const { user, isAdmin } = useUser();
+  const { user } = useUser();
+
   const team = useQuery(api.teams.get, teamId ? { teamId } : "skip");
   const members =
     useQuery(api.teams.listTeamMembers, teamId ? { teamId } : "skip") || [];

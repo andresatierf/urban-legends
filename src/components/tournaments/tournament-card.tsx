@@ -12,11 +12,12 @@ type Props = {
 
 export function TournamentCard({ tournament, teamCount }: Props) {
   const now = new Date();
-  const isActive =
-    new Date(tournament.startDate) <= now &&
-    now <= new Date(tournament.endDate);
-  const isEnded = new Date(tournament.endDate) < now;
-  const isUpcoming = new Date(tournament.startDate) > now;
+  const startDate = new Date(tournament.startDate);
+  const endDate = new Date(tournament.endDate);
+
+  const isActive = startDate <= now && now <= endDate;
+  const isEnded = endDate < now;
+  const isUpcoming = startDate > now;
 
   return (
     <Card>
