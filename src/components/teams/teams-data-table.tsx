@@ -5,7 +5,6 @@ import { Crown, Pencil, Trash } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { toast } from "sonner";
-import { useUser } from "@/hooks/useUser";
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import {
@@ -75,12 +74,7 @@ export function TeamsDataTable<T, V>({
           const team = row.original;
           return (
             <div className="flex justify-end gap-2">
-              <Button
-                variant="secondary"
-                size="icon"
-                className="z-10"
-                asChild
-              >
+              <Button variant="secondary" size="icon" className="z-10" asChild>
                 <Link href={`/teams/${team._id}/edit`}>
                   <Pencil />
                 </Link>
