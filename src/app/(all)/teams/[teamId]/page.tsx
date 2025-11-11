@@ -78,25 +78,20 @@ export default function TeamDetailsPage({ params }: Props) {
 
       {regularMembers.length !== 0 ? (
         <div className="space-y-3">
-          {regularMembers.map((member) => {
-            const canRemoveMember =
-              (isCaptain || isAdmin) && member._id !== user?._id;
-
-            return (
-              <TeamMemberCard
-                key={member._id}
-                member={member}
-                memberRole="member"
-                canRemove={canRemoveMember}
-                onRemove={() =>
-                  removeMember({
-                    teamId: teamId,
-                    userId: member._id,
-                  })
-                }
-              />
-            );
-          })}
+          {regularMembers.map((member) => (
+            <TeamMemberCard
+              key={member._id}
+              member={member}
+              memberRole="member"
+              canRemove={isCaptain && member._id !== user?._id}
+              onRemove={() =>
+                removeMember({
+                  teamId: teamId,
+                  userId: member._id,
+                })
+              }
+            />
+          ))}
         </div>
       ) : (
         <InviteMemberCard team={team} isCaptain={isCaptain} />

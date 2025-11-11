@@ -31,7 +31,6 @@ type Props = {
     separator?: "after" | "before";
   }[];
   className?: string;
-  children?: React.ReactNode;
 };
 
 export function DetailsCard({

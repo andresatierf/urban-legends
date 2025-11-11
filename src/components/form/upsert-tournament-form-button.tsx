@@ -31,15 +31,24 @@ const formSchema = z.object({
 });
 
 type UpsertTournamentFormProps = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   tournament?: Doc<"tournaments">;
+  children?: React.ReactNode;
 };
 
 export function UpsertTournamentFormButton({
+  open: controlledOpen,
+  onOpenChange,
   tournament,
+  children,
 }: UpsertTournamentFormProps) {
   const formId = useId();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
 
   const upsertTournament = useMutation(api.tournaments.upsert);
 
@@ -95,6 +104,18 @@ export function UpsertTournamentFormButton({
             {tournament ? "Edit Tournament" : "Create Tournament"}
           </Button>
         </DialogTrigger>
+        {children ? (
+          <DialogTrigger asChild>{children}</DialogTrigger>
+        ) : (
+          controlledOpen === undefined &&
+          onOpenChange === undefined && (
+            <DialogTrigger asChild>
+              <Button>
+                {tournament ? "Edit Tournament" : "Create Tournament"}
+              </Button>
+            </DialogTrigger>
+          )
+        )}
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -207,7 +228,7 @@ export function UpsertTournamentFormButton({
                   disabled={isSubmitting || isPristine || !canSubmit}
                 >
                   {isSubmitting && <Loader2 className="animate-spin" />}
-                  Create Tournament
+                  {tournament ? "Update Tournament" : "Create Tournament"}
                 </Button>
               </DialogFooter>
             )}

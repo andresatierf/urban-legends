@@ -15,7 +15,7 @@ export function TournamentCard({ tournament, teamCount }: Props) {
   const isActive =
     new Date(tournament.startDate) <= now &&
     now <= new Date(tournament.endDate);
-  const isEnded = new Date(tournament.endDate) <= now;
+  const isEnded = new Date(tournament.endDate) < now;
   const isUpcoming = new Date(tournament.startDate) > now;
 
   return (
