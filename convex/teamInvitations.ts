@@ -187,8 +187,6 @@ export const cancelInvitation = mutation({
       throw new Error("Invitation is not pending");
     }
 
-    // Validate user is captain/admin
-    validateIsAdmin(user);
     await validateIsTeamMember(ctx, {
       teamId: invitation.teamId,
       userId: user._id,
