@@ -45,7 +45,12 @@ The UI displays hardcoded "0 pts" or "- pts" for teams. Submissions are tracked 
 
 1. **Point Tracking**
 
-   - Each approved submission = 1 point for the team
+   - Each tournament has it's own scoring system
+     - When creating a tournament, admin sets submission value
+     - There will be different tier submissions (eg. base = 2 points, advanced = 3 points)
+     - If the team exercises together, they get a higher point value
+     - There should be a threshold for a team exercise (eg. 50% of members must be present)
+     - Tiers also apply to team exercises (eg: base = 20, advanced = 30)
    - Points automatically recalculated when submissions approved/rejected
    - Points tied to specific tournament
    - Historical point tracking (point changes over time)

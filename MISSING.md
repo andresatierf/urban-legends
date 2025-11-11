@@ -16,7 +16,7 @@ The codebase is approximately **60-70% complete** for MVP. Core infrastructure i
 
 These features are **required** for a functional MVP and block the user journey:
 
-### 1. Team Joining / Self-Service ([spec](specs/team-joining.md))
+### 1. Team Joining / Self-Service ([spec](specs/01-team-joining.md))
 
 **Status:** ❌ Not Implemented
 **Priority:** CRITICAL
@@ -32,7 +32,7 @@ These features are **required** for a functional MVP and block the user journey:
 - Leave teams
 - Team invitation system
 
-### 2. Leaderboard & Scoring System ([spec](specs/leaderboard-scoring.md))
+### 2. Leaderboard & Scoring System ([spec](specs/02-leaderboard-scoring.md))
 
 **Status:** ❌ Not Implemented
 **Priority:** CRITICAL
@@ -48,7 +48,7 @@ These features are **required** for a functional MVP and block the user journey:
 - Leaderboard query and UI
 - Tournament winner determination
 
-### 3. Team Edit/Delete ([spec](specs/team-edit-delete.md))
+### 3. Team Edit/Delete ([spec](specs/03-team-edit-delete.md))
 
 **Status:** ❌ Backend Missing
 **Priority:** CRITICAL
@@ -68,7 +68,7 @@ These features are **required** for a functional MVP and block the user journey:
 
 These features significantly improve user experience but don't block core flows:
 
-### 4. Submission Progress Calendar ([spec](specs/submission-calendar.md))
+### 4. Submission Progress Calendar ([spec](specs/04-submission-calendar.md))
 
 **Status:** ⚠️ Commented Out (77 lines of code exist)
 **Priority:** HIGH
@@ -83,7 +83,7 @@ These features significantly improve user experience but don't block core flows:
 - Show submission status by date (submitted/missing/approved/rejected)
 - Visual progress indicators for tournaments
 
-### 5. Admin Role Management UI ([spec](specs/admin-role-management.md))
+### 5. Admin Role Management UI ([spec](specs/05-admin-role-management.md))
 
 **Status:** ⚠️ Backend Complete, UI Missing
 **Priority:** HIGH
@@ -98,7 +98,7 @@ These features significantly improve user experience but don't block core flows:
 - Add role selector to user details page
 - Confirmation dialogs for role changes
 
-### 6. Team Member Management UI ([spec](specs/team-member-management.md))
+### 6. Team Member Management UI ([spec](specs/06-team-member-management.md))
 
 **Status:** ⚠️ Backend Complete, UI Missing
 **Priority:** HIGH
@@ -118,7 +118,7 @@ These features significantly improve user experience but don't block core flows:
 
 These features enhance the platform but are not essential for MVP launch:
 
-### 7. Complete Admin Dashboard ([spec](specs/admin-dashboard.md))
+### 7. Complete Admin Dashboard ([spec](specs/07-admin-dashboard.md))
 
 **Status:** ⚠️ Placeholder Only
 **Priority:** MEDIUM
