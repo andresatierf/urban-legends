@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { api } from "../../../../convex/_generated/api";
 
 export default function UsersPage() {
-  const users = useQuery(api.users.list);
+  const users = useQuery(api.users.list, {});
 
   if (!users) return null; // TODO: Add skeleton
 

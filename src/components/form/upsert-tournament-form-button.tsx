@@ -1,0 +1,261 @@
+import { useMutation } from "convex/react";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useId, useState } from "react";
+import { toast } from "sonner";
+import * as z from "zod";
+import { useAppForm } from "@/hooks/form";
+import { toastFormValues } from "@/lib/form";
+import { api } from "../../../convex/_generated/api";
+import type { Doc } from "../../../convex/_generated/dataModel";
+import { Button } from "../ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import { FieldGroup } from "../ui/field";
+
+const formSchema = z.object({
+  name: z.string().min(1, "Name can't be empty"),
+  description: z.string().optional(),
+  startDate: z.string().min(1, "Please select a start date"),
+  endDate: z.string().min(1, "Please select an end date"),
+  teamMinSize: z.number().min(1, "Team minimum size must be at least 1"),
+  teamMaxSize: z.number().min(1, "Team maximum size must be at least 1"),
+});
+
+type UpsertTournamentFormProps = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  tournament?: Doc<"tournaments">;
+  children?: React.ReactNode;
+};
+
+export function UpsertTournamentFormButton({
+  open: controlledOpen,
+  onOpenChange,
+  tournament,
+  children,
+}: UpsertTournamentFormProps) {
+  const formId = useId();
+  const router = useRouter();
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
+
+  const upsertTournament = useMutation(api.tournaments.upsert);
+
+  const form = useAppForm({
+    defaultValues: {
+      name: tournament?.name ?? "",
+      description: tournament?.description ?? "",
+      startDate: tournament?.startDate ?? "",
+      endDate: tournament?.endDate ?? "",
+      teamMinSize: tournament?.teamMinSize ?? 1,
+      teamMaxSize: tournament?.teamMaxSize ?? 5,
+    } as z.input<typeof formSchema>,
+    validators: {
+      onChange: formSchema,
+      // onBlur: formSchema,
+      // onSubmit: formSchema,
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        await upsertTournament({ ...value, _id: tournament?._id });
+        toast.success(
+          `Tournament ${tournament ? "updated" : "created"} successfully!`,
+        );
+        router.push("/tournaments");
+        setOpen(false);
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : `Failed to ${tournament ? "update" : "create"} tournament`,
+        );
+      }
+    },
+  });
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        setOpen(newOpen);
+        form.reset();
+      }}
+    >
+      <form
+        id={formId}
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+      >
+        {children ? (
+          <DialogTrigger asChild>{children}</DialogTrigger>
+        ) : (
+          controlledOpen === undefined &&
+          onOpenChange === undefined && (
+            <DialogTrigger asChild>
+              <Button>
+                {tournament ? "Edit Tournament" : "Create Tournament"}
+              </Button>
+            </DialogTrigger>
+          )
+        )}
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {tournament ? "Edit Tournament" : "Create Tournament"}
+            </DialogTitle>
+            <DialogDescription>
+              {tournament
+                ? "Edit the tournament details"
+                : "Create a new tournament"}
+            </DialogDescription>
+          </DialogHeader>
+          <FieldGroup>
+            <form.AppField name="name">
+              {(field) => (
+                <field.TextField
+                  label="Name"
+                  placeholder="The name of the tournament"
+                />
+              )}
+            </form.AppField>
+            <form.AppField name="description">
+              {(field) => (
+                <field.TextareaField
+                  label="Description"
+                  placeholder="Add a description of the event"
+                />
+              )}
+            </form.AppField>
+            <FieldGroup className="flex-row">
+              <form.AppField
+                name="teamMinSize"
+                validators={{
+                  onChangeListenTo: ["teamMaxSize"],
+                  onChange: ({ value, fieldApi }) => {
+                    if (value > fieldApi.form.getFieldValue("teamMaxSize")) {
+                      return {
+                        message:
+                          "Team minimum size must be lesser than team maximum size",
+                      };
+                    }
+                  },
+                }}
+              >
+                {(field) => <field.NumberField label="Minimum Team Size" />}
+              </form.AppField>
+              <form.AppField
+                name="teamMaxSize"
+                validators={{
+                  onChangeListenTo: ["teamMinSize"],
+                  onChange: ({ value, fieldApi }) => {
+                    if (value < fieldApi.form.getFieldValue("teamMinSize")) {
+                      return {
+                        message:
+                          "Team maximum size must be greater than team minimum size",
+                      };
+                    }
+                  },
+                }}
+              >
+                {(field) => <field.NumberField label="Maximum Team Size" />}
+              </form.AppField>
+            </FieldGroup>
+            <FieldGroup className="flex-row">
+              <form.AppField
+                name="startDate"
+                validators={{
+                  onChangeListenTo: ["endDate"],
+                  onChange: ({ value, fieldApi }) => {
+                    const endDate = fieldApi.form.getFieldValue("endDate");
+                    if (endDate && new Date(value) >= new Date(endDate)) {
+                      return {
+                        message: "Start date must be before end date",
+                      };
+                    }
+                  },
+                }}
+              >
+                {(field) => <field.DateField label="Start Date" />}
+              </form.AppField>
+              <form.AppField
+                name="endDate"
+                validators={{
+                  onChangeListenTo: ["startDate"],
+                  onChange: ({ value, fieldApi }) => {
+                    const startDate = fieldApi.form.getFieldValue("startDate");
+                    if (startDate && new Date(value) <= new Date(startDate)) {
+                      return {
+                        message: "End date must be after start date",
+                      };
+                    }
+                  },
+                }}
+              >
+                {(field) => <field.DateField label="End Date" />}
+              </form.AppField>
+            </FieldGroup>
+          </FieldGroup>
+
+          <form.Subscribe
+            selector={(state) => [
+              state.isPristine,
+              state.canSubmit,
+              state.isSubmitting,
+            ]}
+          >
+            {([isPristine, canSubmit, isSubmitting]) => (
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => toastFormValues(form.state.values)}
+                >
+                  Check values
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => form.reset()}
+                  disabled={isPristine || isSubmitting}
+                  className="mr-auto"
+                >
+                  Reset
+                </Button>
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  type="submit"
+                  form={formId}
+                  disabled={isSubmitting || isPristine || !canSubmit}
+                >
+                  {isSubmitting && <Loader2 className="animate-spin" />}
+                  {tournament ? "Update Tournament" : "Create Tournament"}
+                </Button>
+              </DialogFooter>
+            )}
+          </form.Subscribe>
+        </DialogContent>
+      </form>
+    </Dialog>
+  );
+}

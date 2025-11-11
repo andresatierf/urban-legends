@@ -1,6 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMutation } from "convex/react";
 import { Pencil, Trash } from "lucide-react";
+import Link from "next/link";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -66,16 +67,13 @@ export function TournamentsDataTable<T, V>({
           const tournament = row.original;
           return (
             <div className="flex justify-end gap-2">
-              <Button
-                href={`/tournaments/${tournament._id}/edit`}
-                variant="secondary"
-                size="icon"
-                className="z-10"
-              >
-                <Pencil />
+              <Button variant="outline" size="icon" className="z-10" asChild>
+                <Link href={`/tournaments/${tournament._id}/edit`}>
+                  <Pencil />
+                </Link>
               </Button>
               <Button
-                variant="destructive"
+                color="destructive"
                 size="icon"
                 onClick={(e) => {
                   e.preventDefault();

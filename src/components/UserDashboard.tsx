@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../convex/_generated/api";
+import { TeamInvitationsList } from "./invitations/team-invitations-list";
 import { StatCard } from "./stat-card";
 import { SvgIcon } from "./svg-icon";
 import { Badge } from "./ui/badge";
@@ -35,7 +36,7 @@ export function UserDashboard(_props: UserDashboardProps) {
   );
 
   // Fetch all tournaments
-  const tournaments = useQuery(api.tournaments.list);
+  const tournaments = useQuery(api.tournaments.list, {});
 
   // Fetch user's submissions
   const userSubmissions = useQuery(api.submissions.listUserSubmissions, {});
@@ -375,6 +376,8 @@ export function UserDashboard(_props: UserDashboardProps) {
           </div>
         )}
       </div>
+
+      <TeamInvitationsList />
 
       {/* Quick Actions */}
       <div className="rounded-lg bg-blue-50 p-6">

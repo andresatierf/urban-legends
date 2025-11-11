@@ -1,14 +1,17 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { ArrowLeft, Trophy } from "lucide-react";
 import Link from "next/link";
-import { use, useMemo } from "react";
-import { DataTableSection } from "@/components/data-table-section";
+import { use } from "react";
+import { InvitedUsersList } from "@/components/invitations/invited-users-list";
+import { JoinRequestsList } from "@/components/invitations/join-requests-list";
 import { SectionHeader } from "@/components/section-header";
+import { InviteMemberCard } from "@/components/teams/invite-member-card";
 import { TeamDetailsCard } from "@/components/teams/team-details-card";
+import { TeamMemberCard } from "@/components/teams/team-member-card";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -18,39 +21,26 @@ type Props = {
 
 export default function TeamDetailsPage({ params }: Props) {
   const { teamId } = use(params);
+  const { user } = useUser();
+
   const team = useQuery(api.teams.get, teamId ? { teamId } : "skip");
-  const tournament = useQuery(
-    api.tournaments.get,
-    team ? { tournamentId: team.tournamentId } : "skip",
-  );
-  const members = useQuery(
-    api.teams.listTeamMembers,
-    teamId ? { teamId } : "skip",
-  );
+  const members =
+    useQuery(api.teams.listTeamMembers, teamId ? { teamId } : "skip") || [];
+  const removeMember = useMutation(api.teams.removeMember);
 
-  const columns: ColumnDef<NonNullable<typeof members>[number]>[] = useMemo(
-    () => [
-      { id: "name", accessorKey: "email", header: "Name" },
-      {
-        accessorKey: "role",
-        header: () => <div className="text-right">Role</div>,
-        // header: "Role",
-        cell: (props) => (
-          <div className="text-right text-gray-600">
-            {props.getValue() as string}
-          </div>
-        ),
-      },
-    ],
-    [],
-  );
+  const userMembership = members?.find((m) => m._id === user?._id);
+  const isCaptain = userMembership?.role === "captain";
 
-  if (!team || !tournament || !members) return null; // TODO: Add skeleton
+  // Separate captain and regular members
+  const captain = members.find((member) => member.role === "captain");
+  const regularMembers = members.filter((member) => member.role === "member");
+
+  if (!team || !members) return null; // TODO: Add skeleton
 
   return (
     <>
       <SectionHeader as="h1" title="Team Details">
-        <Button variant="secondary" asChild>
+        <Button variant="outline" asChild>
           <Link href={`/tournaments/${team?.tournamentId}`}>
             <Trophy />
             View Tournament
@@ -64,14 +54,47 @@ export default function TeamDetailsPage({ params }: Props) {
         </Button>
       </SectionHeader>
 
-      <TeamDetailsCard team={team} tournament={tournament} />
+      <TeamDetailsCard team={team} />
 
-      <DataTableSection
-        title="Members"
-        columns={columns}
-        data={members}
-        emptyMessage="No members yet."
-      />
+      {(captain || regularMembers.length !== 0) && (
+        <>
+          <SectionHeader title="Team" />
+          {captain ? (
+            <TeamMemberCard
+              member={captain}
+              memberRole="captain"
+              canRemove={false}
+            />
+          ) : (
+            <p className="text-muted-foreground">No captain yet.</p>
+          )}
+
+          {regularMembers.length !== 0 ? (
+            <div className="space-y-3">
+              {regularMembers.map((member) => (
+                <TeamMemberCard
+                  key={member._id}
+                  member={member}
+                  memberRole="member"
+                  canRemove={isCaptain && member._id !== user?._id}
+                  onRemove={() =>
+                    removeMember({
+                      teamId: teamId,
+                      userId: member._id,
+                    })
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <InviteMemberCard team={team} isCaptain={isCaptain} />
+          )}
+        </>
+      )}
+
+      <SectionHeader title="Invites and Requests" />
+      <InvitedUsersList teamId={teamId} canCancel={isCaptain} />
+      {team.visibility !== "private" && <JoinRequestsList teamId={teamId} />}
     </>
   );
 }

@@ -1,84 +1,103 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { Plus } from "lucide-react";
-import Link from "next/link";
 import { useMemo } from "react";
+import { UpsertTeamFormDialog } from "@/components/form/upsert-team-form";
+import { UpsertTournamentFormButton } from "@/components/form/upsert-tournament-form-button";
 import { SectionHeader } from "@/components/section-header";
-import { StatCard } from "@/components/stat-card";
-import { TournamentsDataTable } from "@/components/tournaments/tournaments-data-table";
-import { Button } from "@/components/ui/button";
+import { TournamentCard } from "@/components/tournaments/tournament-card";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+} from "@/components/ui/empty";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 export default function TournamentsPage() {
   const { user, isAdmin } = useUser();
 
   const userTournaments =
     useQuery(api.tournaments.list, { userId: user?._id }) || [];
-  const allTournaments =
-    useQuery(api.tournaments.list, isAdmin ? {} : "skip") || [];
+  const allTournaments = useQuery(api.tournaments.list, {}) || [];
 
-  const now = new Date();
-
-  const active = useMemo(
-    () =>
-      (isAdmin ? allTournaments : userTournaments).filter(
-        (t) => new Date(t.startDate) <= now && new Date(t.endDate) >= now,
-      ).length,
-    [now, userTournaments, allTournaments, isAdmin],
-  );
-
-  const upcoming = useMemo(
-    () =>
-      (isAdmin ? allTournaments : userTournaments).filter(
-        (t) => new Date(t.startDate) > now,
-      ).length,
-    [now, userTournaments, allTournaments, isAdmin],
-  );
-
-  const total = (isAdmin ? allTournaments : userTournaments).length;
+  const teams = useQuery(api.teams.list, {}) || [];
+  const teamCount = useMemo(() => {
+    return teams.reduce<Map<Id<"tournaments">, number>>((acc, team) => {
+      if (!acc.has(team.tournamentId)) acc.set(team.tournamentId, 0);
+      acc.set(team.tournamentId, (acc.get(team.tournamentId) ?? 0) + 1);
+      return acc;
+    }, new Map());
+  }, [teams]);
 
   if (!userTournaments) return null; // TODO: Add skeleton
 
   return (
     <>
       <SectionHeader as="h1" title="Tournaments">
-        {isAdmin && (
-          <Button asChild>
-            <Link href="/tournaments/new">
-              <Plus />
-              Add New Tournament
-            </Link>
-          </Button>
-        )}
+        {isAdmin && <UpsertTournamentFormButton />}
       </SectionHeader>
 
-      {isAdmin && (
-        <div className="mb-4 grid grid-cols-1 gap-6 sm:grid-cols-3">
-          <StatCard title="Active Tournaments" value={active} color="green" />
-          <StatCard
-            title="Upcoming Tournaments"
-            value={upcoming}
-            color="yellow"
-          />
-          <StatCard title="Total Tournaments" value={total} color="blue" />
-        </div>
+      {allTournaments && allTournaments.length !== 0 && (
+        <>
+          <SectionHeader title="Your Tournaments" />
+          <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
+            {userTournaments && userTournaments.length !== 0 ? (
+              userTournaments.map((tournament) => (
+                <TournamentCard
+                  key={tournament._id}
+                  tournament={tournament}
+                  teamCount={teamCount.get(tournament._id) ?? 0}
+                />
+              ))
+            ) : (
+              <Card>
+                <CardContent>
+                  <Empty className="gap-3 py-2!">
+                    <EmptyHeader>No tournaments yet</EmptyHeader>
+                    <EmptyDescription>
+                      Join a team to start playing in tournaments or create your
+                      own.
+                    </EmptyDescription>
+                    <EmptyContent>
+                      <UpsertTeamFormDialog />
+                    </EmptyContent>
+                  </Empty>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </>
       )}
 
-      <TournamentsDataTable
-        title="Your tournaments"
-        tournaments={userTournaments}
-      />
-
-      {isAdmin && (
-        <TournamentsDataTable
-          title="All Tournaments"
-          tournaments={allTournaments}
-          showActions
-          enableSearch
-        />
-      )}
+      <SectionHeader title="All Tournaments" />
+      <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
+        {allTournaments && allTournaments.length !== 0 ? (
+          allTournaments.map((tournament) => (
+            <TournamentCard
+              key={tournament._id}
+              tournament={tournament}
+              teamCount={teamCount.get(tournament._id) ?? 0}
+            />
+          ))
+        ) : (
+          <Card>
+            <CardContent>
+              <Empty className="gap-3 py-2!">
+                <EmptyHeader>No tournaments yet</EmptyHeader>
+                <EmptyDescription>
+                  Please contact your tournament organizer to create a
+                  tournament
+                </EmptyDescription>
+                <EmptyContent></EmptyContent>
+              </Empty>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </>
   );
 }

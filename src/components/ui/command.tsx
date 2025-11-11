@@ -44,6 +44,7 @@ const CommandInput = forwardRef<
       ref={ref}
       className={cn(
         "flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        "aria-invalid:border aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
         className,
       )}
       {...props}

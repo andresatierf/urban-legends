@@ -163,3 +163,11 @@ async function getRolesForUser(ctx: QueryCtx, userId: Id<"users">) {
   );
   return roles.map((r) => r?.name);
 }
+
+export function validateIsAdmin(
+  user: Awaited<ReturnType<typeof getCurrentUserOrThrow>>,
+) {
+  if (!user.roles.includes("admin")) {
+    throw new Error("Admin access required");
+  }
+}

@@ -74,13 +74,13 @@ export function TeamsDataTable<T, V>({
           const team = row.original;
           return (
             <div className="flex justify-end gap-2">
-              <Button variant="secondary" size="icon" className="z-10" asChild>
+              <Button variant="outline" size="icon" className="z-10" asChild>
                 <Link href={`/teams/${team._id}/edit`}>
                   <Pencil />
                 </Link>
               </Button>
               <Button
-                variant="destructive"
+                color="destructive"
                 size="icon"
                 onClick={(e) => {
                   e.preventDefault();

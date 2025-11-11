@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Sidebar as SidebarBase,
   SidebarContent,
@@ -28,16 +28,21 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { api } from "../../convex/_generated/api";
+import { UpsertSubmissionFormDialog } from "./form/upsert-submission-form";
 import { Button } from "./ui/button";
 
 type SidebarItem = {
   title: string;
   roles?: string[];
-} & ({ items: SidebarItem[] } | { href: string; icon: LucideIcon });
+} & (
+  | { items: SidebarItem[] }
+  | ({ icon: LucideIcon } & ({ href: string } | { onClick: () => void }))
+);
 
 function useSidebarItems() {
   const tUserItems = useTranslations("sidebar.items.user");
   const tAdminItems = useTranslations("sidebar.items.admin");
+  const [submissionFormOpen, setSubmissionFormOpen] = useState(false);
 
   const sidebar: SidebarItem[] = useMemo(
     () => [
@@ -62,7 +67,7 @@ function useSidebarItems() {
           },
           {
             title: tUserItems("newSubmission"),
-            href: "/submissions/new",
+            onClick: () => setSubmissionFormOpen(true),
             icon: PlusCircle,
           },
           {
@@ -76,14 +81,18 @@ function useSidebarItems() {
     [tUserItems, tAdminItems],
   );
 
-  return sidebar;
+  return {
+    items: sidebar,
+    open: submissionFormOpen,
+    setOpen: setSubmissionFormOpen,
+  };
 }
 
 export function Sidebar() {
   const t = useTranslations("sidebar");
+  const { items: sidebarItems, open, setOpen } = useSidebarItems();
   const { signOut } = useClerk();
 
-  const sidebarItems = useSidebarItems();
   const user = useQuery(api.users.current);
   const roles = useQuery(
     api.roles.getByUserId,
@@ -95,6 +104,7 @@ export function Sidebar() {
       <SidebarHeader />
       <SidebarContent>
         {sidebarItems.map((item) => renderItem(item, roles || []))}
+        <UpsertSubmissionFormDialog open={open} onOpenChange={setOpen} />
       </SidebarContent>
       <SidebarSeparator />
       <SidebarFooter className="space-y-2">
@@ -125,6 +135,16 @@ function renderItem(item: SidebarItem, userRoles: string[]) {
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
+    );
+
+  if ("onClick" in item)
+    return (
+      <SidebarMenuItem key={item.title}>
+        <SidebarMenuButton onClick={item.onClick}>
+          <item.icon />
+          {item.title}
+        </SidebarMenuButton>
+      </SidebarMenuItem>
     );
 
   return (

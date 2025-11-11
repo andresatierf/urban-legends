@@ -17,21 +17,27 @@ import {
 import { cn } from "@/lib/utils";
 
 type Props<T extends string> = {
+  id?: string;
+  name?: string;
   value: T;
   setValue: (value: T) => void;
   options: { value: T; label: string }[];
   noSelectionText?: string;
   placeholder?: string;
   disabled?: boolean;
+  "aria-invalid"?: boolean;
 };
 
 export function Combobox<T extends string>({
+  id,
+  name,
   value,
   setValue,
   options,
   noSelectionText = "Select...",
   placeholder = "Search...",
   disabled,
+  "aria-invalid": ariaInvalid,
 }: Props<T>) {
   const [open, setOpen] = useState(false);
 
@@ -47,6 +53,7 @@ export function Combobox<T extends string>({
           className={cn("grow justify-between", {
             "pointer-events-none": disabled,
           })}
+          aria-invalid={ariaInvalid}
         >
           {value
             ? options.find((option) => option.value === value)?.label
@@ -56,7 +63,13 @@ export function Combobox<T extends string>({
       </PopoverTrigger>
       <PopoverContent className="grow p-0">
         <Command>
-          <CommandInput placeholder={placeholder} className="h-9" />
+          <CommandInput
+            id={id}
+            name={name}
+            placeholder={placeholder}
+            className="h-9"
+            aria-invalid={ariaInvalid}
+          />
           <CommandList>
             <CommandEmpty>No options found.</CommandEmpty>
             <CommandGroup>

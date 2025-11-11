@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import type { Doc } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import { mutation, type QueryCtx, query } from "./_generated/server";
 import { getTeams } from "./teams";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -80,8 +80,8 @@ export const get = query({
     if (args.tournamentName)
       return await ctx.db
         .query("tournaments")
-        .filter((q) => q.eq(q.field("name"), args.tournamentName))
-        .first();
+        .withIndex("by_name", (q) => q.eq("name", args.tournamentName!))
+        .unique();
 
     return await ctx.db.get(args.tournamentId!);
   },
@@ -125,9 +125,11 @@ export const upsert = mutation({
   },
 });
 
+// TODO: deleting a tournament should delete all associated teams, submissions, invites, etc
 export const remove = mutation({
   args: { tournamentId: v.id("tournaments") },
   handler: async (ctx, args) => {
+    throw new Error("Not implemented");
     const user = await getCurrentUserOrThrow(ctx);
 
     if (!user.roles.includes("admin")) {
@@ -137,3 +139,80 @@ export const remove = mutation({
     await ctx.db.delete(args.tournamentId);
   },
 });
+
+// Get users not in any team for a given tournament
+export const getAvailableUsersForTournament = query({
+  args: {
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    await getCurrentUserOrThrow(ctx);
+
+    // Get all teams in this tournament
+    const teams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", args.tournamentId),
+      )
+      .collect();
+
+    // Get all team members in this tournament
+    const teamMembers = await Promise.all(
+      teams.map((team) =>
+        ctx.db
+          .query("teamMembers")
+          .withIndex("by_team", (q) => q.eq("teamId", team._id))
+          .collect(),
+      ),
+    );
+
+    const allTeamMembers = teamMembers.flat();
+    const userIdsInTeams = new Set(allTeamMembers.map((m) => m.userId));
+
+    // Get all users
+    const allUsers = await ctx.db.query("users").collect();
+
+    // Filter out users who are already in a team
+    const availableUsers = allUsers.filter(
+      (user) => !userIdsInTeams.has(user._id),
+    );
+
+    return availableUsers;
+  },
+});
+
+type ValidateUserInTournamentTeamArgs = {
+  userId: Id<"users">;
+  tournamentId: Id<"tournaments">;
+};
+
+export async function validateUserNotInTournamentTeam(
+  ctx: QueryCtx,
+  args: ValidateUserInTournamentTeamArgs,
+) {
+  // Check if user already has a team in this tournament
+  const userTeams = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_user", (q) => q.eq("userId", args.userId))
+    .collect();
+
+  if (userTeams.length === 0) {
+    return;
+  }
+
+  const teamIds = userTeams.map((m) => m.teamId);
+
+  const existingTeamInTournament = await ctx.db
+    .query("teams")
+    .filter((q) =>
+      q.and(
+        q.eq(q.field("tournamentId"), args.tournamentId),
+        q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))),
+      ),
+    )
+    .first();
+
+  if (existingTeamInTournament) {
+    throw new Error("You already have a team in this tournament");
+  }
+}

@@ -1,9 +1,13 @@
+"use client";
+
+import { useQuery } from "convex/react";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
+import { UpsertSubmissionFormDialog } from "@/components/form/upsert-submission-form";
 import { SectionHeader } from "@/components/section-header";
-import { UpsertSubmissionForm } from "@/components/submissions/upsert-submission-form";
 import { Button } from "@/components/ui/button";
+import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
 type Props = {
@@ -12,6 +16,13 @@ type Props = {
 
 export default function SubmissionDetailsPage({ params }: Props) {
   const { submissionId } = use(params);
+  const submission = useQuery(
+    api.submissions.get,
+    submissionId ? { submissionId } : "skip",
+  );
+
+  if (!submission) return null; // TODO: add skeleton
+
   return (
     <>
       <SectionHeader as="h1" title="Edit Activity">
@@ -22,7 +33,7 @@ export default function SubmissionDetailsPage({ params }: Props) {
           </Link>
         </Button>
       </SectionHeader>
-      <UpsertSubmissionForm submissionId={submissionId} />
+      <UpsertSubmissionFormDialog submission={submission} />
     </>
   );
 }
