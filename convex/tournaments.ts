@@ -125,9 +125,11 @@ export const upsert = mutation({
   },
 });
 
+// TODO: deleting a tournament should delete all associated teams, submissions, invites, etc
 export const remove = mutation({
   args: { tournamentId: v.id("tournaments") },
   handler: async (ctx, args) => {
+    throw new Error("Not implemented");
     const user = await getCurrentUserOrThrow(ctx);
 
     if (!user.roles.includes("admin")) {

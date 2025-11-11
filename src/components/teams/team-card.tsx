@@ -1,22 +1,27 @@
-import { Users } from "lucide-react";
+import { Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { JoinTeamFormButton } from "../form/join-team-form-button";
+import { getStatusBadge } from "../tournaments/utils";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "../ui/card";
 
-export function TeamCard({
-  team,
-  memberCount,
-  isUserMember,
-  isUserInTeam,
-}: {
+type Props = {
   team: Doc<"teams">;
+  tournament?: Doc<"tournaments">;
   memberCount: number;
   isUserMember: boolean;
   isUserInTeam: boolean;
-}) {
+};
+
+export function TeamCard({
+  team,
+  tournament,
+  memberCount,
+  isUserMember,
+  isUserInTeam,
+}: Props) {
   const isFull = team.maxMembers && memberCount >= team.maxMembers;
 
   return (
@@ -27,7 +32,7 @@ export function TeamCard({
             <CardTitle>
               <Button
                 variant="link"
-                className="h-min cursor-pointer p-0 font-semibold text-md leading-none tracking-tight"
+                className="h-min cursor-pointer p-0 font-semibold text-base leading-none tracking-tight"
                 asChild
               >
                 <Link href={`/teams/${team._id}`}>{team.name}</Link>
@@ -40,9 +45,20 @@ export function TeamCard({
             </Badge>
             {isFull && <Badge variant="destructive">Full</Badge>}
           </div>
-          {/* FIX: move this to bottom of card */}
           <CardDescription className="mt-2">
-            <div className="flex items-center gap-1">
+            {tournament && (
+              <div className="mt-2 flex items-center gap-2 text-muted-foreground text-sm">
+                <Trophy className="h-4 w-4" />
+                <Link
+                  href={`/tournaments/${tournament._id}`}
+                  className="hover:underline"
+                >
+                  {tournament.name}
+                </Link>
+                {getStatusBadge(tournament)}
+              </div>
+            )}
+            <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               {memberCount}
               {team.maxMembers ? ` / ${team.maxMembers} ` : " "}
@@ -50,7 +66,7 @@ export function TeamCard({
             </div>
           </CardDescription>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex xs:flex-col flex-wrap gap-2">
           <JoinTeamFormButton
             teamId={team._id}
             team={team}

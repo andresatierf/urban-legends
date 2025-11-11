@@ -16,7 +16,7 @@ export function UserCard({ user }: UserCardProps) {
 
   return (
     <div className="flex items-center justify-between rounded-lg border p-4 shadow-sm transition-shadow duration-200 hover:shadow-md">
-      <p className="font-medium text-md">{user.email}</p>
+      <p className="font-medium text-base">{user.email}</p>
       <div className="flex items-center gap-2">
         {teams && teams.length > 0 ? (
           teams.map((team) => (

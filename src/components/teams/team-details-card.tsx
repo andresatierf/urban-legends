@@ -73,6 +73,7 @@ export function TeamDetailsCard({ team, score, className }: Props) {
         icon: UserPlus,
         condition: isCaptain,
         separator: "after" as const,
+        external: true,
       },
       {
         label: "Edit team",

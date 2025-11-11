@@ -22,7 +22,7 @@ export function TeamMemberCard({
       <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-2 xs:gap-16">
         <div className="flex flex-1 flex-col justify-between self-start">
           <div className="flex items-center gap-2">
-            <CardTitle className="flex items-center gap-2 font-semibold text-md leading-none tracking-tight">
+            <CardTitle className="flex items-center gap-2 font-semibold text-base leading-none tracking-tight">
               <User className="h-4 w-4" />
               {member.name}
             </CardTitle>

@@ -22,13 +22,14 @@ import {
 type Props = {
   title: string;
   description?: string;
-  details?: { key: string; value: string; className?: string }[];
+  details?: { key: string; value: React.ReactNode; className?: string }[];
   actions?: {
     label: string;
     onClick: () => void;
     icon: LucideIcon;
     condition: boolean;
     separator?: "after" | "before";
+    external?: boolean;
   }[];
   className?: string;
 };
@@ -45,8 +46,21 @@ export function DetailsCard({
       <CardHeader>
         <CardTitle className="flex justify-between text-xl">
           {title}
-          {actions?.some((action) => action.condition) && (
-            <ButtonGroup>
+          <ButtonGroup>
+            {actions
+              ?.filter((action) => action.external)
+              .map((action) => (
+                <Button
+                  key={action.label}
+                  variant="outline"
+                  onClick={action.onClick}
+                >
+                  <action.icon className="h-4 w-4" />
+                  {action.label}
+                </Button>
+              ))}
+
+            {actions?.some((action) => action.condition) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -77,8 +91,8 @@ export function DetailsCard({
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
-            </ButtonGroup>
-          )}
+            )}
+          </ButtonGroup>
         </CardTitle>
         {description && (
           <CardDescription>

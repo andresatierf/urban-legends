@@ -7,7 +7,7 @@ const headerVariants = cva("font-normal text-gray-600 pb-0", {
     size: {
       xs: "text-xs",
       sm: "text-sm",
-      md: "text-md",
+      md: "text-base",
       lg: "text-lg",
     },
   },

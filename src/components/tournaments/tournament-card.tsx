@@ -1,9 +1,9 @@
 import { Calendar, ChevronRight, Users } from "lucide-react";
 import Link from "next/link";
 import type { Doc } from "../../../convex/_generated/dataModel";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "../ui/card";
+import { getStatusBadge } from "./utils";
 
 type Props = {
   tournament: Doc<"tournaments">;
@@ -11,23 +11,15 @@ type Props = {
 };
 
 export function TournamentCard({ tournament, teamCount }: Props) {
-  const now = new Date();
-  const startDate = new Date(tournament.startDate);
-  const endDate = new Date(tournament.endDate);
-
-  const isActive = startDate <= now && now <= endDate;
-  const isEnded = endDate < now;
-  const isUpcoming = startDate > now;
-
   return (
     <Card>
       <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4 xs:gap-16">
         <div className="flex-1 xs:self-auto self-start">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <CardTitle>
               <Button
                 variant="link"
-                className="h-min cursor-pointer p-0 font-semibold text-md leading-none tracking-tight"
+                className="h-min cursor-pointer p-0 font-semibold text-base leading-none tracking-tight"
                 asChild
               >
                 <Link href={`/tournaments/${tournament._id}`}>
@@ -35,19 +27,7 @@ export function TournamentCard({ tournament, teamCount }: Props) {
                 </Link>
               </Button>
             </CardTitle>
-            <Badge
-              variant={
-                isActive ? "approved" : isUpcoming ? "pending" : "rejected"
-              }
-            >
-              {isActive
-                ? "Active"
-                : isUpcoming
-                  ? "Upcoming"
-                  : isEnded
-                    ? "Ended"
-                    : "Unknown"}
-            </Badge>
+            {getStatusBadge(tournament)}
           </div>
           <CardDescription className="mt-2">
             <div className="flex items-center gap-1">
