@@ -46,6 +46,8 @@ export default function TeamsPage() {
       )
     : {};
 
+  const userTeamIds = new Set(userTeams.map((team) => team._id));
+
   return (
     <>
       <SectionHeader as="h1" title="My Teams">
@@ -88,8 +90,8 @@ export default function TeamsPage() {
               team={team}
               tournament={tournamentMap?.[team.tournamentId]}
               memberCount={teamMemberCounts?.[team._id]?.length || 0}
-              isUserMember={true}
-              isUserInTeam={true}
+              isUserMember={userTeamIds.has(team._id)}
+              isUserInTeam={!!userTeams.length}
             />
           ))
         ) : (

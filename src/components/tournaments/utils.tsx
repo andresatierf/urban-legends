@@ -13,13 +13,13 @@ export const getStatusBadge = (tournament: Doc<"tournaments">) => {
   const status = isActive
     ? "active"
     : isUpcoming
-      ? "upcomming"
+      ? "upcoming"
       : isEnded
         ? "ended"
         : "unknown";
 
   switch (status) {
-    case "upcomming":
+    case "upcoming":
       return <Badge variant="pending">Upcomming</Badge>;
     case "active":
       return <Badge variant="approved">Active</Badge>;

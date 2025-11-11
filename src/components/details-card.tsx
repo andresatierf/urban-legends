@@ -48,7 +48,7 @@ export function DetailsCard({
           {title}
           <ButtonGroup>
             {actions
-              ?.filter((action) => action.external)
+              ?.filter((action) => action.external && action.condition)
               .map((action) => (
                 <Button
                   key={action.label}

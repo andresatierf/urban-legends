@@ -1,3 +1,5 @@
+"use client";
+
 import { useMutation, useQuery } from "convex/react";
 import { Crown, DoorOpen, Pencil, Trash2, UserPlus } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";

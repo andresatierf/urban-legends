@@ -339,6 +339,13 @@ export const upsertUserTeam = mutation({
         throw new Error("Team not found");
       }
 
+      if (args.name !== team.name) {
+        await validateUniqueTeamName(ctx, {
+          tournamentId: team.tournamentId,
+          name: args.name,
+        });
+      }
+
       await ctx.db.patch(args._id, {
         name: args.name,
         visibility: args.visibility,
