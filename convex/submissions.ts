@@ -140,6 +140,7 @@ export const upsert = mutation({
         ...data,
         state: "pending",
         createdBy: user._id,
+        pointsEarned: 0, // Will be calculated on approval
       });
     }
 
