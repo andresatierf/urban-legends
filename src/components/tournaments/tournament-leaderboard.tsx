@@ -39,6 +39,7 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
           </TableHeader>
           <TableBody>
             {Array.from({ length: 5 }).map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton
               <TableRow key={i}>
                 <TableCell>
                   <div className="h-5 w-8 animate-pulse rounded bg-muted" />
@@ -72,7 +73,7 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
     );
   }
 
-  const getRankBadge = (rank: number, isWinner: boolean) => {
+  const getRankBadge = (rank: number, _isWinner: boolean) => {
     if (rank === 1) {
       return (
         <div className="flex items-center justify-center gap-1 font-bold text-yellow-600">
@@ -104,7 +105,7 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
     );
   };
 
-  const getRowClassName = (rank: number, isWinner: boolean) => {
+  const getRowClassName = (rank: number, _isWinner: boolean) => {
     if (rank === 1) {
       return "bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-950/20 dark:hover:bg-yellow-950/30";
     }

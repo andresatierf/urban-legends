@@ -26,6 +26,7 @@ export function TeamStatisticsCard({ teamId }: Props) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton
           <Card key={i} className="animate-pulse">
             <CardHeader>
               <div className="h-5 w-32 rounded bg-muted" />

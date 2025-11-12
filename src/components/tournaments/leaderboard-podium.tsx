@@ -21,6 +21,7 @@ export function LeaderboardPodium({ tournamentId }: Props) {
     return (
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton
           <Card key={i} className="animate-pulse">
             <CardContent className="flex flex-col items-center p-6">
               <div className="mb-4 h-16 w-16 rounded-full bg-muted" />
