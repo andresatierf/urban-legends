@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { Plus } from "lucide-react";
+import { Settings } from "lucide-react";
 import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -41,8 +41,8 @@ export function RoleManagementCard({ userId, userName, currentRoles }: Props) {
               variant="outline"
               onClick={() => setAssignDialogOpen(true)}
             >
-              <Plus className="h-4 w-4" />
-              Assign Role
+              <Settings className="h-4 w-4" />
+              Manage Roles
             </Button>
           </CardTitle>
         </CardHeader>

@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -8,32 +8,36 @@ export const makeFirstUserAdmin = mutation({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const adminRole = await ctx.db
+    const adminQuery = ctx.db
       .query("roles")
-      .withIndex("by_name", (q) => q.eq("name", "admin"))
-      .first();
+      .withIndex("by_name", (q) => q.eq("name", "admin"));
 
-    let roleId: Id<"roles">;
-    if (adminRole) {
-      roleId = adminRole._id;
-    } else {
-      roleId = await ctx.db.insert("roles", {
-        name: "admin",
-        description: "auto-generated",
-      });
+    let adminRole = await adminQuery.first();
+
+    if (!adminRole) {
+      await ctx.runMutation(internal.roles.seedRoles);
+
+      adminRole = await adminQuery.first();
+
+      if (!adminRole) {
+        throw new Error("Failed to create admin role");
+      }
     }
 
     // Check if any admin exists
     const existingAdmin = await ctx.db
       .query("userRoles")
-      .withIndex("by_role", (q) => q.eq("roleId", roleId))
+      .withIndex("by_role", (q) => q.eq("roleId", adminRole._id))
       .first();
 
     if (existingAdmin) {
-      return false; // Admin already exists
+      return false;
     }
 
-    await ctx.db.insert("userRoles", { userId: user._id, roleId });
+    await ctx.db.insert("userRoles", {
+      userId: user._id,
+      roleId: adminRole._id,
+    });
 
     return true;
   },

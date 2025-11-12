@@ -2,6 +2,7 @@
 
 import { useQuery } from "convex/react";
 import Link from "next/link";
+import { RolesBadgeList } from "@/components/admin/roles-badge-list";
 import { SectionHeader } from "@/components/section-header";
 import { Card } from "@/components/ui/card";
 import {
@@ -46,7 +47,7 @@ export default function UsersPage() {
                 className={cn("border-t transition hover:bg-gray-50")}
               >
                 <TableCell className="p-3 font-medium text-gray-800">
-                  {user.name}
+                  <Link href={`/users/${user._id}`}>{user.name}</Link>
                 </TableCell>
                 <Link href={`/users/${user._id}` || ""}>
                   <TableCell className="p-3 text-gray-600">
@@ -54,7 +55,7 @@ export default function UsersPage() {
                   </TableCell>
                 </Link>
                 <TableCell className="p-3 text-gray-600">
-                  {user.roles?.join(", ")}
+                  <RolesBadgeList roles={user.roles || []} />
                 </TableCell>
               </TableRow>
             ))}

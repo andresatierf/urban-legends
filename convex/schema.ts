@@ -49,7 +49,9 @@ export default defineSchema({
 
   roles: defineTable({
     name: v.string(),
+    displayName: v.string(),
     description: v.optional(v.string()),
+    hierarchy: v.number(), // Lower number = more access (0 = highest)
   }).index("by_name", ["name"]),
 
   userRoles: defineTable({
