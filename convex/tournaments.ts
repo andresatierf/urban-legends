@@ -267,10 +267,11 @@ export const getLeaderboard = query({
           .withIndex("by_team", (q) => q.eq("teamId", team._id))
           .collect();
 
+        const points = team.points ?? 0;
         return {
           teamId: team._id,
           teamName: team.name,
-          points: team.points,
+          points,
           memberCount: members.length,
           lastActivityAt: team.lastActivityAt,
           createdAt: team._creationTime,

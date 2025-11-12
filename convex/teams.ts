@@ -662,10 +662,13 @@ export const recalculatePoints = mutation({
       let pointsEarned = submission.pointsEarned;
 
       const tier = submission.tier || "base";
-      const teammateCount = submission.teammates.length;
       const totalTeamMembers = teamMembers.length;
+      const participantCount = Math.min(
+        totalTeamMembers,
+        submission.teammates.length + 1,
+      );
       const participationRate =
-        totalTeamMembers > 0 ? teammateCount / totalTeamMembers : 0;
+        totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
       const isTeamExercise =
         participationRate >= scoringConfig.teamExerciseThreshold;
 

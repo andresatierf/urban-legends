@@ -230,8 +230,9 @@ export const remove = mutation({
     if (previousState === "approved" && previousPoints > 0) {
       const team = await ctx.db.get(submission.teamId);
       if (team) {
+        const currentPoints = team.points ?? 0;
         await ctx.db.patch(submission.teamId, {
-          points: Math.max(0, team.points - previousPoints),
+          points: Math.max(0, currentPoints - previousPoints),
           lastActivityAt: new Date().toISOString(),
         });
       }
@@ -344,10 +345,13 @@ export const approve = mutation({
     };
 
     // Determine if this is a team exercise
-    const teammateCount = submission.teammates.length;
     const totalTeamMembers = teamMembers.length;
+    const participantCount = Math.min(
+      totalTeamMembers,
+      submission.teammates.length + 1,
+    );
     const participationRate =
-      totalTeamMembers > 0 ? teammateCount / totalTeamMembers : 0;
+      totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
     const isTeamExercise =
       participationRate >= scoringConfig.teamExerciseThreshold;
 
@@ -363,17 +367,19 @@ export const approve = mutation({
       pointsEarned,
     });
 
+    const currentPoints = team.points ?? 0;
+
     // Only increment points if transitioning from non-approved state to approved
     if (previousState !== "approved") {
       await ctx.db.patch(submission.teamId, {
-        points: team.points + pointsEarned,
+        points: currentPoints + pointsEarned,
         lastActivityAt: new Date().toISOString(),
       });
     } else if (submission.pointsEarned !== pointsEarned) {
       // Re-approval with different points (e.g., tier changed)
       const pointsDiff = pointsEarned - (submission.pointsEarned || 0);
       await ctx.db.patch(submission.teamId, {
-        points: team.points + pointsDiff,
+        points: currentPoints + pointsDiff,
         lastActivityAt: new Date().toISOString(),
       });
     }
@@ -405,8 +411,9 @@ export const reject = mutation({
     if (previousState === "approved" && previousPoints > 0) {
       const team = await ctx.db.get(submission.teamId);
       if (team) {
+        const currentPoints = team.points ?? 0;
         await ctx.db.patch(submission.teamId, {
-          points: Math.max(0, team.points - previousPoints),
+          points: Math.max(0, currentPoints - previousPoints),
           lastActivityAt: new Date().toISOString(),
         });
       }
