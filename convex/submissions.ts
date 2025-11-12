@@ -218,7 +218,23 @@ export const remove = mutation({
       throw new Error("Cannot remove a rejected submission");
     }
 
-    await ctx.db.patch(args.submissionId, { state: "deleted" });
+    const previousState = submission.state;
+
+    await ctx.db.patch(args.submissionId, {
+      state: "deleted",
+      managedBy: user._id,
+    });
+
+    // Decrement points if the submission was approved before deletion
+    if (previousState === "approved") {
+      const team = await ctx.db.get(submission.teamId);
+      if (team) {
+        await ctx.db.patch(submission.teamId, {
+          points: Math.max(0, team.points - 1),
+          lastActivityAt: new Date().toISOString(),
+        });
+      }
+    }
   },
 });
 
@@ -293,7 +309,28 @@ export const approve = mutation({
       throw new Error("You do not have permission to approve this submission");
     }
 
-    await ctx.db.patch(args.submissionId, { state: "approved" });
+    const submission = await ctx.db.get(args.submissionId);
+    if (!submission) {
+      throw new Error("Submission not found");
+    }
+
+    const previousState = submission.state;
+
+    await ctx.db.patch(args.submissionId, {
+      state: "approved",
+      managedBy: user._id,
+    });
+
+    // Only increment points if transitioning from non-approved state to approved
+    if (previousState !== "approved") {
+      const team = await ctx.db.get(submission.teamId);
+      if (team) {
+        await ctx.db.patch(submission.teamId, {
+          points: team.points + 1,
+          lastActivityAt: new Date().toISOString(),
+        });
+      }
+    }
   },
 });
 
@@ -305,6 +342,27 @@ export const reject = mutation({
       throw new Error("You do not have permission to reject this submission");
     }
 
-    await ctx.db.patch(args.submissionId, { state: "rejected" });
+    const submission = await ctx.db.get(args.submissionId);
+    if (!submission) {
+      throw new Error("Submission not found");
+    }
+
+    const previousState = submission.state;
+
+    await ctx.db.patch(args.submissionId, {
+      state: "rejected",
+      managedBy: user._id,
+    });
+
+    // Only decrement points if transitioning from approved state to rejected
+    if (previousState === "approved") {
+      const team = await ctx.db.get(submission.teamId);
+      if (team) {
+        await ctx.db.patch(submission.teamId, {
+          points: Math.max(0, team.points - 1),
+          lastActivityAt: new Date().toISOString(),
+        });
+      }
+    }
   },
 });
