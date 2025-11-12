@@ -1,7 +1,14 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { Crown, DoorOpen, Pencil, Trash2, UserPlus } from "lucide-react";
+import {
+  ChartArea,
+  Crown,
+  DoorOpen,
+  Pencil,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/useUser";
@@ -70,12 +77,18 @@ export function TeamDetailsCard({ team, score, className }: Props) {
   const actions = useMemo(
     () => [
       {
+        label: "View statistics",
+        href: `/teams/${team._id}/statistics`,
+        icon: ChartArea,
+        condition: true,
+        separator: "after" as const,
+        external: true,
+      },
+      {
         label: "Invite member",
         onClick: () => setInviteDialogOpen(true),
         icon: UserPlus,
         condition: isCaptain,
-        separator: "after" as const,
-        external: true,
       },
       {
         label: "Edit team",
@@ -103,7 +116,7 @@ export function TeamDetailsCard({ team, score, className }: Props) {
         separator: "before" as const,
       },
     ],
-    [handleDeleteTeam, handleLeaveTeam, isCaptain],
+    [handleDeleteTeam, handleLeaveTeam, isCaptain, team._id],
   );
 
   if (team === undefined) return null; // TODO: Add skeleton

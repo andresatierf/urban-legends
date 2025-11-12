@@ -661,24 +661,21 @@ export const recalculatePoints = mutation({
     for (const submission of submissions) {
       let pointsEarned = submission.pointsEarned;
 
-      // Recalculate if pointsEarned is not set or is 0
-      if (pointsEarned === undefined || pointsEarned === 0) {
-        const tier = submission.tier || "base";
-        const teammateCount = submission.teammates.length;
-        const totalTeamMembers = teamMembers.length;
-        const participationRate =
-          totalTeamMembers > 0 ? teammateCount / totalTeamMembers : 0;
-        const isTeamExercise =
-          participationRate >= scoringConfig.teamExerciseThreshold;
+      const tier = submission.tier || "base";
+      const teammateCount = submission.teammates.length;
+      const totalTeamMembers = teamMembers.length;
+      const participationRate =
+        totalTeamMembers > 0 ? teammateCount / totalTeamMembers : 0;
+      const isTeamExercise =
+        participationRate >= scoringConfig.teamExerciseThreshold;
 
-        pointsEarned = isTeamExercise
-          ? scoringConfig.teamExercisePoints[tier]
-          : scoringConfig.individualPoints[tier];
+      pointsEarned = isTeamExercise
+        ? scoringConfig.teamExercisePoints[tier]
+        : scoringConfig.individualPoints[tier];
 
-        // Update the submission with calculated points
-        await ctx.db.patch(submission._id, { pointsEarned });
-        updatedCount++;
-      }
+      // Update the submission with calculated points
+      await ctx.db.patch(submission._id, { pointsEarned });
+      updatedCount++;
 
       totalPoints += pointsEarned;
     }
