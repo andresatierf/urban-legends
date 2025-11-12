@@ -1,5 +1,6 @@
 import { useMutation } from "convex/react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Trophy } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { DetailsCard } from "@/components/details-card";
@@ -43,11 +44,18 @@ export function TournamentDetailsCard({ tournament, teams, className }: Props) {
 
   const actions = [
     {
+      label: "View Leaderboard",
+      href: `/tournaments/${tournament._id}/leaderboard`,
+      icon: Trophy,
+      condition: true,
+    },
+    {
       label: "Edit Tournament",
       onClick: () => setEditTournamentDialogOpen(true),
       icon: Pencil,
       condition: isAdmin,
       external: true,
+      separator: "before" as const,
     },
     {
       label: "Delete tournament",

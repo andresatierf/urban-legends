@@ -686,13 +686,15 @@ export const getStatistics = query({
     const currentDate = today > endDate ? endDate : today;
 
     const tournamentDays =
-      Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) +
-      1;
+      Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+      ) + 1;
     const daysSoFar =
       today < startDate
         ? 0
         : Math.ceil(
-            (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+            (currentDate.getTime() - startDate.getTime()) /
+              (1000 * 60 * 60 * 24),
           ) + 1;
 
     // Calculate approval rate
@@ -706,7 +708,10 @@ export const getStatistics = query({
 
     // Calculate current streak (consecutive days with approved submissions)
     const approvedDates = new Set(
-      approvedSubmissions.map((s) => s.date).sort().reverse(),
+      approvedSubmissions
+        .map((s) => s.date)
+        .sort()
+        .reverse(),
     );
     let currentStreak = 0;
     const streakDate = new Date(today);

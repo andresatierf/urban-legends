@@ -424,7 +424,8 @@ export const getStatistics = query({
         : 0;
 
     // Find most active team (highest points)
-    const mostActiveTeam = teams.length > 0 ? teams.sort((a, b) => b.points - a.points)[0] : null;
+    const mostActiveTeam =
+      teams.length > 0 ? teams.sort((a, b) => b.points - a.points)[0] : null;
 
     // Find highest scoring day
     const submissionsByDate = new Map<string, number>();
@@ -437,10 +438,7 @@ export const getStatistics = query({
 
     let highestScoringDay: { date: string; submissions: number } | null = null;
     for (const [date, count] of submissionsByDate.entries()) {
-      if (
-        !highestScoringDay ||
-        count > highestScoringDay.submissions
-      ) {
+      if (!highestScoringDay || count > highestScoringDay.submissions) {
         highestScoringDay = { date, submissions: count };
       }
     }
