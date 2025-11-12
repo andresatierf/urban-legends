@@ -27,9 +27,11 @@ export function SvgIcon({
   variant,
   className,
   children,
+  ariaLabel,
 }: {
   children: React.ReactElement<SVGPathElement>;
   className?: string;
+  ariaLabel?: string;
 } & VariantProps<typeof containerVariants> &
   VariantProps<typeof svgVariants>) {
   return (
@@ -39,6 +41,8 @@ export function SvgIcon({
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
+        role="img"
+        aria-label={ariaLabel || "Icon"}
       >
         {children}
       </svg>

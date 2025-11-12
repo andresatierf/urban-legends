@@ -20,7 +20,9 @@ export const list = query({
     if (args.userId) {
       const memberships = await ctx.db
         .query("teamMembers")
-        .withIndex("by_user", (q) => q.eq("userId", args.userId!))
+        .withIndex("by_user", (q) =>
+          q.eq("userId", args.userId as typeof args.userId),
+        )
         .collect();
 
       const teamIds = memberships.map((m) => m.teamId);
@@ -98,21 +100,25 @@ export const get = query({
       return await ctx.db
         .query("teams")
         .withIndex("by_tournament_and_name", (q) =>
-          q.eq("tournamentId", args.tournamentId!).eq("name", args.teamName!),
+          q
+            .eq("tournamentId", args.tournamentId as typeof args.tournamentId)
+            .eq("name", args.teamName as typeof args.teamName),
         )
         .unique();
 
     if (args.userId && args.tournamentId) {
       const userTeams = await ctx.db
         .query("teamMembers")
-        .withIndex("by_user", (q) => q.eq("userId", args.userId!))
+        .withIndex("by_user", (q) =>
+          q.eq("userId", args.userId as typeof args.userId),
+        )
         .collect();
       const teamIds = userTeams.map((m) => m.teamId);
       return await ctx.db
         .query("teams")
         .filter((q) =>
           q.and(
-            q.eq(q.field("tournamentId"), args.tournamentId!),
+            q.eq(q.field("tournamentId"), args.tournamentId),
             q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))),
           ),
         )

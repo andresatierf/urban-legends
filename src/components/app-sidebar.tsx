@@ -1,7 +1,6 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
 import {
   ClipboardList,
   LayoutDashboard,
@@ -27,7 +26,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { api } from "../../convex/_generated/api";
+import { useUser } from "@/hooks/useUser";
 import { UpsertSubmissionFormDialog } from "./form/upsert-submission-form";
 import { Button } from "./ui/button";
 
@@ -90,20 +89,16 @@ function useSidebarItems() {
 
 export function Sidebar() {
   const t = useTranslations("sidebar");
+
+  const { user } = useUser();
   const { items: sidebarItems, open, setOpen } = useSidebarItems();
   const { signOut } = useClerk();
-
-  const user = useQuery(api.users.current);
-  const roles = useQuery(
-    api.roles.getByUserId,
-    user ? { userId: user._id } : "skip",
-  );
 
   return (
     <SidebarBase collapsible="icon">
       <SidebarHeader />
       <SidebarContent>
-        {sidebarItems.map((item) => renderItem(item, roles || []))}
+        {sidebarItems.map((item) => renderItem(item, user?.roles || []))}
         <UpsertSubmissionFormDialog open={open} onOpenChange={setOpen} />
       </SidebarContent>
       <SidebarSeparator />

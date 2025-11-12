@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
-import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
+import { getCurrentUserOrThrow } from "./users";
 
 // List team invitations (captain/admin only)
 export const listTeamInvitations = query({

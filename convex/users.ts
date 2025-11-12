@@ -1,12 +1,7 @@
 import type { UserJSON } from "@clerk/backend";
 import { type Validator, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import {
-  internalMutation,
-  mutation,
-  type QueryCtx,
-  query,
-} from "./_generated/server";
+import { internalMutation, type QueryCtx, query } from "./_generated/server";
 
 export const list = query({
   args: { userIds: v.optional(v.array(v.id("users"))) },
@@ -17,84 +12,49 @@ export const list = query({
 
     if (args.userIds && args.userIds.length > 0) {
       usersQuery = usersQuery.filter((q) =>
-        q.or(...args.userIds!.map((u) => q.eq(q.field("_id"), u))),
+        q.or(
+          ...(args.userIds as typeof args.userIds).map((u) =>
+            q.eq(q.field("_id"), u),
+          ),
+        ),
       );
     }
 
-    const [users, roles, userRoles] = await Promise.all([
-      usersQuery.collect(),
-      ctx.db.query("roles").collect(),
-      ctx.db.query("userRoles").collect(),
-    ]);
+    const users = await usersQuery.collect();
 
-    return users.map((user) => ({
-      ...user,
-      roles: userRoles
-        .filter((role) => role.userId === user._id)
-        .map((role) => roles.find((r) => r._id === role.roleId)?.name),
-    }));
+    return await Promise.all(
+      users.map(async (user) => {
+        const roles = await getRolesForUser(ctx, user._id);
+        return { ...user, roles };
+      }),
+    );
   },
 });
 
 export const getById = query({
   args: { id: v.id("users") },
   handler: async (ctx, { id }) => {
-    getCurrentUserOrThrow(ctx);
+    await getCurrentUserOrThrow(ctx);
 
     const user = await ctx.db.get(id);
 
-    const [roles, userRoles] = await Promise.all([
-      ctx.db.query("roles").collect(),
-      ctx.db
-        .query("userRoles")
-        .withIndex("by_user", (q) => q.eq("userId", id))
-        .collect(),
-    ]);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const roles = await getRolesForUser(ctx, user._id);
 
     return {
       ...user,
-      roles: userRoles.map(
-        (role) => roles.find((r) => r._id === role.roleId)?.name,
-      ),
+      roles,
     };
-  },
-});
-
-export const store = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Called storeUser without authentication present");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_external_id", (q) => q.eq("externalId", identity.subject))
-      .unique();
-
-    if (user !== null) {
-      if (user.name !== identity.name) {
-        await ctx.db.patch(user._id, {
-          email: identity.email,
-          name: identity.name,
-        });
-      }
-      return user._id;
-    }
-
-    return await ctx.db.insert("users", {
-      name: identity.name ?? "Anonymous",
-      email: identity.email ?? "no email found",
-      externalId: identity.subject,
-    });
   },
 });
 
 export const current = query({
   args: {},
   handler: async (ctx) => {
-    return await getCurrentUser(ctx);
+    return await getCurrentUserOrThrow(ctx);
   },
 });
 
@@ -161,7 +121,9 @@ async function getRolesForUser(ctx: QueryCtx, userId: Id<"users">) {
   const roles = await Promise.all(
     userRoles.map(({ roleId }) => ctx.db.get(roleId)),
   );
-  return roles.map((r) => r?.name);
+  return roles
+    .map((r) => r?.name)
+    .filter((role): role is string => Boolean(role));
 }
 
 export function validateIsAdmin(

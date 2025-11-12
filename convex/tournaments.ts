@@ -17,8 +17,8 @@ export const list = query({
         .query("tournaments")
         .filter((q) =>
           q.or(
-            ...args.tournamentIds!.map((tournamentId) =>
-              q.eq(q.field("_id"), tournamentId),
+            ...(args.tournamentIds as typeof args.tournamentIds).map(
+              (tournamentId) => q.eq(q.field("_id"), tournamentId),
             ),
           ),
         )
@@ -80,10 +80,14 @@ export const get = query({
     if (args.tournamentName)
       return await ctx.db
         .query("tournaments")
-        .withIndex("by_name", (q) => q.eq("name", args.tournamentName!))
+        .withIndex("by_name", (q) =>
+          q.eq("name", args.tournamentName as typeof args.tournamentName),
+        )
         .unique();
 
-    return await ctx.db.get(args.tournamentId!);
+    return await ctx.db.get(
+      args.tournamentId as NonNullable<typeof args.tournamentId>,
+    );
   },
 });
 
@@ -128,15 +132,8 @@ export const upsert = mutation({
 // TODO: deleting a tournament should delete all associated teams, submissions, invites, etc
 export const remove = mutation({
   args: { tournamentId: v.id("tournaments") },
-  handler: async (ctx, args) => {
+  handler: async (_ctx, _args) => {
     throw new Error("Not implemented");
-    const user = await getCurrentUserOrThrow(ctx);
-
-    if (!user.roles.includes("admin")) {
-      throw new Error("Admin access required");
-    }
-
-    await ctx.db.delete(args.tournamentId);
   },
 });
 

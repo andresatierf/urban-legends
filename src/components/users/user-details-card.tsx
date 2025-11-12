@@ -1,7 +1,8 @@
+import type { Doc } from "../../../convex/_generated/dataModel";
 import { DetailsCard } from "../details-card";
 
 type Props = {
-  user: any;
+  user: Doc<"users"> & { roles: string[] };
   className?: string;
 };
 

@@ -44,9 +44,13 @@ export function TeamsDataTable<T, V>({
         accessorKey: "members",
         header: "Members",
         cell: (cell) => {
+          const members = (cell.getValue() || []) as (Doc<"teamMembers"> & {
+            user?: Doc<"users">;
+          })[];
+
           return (
             <ul>
-              {cell.getValue()?.map((x) => (
+              {members.map((x) => (
                 <li key={x.userId} className="flex items-center gap-1">
                   {x.user?.email}{" "}
                   {x.role === "captain" && (
