@@ -46,6 +46,9 @@ cd ../urban-legends-[feature-name]
 pwd
 git status
 git branch --show-current
+
+# Install project
+bun install
 ```
 
 **Important:** All subsequent work will be done in the worktree directory, not the main repository.
