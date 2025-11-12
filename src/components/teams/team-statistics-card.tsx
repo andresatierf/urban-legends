@@ -10,7 +10,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
 
@@ -21,6 +21,20 @@ type Props = {
 export function TeamStatisticsCard({ teamId }: Props) {
   const stats = useQuery(api.teams.getStatistics, { teamId });
   const team = useQuery(api.teams.get, { teamId });
+  const users = useQuery(
+    api.users.list,
+    stats
+      ? { userIds: stats.memberContributions.map((c) => c.userId) }
+      : "skip",
+  );
+
+  const userMap = users?.reduce(
+    (map, user) => {
+      map[user._id] = user;
+      return map;
+    },
+    {} as Record<Id<"users">, Doc<"users">>,
+  );
 
   if (stats === undefined || team === undefined) {
     return (
@@ -84,7 +98,7 @@ export function TeamStatisticsCard({ teamId }: Props) {
       title: "Total Submissions",
       value: stats.totalSubmissions,
       icon: Activity,
-      description: `${stats.approvedSubmissions} approved, ${stats.totalSubmissions - stats.approvedSubmissions} pending/rejected`,
+      description: `${stats.approvedSubmissions} approved, ${stats.pendingSubmissions ?? "unknown"} pending, ${stats.rejectedSubmissions ?? "unknown"} rejected`,
       color: "text-indigo-600",
     },
   ];
@@ -96,13 +110,13 @@ export function TeamStatisticsCard({ teamId }: Props) {
           const Icon = stat.icon;
           return (
             <Card key={stat.title}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="font-medium text-sm">
                   {stat.title}
                 </CardTitle>
                 <Icon className={`h-4 w-4 ${stat.color}`} />
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-2">
                 <div className="font-bold text-2xl">{stat.value}</div>
                 <p className="text-muted-foreground text-xs">
                   {stat.description}
@@ -127,15 +141,20 @@ export function TeamStatisticsCard({ teamId }: Props) {
               {stats.memberContributions
                 .sort((a, b) => b.count - a.count)
                 .map((contribution) => {
+                  const user = userMap?.[contribution.userId];
+
                   const percentage =
                     stats.approvedSubmissions > 0
                       ? (contribution.count / stats.approvedSubmissions) * 100
                       : 0;
+
                   return (
                     <div key={contribution.userId} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="font-medium">
-                          User {contribution.userId}
+                          {user
+                            ? `${user.name} (${user?.email})`
+                            : contribution.userId}
                         </span>
                         <span className="text-muted-foreground">
                           {contribution.count} submissions (

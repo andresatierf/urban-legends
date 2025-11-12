@@ -727,6 +727,12 @@ export const getStatistics = query({
     const approvedSubmissions = allSubmissions.filter(
       (s) => s.state === "approved",
     );
+    const pendingSubmissions = allSubmissions.filter(
+      (s) => s.state === "pending",
+    );
+    const rejectedSubmissions = allSubmissions.filter(
+      (s) => s.state === "rejected",
+    );
 
     // Calculate tournament duration and expected days
     const startDate = new Date(tournament.startDate);
@@ -797,6 +803,8 @@ export const getStatistics = query({
     return {
       totalSubmissions: allSubmissions.length,
       approvedSubmissions: approvedSubmissions.length,
+      pendingSubmissions: pendingSubmissions.length,
+      rejectedSubmissions: rejectedSubmissions.length,
       approvalRate,
       averagePointsPerDay,
       currentStreak,
