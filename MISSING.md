@@ -130,6 +130,22 @@ These features significantly improve user experience but don't block core flows:
 - Add member invite by email UI
 - Display member roles (captain vs. member)
 
+### 10. Loading States / Skeleton Screens ([spec](specs/10-loading-states.md))
+
+**Status:** ❌ Not Implemented
+**Priority:** HIGH
+
+**Problem:** 9 locations with missing loading states. Users see blank screens or flashes of empty content while data loads.
+
+**Impact:** Poor perceived performance, jarring user experience, lack of visual feedback.
+
+**Required:**
+
+- Create reusable skeleton components (DetailsCardSkeleton, TableSkeleton, CardGridSkeleton, PageSkeleton)
+- Replace all `return null` loading states with appropriate skeletons
+- Add ARIA attributes for accessibility
+- Ensure skeletons match actual content layout
+
 ## Medium Priority (Nice to Have)
 
 These features enhance the platform but are not essential for MVP launch:
@@ -165,11 +181,27 @@ These features enhance the platform but are not essential for MVP launch:
 - Email notifications (optional)
 - Notification preferences
 
+### 9. Code Cleanup ([spec](specs/09-code-cleanup.md))
+
+**Status:** ❌ Not Implemented
+**Priority:** MEDIUM
+
+**Problem:** 26 unused exports (13 frontend components, 13 backend functions) totaling ~25KB of dead code.
+
+**Impact:** Increased maintenance burden, confusion for developers, larger bundle size.
+
+**Required:**
+
+- Remove demo/legacy components (UserCard, UserStatsCard, button-demo, etc.)
+- Remove stub implementations (admin.addUserRole, teams.create)
+- Consolidate duplicate functions (submission getters, team creation)
+- Document admin utility functions (makeFirstUserAdmin, recalculatePoints)
+- Fix or remove unimplemented functions (tournaments.remove)
+
 ## Technical Debt
 
 Additional issues that should be addressed:
 
-- **15+ "TODO: Add skeleton" comments** - Missing loading states
 - **Empty onClick handlers** - Tournament action buttons (Edit Tournament, Manage Teams)
 - **"TODO: Add teams table"** in user details page (line 36 of `/users/[userId]/page.tsx`)
 - **Commented form validators** - onBlur/onSubmit validators in forms
@@ -188,13 +220,15 @@ Additional issues that should be addressed:
 | Submission Calendar       | 1-2 days | High Priority   | ❌ Pending  |
 | Admin Role Management UI  | 1 day    | High Priority   | ❌ Pending  |
 | Team Member Management UI | 1-2 days | High Priority   | ❌ Pending  |
+| Loading States            | 1-2 days | High Priority   | ❌ Pending  |
 | Admin Dashboard           | 2 days   | Medium Priority | ❌ Pending  |
+| Code Cleanup              | 2-3 days | Medium Priority | ❌ Pending  |
 | Notifications             | 3-4 days | Medium Priority | ❌ Pending  |
 
 **Completed:** ~5 days
 **Remaining for Critical MVP:** ~3-4 days (Leaderboard + Team Edit)
-**Remaining for High Priority:** ~6-9 days
-**Remaining for Complete MVP:** ~11-17 days
+**Remaining for High Priority:** ~7-11 days (includes Calendar, Role Mgmt, Member Mgmt, Loading States)
+**Remaining for Complete MVP:** ~19-26 days
 
 ## Progress Summary
 

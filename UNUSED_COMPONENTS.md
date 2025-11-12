@@ -1,5 +1,7 @@
 # Code Cleanup
 
+> **📋 Implementation Spec:** See [`specs/09-code-cleanup.md`](specs/09-code-cleanup.md) for the complete implementation plan.
+
 ## Unused Components Report
 
 Generated: 2025-11-12
