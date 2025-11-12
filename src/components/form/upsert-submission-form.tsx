@@ -36,6 +36,7 @@ const formSchema = z.object({
   teammateIds: z.array(
     z.custom<Id<"users">>((val) => typeof val === "string" && val.length >= 1),
   ),
+  tier: z.union([z.literal("base"), z.literal("advanced")]),
 });
 
 type Props = {
@@ -74,6 +75,7 @@ export function UpsertSubmissionFormDialog({
       description: submission?.description ?? "",
       teamId: submission?.teamId ?? "",
       teammateIds: submission?.teammates ?? [],
+      tier: submission?.tier ?? "base",
     } as z.input<typeof formSchema>,
     validators: {
       onChange: formSchema,
@@ -186,6 +188,17 @@ export function UpsertSubmissionFormDialog({
             </form.AppField>
             <form.AppField name="date">
               {(field) => <field.DateField label="Date" />}
+            </form.AppField>
+            <form.AppField name="tier">
+              {(field) => (
+                <field.SelectField
+                  label="Tier"
+                  options={[
+                    { value: "base", label: "Base" },
+                    { value: "advanced", label: "Advanced" },
+                  ]}
+                />
+              )}
             </form.AppField>
           </FieldGroup>
           {teamMembers.length > 0 && (
