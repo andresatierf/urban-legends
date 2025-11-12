@@ -10,6 +10,19 @@ export default defineSchema({
     teamMinSize: v.optional(v.number()),
     teamMaxSize: v.optional(v.number()),
     createdBy: v.id("users"),
+    winnerId: v.optional(v.id("teams")),
+    completedAt: v.optional(v.string()),
+    scoringConfig: v.object({
+      individualPoints: v.object({
+        base: v.number(),
+        advanced: v.number(),
+      }),
+      teamExercisePoints: v.object({
+        base: v.number(),
+        advanced: v.number(),
+      }),
+      teamExerciseThreshold: v.number(),
+    }),
   }).index("by_name", ["name"]),
 
   teams: defineTable({
@@ -18,9 +31,12 @@ export default defineSchema({
     createdBy: v.id("users"),
     visibility: v.union(v.literal("public"), v.literal("private")),
     maxMembers: v.optional(v.number()),
+    points: v.number(),
+    lastActivityAt: v.optional(v.string()),
   })
     .index("by_tournament", ["tournamentId"])
-    .index("by_tournament_and_name", ["tournamentId", "name"]),
+    .index("by_tournament_and_name", ["tournamentId", "name"])
+    .index("by_tournament_and_points", ["tournamentId", "points"]),
 
   teamMembers: defineTable({
     teamId: v.id("teams"),
@@ -59,9 +75,13 @@ export default defineSchema({
     ),
     createdBy: v.id("users"),
     managedBy: v.optional(v.id("users")),
+    // Scoring fields
+    tier: v.union(v.literal("base"), v.literal("advanced")),
+    pointsEarned: v.number(), // Calculated when approved
   })
     .index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "date"])
+    .index("by_team", ["teamId"])
     .index("by_team_and_date", ["teamId", "date"])
     .index("by_tournament_and_date", ["tournamentId", "date"])
     .index("by_state", ["state"])

@@ -1,12 +1,12 @@
 import { useMutation } from "convex/react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Trophy } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { DetailsCard } from "@/components/details-card";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
-import { UpsertTournamentFormButton } from "../form/upsert-tournament-form-button";
+import { UpsertTournamentFormDialog } from "../form/upsert-tournament-form";
 import { getStatusBadge } from "./utils";
 
 type Props = {
@@ -43,11 +43,18 @@ export function TournamentDetailsCard({ tournament, teams, className }: Props) {
 
   const actions = [
     {
+      label: "View Leaderboard",
+      href: `/tournaments/${tournament._id}/leaderboard`,
+      icon: Trophy,
+      condition: true,
+      external: true,
+      separator: "after" as const,
+    },
+    {
       label: "Edit Tournament",
       onClick: () => setEditTournamentDialogOpen(true),
       icon: Pencil,
       condition: isAdmin,
-      external: true,
     },
     {
       label: "Delete tournament",
@@ -62,7 +69,7 @@ export function TournamentDetailsCard({ tournament, teams, className }: Props) {
 
   return (
     <div>
-      <UpsertTournamentFormButton
+      <UpsertTournamentFormDialog
         open={editTournamentDialogOpen}
         onOpenChange={setEditTournamentDialogOpen}
         tournament={tournament}

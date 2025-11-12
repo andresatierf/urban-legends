@@ -1,13 +1,13 @@
 import { useStore } from "@tanstack/react-form";
 import { useFieldContext } from "@/hooks/form-context";
 import { Field, FieldError, FieldLabel } from "../../ui/field";
-import { Input } from "../../ui/input";
+import { Input, type InputProps } from "../../ui/input";
 
-type Props = {
+type Props = InputProps & {
   label: string;
 };
 
-export default function NumberField({ label }: Props) {
+export default function NumberField({ label, ...props }: Props) {
   const field = useFieldContext<number>();
 
   const [isInvalid, errors] = useStore(field.store, (state) => [
@@ -19,6 +19,7 @@ export default function NumberField({ label }: Props) {
     <Field data-invalid={isInvalid}>
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Input
+        {...props}
         type="number"
         id={field.name}
         name={field.name}

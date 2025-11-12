@@ -255,6 +255,7 @@ export const create = mutation({
       createdBy: user._id,
       visibility: args.visibility ?? "public",
       maxMembers: tournament.teamMaxSize,
+      points: 0,
     });
 
     // TODO: add members if provided
@@ -388,6 +389,12 @@ export const upsertUserTeam = mutation({
       }
     }
 
+    const data = {
+      name: args.name,
+      tournamentId: args.tournamentId,
+      visibility: args.visibility,
+    };
+
     if (args._id) {
       const team = await ctx.db.get(args._id);
       if (!team) {
@@ -401,10 +408,7 @@ export const upsertUserTeam = mutation({
         });
       }
 
-      await ctx.db.patch(args._id, {
-        name: args.name,
-        visibility: args.visibility,
-      });
+      await ctx.db.patch(args._id, data);
 
       return args._id;
     }
@@ -426,11 +430,10 @@ export const upsertUserTeam = mutation({
     });
 
     const teamId = await ctx.db.insert("teams", {
-      name: args.name,
-      tournamentId: args.tournamentId,
+      ...data,
       createdBy: user._id,
-      visibility: args.visibility,
       maxMembers: tournament.teamMaxSize,
+      points: 0,
     });
 
     await ctx.db.insert("teamMembers", {
@@ -611,3 +614,206 @@ export async function validateTeamHasSpace(
 
   return team;
 }
+
+// Admin utility to recalculate team points from approved submissions
+export const recalculatePoints = mutation({
+  args: {
+    teamId: v.id("teams"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    validateIsAdmin(user);
+
+    const team = await ctx.db.get(args.teamId);
+    if (!team) {
+      throw new Error("Team not found");
+    }
+
+    // Get tournament for scoring config
+    const tournament = await ctx.db.get(team.tournamentId);
+    if (!tournament) {
+      throw new Error("Tournament not found");
+    }
+
+    const scoringConfig = tournament.scoringConfig || {
+      individualPoints: { base: 1, advanced: 1 },
+      teamExercisePoints: { base: 1, advanced: 1 },
+      teamExerciseThreshold: 0.5,
+    };
+
+    // Get all team members for participation calculation
+    const teamMembers = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .collect();
+
+    // Get all approved submissions for team
+    const submissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .filter((q) => q.eq(q.field("state"), "approved"))
+      .collect();
+
+    let totalPoints = 0;
+    let updatedCount = 0;
+
+    // Calculate points for each submission
+    for (const submission of submissions) {
+      let pointsEarned = submission.pointsEarned;
+
+      const tier = submission.tier || "base";
+      const totalTeamMembers = teamMembers.length;
+      const participantCount = Math.min(
+        totalTeamMembers,
+        submission.teammates.length + 1,
+      );
+      const participationRate =
+        totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
+      const isTeamExercise =
+        participationRate >= scoringConfig.teamExerciseThreshold;
+
+      pointsEarned = isTeamExercise
+        ? scoringConfig.teamExercisePoints[tier]
+        : scoringConfig.individualPoints[tier];
+
+      // Update the submission with calculated points
+      await ctx.db.patch(submission._id, { pointsEarned });
+      updatedCount++;
+
+      totalPoints += pointsEarned;
+    }
+
+    // Find most recent submission for lastActivityAt
+    const sortedSubmissions = submissions.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+    const lastActivityAt = sortedSubmissions[0]?.date;
+
+    // Update team points
+    await ctx.db.patch(args.teamId, {
+      points: totalPoints,
+      lastActivityAt,
+    });
+
+    return {
+      teamId: args.teamId,
+      points: totalPoints,
+      lastActivityAt,
+      submissionsUpdated: updatedCount,
+    };
+  },
+});
+
+// Get detailed statistics for a team
+export const getStatistics = query({
+  args: {
+    teamId: v.id("teams"),
+  },
+  handler: async (ctx, args) => {
+    await getCurrentUserOrThrow(ctx);
+
+    const team = await ctx.db.get(args.teamId);
+    if (!team) return null;
+
+    const tournament = await ctx.db.get(team.tournamentId);
+    if (!tournament) return null;
+
+    // Get all submissions for the team
+    const allSubmissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .collect();
+
+    const approvedSubmissions = allSubmissions.filter(
+      (s) => s.state === "approved",
+    );
+    const pendingSubmissions = allSubmissions.filter(
+      (s) => s.state === "pending",
+    );
+    const rejectedSubmissions = allSubmissions.filter(
+      (s) => s.state === "rejected",
+    );
+
+    // Calculate tournament duration and expected days
+    const startDate = new Date(tournament.startDate);
+    const endDate = new Date(tournament.endDate);
+    const today = new Date();
+    const currentDate = today > endDate ? endDate : today;
+
+    const tournamentDays =
+      Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+      ) + 1;
+    const daysSoFar =
+      today < startDate
+        ? 0
+        : Math.ceil(
+            (currentDate.getTime() - startDate.getTime()) /
+              (1000 * 60 * 60 * 24),
+          ) + 1;
+
+    // Calculate approval rate
+    const approvalRate =
+      allSubmissions.length > 0
+        ? approvedSubmissions.length / allSubmissions.length
+        : 0;
+
+    // Calculate average points per day
+    const averagePointsPerDay = daysSoFar > 0 ? team.points / daysSoFar : 0;
+
+    // Calculate current streak (consecutive days with approved submissions)
+    const approvedDates = new Set(
+      approvedSubmissions
+        .map((s) => s.date)
+        .sort()
+        .reverse(),
+    );
+    let currentStreak = 0;
+    const streakDate = new Date(today);
+    streakDate.setHours(0, 0, 0, 0);
+
+    const maxIterations = 1000;
+
+    while (currentStreak < maxIterations) {
+      const dateStr = streakDate.toISOString().split("T")[0];
+      if (approvedDates.has(dateStr)) {
+        currentStreak++;
+        streakDate.setDate(streakDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    // Calculate member contributions
+    const memberContributions = new Map<Id<"users">, number>();
+    for (const submission of approvedSubmissions) {
+      memberContributions.set(
+        submission.userId,
+        (memberContributions.get(submission.userId) || 0) + 1,
+      );
+    }
+
+    const memberContributionsArray = Array.from(
+      memberContributions.entries(),
+    ).map(([userId, count]) => ({ userId, count }));
+
+    // Calculate completion rate
+    const uniqueSubmissionDays = new Set(approvedSubmissions.map((s) => s.date))
+      .size;
+    const completionRate = daysSoFar > 0 ? uniqueSubmissionDays / daysSoFar : 0;
+
+    return {
+      totalSubmissions: allSubmissions.length,
+      approvedSubmissions: approvedSubmissions.length,
+      pendingSubmissions: pendingSubmissions.length,
+      rejectedSubmissions: rejectedSubmissions.length,
+      approvalRate,
+      averagePointsPerDay,
+      currentStreak,
+      memberContributions: memberContributionsArray,
+      completionRate,
+      tournamentDays,
+      daysSoFar,
+    };
+  },
+});

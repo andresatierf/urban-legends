@@ -100,6 +100,20 @@ export const upsert = mutation({
     endDate: v.string(),
     teamMinSize: v.number(),
     teamMaxSize: v.number(),
+    // Scoring configuration (optional for backwards compatibility)
+    scoringConfig: v.optional(
+      v.object({
+        individualPoints: v.object({
+          base: v.number(),
+          advanced: v.number(),
+        }),
+        teamExercisePoints: v.object({
+          base: v.number(),
+          advanced: v.number(),
+        }),
+        teamExerciseThreshold: v.number(),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -108,6 +122,13 @@ export const upsert = mutation({
       throw new Error("Admin access required");
     }
 
+    // Default scoring config if not provided
+    const defaultScoringConfig = {
+      individualPoints: { base: 1, advanced: 1 },
+      teamExercisePoints: { base: 1, advanced: 1 },
+      teamExerciseThreshold: 0.5,
+    };
+
     const data = {
       name: args.name,
       description: args.description || "",
@@ -115,6 +136,7 @@ export const upsert = mutation({
       endDate: args.endDate,
       teamMinSize: args.teamMinSize,
       teamMaxSize: args.teamMaxSize,
+      scoringConfig: args.scoringConfig || defaultScoringConfig,
     };
 
     if (args._id) {
@@ -122,14 +144,15 @@ export const upsert = mutation({
 
       if (!tournament) throw new Error("Tournament not found");
 
-      return await ctx.db.patch(args._id, data);
+      await ctx.db.patch(args._id, data);
+
+      return args._id;
     }
 
     return await ctx.db.insert("tournaments", { ...data, createdBy: user._id });
   },
 });
 
-// TODO: deleting a tournament should delete all associated teams, submissions, invites, etc
 export const remove = mutation({
   args: { tournamentId: v.id("tournaments") },
   handler: async (_ctx, _args) => {
@@ -213,3 +236,260 @@ export async function validateUserNotInTournamentTeam(
     throw new Error("You already have a team in this tournament");
   }
 }
+
+// Get leaderboard for a tournament with rankings
+export const getLeaderboard = query({
+  args: {
+    tournamentId: v.id("tournaments"),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await getCurrentUserOrThrow(ctx);
+
+    const tournament = await ctx.db.get(args.tournamentId);
+    if (!tournament) {
+      throw new Error("Tournament not found");
+    }
+
+    // Get all teams for tournament
+    const teams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", args.tournamentId),
+      )
+      .collect();
+
+    // Get member counts for each team
+    const teamsWithCounts = await Promise.all(
+      teams.map(async (team) => {
+        const members = await ctx.db
+          .query("teamMembers")
+          .withIndex("by_team", (q) => q.eq("teamId", team._id))
+          .collect();
+
+        const points = team.points ?? 0;
+        return {
+          teamId: team._id,
+          teamName: team.name,
+          points,
+          memberCount: members.length,
+          lastActivityAt: team.lastActivityAt,
+          createdAt: team._creationTime,
+        };
+      }),
+    );
+
+    // Sort by points DESC, lastActivityAt DESC (more recent wins), createdAt ASC (earlier creation wins)
+    const sortedTeams = teamsWithCounts.sort((a, b) => {
+      // First sort by points (descending)
+      if (a.points !== b.points) {
+        return b.points - a.points;
+      }
+
+      // If points are equal, sort by lastActivityAt (descending - more recent wins)
+      if (a.lastActivityAt && b.lastActivityAt) {
+        return b.lastActivityAt.localeCompare(a.lastActivityAt);
+      }
+      if (a.lastActivityAt) return -1;
+      if (b.lastActivityAt) return 1;
+
+      // If still tied, sort by creation time (ascending - earlier wins)
+      return a.createdAt - b.createdAt;
+    });
+
+    // Apply limit if provided
+    const limitedTeams = args.limit
+      ? sortedTeams.slice(0, args.limit)
+      : sortedTeams;
+
+    // Add rank and isWinner flag
+    const leaderboard = limitedTeams.map((team, index) => ({
+      rank: index + 1,
+      ...team,
+      isWinner: tournament.winnerId === team.teamId,
+    }));
+
+    return leaderboard;
+  },
+});
+
+// Get winner of a tournament
+export const getWinner = query({
+  args: {
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    await getCurrentUserOrThrow(ctx);
+
+    const tournament = await ctx.db.get(args.tournamentId);
+    if (!tournament?.winnerId) return null;
+
+    const team = await ctx.db.get(tournament.winnerId);
+    if (!team) return null;
+
+    const members = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) =>
+        q.eq("teamId", tournament.winnerId as typeof tournament.winnerId),
+      )
+      .collect();
+
+    const users = await Promise.all(
+      members.map((member) => ctx.db.get(member.userId)),
+    );
+
+    return {
+      team,
+      members: users.filter((u) => u !== null),
+      completedAt: tournament.completedAt,
+    };
+  },
+});
+
+// Determine winner for a tournament (admin only)
+export const determineWinner = mutation({
+  args: {
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    if (!user.roles.includes("admin")) {
+      throw new Error("Admin access required");
+    }
+
+    const tournament = await ctx.db.get(args.tournamentId);
+    if (!tournament) {
+      throw new Error("Tournament not found");
+    }
+
+    // Validate tournament has ended
+    const now = new Date();
+    const endDate = new Date(tournament.endDate);
+    if (now < endDate) {
+      throw new Error("Cannot determine winner before tournament ends");
+    }
+
+    // Get all teams sorted by points
+    const teams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", args.tournamentId),
+      )
+      .collect();
+
+    if (teams.length === 0) {
+      throw new Error("No teams in this tournament");
+    }
+
+    // Sort teams using same logic as leaderboard
+    const sortedTeams = teams.sort((a, b) => {
+      if (a.points !== b.points) {
+        return b.points - a.points;
+      }
+
+      if (a.lastActivityAt && b.lastActivityAt) {
+        return b.lastActivityAt.localeCompare(a.lastActivityAt);
+      }
+      if (a.lastActivityAt) return -1;
+      if (b.lastActivityAt) return 1;
+
+      return a._creationTime - b._creationTime;
+    });
+
+    const winner = sortedTeams[0];
+
+    // Update tournament with winner
+    await ctx.db.patch(args.tournamentId, {
+      winnerId: winner._id,
+      completedAt: new Date().toISOString(),
+    });
+
+    return {
+      winnerId: winner._id,
+      winnerName: winner.name,
+      points: winner.points,
+    };
+  },
+});
+
+// Get tournament statistics
+export const getStatistics = query({
+  args: {
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    await getCurrentUserOrThrow(ctx);
+
+    const tournament = await ctx.db.get(args.tournamentId);
+    if (!tournament) return null;
+
+    // Get all teams
+    const teams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", args.tournamentId),
+      )
+      .collect();
+
+    // Get all submissions for this tournament
+    const allSubmissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_tournament_and_date", (q) =>
+        q.eq("tournamentId", args.tournamentId),
+      )
+      .collect();
+
+    const approvedSubmissions = allSubmissions.filter(
+      (s) => s.state === "approved",
+    );
+
+    // Calculate average team score
+    const averageTeamScore =
+      teams.length > 0
+        ? teams.reduce((sum, team) => sum + team.points, 0) / teams.length
+        : 0;
+
+    // Find most active team (highest points)
+    const mostActiveTeam =
+      teams.length > 0 ? teams.sort((a, b) => b.points - a.points)[0] : null;
+
+    // Find highest scoring day
+    const submissionsByDate = new Map<string, number>();
+    for (const submission of approvedSubmissions) {
+      submissionsByDate.set(
+        submission.date,
+        (submissionsByDate.get(submission.date) || 0) + 1,
+      );
+    }
+
+    let highestScoringDay: { date: string; submissions: number } | null = null;
+    for (const entry of Array.from(submissionsByDate.entries())) {
+      const [date, count] = entry;
+      if (!highestScoringDay || count > highestScoringDay.submissions) {
+        highestScoringDay = { date, submissions: count };
+      }
+    }
+
+    // Calculate participation rate (teams with at least one submission)
+    const teamsWithSubmissions = new Set(
+      approvedSubmissions.map((s) => s.teamId),
+    );
+    const participationRate =
+      teams.length > 0 ? teamsWithSubmissions.size / teams.length : 0;
+
+    return {
+      totalTeams: teams.length,
+      totalSubmissions: approvedSubmissions.length,
+      averageTeamScore,
+      mostActiveTeam: mostActiveTeam
+        ? {
+            teamId: mostActiveTeam._id,
+            name: mostActiveTeam.name,
+            points: mostActiveTeam.points,
+          }
+        : null,
+      highestScoringDay,
+      participationRate,
+    };
+  },
+});

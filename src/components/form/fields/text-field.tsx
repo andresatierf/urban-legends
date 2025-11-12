@@ -1,14 +1,13 @@
 import { useStore } from "@tanstack/react-form";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { Input, type InputProps } from "@/components/ui/input";
 import { useFieldContext } from "@/hooks/form-context";
 
-type Props = {
+type Props = InputProps & {
   label: string;
-  placeholder?: string;
 };
 
-export default function TextField({ label, placeholder }: Props) {
+export default function TextField({ label, ...props }: Props) {
   const field = useFieldContext<string>();
 
   const [isInvalid, errors] = useStore(field.store, (state) => [
@@ -20,13 +19,13 @@ export default function TextField({ label, placeholder }: Props) {
     <Field data-invalid={isInvalid}>
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Input
+        {...props}
         id={field.name}
         name={field.name}
         value={field.state.value}
         onBlur={field.handleBlur}
         onChange={(e) => field.handleChange(e.target.value)}
         aria-invalid={isInvalid}
-        placeholder={placeholder}
         autoComplete="off"
       />
       {isInvalid && <FieldError errors={errors} />}

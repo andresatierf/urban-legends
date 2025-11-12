@@ -107,6 +107,7 @@ export const upsert = mutation({
     teamId: v.id("teams"),
     description: v.optional(v.string()),
     teammateIds: v.array(v.id("users")),
+    tier: v.optional(v.union(v.literal("base"), v.literal("advanced"))),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -131,24 +132,27 @@ export const upsert = mutation({
       tournamentId: team.tournamentId,
       description: args.description,
       teammates: args.teammateIds,
+      tier: args.tier || "base",
     };
 
-    if (!args._id) {
-      return await ctx.db.insert("submissions", {
-        ...data,
-        state: "pending",
-        createdBy: user._id,
-      });
+    if (args._id) {
+      const submission = await ctx.db.get(args._id);
+
+      if (!submission) throw new Error("Submission not found");
+
+      if (submission.createdBy !== user._id) {
+        throw new Error("You do not have permission to update this submission");
+      }
+
+      return await ctx.db.patch(args._id, data);
     }
 
-    const submission = await ctx.db.get(args._id);
-    if (!submission) throw new Error("Submission not found");
-
-    if (submission.createdBy !== user._id) {
-      throw new Error("You do not have permission to update this submission");
-    }
-
-    return await ctx.db.patch(args._id, data);
+    return await ctx.db.insert("submissions", {
+      ...data,
+      state: "pending",
+      createdBy: user._id,
+      pointsEarned: 0, // Will be calculated on approval
+    });
   },
 });
 
@@ -210,15 +214,29 @@ export const remove = mutation({
       throw new Error("Submission already deleted");
     }
 
-    if (submission.state === "approved") {
-      throw new Error("Cannot remove an approved submission");
-    }
-
     if (submission.state === "rejected") {
       throw new Error("Cannot remove a rejected submission");
     }
 
-    await ctx.db.patch(args.submissionId, { state: "deleted" });
+    const previousState = submission.state;
+    const previousPoints = submission.pointsEarned || 0;
+
+    await ctx.db.patch(args.submissionId, {
+      state: "deleted",
+      managedBy: user._id,
+    });
+
+    // Decrement points if the submission was approved before deletion
+    if (previousState === "approved" && previousPoints > 0) {
+      const team = await ctx.db.get(submission.teamId);
+      if (team) {
+        const currentPoints = team.points ?? 0;
+        await ctx.db.patch(submission.teamId, {
+          points: Math.max(0, currentPoints - previousPoints),
+          lastActivityAt: new Date().toISOString(),
+        });
+      }
+    }
   },
 });
 
@@ -293,7 +311,78 @@ export const approve = mutation({
       throw new Error("You do not have permission to approve this submission");
     }
 
-    await ctx.db.patch(args.submissionId, { state: "approved" });
+    const submission = await ctx.db.get(args.submissionId);
+    if (!submission) {
+      throw new Error("Submission not found");
+    }
+
+    const previousState = submission.state;
+
+    // Get tournament to access scoring config
+    const tournament = await ctx.db.get(submission.tournamentId);
+    if (!tournament) {
+      throw new Error("Tournament not found");
+    }
+
+    // Get team and team members for scoring calculation
+    const team = await ctx.db.get(submission.teamId);
+    if (!team) {
+      throw new Error("Team not found");
+    }
+
+    const teamMembers = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
+      .collect();
+
+    // Calculate points based on tier and team exercise
+    let pointsEarned = 0;
+    const tier = submission.tier || "base";
+    const scoringConfig = tournament.scoringConfig || {
+      individualPoints: { base: 1, advanced: 1 },
+      teamExercisePoints: { base: 1, advanced: 1 },
+      teamExerciseThreshold: 0.5,
+    };
+
+    // Determine if this is a team exercise
+    const totalTeamMembers = teamMembers.length;
+    const participantCount = Math.min(
+      totalTeamMembers,
+      submission.teammates.length + 1,
+    );
+    const participationRate =
+      totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
+    const isTeamExercise =
+      participationRate >= scoringConfig.teamExerciseThreshold;
+
+    if (isTeamExercise) {
+      pointsEarned = scoringConfig.teamExercisePoints[tier];
+    } else {
+      pointsEarned = scoringConfig.individualPoints[tier];
+    }
+
+    await ctx.db.patch(args.submissionId, {
+      state: "approved",
+      managedBy: user._id,
+      pointsEarned,
+    });
+
+    const currentPoints = team.points ?? 0;
+
+    // Only increment points if transitioning from non-approved state to approved
+    if (previousState !== "approved") {
+      await ctx.db.patch(submission.teamId, {
+        points: currentPoints + pointsEarned,
+        lastActivityAt: new Date().toISOString(),
+      });
+    } else if (submission.pointsEarned !== pointsEarned) {
+      // Re-approval with different points (e.g., tier changed)
+      const pointsDiff = pointsEarned - (submission.pointsEarned || 0);
+      await ctx.db.patch(submission.teamId, {
+        points: currentPoints + pointsDiff,
+        lastActivityAt: new Date().toISOString(),
+      });
+    }
   },
 });
 
@@ -305,6 +394,29 @@ export const reject = mutation({
       throw new Error("You do not have permission to reject this submission");
     }
 
-    await ctx.db.patch(args.submissionId, { state: "rejected" });
+    const submission = await ctx.db.get(args.submissionId);
+    if (!submission) {
+      throw new Error("Submission not found");
+    }
+
+    const previousState = submission.state;
+    const previousPoints = submission.pointsEarned || 0;
+
+    await ctx.db.patch(args.submissionId, {
+      state: "rejected",
+      managedBy: user._id,
+    });
+
+    // Only decrement points if transitioning from approved state to rejected
+    if (previousState === "approved" && previousPoints > 0) {
+      const team = await ctx.db.get(submission.teamId);
+      if (team) {
+        const currentPoints = team.points ?? 0;
+        await ctx.db.patch(submission.teamId, {
+          points: Math.max(0, currentPoints - previousPoints),
+          lastActivityAt: new Date().toISOString(),
+        });
+      }
+    }
   },
 });

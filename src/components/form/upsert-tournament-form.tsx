@@ -28,6 +28,23 @@ const formSchema = z.object({
   endDate: z.string().min(1, "Please select an end date"),
   teamMinSize: z.number().min(1, "Team minimum size must be at least 1"),
   teamMaxSize: z.number().min(1, "Team maximum size must be at least 1"),
+  // Scoring configuration
+  scoringConfig: z
+    .object({
+      individualPoints: z.object({
+        base: z.number().min(0, "Points must be non-negative"),
+        advanced: z.number().min(0, "Points must be non-negative"),
+      }),
+      teamExercisePoints: z.object({
+        base: z.number().min(0, "Points must be non-negative"),
+        advanced: z.number().min(0, "Points must be non-negative"),
+      }),
+      teamExerciseThreshold: z
+        .number()
+        .min(0, "Threshold must be between 0 and 1")
+        .max(1, "Threshold must be between 0 and 1"),
+    })
+    .optional(),
 });
 
 type UpsertTournamentFormProps = {
@@ -37,7 +54,7 @@ type UpsertTournamentFormProps = {
   children?: React.ReactNode;
 };
 
-export function UpsertTournamentFormButton({
+export function UpsertTournamentFormDialog({
   open: controlledOpen,
   onOpenChange,
   tournament,
@@ -60,6 +77,11 @@ export function UpsertTournamentFormButton({
       endDate: tournament?.endDate ?? "",
       teamMinSize: tournament?.teamMinSize ?? 1,
       teamMaxSize: tournament?.teamMaxSize ?? 5,
+      scoringConfig: tournament?.scoringConfig ?? {
+        individualPoints: { base: 2, advanced: 3 },
+        teamExercisePoints: { base: 20, advanced: 30 },
+        teamExerciseThreshold: 0.5,
+      },
     } as z.input<typeof formSchema>,
     validators: {
       onChange: formSchema,
@@ -68,11 +90,14 @@ export function UpsertTournamentFormButton({
     },
     onSubmit: async ({ value }) => {
       try {
-        await upsertTournament({ ...value, _id: tournament?._id });
+        const upsertedId = await upsertTournament({
+          ...value,
+          _id: tournament?._id,
+        });
         toast.success(
           `Tournament ${tournament ? "updated" : "created"} successfully!`,
         );
-        router.push("/tournaments");
+        router.push(`/tournaments/${upsertedId}`);
         setOpen(false);
       } catch (error) {
         toast.error(
@@ -207,6 +232,46 @@ export function UpsertTournamentFormButton({
                 {(field) => <field.DateField label="End Date" />}
               </form.AppField>
             </FieldGroup>
+
+            <div className="space-y-4">
+              <div className="font-medium text-sm">Scoring Configuration</div>
+              <div className="space-y-3">
+                <div className="font-medium text-muted-foreground text-xs">
+                  Individual Exercise Points
+                </div>
+                <FieldGroup className="flex-row">
+                  <form.AppField name="scoringConfig.individualPoints.base">
+                    {(field) => <field.NumberField label="Base Tier" />}
+                  </form.AppField>
+                  <form.AppField name="scoringConfig.individualPoints.advanced">
+                    {(field) => <field.NumberField label="Advanced Tier" />}
+                  </form.AppField>
+                </FieldGroup>
+
+                <div className="font-medium text-muted-foreground text-xs">
+                  Team Exercise Points
+                </div>
+                <FieldGroup className="flex-row">
+                  <form.AppField name="scoringConfig.teamExercisePoints.base">
+                    {(field) => <field.NumberField label="Base Tier" />}
+                  </form.AppField>
+                  <form.AppField name="scoringConfig.teamExercisePoints.advanced">
+                    {(field) => <field.NumberField label="Advanced Tier" />}
+                  </form.AppField>
+                </FieldGroup>
+
+                <form.AppField name="scoringConfig.teamExerciseThreshold">
+                  {(field) => (
+                    <field.NumberField
+                      label="Team Exercise Threshold (0-1)"
+                      step="0.1"
+                      min="0"
+                      max="1"
+                    />
+                  )}
+                </form.AppField>
+              </div>
+            </div>
           </FieldGroup>
 
           <form.Subscribe

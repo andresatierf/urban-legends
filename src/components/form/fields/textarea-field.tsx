@@ -1,15 +1,13 @@
 import { useStore } from "@tanstack/react-form";
 import { useFieldContext } from "@/hooks/form-context";
 import { Field, FieldError, FieldLabel } from "../../ui/field";
-import { Textarea } from "../../ui/textarea";
+import { Textarea, type TextareaProps } from "../../ui/textarea";
 
-type Props = {
+type Props = TextareaProps & {
   label: string;
-  placeholder?: string;
-  rows?: number;
 };
 
-export default function TextareaField({ label, placeholder, ...props }: Props) {
+export default function TextareaField({ label, ...props }: Props) {
   const field = useFieldContext<string>();
 
   const [isInvalid, errors] = useStore(field.store, (state) => [
@@ -28,7 +26,6 @@ export default function TextareaField({ label, placeholder, ...props }: Props) {
         onBlur={field.handleBlur}
         onChange={(e) => field.handleChange(e.target.value)}
         aria-invalid={isInvalid}
-        placeholder={placeholder}
         autoComplete="off"
       />
       {isInvalid && <FieldError errors={errors} />}
