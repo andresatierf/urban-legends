@@ -39,19 +39,39 @@ Commands:
 # Create worktree with new branch
 git worktree add ../urban-legends-[feature-name] -b andre/feat/[feature-name]
 
-# Change to worktree directory
-cd ../urban-legends-[feature-name]
+# Copy .env file to worktree
+cp .env ../urban-legends-[feature-name]/.env
+
+# Install dependencies
+cd ../urban-legends-[feature-name] && bun install
 
 # Verify setup
 pwd
 git status
 git branch --show-current
-
-# Install project
-bun install
 ```
 
 **Important:** All subsequent work will be done in the worktree directory, not the main repository.
+
+## Step 3.5: Set Up Zellij Environment
+
+After creating the worktree, use the `/zellij-spec` command to set up the development environment:
+
+```
+/zellij-spec [feature-name]
+```
+
+This will:
+- Create a Zellij tab with three panes
+- Calculate unique ports based on feature name (to avoid conflicts with other features)
+- Start both development servers with custom ports
+
+The three panes will be:
+- **Left pane**: Code editor workspace (where Claude will work)
+- **Upper-right pane**: Next.js dev server on custom port
+- **Lower-right pane**: Convex backend on custom port
+
+**Note:** Each feature gets unique ports so you can work on multiple features simultaneously without port conflicts.
 
 ## Step 4: Create Implementation Plan
 
@@ -164,17 +184,30 @@ Tell the user:
 ```
 Worktree location: /home/andre/dev/urban-legends-[feature-name]
 Branch: andre/feat/[feature-name]
+Zellij tab: "[feature-name]" with 3-pane layout
 
-To test this feature:
-1. cd /home/andre/dev/urban-legends-[feature-name]
-2. bun run dev (in one terminal)
-3. bunx convex dev (in another terminal)
+The Zellij tab is already running:
+- Left pane: Code workspace (current)
+- Upper-right: Next.js dev server (http://localhost:[NEXT_PORT])
+- Lower-right: Convex backend (http://localhost:[CONVEX_PORT])
 
-To clean up the worktree after merging:
-git worktree remove ../urban-legends-[feature-name]
+Ports assigned (based on feature name hash):
+- Next.js: [NEXT_PORT]
+- Convex: [CONVEX_PORT]
+
+Access your feature at: http://localhost:[NEXT_PORT]
+
+You can switch to the Zellij tab to view the running servers.
+Each feature runs on unique ports to avoid conflicts.
+
+To clean up after merging:
+1. Close the Zellij tab (or kill the running processes)
+2. git worktree remove ../urban-legends-[feature-name]
 
 The main repository at /home/andre/dev/urban-legends is unchanged.
 ```
+
+**Important:** Replace `[NEXT_PORT]` and `[CONVEX_PORT]` with actual port numbers calculated during setup.
 
 ## Important Guidelines
 
@@ -220,17 +253,21 @@ You would:
 
 1. Read `specs/team-joining.md` from main repository
 2. Create worktree at `../urban-legends-team-joining` with branch `andre/feat/team-joining`
-3. Change directory to worktree: `cd ../urban-legends-team-joining`
-4. Create task list with ~15-20 tasks
-5. Implement schema changes (teamInvitations, joinRequests tables)
-6. Commit: "feat(schema): add team invitation and join request tables"
-7. Implement backend mutations (requestToJoin, approveJoinRequest, etc.)
-8. Commit: "feat(backend): implement team joining mutations"
-9. Create UI components (JoinTeamButton, JoinRequestsList, etc.)
-10. Commit: "feat(ui): add team joining components"
-11. Update pages to integrate new features
-12. Commit: "feat(pages): integrate team joining UI"
-13. Run linting and formatting
-14. Provide summary with worktree location and cleanup instructions
+3. Run `/zellij-spec team-joining` to set up environment
+   - Calculates ports: Next.js → 3084, Convex → 3294
+   - Creates 3-pane Zellij tab
+   - Starts both servers on unique ports
+4. Change directory to worktree: `cd ../urban-legends-team-joining`
+5. Create task list with ~15-20 tasks
+6. Implement schema changes (teamInvitations, joinRequests tables)
+7. Commit: "feat(schema): add team invitation and join request tables"
+8. Implement backend mutations (requestToJoin, approveJoinRequest, etc.)
+9. Commit: "feat(backend): implement team joining mutations"
+10. Create UI components (JoinTeamButton, JoinRequestsList, etc.)
+11. Commit: "feat(ui): add team joining components"
+12. Update pages to integrate new features
+13. Commit: "feat(pages): integrate team joining UI"
+14. Run linting and formatting
+15. Provide summary with worktree location, ports, and cleanup instructions
 
-The main repository remains on the `main` branch, allowing the user to continue working there while the feature is implemented in the worktree.
+The main repository remains on the `main` branch, allowing the user to continue working there while the feature is implemented in the worktree. Each feature gets unique ports (based on name hash) so multiple features can run simultaneously without conflicts.
