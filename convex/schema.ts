@@ -55,6 +55,8 @@ export default defineSchema({
   userRoles: defineTable({
     userId: v.id("users"),
     roleId: v.id("roles"),
+    assignedBy: v.optional(v.id("users")),
+    assignedAt: v.optional(v.string()),
   })
     .index("by_user_role", ["userId", "roleId"])
     .index("by_user", ["userId"])
