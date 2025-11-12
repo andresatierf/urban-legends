@@ -62,11 +62,13 @@ After creating the worktree, use the `/zellij-spec` command to set up the develo
 ```
 
 This will:
+
 - Create a Zellij tab with three panes
 - Calculate unique ports based on feature name (to avoid conflicts with other features)
 - Start both development servers with custom ports
 
 The three panes will be:
+
 - **Left pane**: Code editor workspace (where Claude will work)
 - **Upper-right pane**: Next.js dev server on custom port
 - **Lower-right pane**: Convex backend on custom port
@@ -148,16 +150,89 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 Example scopes: `schema`, `backend`, `ui`, `pages`, `teams`, `leaderboard`
 
-## Step 7: Run Quality Checks
+## Step 7: Run Quality Checks and Validation
 
-Before finishing:
+Before finishing, validate the implementation with comprehensive checks:
+
+### 7.1: Run CI Checks
+
+Run the full CI suite to catch any issues:
 
 ```bash
-bun run lint:fix
-bun run format:fix
+bun --bun run ci
 ```
 
-Fix any linting or formatting issues.
+This runs all CI checks including linting, formatting, and type checking.
+
+**If CI fails:**
+
+- Read the error output carefully
+- Fix each issue systematically
+- Re-run `bun --bun run ci` until it passes
+- Do NOT proceed until CI is green
+
+### 7.2: Run Type Checking
+
+Run TypeScript type checking to catch type errors:
+
+```bash
+bun --bun run typecheck
+```
+
+**If typecheck fails:**
+
+- Review type errors in the output
+- Fix type issues (avoid using `any` or non-null assertions)
+- Re-run `bun --bun run typecheck` until clean
+- Do NOT proceed until typecheck passes
+
+### 7.3: CodeRabbit AI Review
+
+Use the CodeRabbit CLI to get AI-powered code review:
+
+```bash
+# Review all changes against main branch
+coderabbit --prompt-only
+```
+
+**If CodeRabbit suggests improvements:**
+
+- Review the suggestions carefully
+- Create todos for each significant issue using TodoWrite
+- Fix issues systematically
+- Re-run `coderabbit review --base main` after fixes
+- Continue until CodeRabbit feedback is minimal/acceptable
+
+**CodeRabbit checks for:**
+
+- Code quality issues
+- Potential bugs
+- Security vulnerabilities
+- Performance concerns
+- Best practice violations
+- Documentation gaps
+
+### 7.4: Fix Any Issues
+
+If any validation step fails:
+
+1. **Add issues to todo list** - Use TodoWrite to track each issue
+2. **Fix systematically** - Address each issue one by one
+3. **Commit fixes** - Make atomic commits for fixes
+4. **Re-run validation** - Ensure all checks pass
+
+### 7.5: Final Validation Summary
+
+Once all checks pass, provide a summary:
+
+```
+✅ All validation checks passed:
+- CI: Passing (lint, format, build)
+- TypeCheck: No errors
+- CodeRabbit: Reviewed and issues addressed
+
+Implementation is ready for PR creation.
+```
 
 ## Step 8: Final Summary
 

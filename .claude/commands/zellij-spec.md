@@ -59,9 +59,9 @@ Example port assignments:
 - `leaderboard`: Next.js → 3042, Convex → 3252
 - `admin-roles`: Next.js → 3067, Convex → 3277
 
-## Step 4: Create Zellij Tab with 3-Pane Layout
+## Step 4: Create Zellij Tab with Layout File
 
-Set up a new Zellij tab with three panes using the calculated ports:
+Set up a new Zellij tab using the `dev-spec` layout file with calculated ports:
 
 ```bash
 # Calculate ports
@@ -69,44 +69,38 @@ OFFSET=$(echo -n "[feature-name]" | cksum | awk '{print $1 % 100}')
 NEXT_PORT=$((3000 + OFFSET))
 CONVEX_PORT=$((3210 + OFFSET))
 
-# Create new Zellij tab named after the feature
-zellij action new-tab --name "[feature-name]"
+# Get the worktree path
+WORKTREE_PATH="$PWD/../urban-legends-[feature-name]"
 
-# Split right to create upper-right pane
-zellij action new-pane --direction right
+# Create new Zellij tab with layout
+zellij action new-tab --layout dev-spec --name "[feature-name]" --cwd "$WORKTREE_PATH"
 
-# Split the right pane down to create lower-right pane
-zellij action new-pane --direction down
+# Wait for layout to be created
+sleep 1
 
-# Focus the left pane (for code editing)
-zellij action focus-previous-pane
-zellij action focus-previous-pane
-
-# Change directory in left pane
-zellij action write-chars "cd ../urban-legends-[feature-name]"
-zellij action write 10  # Send Enter key
-
-# Focus upper-right pane and start dev server with custom port
+# Focus the next pane (upper-right for Next.js)
 zellij action focus-next-pane
-zellij action write-chars "cd ../urban-legends-[feature-name] && PORT=$NEXT_PORT bun --bun run dev"
+
+# Start Next.js dev server
+zellij action write-chars "PORT=$NEXT_PORT bun --bun run dev"
 zellij action write 10
 
-# Focus lower-right pane and start Convex with custom port
+# Focus the convex pane (lower-right)
 zellij action focus-next-pane
-zellij action write-chars "cd ../urban-legends-[feature-name] && CONVEX_SITE_PORT=$CONVEX_PORT bun --bun convex dev"
+
+# Start Convex backend
+zellij action write-chars "CONVEX_SITE_PORT=$CONVEX_PORT bun --bun convex dev"
 zellij action write 10
 
-# Focus back to left pane for coding
-zellij action focus-previous-pane
-zellij action focus-previous-pane
+# Focus back to the editor pane (left)
+zellij action focus-next-pane
 
-# Resize
-zellij action resize + right
-zellij action resize + right
-zellij action resize + right
-zellij action resize + right
-zellij action resize + right
+# Open nvim in the editor pane
+zellij action write-chars "nvim"
+zellij action write 10
 ```
+
+**Note:** This uses the Zellij layout file at `~/.config/zellij/layouts/dev-spec.kdl` which defines the 3-pane layout with proper sizing.
 
 ## Step 5: Confirm Setup
 
