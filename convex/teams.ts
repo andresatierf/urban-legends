@@ -629,6 +629,24 @@ export const recalculatePoints = mutation({
       throw new Error("Team not found");
     }
 
+    // Get tournament for scoring config
+    const tournament = await ctx.db.get(team.tournamentId);
+    if (!tournament) {
+      throw new Error("Tournament not found");
+    }
+
+    const scoringConfig = tournament.scoringConfig || {
+      individualPoints: { base: 1, advanced: 1 },
+      teamExercisePoints: { base: 1, advanced: 1 },
+      teamExerciseThreshold: 0.5,
+    };
+
+    // Get all team members for participation calculation
+    const teamMembers = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .collect();
+
     // Get all approved submissions for team
     const submissions = await ctx.db
       .query("submissions")
@@ -636,11 +654,34 @@ export const recalculatePoints = mutation({
       .filter((q) => q.eq(q.field("state"), "approved"))
       .collect();
 
-    // Sum up all points earned from approved submissions
-    const totalPoints = submissions.reduce(
-      (sum, submission) => sum + (submission.pointsEarned || 1), // fallback to 1 for old submissions
-      0,
-    );
+    let totalPoints = 0;
+    let updatedCount = 0;
+
+    // Calculate points for each submission
+    for (const submission of submissions) {
+      let pointsEarned = submission.pointsEarned;
+
+      // Recalculate if pointsEarned is not set or is 0
+      if (pointsEarned === undefined || pointsEarned === 0) {
+        const tier = submission.tier || "base";
+        const teammateCount = submission.teammates.length;
+        const totalTeamMembers = teamMembers.length;
+        const participationRate =
+          totalTeamMembers > 0 ? teammateCount / totalTeamMembers : 0;
+        const isTeamExercise =
+          participationRate >= scoringConfig.teamExerciseThreshold;
+
+        pointsEarned = isTeamExercise
+          ? scoringConfig.teamExercisePoints[tier]
+          : scoringConfig.individualPoints[tier];
+
+        // Update the submission with calculated points
+        await ctx.db.patch(submission._id, { pointsEarned });
+        updatedCount++;
+      }
+
+      totalPoints += pointsEarned;
+    }
 
     // Find most recent submission for lastActivityAt
     const sortedSubmissions = submissions.sort(
@@ -658,6 +699,7 @@ export const recalculatePoints = mutation({
       teamId: args.teamId,
       points: totalPoints,
       lastActivityAt,
+      submissionsUpdated: updatedCount,
     };
   },
 });
