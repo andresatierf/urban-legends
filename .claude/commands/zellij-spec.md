@@ -72,35 +72,31 @@ CONVEX_PORT=$((3210 + OFFSET))
 # Get the worktree path
 WORKTREE_PATH="$PWD/../urban-legends-[feature-name]"
 
-# Create new Zellij tab with layout
-zellij action new-tab --layout dev-spec --name "[feature-name]" --cwd "$WORKTREE_PATH"
-
-# Wait for layout to be created
-sleep 1
-
-# Focus the next pane (upper-right for Next.js)
-zellij action focus-next-pane
-
-# Start Next.js dev server
-zellij action write-chars "PORT=$NEXT_PORT bun --bun run dev"
+# Create new Zellij tab named after the feature
+zellij action new-tab --name "[feature-name]" --cwd "$WORKTREE_PATH"
+zellij action write-chars "cd $WORKTREE_PATH"
 zellij action write 10
 
-# Focus the convex pane (lower-right)
-zellij action focus-next-pane
+# Split right to create upper-right pane
+zellij action new-pane --direction right --cwd "$WORKTREE_PATH" --start-suspended -- PORT=$NEXT_PORT bun --bun run dev
 
-# Start Convex backend
-zellij action write-chars "CONVEX_SITE_PORT=$CONVEX_PORT bun --bun convex dev"
-zellij action write 10
+# Split the right pane down to create lower-right pane
+zellij action new-pane --direction down --cwd "$WORKTREE_PATH" --start-suspended -- CONVEX_SITE_PORT=$CONVEX_PORT bun --bun convex dev
 
-# Focus back to the editor pane (left)
+# Focus back to left pane for coding
 zellij action focus-next-pane
 
 # Open nvim in the editor pane
 zellij action write-chars "nvim"
 zellij action write 10
-```
 
-**Note:** This uses the Zellij layout file at `~/.config/zellij/layouts/dev-spec.kdl` which defines the 3-pane layout with proper sizing.
+# Resize
+zellij action resize + right
+zellij action resize + right
+zellij action resize + right
+zellij action resize + right
+zellij action resize + right
+```
 
 ## Step 5: Confirm Setup
 
