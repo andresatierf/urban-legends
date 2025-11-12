@@ -389,6 +389,12 @@ export const upsertUserTeam = mutation({
       }
     }
 
+    const data = {
+      name: args.name,
+      tournamentId: args.tournamentId,
+      visibility: args.visibility,
+    };
+
     if (args._id) {
       const team = await ctx.db.get(args._id);
       if (!team) {
@@ -402,10 +408,7 @@ export const upsertUserTeam = mutation({
         });
       }
 
-      await ctx.db.patch(args._id, {
-        name: args.name,
-        visibility: args.visibility,
-      });
+      await ctx.db.patch(args._id, data);
 
       return args._id;
     }
@@ -427,10 +430,8 @@ export const upsertUserTeam = mutation({
     });
 
     const teamId = await ctx.db.insert("teams", {
-      name: args.name,
-      tournamentId: args.tournamentId,
+      ...data,
       createdBy: user._id,
-      visibility: args.visibility,
       maxMembers: tournament.teamMaxSize,
       points: 0,
     });

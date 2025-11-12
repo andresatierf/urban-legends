@@ -1,13 +1,13 @@
 import { useStore } from "@tanstack/react-form";
 import { useFieldContext } from "@/hooks/form-context";
 import { Field, FieldError, FieldLabel } from "../../ui/field";
-import { Input } from "../../ui/input";
+import { Input, type InputProps } from "../../ui/input";
 
-type Props = {
+type Props = InputProps & {
   label: string;
 };
 
-export default function DateField({ label }: Props) {
+export default function DateField({ label, ...props }: Props) {
   const field = useFieldContext<string>();
 
   const [isInvalid, errors] = useStore(field.store, (state) => [
@@ -19,6 +19,7 @@ export default function DateField({ label }: Props) {
     <Field data-invalid={isInvalid}>
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Input
+        {...props}
         type="date"
         id={field.name}
         name={field.name}

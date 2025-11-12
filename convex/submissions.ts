@@ -135,23 +135,24 @@ export const upsert = mutation({
       tier: args.tier || "base",
     };
 
-    if (!args._id) {
-      return await ctx.db.insert("submissions", {
-        ...data,
-        state: "pending",
-        createdBy: user._id,
-        pointsEarned: 0, // Will be calculated on approval
-      });
+    if (args._id) {
+      const submission = await ctx.db.get(args._id);
+
+      if (!submission) throw new Error("Submission not found");
+
+      if (submission.createdBy !== user._id) {
+        throw new Error("You do not have permission to update this submission");
+      }
+
+      return await ctx.db.patch(args._id, data);
     }
 
-    const submission = await ctx.db.get(args._id);
-    if (!submission) throw new Error("Submission not found");
-
-    if (submission.createdBy !== user._id) {
-      throw new Error("You do not have permission to update this submission");
-    }
-
-    return await ctx.db.patch(args._id, data);
+    return await ctx.db.insert("submissions", {
+      ...data,
+      state: "pending",
+      createdBy: user._id,
+      pointsEarned: 0, // Will be calculated on approval
+    });
   },
 });
 

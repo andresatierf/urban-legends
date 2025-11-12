@@ -144,14 +144,15 @@ export const upsert = mutation({
 
       if (!tournament) throw new Error("Tournament not found");
 
-      return await ctx.db.patch(args._id, data);
+      await ctx.db.patch(args._id, data);
+
+      return args._id;
     }
 
     return await ctx.db.insert("tournaments", { ...data, createdBy: user._id });
   },
 });
 
-// TODO: deleting a tournament should delete all associated teams, submissions, invites, etc
 export const remove = mutation({
   args: { tournamentId: v.id("tournaments") },
   handler: async (_ctx, _args) => {

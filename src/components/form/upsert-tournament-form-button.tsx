@@ -94,7 +94,7 @@ export function UpsertTournamentFormButton({
         toast.success(
           `Tournament ${tournament ? "updated" : "created"} successfully!`,
         );
-        router.push("/tournaments");
+        router.push(`/tournaments/${tournament?._id}`);
         setOpen(false);
       } catch (error) {
         toast.error(
@@ -259,7 +259,12 @@ export function UpsertTournamentFormButton({
 
                 <form.AppField name="scoringConfig.teamExerciseThreshold">
                   {(field) => (
-                    <field.NumberField label="Team Exercise Threshold (0-1)" />
+                    <field.NumberField
+                      label="Team Exercise Threshold (0-1)"
+                      step="0.1"
+                      min="0"
+                      max="1"
+                    />
                   )}
                 </form.AppField>
               </div>
