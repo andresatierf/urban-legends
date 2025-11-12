@@ -16,7 +16,6 @@ import type {
 import type * as admin from "../admin.js";
 import type * as http from "../http.js";
 import type * as joinRequests from "../joinRequests.js";
-import type * as migrations from "../migrations.js";
 import type * as roles from "../roles.js";
 import type * as submissions from "../submissions.js";
 import type * as teamInvitations from "../teamInvitations.js";
@@ -36,7 +35,6 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   http: typeof http;
   joinRequests: typeof joinRequests;
-  migrations: typeof migrations;
   roles: typeof roles;
   submissions: typeof submissions;
   teamInvitations: typeof teamInvitations;
