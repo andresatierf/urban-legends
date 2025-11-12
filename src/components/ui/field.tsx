@@ -206,8 +206,11 @@ function FieldError({
 
     return (
       <ul className="ml-4 flex list-disc flex-col gap-1">
-        {errors.map((error) =>
-          error?.message ? <li key={error.message}>{error.message}</li> : null,
+        {errors.map((error, index) =>
+          error?.message ? (
+            // biome-ignore lint/suspicious/noArrayIndexKey: explanation
+            <li key={`error-${index}`}>{error.message}</li>
+          ) : null,
         )}
       </ul>
     );

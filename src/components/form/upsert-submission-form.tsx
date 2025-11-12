@@ -29,6 +29,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 const formSchema = z.object({
   teamId: z.custom<Id<"teams">>(
     (val) => typeof val === "string" && val.length >= 1,
+    "Please select a team",
   ),
   description: z.string().optional(),
   date: z.string().min(1, "You must select a date."),
@@ -109,7 +110,7 @@ export function UpsertSubmissionFormDialog({
     team ? { tournamentId: team.tournamentId } : "skip",
   );
 
-  const teammates =
+  const teamMembers =
     useQuery(
       api.teams.listTeamMembers,
       teamId ? { teamId, excludeSelf: true } : "skip",
@@ -117,11 +118,11 @@ export function UpsertSubmissionFormDialog({
 
   const teammateOptions = useMemo(
     () =>
-      teammates?.map((t) => ({
-        value: t._id,
-        label: t.email || "Unknown",
+      teamMembers?.map((teammate) => ({
+        value: teammate._id,
+        label: `${teammate.name || "unknown name"} (${teammate.email})`,
       })) ?? [],
-    [teammates],
+    [teamMembers],
   );
 
   return (
@@ -187,7 +188,7 @@ export function UpsertSubmissionFormDialog({
               {(field) => <field.DateField label="Date" />}
             </form.AppField>
           </FieldGroup>
-          {teammates.length > 0 && (
+          {teamMembers.length > 0 && (
             <FieldGroup className="mt-6">
               <form.Field name="teammateIds" mode="array">
                 {(field) => {
@@ -203,7 +204,7 @@ export function UpsertSubmissionFormDialog({
                             field.state.value.length <
                               Math.min(
                                 tournament?.teamMaxSize || 9999,
-                                teammates.length,
+                                teamMembers.length,
                               )
                               ? field.pushValue("" as Id<"users">)
                               : undefined
@@ -213,7 +214,7 @@ export function UpsertSubmissionFormDialog({
                             field.state.value.length >=
                               Math.min(
                                 tournament?.teamMaxSize || 9999,
-                                teammates.length,
+                                teamMembers.length,
                               )
                           }
                           type="button"

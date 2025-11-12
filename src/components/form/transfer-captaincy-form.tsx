@@ -57,7 +57,7 @@ export function TransferCaptaincyFormDialog({
     () =>
       teamMembers?.map((member) => ({
         value: member._id,
-        label: `${member.name} (${member.email})`,
+        label: `${member.name || "unknown name"} (${member.email})`,
       })) ?? [],
     [teamMembers],
   );
