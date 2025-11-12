@@ -22,10 +22,12 @@ export const list = query({
 
     const users = await usersQuery.collect();
 
-    return users.map(async (user) => {
-      const roles = await getRolesForUser(ctx, user._id);
-      return { ...user, roles };
-    });
+    return await Promise.all(
+      users.map(async (user) => {
+        const roles = await getRolesForUser(ctx, user._id);
+        return { ...user, roles };
+      }),
+    );
   },
 });
 

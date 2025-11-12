@@ -6,6 +6,6 @@ export function useUser() {
 
   return {
     user,
-    isAdmin: user?.roles?.includes("admin"),
+    isAdmin: user?.roles.includes("admin") ?? false,
   };
 }
