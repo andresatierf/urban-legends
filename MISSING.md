@@ -4,35 +4,48 @@ This document outlines the features that are missing or incomplete for a Minimum
 
 ## Current State
 
-The codebase is approximately **60-70% complete** for MVP. Core infrastructure is solid:
+The codebase is approximately **75-80% complete** for MVP. Core infrastructure is solid:
 
 - ✅ Authentication & user management (Clerk integration)
 - ✅ Role-based access control
 - ✅ Tournament management (admin)
 - ✅ Submission creation and approval workflow
-- ✅ Basic team management (admin-only)
+- ✅ **Team joining and self-service** (PR #1 - COMPLETE)
+- ✅ **Code quality and type safety** (PR #4 - COMPLETE)
+- ✅ Team management (admin-only)
+
+## Completed Features
+
+### ✅ 1. Team Joining / Self-Service ([spec](specs/done/01-team-joining.md))
+
+**Status:** ✅ Implemented (PR #1)
+**Completed:** 2025-11-11
+
+**Implemented:**
+- ✅ User self-service team creation for tournaments
+- ✅ Join existing teams (with captain approval via join requests)
+- ✅ Leave teams
+- ✅ Team invitation system by email
+- ✅ Accept/reject invitations
+- ✅ Cancel join requests
+
+### ✅ 8. Code Quality Fixes ([spec](specs/done/08-code-quality-fixes.md))
+
+**Status:** ✅ Implemented (PR #4)
+**Completed:** 2025-11-12
+
+**Implemented:**
+- ✅ Fixed all TypeScript type errors
+- ✅ Removed non-null assertions with proper validation
+- ✅ Environment variable validation at startup
+- ✅ Webhook validation improvements
+- ✅ Fixed linting errors (0 errors, 2 acceptable warnings)
 
 ## Critical Blockers (Must Have)
 
 These features are **required** for a functional MVP and block the user journey:
 
-### 1. Team Joining / Self-Service ([spec](specs/01-team-joining.md))
-
-**Status:** ❌ Not Implemented
-**Priority:** CRITICAL
-
-**Problem:** Users cannot join tournaments or teams without admin intervention. Team creation is admin-only.
-
-**Impact:** Prevents users from participating in tournaments independently.
-
-**Required:**
-
-- User self-service team creation for tournaments
-- Join existing teams (with captain approval)
-- Leave teams
-- Team invitation system
-
-### 2. Leaderboard & Scoring System ([spec](specs/02-leaderboard-scoring.md))
+### 1. Leaderboard & Scoring System ([spec](specs/02-leaderboard-scoring.md))
 
 **Status:** ❌ Not Implemented
 **Priority:** CRITICAL
@@ -48,27 +61,30 @@ These features are **required** for a functional MVP and block the user journey:
 - Leaderboard query and UI
 - Tournament winner determination
 
-### 3. Team Edit/Delete ([spec](specs/03-team-edit-delete.md))
+### 2. Team Edit Functionality ([spec](specs/03-team-edit-delete.md))
 
-**Status:** ❌ Backend Missing
+**Status:** ⚠️ Partially Implemented (Delete done in PR #3, Edit missing)
 **Priority:** CRITICAL
 
-**Problem:** Teams cannot be edited or deleted after creation. UI has non-functional buttons.
+**Problem:** Teams can be deleted but cannot be edited. UI has non-functional Edit button.
 
-**Impact:** No way to fix mistakes or clean up abandoned teams.
+**Impact:** No way to fix typos in team names or update team settings.
 
-**Required:**
+**Completed:**
+- ✅ `teams.removeUserTeam` mutation (captain can delete their team)
+- ✅ Permission checks (captains + admins only)
 
-- `teams.update` mutation
-- `teams.delete` mutation
-- Wire up Edit/Delete buttons in UI
-- Permission checks (captains + admins only)
+**Still Required:**
+
+- ❌ `teams.update` mutation
+- ❌ Edit team form/dialog in UI
+- ❌ Wire up Edit button in UI
 
 ## High Priority (Should Have)
 
 These features significantly improve user experience but don't block core flows:
 
-### 4. Submission Progress Calendar ([spec](specs/04-submission-calendar.md))
+### 3. Submission Progress Calendar ([spec](specs/04-submission-calendar.md))
 
 **Status:** ⚠️ Commented Out (77 lines of code exist)
 **Priority:** HIGH
@@ -83,7 +99,7 @@ These features significantly improve user experience but don't block core flows:
 - Show submission status by date (submitted/missing/approved/rejected)
 - Visual progress indicators for tournaments
 
-### 5. Admin Role Management UI ([spec](specs/05-admin-role-management.md))
+### 4. Admin Role Management UI ([spec](specs/05-admin-role-management.md))
 
 **Status:** ⚠️ Backend Complete, UI Missing
 **Priority:** HIGH
@@ -98,7 +114,7 @@ These features significantly improve user experience but don't block core flows:
 - Add role selector to user details page
 - Confirmation dialogs for role changes
 
-### 6. Team Member Management UI ([spec](specs/06-team-member-management.md))
+### 5. Team Member Management UI ([spec](specs/06-team-member-management.md))
 
 **Status:** ⚠️ Backend Complete, UI Missing
 **Priority:** HIGH
@@ -118,7 +134,7 @@ These features significantly improve user experience but don't block core flows:
 
 These features enhance the platform but are not essential for MVP launch:
 
-### 7. Complete Admin Dashboard ([spec](specs/07-admin-dashboard.md))
+### 6. Complete Admin Dashboard ([spec](specs/07-admin-dashboard.md))
 
 **Status:** ⚠️ Placeholder Only
 **Priority:** MEDIUM
@@ -134,7 +150,7 @@ These features enhance the platform but are not essential for MVP launch:
 - Quick actions for admin tasks
 - Recent activity feed
 
-### 8. Notifications System
+### 7. Notifications System
 
 **Status:** ❌ Not Implemented
 **Priority:** MEDIUM
@@ -162,25 +178,37 @@ Additional issues that should be addressed:
 
 ## Estimated Effort
 
-| Feature                   | Effort   | Blockers        |
-| ------------------------- | -------- | --------------- |
-| Team Joining/Self-Service | 3-5 days | Critical        |
-| Leaderboard & Scoring     | 2-3 days | Critical        |
-| Team Edit/Delete          | 1 day    | Critical        |
-| Submission Calendar       | 1-2 days | High Priority   |
-| Admin Role Management UI  | 1 day    | High Priority   |
-| Team Member Management UI | 1-2 days | High Priority   |
-| Admin Dashboard           | 2 days   | Medium Priority |
-| Notifications             | 3-4 days | Medium Priority |
+| Feature                   | Effort   | Blockers        | Status      |
+| ------------------------- | -------- | --------------- | ----------- |
+| Team Joining/Self-Service | 3-5 days | Critical        | ✅ Complete |
+| Code Quality Fixes        | 1 day    | Technical Debt  | ✅ Complete |
+| Leaderboard & Scoring     | 2-3 days | Critical        | ❌ Pending  |
+| Team Edit (Update)        | 0.5 days | Critical        | ❌ Pending  |
+| Team Delete               | 0.5 days | Critical        | ✅ Complete |
+| Submission Calendar       | 1-2 days | High Priority   | ❌ Pending  |
+| Admin Role Management UI  | 1 day    | High Priority   | ❌ Pending  |
+| Team Member Management UI | 1-2 days | High Priority   | ❌ Pending  |
+| Admin Dashboard           | 2 days   | Medium Priority | ❌ Pending  |
+| Notifications             | 3-4 days | Medium Priority | ❌ Pending  |
 
-**Total for Critical MVP:** ~6-9 days
-**Total for High Priority:** ~9-12 days
-**Total for Complete MVP:** ~14-20 days
+**Completed:** ~5 days
+**Remaining for Critical MVP:** ~3-4 days (Leaderboard + Team Edit)
+**Remaining for High Priority:** ~6-9 days
+**Remaining for Complete MVP:** ~11-17 days
+
+## Progress Summary
+
+- **Overall Completion:** ~75-80% of MVP
+- **Critical Features:** 2/3 complete (Team Joining ✅, Code Quality ✅, Leaderboard ❌, Team Edit/Delete ⚠️)
+- **Recent Merges:**
+  - PR #1: Team Joining (11/11/2025)
+  - PR #3: Team Deletion (11/11/2025)
+  - PR #4: Code Quality Fixes (11/12/2025)
 
 ## Next Steps
 
-1. **Week 1:** Complete critical blockers (team joining, leaderboard, team edit/delete)
-2. **Week 2:** Implement high priority features (calendar, role management, member management)
-3. **Week 3:** Polish and medium priority features (admin dashboard, notifications)
+1. **Immediate:** Leaderboard & Scoring (2-3 days) - highest priority blocker
+2. **Next:** Team Edit mutation and UI (0.5 days) - complete spec #3
+3. **Then:** High priority features (calendar, role management, member management)
 
 Refer to individual spec files in the `specs/` directory for detailed implementation plans.
