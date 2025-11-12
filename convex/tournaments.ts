@@ -100,6 +100,20 @@ export const upsert = mutation({
     endDate: v.string(),
     teamMinSize: v.number(),
     teamMaxSize: v.number(),
+    // Scoring configuration (optional for backwards compatibility)
+    scoringConfig: v.optional(
+      v.object({
+        individualPoints: v.object({
+          base: v.number(),
+          advanced: v.number(),
+        }),
+        teamExercisePoints: v.object({
+          base: v.number(),
+          advanced: v.number(),
+        }),
+        teamExerciseThreshold: v.number(),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -108,6 +122,13 @@ export const upsert = mutation({
       throw new Error("Admin access required");
     }
 
+    // Default scoring config if not provided
+    const defaultScoringConfig = {
+      individualPoints: { base: 1, advanced: 1 },
+      teamExercisePoints: { base: 1, advanced: 1 },
+      teamExerciseThreshold: 0.5,
+    };
+
     const data = {
       name: args.name,
       description: args.description || "",
@@ -115,6 +136,7 @@ export const upsert = mutation({
       endDate: args.endDate,
       teamMinSize: args.teamMinSize,
       teamMaxSize: args.teamMaxSize,
+      scoringConfig: args.scoringConfig || defaultScoringConfig,
     };
 
     if (args._id) {
@@ -305,7 +327,9 @@ export const getWinner = query({
 
     const members = await ctx.db
       .query("teamMembers")
-      .withIndex("by_team", (q) => q.eq("teamId", tournament.winnerId))
+      .withIndex("by_team", (q) =>
+        q.eq("teamId", tournament.winnerId as typeof tournament.winnerId),
+      )
       .collect();
 
     const users = await Promise.all(
@@ -437,7 +461,8 @@ export const getStatistics = query({
     }
 
     let highestScoringDay: { date: string; submissions: number } | null = null;
-    for (const [date, count] of submissionsByDate.entries()) {
+    for (const entry of Array.from(submissionsByDate.entries())) {
+      const [date, count] = entry;
       if (!highestScoringDay || count > highestScoringDay.submissions) {
         highestScoringDay = { date, submissions: count };
       }

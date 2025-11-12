@@ -107,6 +107,7 @@ export const upsert = mutation({
     teamId: v.id("teams"),
     description: v.optional(v.string()),
     teammateIds: v.array(v.id("users")),
+    tier: v.optional(v.union(v.literal("base"), v.literal("advanced"))),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -131,6 +132,7 @@ export const upsert = mutation({
       tournamentId: team.tournamentId,
       description: args.description,
       teammates: args.teammateIds,
+      tier: args.tier || "base",
     };
 
     if (!args._id) {
@@ -210,15 +212,12 @@ export const remove = mutation({
       throw new Error("Submission already deleted");
     }
 
-    if (submission.state === "approved") {
-      throw new Error("Cannot remove an approved submission");
-    }
-
     if (submission.state === "rejected") {
       throw new Error("Cannot remove a rejected submission");
     }
 
     const previousState = submission.state;
+    const previousPoints = submission.pointsEarned || 0;
 
     await ctx.db.patch(args.submissionId, {
       state: "deleted",
@@ -226,11 +225,11 @@ export const remove = mutation({
     });
 
     // Decrement points if the submission was approved before deletion
-    if (previousState === "approved") {
+    if (previousState === "approved" && previousPoints > 0) {
       const team = await ctx.db.get(submission.teamId);
       if (team) {
         await ctx.db.patch(submission.teamId, {
-          points: Math.max(0, team.points - 1),
+          points: Math.max(0, team.points - previousPoints),
           lastActivityAt: new Date().toISOString(),
         });
       }
@@ -316,20 +315,65 @@ export const approve = mutation({
 
     const previousState = submission.state;
 
+    // Get tournament to access scoring config
+    const tournament = await ctx.db.get(submission.tournamentId);
+    if (!tournament) {
+      throw new Error("Tournament not found");
+    }
+
+    // Get team and team members for scoring calculation
+    const team = await ctx.db.get(submission.teamId);
+    if (!team) {
+      throw new Error("Team not found");
+    }
+
+    const teamMembers = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
+      .collect();
+
+    // Calculate points based on tier and team exercise
+    let pointsEarned = 0;
+    const tier = submission.tier || "base";
+    const scoringConfig = tournament.scoringConfig || {
+      individualPoints: { base: 1, advanced: 1 },
+      teamExercisePoints: { base: 1, advanced: 1 },
+      teamExerciseThreshold: 0.5,
+    };
+
+    // Determine if this is a team exercise
+    const teammateCount = submission.teammates.length;
+    const totalTeamMembers = teamMembers.length;
+    const participationRate =
+      totalTeamMembers > 0 ? teammateCount / totalTeamMembers : 0;
+    const isTeamExercise =
+      participationRate >= scoringConfig.teamExerciseThreshold;
+
+    if (isTeamExercise) {
+      pointsEarned = scoringConfig.teamExercisePoints[tier];
+    } else {
+      pointsEarned = scoringConfig.individualPoints[tier];
+    }
+
     await ctx.db.patch(args.submissionId, {
       state: "approved",
       managedBy: user._id,
+      pointsEarned,
     });
 
     // Only increment points if transitioning from non-approved state to approved
     if (previousState !== "approved") {
-      const team = await ctx.db.get(submission.teamId);
-      if (team) {
-        await ctx.db.patch(submission.teamId, {
-          points: team.points + 1,
-          lastActivityAt: new Date().toISOString(),
-        });
-      }
+      await ctx.db.patch(submission.teamId, {
+        points: team.points + pointsEarned,
+        lastActivityAt: new Date().toISOString(),
+      });
+    } else if (submission.pointsEarned !== pointsEarned) {
+      // Re-approval with different points (e.g., tier changed)
+      const pointsDiff = pointsEarned - (submission.pointsEarned || 0);
+      await ctx.db.patch(submission.teamId, {
+        points: team.points + pointsDiff,
+        lastActivityAt: new Date().toISOString(),
+      });
     }
   },
 });
@@ -348,6 +392,7 @@ export const reject = mutation({
     }
 
     const previousState = submission.state;
+    const previousPoints = submission.pointsEarned || 0;
 
     await ctx.db.patch(args.submissionId, {
       state: "rejected",
@@ -355,11 +400,11 @@ export const reject = mutation({
     });
 
     // Only decrement points if transitioning from approved state to rejected
-    if (previousState === "approved") {
+    if (previousState === "approved" && previousPoints > 0) {
       const team = await ctx.db.get(submission.teamId);
       if (team) {
         await ctx.db.patch(submission.teamId, {
-          points: Math.max(0, team.points - 1),
+          points: Math.max(0, team.points - previousPoints),
           lastActivityAt: new Date().toISOString(),
         });
       }

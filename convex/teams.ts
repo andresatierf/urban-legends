@@ -628,12 +628,18 @@ export const recalculatePoints = mutation({
       throw new Error("Team not found");
     }
 
-    // Count all approved submissions for team
+    // Get all approved submissions for team
     const submissions = await ctx.db
       .query("submissions")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
       .filter((q) => q.eq(q.field("state"), "approved"))
       .collect();
+
+    // Sum up all points earned from approved submissions
+    const totalPoints = submissions.reduce(
+      (sum, submission) => sum + (submission.pointsEarned || 1), // fallback to 1 for old submissions
+      0,
+    );
 
     // Find most recent submission for lastActivityAt
     const sortedSubmissions = submissions.sort(
@@ -643,13 +649,13 @@ export const recalculatePoints = mutation({
 
     // Update team points
     await ctx.db.patch(args.teamId, {
-      points: submissions.length,
+      points: totalPoints,
       lastActivityAt,
     });
 
     return {
       teamId: args.teamId,
-      points: submissions.length,
+      points: totalPoints,
       lastActivityAt,
     };
   },

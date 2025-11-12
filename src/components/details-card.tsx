@@ -1,5 +1,6 @@
 import { startCase } from "lodash";
 import { type LucideIcon, MoreHorizontalIcon } from "lucide-react";
+import Link, { type LinkProps } from "next/link";
 import { Fragment } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -23,14 +24,13 @@ type Props = {
   title: string;
   description?: string;
   details?: { key: string; value: React.ReactNode; className?: string }[];
-  actions?: {
+  actions?: ({
     label: string;
-    onClick: () => void;
     icon: LucideIcon;
     condition: boolean;
     separator?: "after" | "before";
     external?: boolean;
-  }[];
+  } & ({ href: LinkProps["href"] } | { onClick: () => void }))[];
   className?: string;
 };
 
@@ -49,16 +49,28 @@ export function DetailsCard({
           <ButtonGroup>
             {actions
               ?.filter((action) => action.external && action.condition)
-              .map((action) => (
-                <Button
-                  key={action.label}
-                  variant="outline"
-                  onClick={action.onClick}
-                >
-                  <action.icon className="h-4 w-4" />
-                  {action.label}
-                </Button>
-              ))}
+              .map((action) => {
+                if ("href" in action)
+                  return (
+                    <Button key={action.label} variant="outline" asChild>
+                      <Link href={action.href}>
+                        <action.icon className="h-4 w-4" />
+                        {action.label}
+                      </Link>
+                    </Button>
+                  );
+
+                return (
+                  <Button
+                    key={action.label}
+                    variant="outline"
+                    onClick={action.onClick}
+                  >
+                    <action.icon className="h-4 w-4" />
+                    {action.label}
+                  </Button>
+                );
+              })}
 
             {actions?.some((action) => action.condition) && (
               <DropdownMenu>
@@ -72,23 +84,42 @@ export function DetailsCard({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
-                  {actions?.map(
-                    (action) =>
-                      action.condition && (
+                  {actions?.map((action) => {
+                    if (action.condition === false) return null;
+
+                    if ("href" in action)
+                      return (
                         <Fragment key={action.label}>
                           {action.separator === "before" && (
                             <DropdownMenuSeparator />
                           )}
-                          <DropdownMenuItem onSelect={action.onClick}>
-                            <action.icon className="h-4 w-4" />
-                            {action.label}
+                          <DropdownMenuItem asChild>
+                            <Link href={action.href}>
+                              <action.icon className="h-4 w-4" />
+                              {action.label}
+                            </Link>
                           </DropdownMenuItem>
                           {action.separator === "after" && (
                             <DropdownMenuSeparator />
                           )}
                         </Fragment>
-                      ),
-                  )}
+                      );
+
+                    return (
+                      <Fragment key={action.label}>
+                        {action.separator === "before" && (
+                          <DropdownMenuSeparator />
+                        )}
+                        <DropdownMenuItem onSelect={action.onClick}>
+                          <action.icon className="h-4 w-4" />
+                          {action.label}
+                        </DropdownMenuItem>
+                        {action.separator === "after" && (
+                          <DropdownMenuSeparator />
+                        )}
+                      </Fragment>
+                    );
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}

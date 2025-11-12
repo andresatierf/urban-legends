@@ -12,6 +12,23 @@ export default defineSchema({
     createdBy: v.id("users"),
     winnerId: v.optional(v.id("teams")),
     completedAt: v.optional(v.string()),
+    // Scoring configuration
+    scoringConfig: v.optional(
+      v.object({
+        // Individual submission points by tier
+        individualPoints: v.object({
+          base: v.number(), // e.g., 2 points
+          advanced: v.number(), // e.g., 3 points
+        }),
+        // Team exercise points by tier
+        teamExercisePoints: v.object({
+          base: v.number(), // e.g., 20 points
+          advanced: v.number(), // e.g., 30 points
+        }),
+        // Threshold for team exercise (percentage of team members required)
+        teamExerciseThreshold: v.number(), // e.g., 0.5 for 50%
+      }),
+    ),
   }).index("by_name", ["name"]),
 
   teams: defineTable({
@@ -64,6 +81,9 @@ export default defineSchema({
     ),
     createdBy: v.id("users"),
     managedBy: v.optional(v.id("users")),
+    // Scoring fields
+    tier: v.optional(v.union(v.literal("base"), v.literal("advanced"))),
+    pointsEarned: v.optional(v.number()), // Calculated when approved
   })
     .index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "date"])
