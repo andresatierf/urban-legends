@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { useMemo } from "react";
 import { UpsertTeamFormDialog } from "@/components/form/upsert-team-form";
-import { UpsertTournamentFormButton } from "@/components/form/upsert-tournament-form-button";
+import { UpsertTournamentFormDialog } from "@/components/form/upsert-tournament-form";
 import { SectionHeader } from "@/components/section-header";
 import { TournamentCard } from "@/components/tournaments/tournament-card";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,7 +38,7 @@ export default function TournamentsPage() {
   return (
     <>
       <SectionHeader as="h1" title="Tournaments">
-        {isAdmin && <UpsertTournamentFormButton />}
+        {isAdmin && <UpsertTournamentFormDialog />}
       </SectionHeader>
 
       {allTournaments && allTournaments.length !== 0 && (

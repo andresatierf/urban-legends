@@ -7,6 +7,39 @@ import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Card, CardContent } from "../ui/card";
 
+const getPodiumIcon = (rank: number) => {
+  if (rank === 1) {
+    return <Trophy className="h-12 w-12 text-yellow-500" />;
+  }
+  if (rank === 2) {
+    return <Medal className="h-10 w-10 text-gray-400" />;
+  }
+  if (rank === 3) {
+    return <Medal className="h-10 w-10 text-orange-600" />;
+  }
+  return null;
+};
+
+const getPodiumColor = (rank: number) => {
+  if (rank === 1) {
+    return "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20";
+  }
+  if (rank === 2) {
+    return "border-gray-400 bg-gray-50 dark:bg-gray-950/20";
+  }
+  if (rank === 3) {
+    return "border-orange-600 bg-orange-50 dark:bg-orange-950/20";
+  }
+  return "";
+};
+
+const getPodiumHeight = (rank: number) => {
+  if (rank === 1) return "md:mt-0";
+  if (rank === 2) return "md:mt-8";
+  if (rank === 3) return "md:mt-12";
+  return "";
+};
+
 type Props = {
   tournamentId: Id<"tournaments">;
 };
@@ -42,40 +75,7 @@ export function LeaderboardPodium({ tournamentId }: Props) {
     leaderboard.find((t) => t.rank === 2),
     leaderboard.find((t) => t.rank === 1),
     leaderboard.find((t) => t.rank === 3),
-  ].filter(Boolean);
-
-  const getPodiumIcon = (rank: number) => {
-    if (rank === 1) {
-      return <Trophy className="h-12 w-12 text-yellow-500" />;
-    }
-    if (rank === 2) {
-      return <Medal className="h-10 w-10 text-gray-400" />;
-    }
-    if (rank === 3) {
-      return <Medal className="h-10 w-10 text-orange-600" />;
-    }
-    return null;
-  };
-
-  const getPodiumColor = (rank: number) => {
-    if (rank === 1) {
-      return "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20";
-    }
-    if (rank === 2) {
-      return "border-gray-400 bg-gray-50 dark:bg-gray-950/20";
-    }
-    if (rank === 3) {
-      return "border-orange-600 bg-orange-50 dark:bg-orange-950/20";
-    }
-    return "";
-  };
-
-  const getPodiumHeight = (rank: number) => {
-    if (rank === 1) return "md:mt-0";
-    if (rank === 2) return "md:mt-8";
-    if (rank === 3) return "md:mt-12";
-    return "";
-  };
+  ].filter((team): team is NonNullable<typeof team> => Boolean(team));
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -93,6 +93,7 @@ export function LeaderboardPodium({ tournamentId }: Props) {
                 <Link
                   href={`/teams/${team.teamId}`}
                   className="font-bold text-lg hover:underline"
+                  aria-label={`View ${team.teamName} team profile - Rank ${team.rank}`}
                 >
                   {team.teamName}
                 </Link>

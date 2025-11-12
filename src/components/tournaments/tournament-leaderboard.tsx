@@ -14,6 +14,49 @@ import {
   TableRow,
 } from "../ui/table";
 
+const getRankBadge = (rank: number, _isWinner: boolean) => {
+  if (rank === 1) {
+    return (
+      <div className="flex items-center justify-center gap-1 font-bold text-yellow-600">
+        <Trophy className="h-4 w-4" />
+        {rank}
+      </div>
+    );
+  }
+  if (rank === 2) {
+    return (
+      <div className="flex items-center justify-center gap-1 font-bold text-gray-400">
+        <Trophy className="h-4 w-4" />
+        {rank}
+      </div>
+    );
+  }
+  if (rank === 3) {
+    return (
+      <div className="flex items-center justify-center gap-1 font-bold text-orange-600">
+        <Trophy className="h-4 w-4" />
+        {rank}
+      </div>
+    );
+  }
+  return (
+    <div className="text-center font-medium text-muted-foreground">#{rank}</div>
+  );
+};
+
+const getRowClassName = (rank: number, _isWinner: boolean) => {
+  if (rank === 1) {
+    return "bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-950/20 dark:hover:bg-yellow-950/30";
+  }
+  if (rank === 2) {
+    return "bg-gray-50 hover:bg-gray-100 dark:bg-gray-950/20 dark:hover:bg-gray-950/30";
+  }
+  if (rank === 3) {
+    return "bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/20 dark:hover:bg-orange-950/30";
+  }
+  return "hover:bg-muted/50";
+};
+
 type Props = {
   tournamentId: Id<"tournaments">;
   limit?: number;
@@ -73,51 +116,6 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
     );
   }
 
-  const getRankBadge = (rank: number, _isWinner: boolean) => {
-    if (rank === 1) {
-      return (
-        <div className="flex items-center justify-center gap-1 font-bold text-yellow-600">
-          <Trophy className="h-4 w-4" />
-          {rank}
-        </div>
-      );
-    }
-    if (rank === 2) {
-      return (
-        <div className="flex items-center justify-center gap-1 font-bold text-gray-400">
-          <Trophy className="h-4 w-4" />
-          {rank}
-        </div>
-      );
-    }
-    if (rank === 3) {
-      return (
-        <div className="flex items-center justify-center gap-1 font-bold text-orange-600">
-          <Trophy className="h-4 w-4" />
-          {rank}
-        </div>
-      );
-    }
-    return (
-      <div className="text-center font-medium text-muted-foreground">
-        #{rank}
-      </div>
-    );
-  };
-
-  const getRowClassName = (rank: number, _isWinner: boolean) => {
-    if (rank === 1) {
-      return "bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-950/20 dark:hover:bg-yellow-950/30";
-    }
-    if (rank === 2) {
-      return "bg-gray-50 hover:bg-gray-100 dark:bg-gray-950/20 dark:hover:bg-gray-950/30";
-    }
-    if (rank === 3) {
-      return "bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/20 dark:hover:bg-orange-950/30";
-    }
-    return "hover:bg-muted/50";
-  };
-
   return (
     <div className="rounded-lg border">
       <Table>
@@ -140,11 +138,13 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
                 <Link
                   href={`/teams/${team.teamId}`}
                   className="font-medium hover:underline"
+                  aria-label={`View ${team.teamName} team profile - Rank ${team.rank}${team.isWinner ? " - Tournament Winner" : ""}`}
                 >
                   {team.teamName}
                   {team.isWinner && (
                     <span className="ml-2 text-xs text-yellow-600">
-                      🏆 Winner
+                      <Trophy className="h-3 w-3" />
+                      Winner
                     </span>
                   )}
                 </Link>

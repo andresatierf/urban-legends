@@ -6,7 +6,7 @@ import { DetailsCard } from "@/components/details-card";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
-import { UpsertTournamentFormButton } from "../form/upsert-tournament-form-button";
+import { UpsertTournamentFormDialog } from "../form/upsert-tournament-form";
 import { getStatusBadge } from "./utils";
 
 type Props = {
@@ -69,7 +69,7 @@ export function TournamentDetailsCard({ tournament, teams, className }: Props) {
 
   return (
     <div>
-      <UpsertTournamentFormButton
+      <UpsertTournamentFormDialog
         open={editTournamentDialogOpen}
         onOpenChange={setEditTournamentDialogOpen}
         tournament={tournament}

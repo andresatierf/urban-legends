@@ -772,7 +772,9 @@ export const getStatistics = query({
     const streakDate = new Date(today);
     streakDate.setHours(0, 0, 0, 0);
 
-    while (true) {
+    const maxIterations = 1000;
+
+    while (currentStreak < maxIterations) {
       const dateStr = streakDate.toISOString().split("T")[0];
       if (approvedDates.has(dateStr)) {
         currentStreak++;

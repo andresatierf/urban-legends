@@ -54,7 +54,7 @@ type UpsertTournamentFormProps = {
   children?: React.ReactNode;
 };
 
-export function UpsertTournamentFormButton({
+export function UpsertTournamentFormDialog({
   open: controlledOpen,
   onOpenChange,
   tournament,
@@ -90,11 +90,14 @@ export function UpsertTournamentFormButton({
     },
     onSubmit: async ({ value }) => {
       try {
-        await upsertTournament({ ...value, _id: tournament?._id });
+        const upsertedId = await upsertTournament({
+          ...value,
+          _id: tournament?._id,
+        });
         toast.success(
           `Tournament ${tournament ? "updated" : "created"} successfully!`,
         );
-        router.push(`/tournaments/${tournament?._id}`);
+        router.push(`/tournaments/${upsertedId}`);
         setOpen(false);
       } catch (error) {
         toast.error(

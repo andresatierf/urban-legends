@@ -54,8 +54,16 @@ export function TeamStatisticsCard({ teamId }: Props) {
     );
   }
 
-  if (!stats || !team) {
-    return null;
+  if (stats === null || team === null) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-destructive text-sm">
+            Failed to load team statistics. Please try again.
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
   const statCards = [
@@ -92,6 +100,12 @@ export function TeamStatisticsCard({ teamId }: Props) {
       value: `${(stats.completionRate * 100).toFixed(1)}%`,
       icon: Calendar,
       description: `${Math.floor(stats.completionRate * stats.daysSoFar)}/${stats.daysSoFar} days with submissions`,
+      description2: (() => {
+        const daysWithSubmissions = Math.floor(
+          stats.completionRate * stats.daysSoFar,
+        );
+        return `${daysWithSubmissions}/${stats.daysSoFar} days with submissions`;
+      })(),
       color: "text-purple-600",
     },
     {
@@ -139,7 +153,7 @@ export function TeamStatisticsCard({ teamId }: Props) {
           ) : (
             <div className="space-y-4">
               {stats.memberContributions
-                .sort((a, b) => b.count - a.count)
+                .toSorted((a, b) => b.count - a.count)
                 .map((contribution) => {
                   const user = userMap?.[contribution.userId];
 
