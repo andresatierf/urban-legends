@@ -10,7 +10,7 @@ import { CalendarStatistics } from "@/components/submissions/calendar-statistics
 import { SubmissionCalendar } from "@/components/submissions/submission-calendar";
 import { SubmissionsDataTable } from "@/components/submissions/submissions-data-table";
 import { TeamSelector } from "@/components/submissions/team-selector";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../convex/_generated/api";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
@@ -19,7 +19,7 @@ export default function Submissions() {
   const { user, isAdmin } = useUser();
   const router = useRouter();
 
-  const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
+  const [_viewMode, _setViewMode] = useState<"calendar" | "list">("calendar");
   const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams"> | null>(
     null,
   );
@@ -129,39 +129,21 @@ export default function Submissions() {
   return (
     <>
       <SectionHeader as="h1" title="Submissions">
-        <div className="flex items-center gap-3">
-          {/* View mode toggle */}
-          {teamsWithTournaments.length > 0 && (
-            <fieldset className="flex rounded-md border bg-white">
-              <Button
-                variant={viewMode === "calendar" ? "solid" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("calendar")}
-                className="rounded-r-none"
-              >
-                <Calendar className="mr-2 h-4 w-4" />
-                Calendar
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "solid" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-                className="rounded-l-none"
-              >
-                <List className="mr-2 h-4 w-4" />
-                List
-              </Button>
-            </fieldset>
-          )}
-
-          <UpsertSubmissionFormDialog />
-        </div>
+        <UpsertSubmissionFormDialog />
       </SectionHeader>
-
-      <div className="space-y-6">
-        {/* Calendar View */}
-        {viewMode === "calendar" &&
-          (teamsWithTournaments.length === 0 ? (
+      <Tabs defaultValue="calendar">
+        <TabsList>
+          <TabsTrigger value="calendar">
+            <Calendar className="mr-2 h-4 w-4" />
+            Calendar
+          </TabsTrigger>
+          <TabsTrigger value="list">
+            <List className="mr-2 h-4 w-4" />
+            List
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="calendar">
+          {teamsWithTournaments.length === 0 ? (
             <div className="rounded-lg border border-gray-300 border-dashed bg-white p-12 text-center shadow-sm">
               <Calendar className="mx-auto mb-4 h-12 w-12 text-gray-400" />
               <h3 className="mb-2 font-semibold text-gray-900 text-lg">
@@ -173,7 +155,7 @@ export default function Submissions() {
               </p>
             </div>
           ) : (
-            <>
+            <div className="space-y-6">
               {/* Team selector for multi-team users */}
               {teamsWithTournaments.length > 1 && (
                 <div className="flex justify-end">
@@ -200,12 +182,11 @@ export default function Submissions() {
                   />
                 </>
               )}
-            </>
-          ))}
-
-        {/* List View */}
-        {viewMode === "list" && (
-          <>
+            </div>
+          )}
+        </TabsContent>
+        <TabsContent value="list">
+          <div className="space-y-6">
             <SubmissionsDataTable
               title="Your Submissions"
               submissions={augmentSubmissions(submissions)}
@@ -226,9 +207,9 @@ export default function Submissions() {
                 />
               </>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </>
   );
 }
