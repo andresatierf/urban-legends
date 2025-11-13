@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { UpsertSubmissionFormDialog } from "../form/upsert-submission-form";
+import { Button } from "../ui/button";
 
 interface SubmissionDetailsCardProps {
   submissionId: Id<"submissions">;
@@ -24,13 +25,11 @@ export function SubmissionDetailsCard({
   const router = useRouter();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  // Fetch submission details
   const data = useQuery(
     api.submissions.getDetail,
     submissionId ? { submissionId } : "skip",
   );
 
-  // Mutations
   const approveSubmission = useMutation(api.submissions.approve);
   const rejectSubmission = useMutation(api.submissions.reject);
   const removeSubmission = useMutation(api.submissions.remove);
@@ -69,7 +68,6 @@ export function SubmissionDetailsCard({
     }
   }, [removeSubmission, submissionId, router]);
 
-  // Build details array
   const details = useMemo(() => {
     if (!data) return [];
 
@@ -107,12 +105,14 @@ export function SubmissionDetailsCard({
       {
         key: "Team",
         value: data.team ? (
-          <Link
-            href={`/teams/${data.team._id}`}
-            className="text-blue-600 hover:underline"
-          >
-            {data.team.name}
-          </Link>
+          <Button variant="link" className="p-0" asChild>
+            <Link
+              href={`/teams/${data.team._id}`}
+              className="text-blue-600 hover:underline"
+            >
+              {data.team.name}
+            </Link>
+          </Button>
         ) : (
           "Unknown"
         ),
@@ -120,12 +120,14 @@ export function SubmissionDetailsCard({
       {
         key: "Tournament",
         value: data.tournament ? (
-          <Link
-            href={`/tournaments/${data.tournament._id}`}
-            className="text-blue-600 hover:underline"
-          >
-            {data.tournament.name}
-          </Link>
+          <Button variant="link" className="p-0" asChild>
+            <Link
+              href={`/tournaments/${data.tournament._id}`}
+              className="text-blue-600 hover:underline"
+            >
+              {data.tournament.name}
+            </Link>
+          </Button>
         ) : (
           "Unknown"
         ),
@@ -157,23 +159,22 @@ export function SubmissionDetailsCard({
     ];
   }, [data]);
 
-  // Build actions array
   const actions = useMemo(() => {
     if (!data) return [];
 
     return [
       {
-        label: "View Team",
-        href: `/teams/${data.submission.teamId}`,
-        icon: Users,
-        condition: true,
+        label: "Approve",
+        onClick: handleApprove,
+        icon: Check,
+        condition: data.canApprove,
         external: true,
       },
       {
-        label: "View Tournament",
-        href: `/tournaments/${data.submission.tournamentId}`,
-        icon: Trophy,
-        condition: true,
+        label: "Reject",
+        onClick: handleReject,
+        icon: X,
+        condition: data.canReject,
         external: true,
         separator: "after" as const,
       },
@@ -182,18 +183,20 @@ export function SubmissionDetailsCard({
         onClick: () => setEditDialogOpen(true),
         icon: Pencil,
         condition: data.canEdit,
+        external: true,
+        separator: "after" as const,
       },
       {
-        label: "Approve",
-        onClick: handleApprove,
-        icon: Check,
-        condition: data.canApprove,
+        label: "View Team",
+        href: `/teams/${data.submission.teamId}`,
+        icon: Users,
+        condition: true,
       },
       {
-        label: "Reject",
-        onClick: handleReject,
-        icon: X,
-        condition: data.canReject,
+        label: "View Tournament",
+        href: `/tournaments/${data.submission.tournamentId}`,
+        icon: Trophy,
+        condition: true,
       },
       {
         label: "Delete Submission",
