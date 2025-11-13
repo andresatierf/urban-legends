@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
-import { getCurrentUserOrThrow } from "./users";
+import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
 export const makeFirstUserAdmin = mutation({
   args: {},
@@ -53,10 +53,7 @@ export const addUserRole = mutation({
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
 
-    // Verify current user is admin
-    if (!currentUser.roles.includes("admin")) {
-      throw new Error("Admin access required");
-    }
+    validateIsAdmin(currentUser);
 
     // Verify target user exists
     const targetUser = await ctx.db.get(args.userId);
@@ -106,9 +103,7 @@ export const removeUserRole = mutation({
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
 
-    if (!currentUser.roles.includes("admin")) {
-      throw new Error("Admin access required");
-    }
+    validateIsAdmin(currentUser);
 
     // Get role by name
     const role = await ctx.db
@@ -168,10 +163,7 @@ export const updateRoles = mutation({
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
 
-    // Verify current user is admin
-    if (!currentUser.roles.includes("admin")) {
-      throw new Error("Admin access required");
-    }
+    validateIsAdmin(currentUser);
 
     // Verify target user exists
     const targetUser = await ctx.db.get(args.userId);

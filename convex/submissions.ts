@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getCurrentUserOrThrow } from "./users";
+import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
 export const list = query({
   args: {
@@ -199,7 +199,7 @@ export const remove = mutation({
   args: { submissionId: v.id("submissions") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    const isAdmin = user.roles.includes("admin");
+    const isAdmin = user.roleNames.includes("admin");
 
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) {
@@ -307,9 +307,11 @@ export const approve = mutation({
   args: { submissionId: v.id("submissions") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    if (!user.roles.includes("admin")) {
-      throw new Error("You do not have permission to approve this submission");
-    }
+
+    validateIsAdmin(
+      user,
+      "You do not have permission to approve this submission",
+    );
 
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) {
@@ -390,9 +392,11 @@ export const reject = mutation({
   args: { submissionId: v.id("submissions") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    if (!user.roles.includes("admin")) {
-      throw new Error("You do not have permission to reject this submission");
-    }
+
+    validateIsAdmin(
+      user,
+      "You do not have permission to reject this submission",
+    );
 
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) {

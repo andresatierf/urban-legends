@@ -57,7 +57,7 @@ export default function UsersPage() {
                     {user.email}
                   </TableCell>
                   <TableCell className="p-3 text-gray-600">
-                    <RolesBadgeList roles={user.roles || []} />
+                    <RolesBadgeList roles={user.roleNames || []} />
                   </TableCell>
                 </TableRow>
               </Link>

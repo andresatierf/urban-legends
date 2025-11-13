@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, type QueryCtx, query } from "./_generated/server";
 import { getTeams } from "./teams";
-import { getCurrentUserOrThrow } from "./users";
+import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
 export const list = query({
   args: {
@@ -118,9 +118,7 @@ export const upsert = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!user.roles.includes("admin")) {
-      throw new Error("Admin access required");
-    }
+    validateIsAdmin(user);
 
     // Default scoring config if not provided
     const defaultScoringConfig = {
@@ -353,9 +351,8 @@ export const determineWinner = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    if (!user.roles.includes("admin")) {
-      throw new Error("Admin access required");
-    }
+
+    validateIsAdmin(user);
 
     const tournament = await ctx.db.get(args.tournamentId);
     if (!tournament) {

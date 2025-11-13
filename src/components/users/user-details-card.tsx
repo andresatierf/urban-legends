@@ -7,7 +7,7 @@ import { ManageRolesFormDialog } from "../form/manage-roles-form";
 import { RolesBadgeList } from "./roles-badge-list";
 
 type Props = {
-  user: Doc<"users"> & { roles: string[] };
+  user: Doc<"users"> & { roleNames: string[] };
   className?: string;
 };
 
@@ -22,7 +22,7 @@ export const UserDetailsCard = ({ user, className }: Props) => {
     { key: "email", value: user.email },
     {
       key: "roles",
-      value: <RolesBadgeList roles={user.roles} className="py-2" />,
+      value: <RolesBadgeList roles={user.roleNames} className="py-2" />,
     },
   ];
   const actions = [
@@ -41,7 +41,7 @@ export const UserDetailsCard = ({ user, className }: Props) => {
         onOpenChange={setAssignDialogOpen}
         userId={user._id}
         userName={user.name}
-        currentRoles={user.roles}
+        currentRoles={user.roleNames}
       />
       <DetailsCard
         title={user.name}

@@ -377,7 +377,7 @@ export const upsertUserTeam = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const isAdmin = user.roles.includes("admin");
+    const isAdmin = user.roleNames.includes("admin");
 
     if (!isAdmin) {
       if (args._id) {
