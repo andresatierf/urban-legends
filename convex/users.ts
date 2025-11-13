@@ -122,7 +122,7 @@ async function userByExternalId(ctx: QueryCtx, externalId: string) {
     .unique();
 }
 
-async function getRolesForUser(ctx: QueryCtx, userId: Id<"users">) {
+export async function getRolesForUser(ctx: QueryCtx, userId: Id<"users">) {
   const userRoles = await ctx.db
     .query("userRoles")
     .withIndex("by_user", (q) => q.eq("userId", userId))

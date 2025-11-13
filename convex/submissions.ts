@@ -1,7 +1,11 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
-import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
+import {
+  getCurrentUserOrThrow,
+  getRolesForUser,
+  validateIsAdmin,
+} from "./users";
 
 export const list = query({
   args: {
@@ -197,6 +201,128 @@ export const getById = query({
     await getCurrentUserOrThrow(ctx);
 
     return await ctx.db.get(args.id);
+  },
+});
+
+export const getDetail = query({
+  args: { submissionId: v.id("submissions") },
+  handler: async (ctx, args) => {
+    const currentUser = await getCurrentUserOrThrow(ctx);
+    const isAdmin = currentUser.roleNames.includes("admin");
+
+    // Fetch submission
+    const submission = await ctx.db.get(args.submissionId);
+    if (!submission) {
+      throw new Error("Submission not found");
+    }
+
+    // Check if user is team member
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team_and_user", (q) =>
+        q.eq("teamId", submission.teamId).eq("userId", currentUser._id),
+      )
+      .first();
+
+    // Permission check: must be owner, team member, or admin
+    const isOwner = submission.userId === currentUser._id;
+    const isTeamMember = !!membership;
+    if (!isOwner && !isTeamMember && !isAdmin) {
+      throw new Error("You do not have permission to view this submission");
+    }
+
+    // Fetch related entities
+    const [team, tournament, submitter] = await Promise.all([
+      ctx.db.get(submission.teamId),
+      ctx.db.get(submission.tournamentId),
+      ctx.db.get(submission.userId),
+    ]);
+
+    if (!submitter) {
+      throw new Error("Submitter not found");
+    }
+
+    // Fetch submitter with roles
+    const submitterRoles = await getRolesForUser(ctx, submitter._id);
+    const submitterWithRoles = {
+      ...submitter,
+      roles: submitterRoles,
+      roleNames: submitterRoles.map(({ name }) => name),
+    };
+
+    // Fetch teammates
+    const teammates = await Promise.all(
+      submission.teammates.map(async (teammateId) => {
+        const user = await ctx.db.get(teammateId);
+        if (!user) return null;
+        const roles = await getRolesForUser(ctx, user._id);
+        return {
+          ...user,
+          roles,
+          roleNames: roles.map(({ name }) => name),
+        };
+      }),
+    );
+    const validTeammates = teammates.filter(
+      (t): t is NonNullable<typeof t> => t !== null,
+    );
+
+    // Fetch managedBy user if exists
+    let managedByUser = null;
+    if (submission.managedBy) {
+      const managedUser = await ctx.db.get(submission.managedBy);
+      if (managedUser) {
+        const roles = await getRolesForUser(ctx, managedUser._id);
+        managedByUser = {
+          ...managedUser,
+          roles,
+          roleNames: roles.map(({ name }) => name),
+        };
+      }
+    }
+
+    // Calculate if this is a team exercise
+    const teamMembers = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
+      .collect();
+    const totalTeamMembers = teamMembers.length;
+    const participantCount = Math.min(
+      totalTeamMembers,
+      submission.teammates.length + 1,
+    );
+    const participationRate =
+      totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
+    const scoringConfig = tournament?.scoringConfig || {
+      individualPoints: { base: 1, advanced: 1 },
+      teamExercisePoints: { base: 1, advanced: 1 },
+      teamExerciseThreshold: 0.5,
+    };
+    const isTeamExercise =
+      participationRate >= scoringConfig.teamExerciseThreshold;
+
+    // Calculate permissions
+    const canEdit = isOwner && submission.state !== "approved";
+    const canApprove = isAdmin && submission.state === "pending";
+    const canReject = isAdmin && submission.state === "pending";
+    const canDelete =
+      (isAdmin || isOwner) &&
+      submission.state !== "deleted" &&
+      submission.state !== "rejected";
+
+    return {
+      submission,
+      team,
+      tournament,
+      submitter: submitterWithRoles,
+      teammates: validTeammates,
+      managedByUser,
+      isTeamExercise,
+      canEdit,
+      canApprove,
+      canReject,
+      canDelete,
+    };
   },
 });
 
