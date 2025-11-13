@@ -13,7 +13,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import {
-  Sidebar as SidebarBase,
+  Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
@@ -85,15 +85,15 @@ function useSidebarItems(setSubmissionFormOpen: (state: boolean) => void) {
   return { items: sidebar };
 }
 
-export function Sidebar() {
+export function AppSidebar() {
   const { user } = useUser();
 
   const [submissionFormOpen, setSubmissionFormOpen] = useState(false);
   const { items: sidebarItems } = useSidebarItems(setSubmissionFormOpen);
 
   return (
-    <SidebarBase collapsible="icon">
-      <SidebarHeader />
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="h-10" />
       <SidebarContent>
         {sidebarItems.map((item) => renderItem(item, user?.roleNames || []))}
         <UpsertSubmissionFormDialog
@@ -105,7 +105,7 @@ export function Sidebar() {
       <SidebarFooter className="">
         <LoggedUserCard />
       </SidebarFooter>
-    </SidebarBase>
+    </Sidebar>
   );
 }
 

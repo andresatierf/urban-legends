@@ -1,12 +1,12 @@
 import type { Doc } from "../../../convex/_generated/dataModel";
 
 export function getInitials(name: string) {
-  const names = name.split(" ");
-  let initials = "";
-  for (let i = 0; i < names.length; i++) {
-    initials += names[i][0];
-  }
-  return initials;
+  return name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 export function getHighestRankingRole(roles: Doc<"roles">[]) {
