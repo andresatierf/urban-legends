@@ -10,3 +10,7 @@ pre-commit:
       glob: "*.{js,ts,jsx,tsx}"
       exclude: "convex/_generated/**"
       run: bun --bun tsc-files --noEmit {staged_files}
+post-checkout:
+  commands:
+    install:
+      run: bun install
