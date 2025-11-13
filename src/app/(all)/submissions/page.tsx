@@ -1,16 +1,28 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { useCallback, useMemo } from "react";
+import { Calendar, List } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { UpsertSubmissionFormDialog } from "@/components/form/upsert-submission-form";
 import { SectionHeader } from "@/components/section-header";
+import { CalendarStatistics } from "@/components/submissions/calendar-statistics";
+import { SubmissionCalendar } from "@/components/submissions/submission-calendar";
 import { SubmissionsDataTable } from "@/components/submissions/submissions-data-table";
+import { TeamSelector } from "@/components/submissions/team-selector";
+import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../convex/_generated/api";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
 export default function Submissions() {
   const { user, isAdmin } = useUser();
+  const router = useRouter();
+
+  const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
+  const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams"> | null>(
+    null,
+  );
 
   const submissions =
     useQuery(
@@ -22,6 +34,42 @@ export default function Submissions() {
   const pendingSubmissions =
     useQuery(api.submissions.list, { state: "pending" }) || [];
   const allSubmissions = useQuery(api.submissions.list, {}) || [];
+
+  // Fetch user's teams with tournament data
+  const userTeams = useQuery(
+    api.teams.list,
+    user ? { userId: user._id } : "skip",
+  );
+
+  const tournaments = useQuery(api.tournaments.list, {}) || [];
+  const tournamentIdMap = useMemo(() => {
+    return tournaments.reduce<Map<Id<"tournaments">, Doc<"tournaments">>>(
+      (acc, tournament) => acc.set(tournament._id, tournament),
+      new Map(),
+    );
+  }, [tournaments]);
+
+  // Augment teams with tournament data
+  const teamsWithTournaments = useMemo(() => {
+    if (!userTeams) return [];
+    return userTeams
+      .map((team) => ({
+        ...team,
+        tournament: tournamentIdMap.get(team.tournamentId),
+      }))
+      .filter((team) => team.tournament);
+  }, [userTeams, tournamentIdMap]);
+
+  // Set default team selection
+  useEffect(() => {
+    if (teamsWithTournaments.length > 0 && !selectedTeamId) {
+      setSelectedTeamId(teamsWithTournaments[0]._id);
+    }
+  }, [teamsWithTournaments, selectedTeamId]);
+
+  const selectedTeam = teamsWithTournaments.find(
+    (t) => t._id === selectedTeamId,
+  );
 
   const teams = useQuery(api.teams.list, {}) || [];
   const teamIdMap = useMemo(() => {
@@ -64,111 +112,122 @@ export default function Submissions() {
     [teamIdMap, userIdMap],
   );
 
+  const handleDateClick = (date: string, submissionId?: Id<"submissions">) => {
+    if (submissionId) {
+      // Navigate to edit page
+      router.push(`/submissions/${submissionId}/edit`);
+    } else {
+      // Navigate to create page with pre-filled date and team
+      const searchParams = new URLSearchParams({
+        date,
+        teamId: selectedTeamId || "",
+      });
+      router.push(`/submissions/new?${searchParams.toString()}`);
+    }
+  };
+
   return (
     <>
       <SectionHeader as="h1" title="Submissions">
-        <UpsertSubmissionFormDialog />
+        <div className="flex items-center gap-3">
+          {/* View mode toggle */}
+          {teamsWithTournaments.length > 0 && (
+            <fieldset className="flex rounded-md border bg-white">
+              <Button
+                variant={viewMode === "calendar" ? "solid" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("calendar")}
+                className="rounded-r-none"
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                Calendar
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "solid" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className="rounded-l-none"
+              >
+                <List className="mr-2 h-4 w-4" />
+                List
+              </Button>
+            </fieldset>
+          )}
+
+          <UpsertSubmissionFormDialog />
+        </div>
       </SectionHeader>
+
       <div className="space-y-6">
-        <SubmissionsDataTable
-          title="Your Submissions"
-          submissions={augmentSubmissions(submissions)}
-          showActions
-        />
-        {isAdmin && (
+        {/* Calendar View */}
+        {viewMode === "calendar" &&
+          (teamsWithTournaments.length === 0 ? (
+            <div className="rounded-lg border border-gray-300 border-dashed bg-white p-12 text-center shadow-sm">
+              <Calendar className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+              <h3 className="mb-2 font-semibold text-gray-900 text-lg">
+                No Teams Yet
+              </h3>
+              <p className="text-gray-500 text-sm">
+                You're not part of any teams. Join or create a team to start
+                tracking your submissions.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Team selector for multi-team users */}
+              {teamsWithTournaments.length > 1 && (
+                <div className="flex justify-end">
+                  <TeamSelector
+                    teams={teamsWithTournaments}
+                    selectedTeamId={selectedTeamId}
+                    onTeamChange={setSelectedTeamId}
+                  />
+                </div>
+              )}
+
+              {/* Calendar */}
+              {selectedTeam?.tournament && selectedTeamId && (
+                <>
+                  <SubmissionCalendar
+                    teamId={selectedTeamId}
+                    tournamentId={selectedTeam.tournamentId}
+                    onDateClick={handleDateClick}
+                  />
+
+                  <CalendarStatistics
+                    teamId={selectedTeamId}
+                    tournamentId={selectedTeam.tournamentId}
+                  />
+                </>
+              )}
+            </>
+          ))}
+
+        {/* List View */}
+        {viewMode === "list" && (
           <>
             <SubmissionsDataTable
-              title="Pending Submissions"
-              submissions={augmentSubmissions(pendingSubmissions)}
+              title="Your Submissions"
+              submissions={augmentSubmissions(submissions)}
               showActions
             />
-            <SubmissionsDataTable
-              title="All Submissions"
-              submissions={augmentSubmissions(allSubmissions)}
-              showActions
-              enableSearch
-            />
+            {isAdmin && (
+              <>
+                <SubmissionsDataTable
+                  title="Pending Submissions"
+                  submissions={augmentSubmissions(pendingSubmissions)}
+                  showActions
+                />
+                <SubmissionsDataTable
+                  title="All Submissions"
+                  submissions={augmentSubmissions(allSubmissions)}
+                  showActions
+                  enableSearch
+                />
+              </>
+            )}
           </>
         )}
-
-        {/* {teams.length !== 0 ? ( */}
-        {/*   selectedTeam && */}
-        {/*   selectedTeamData && ( */}
-        {/*     <Card> */}
-        {/*       <CardHeader> */}
-        {/*         <CardTitle>Your Progress Calendar</CardTitle> */}
-        {/*         <label */}
-        {/*           htmlFor="team-selector" */}
-        {/*           className="mb-2 block font-medium text-gray-700 text-sm" */}
-        {/*         > */}
-        {/*           Select Team */}
-        {/*         </label> */}
-        {/*         {/** biome-ignore lint/correctness/useUniqueElementIds: id */}
-        {/*         <select */}
-        {/*           id="team-selector" */}
-        {/*           value={selectedTeam || ""} */}
-        {/*           onChange={(e) => */}
-        {/*             setSelectedTeam((e.target.value as Id<"teams">) || null) */}
-        {/*           } */}
-        {/*           className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" */}
-        {/*         > */}
-        {/*           <option value="" disabled> */}
-        {/*             Select a team... */}
-        {/*           </option> */}
-        {/*           {teams.map((team) => ( */}
-        {/*             <option key={team._id} value={team._id}> */}
-        {/*               {team.name} - {team.tournament?.name} */}
-        {/*             </option> */}
-        {/*           ))} */}
-        {/*         </select> */}
-        {/*       </CardHeader> */}
-        {/*       <CardContent> */}
-        {/*         {selectedTeamData.tournament && ( */}
-        {/*           <div className="grid grid-cols-7 gap-2"> */}
-        {/*             {generateDateRange( */}
-        {/*               selectedTeamData.tournament.startDate, */}
-        {/*               selectedTeamData.tournament.endDate, */}
-        {/*             ).map((date) => { */}
-        {/*               const completion = submissions.find( */}
-        {/*                 (c) => c.date === date, */}
-        {/*               ); */}
-        {/*               const isToday = */}
-        {/*                 date === new Date().toISOString().split("T")[0]; */}
-        {/**/}
-        {/*               return ( */}
-        {/*                 <div */}
-        {/*                   key={date} */}
-        {/*                   className={cn( */}
-        {/*                     "rounded border border-gray-200 bg-gray-50 p-2 text-center text-gray-600 text-xs", */}
-        {/*                     { */}
-        {/*                       "border-blue-300 bg-blue-100 text-blue-800": */}
-        {/*                         isToday, */}
-        {/*                       "border-red-300 bg-red-100 text-red-800": */}
-        {/*                         completion?.state === "rejected", */}
-        {/*                       "border-yellow-300 bg-yellow-100 text-yellow-800": */}
-        {/*                         completion?.state === "pending", */}
-        {/*                       "border-green-300 bg-green-100 text-green-800": */}
-        {/*                         completion?.state === "approved", */}
-        {/*                     }, */}
-        {/*                   )} */}
-        {/*                 > */}
-        {/*                   {new Date(date).getDate()} */}
-        {/*                 </div> */}
-        {/*               ); */}
-        {/*             })} */}
-        {/*           </div> */}
-        {/*         )} */}
-        {/*       </CardContent> */}
-        {/*     </Card> */}
-        {/*   ) */}
-        {/* ) : ( */}
-        {/*   <div className="rounded-lg bg-white p-6 text-center shadow"> */}
-        {/*     <p className="text-gray-500"> */}
-        {/*       You're not part of any active teams. Contact an admin to be added */}
-        {/*       to a team. */}
-        {/*     </p> */}
-        {/*   </div> */}
-        {/* )} */}
       </div>
     </>
   );
