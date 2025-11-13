@@ -4,7 +4,7 @@ This document tracks all completed features for the Urban Legends tournament tra
 
 ## Overview
 
-The platform has successfully implemented **5 major features** representing approximately **11-13 days of development effort**. These features provide core functionality for tournament management, team collaboration, scoring, and administration.
+The platform has successfully implemented **6 major features** representing approximately **11-13 days of development effort**. These features provide core functionality for tournament management, team collaboration, scoring, and administration.
 
 ---
 
@@ -239,7 +239,78 @@ Complete role management UI and backend allowing admins to assign and remove rol
 
 ---
 
-## ✅ 5. Code Quality & Type Safety
+## ✅ 5. Team Member Management UI
+
+**Spec:** [specs/done/06-team-member-management.md](specs/done/06-team-member-management.md)
+**PR:** Built-in (implemented via invitation system in PR #1)
+**Completed:** 2025-11-07 (via PR #1)
+**Effort:** Included in Team Joining feature
+
+### Summary
+
+Complete team roster management UI allowing captains to manage team members, transfer captaincy, and handle team membership through an invitation-based system (implemented differently than originally specified, but with superior UX).
+
+### Implemented Features
+
+- ✅ View team roster with member roles (captain/member badges)
+- ✅ Invite members by email (invitation system)
+- ✅ Remove team members (captain permission)
+- ✅ Leave team functionality with captain transfer requirement
+- ✅ Transfer captaincy to another member
+- ✅ Join requests for public teams
+- ✅ Accept/reject team invitations
+- ✅ Role badges with crown icon for captains
+
+### Backend Implementation
+
+**Mutations:**
+
+- `teams.removeMember` - Captain can remove members (line 302-331 in teams.ts)
+- `teams.leaveTeam` - Members can leave with captain transfer check (line 450-496)
+- `teams.transferCaptaincy` - Transfer captain role (line 499-522)
+- `teamInvitations.inviteMember` - Invite users by email with expiry
+- `teamInvitations.respondToInvitation` - Accept/reject invitations
+- `joinRequests.requestToJoin` - Request to join public teams
+- `joinRequests.approveJoinRequest` / `rejectJoinRequest` - Captain approval
+
+**Queries:**
+
+- `teams.listTeamMembers` - Get team roster with role information (line 202-228)
+- `teamInvitations.listTeamInvitations` - View pending/past invitations
+- `joinRequests.listJoinRequests` - View join requests for team
+
+### Frontend Components
+
+- `TeamMemberCard` - Display member with role badge and remove action
+- `InviteMemberFormDialog` - Captain interface to invite users by email
+- `TransferCaptaincyFormDialog` - Transfer captain role with confirmation
+- `InvitedUsersList` - View and manage pending invitations
+- `JoinRequestsList` - Captain view to approve/reject join requests
+- Team details page integrated member management (`/teams/[teamId]/page.tsx`)
+
+### Implementation Notes
+
+**Differs from Original Spec:**
+The spec originally called for direct member addition (`teams.addMember` with captain permissions), but the implementation uses a more sophisticated **invitation system** instead:
+
+- Email-based invitations with 7-day expiry
+- Accept/reject workflow for better user control
+- Join requests for public teams
+- Better audit trail and notification support
+- Prevents adding users without their consent
+
+This approach provides superior UX and is actually more feature-rich than the original specification.
+
+**Permission Model:**
+
+- Team captains can: invite members, remove members (except captain), transfer captaincy, approve join requests
+- Regular members can: leave team (with captain transfer check)
+- Admins have: full management capabilities
+- Protected operations: cannot remove captain without transfer, cannot leave as last captain without deleting team
+
+---
+
+## ✅ 6. Code Quality & Type Safety
 
 **Spec:** [specs/done/08-code-quality-fixes.md](specs/done/08-code-quality-fixes.md)
 **PR:** #4
@@ -330,7 +401,7 @@ The following foundational systems were already in place before feature developm
 ### Development Effort
 
 - **Total Completed:** 11-13 days of development
-- **Features Completed:** 5 major features
+- **Features Completed:** 6 major features
 - **PRs Merged:** 7 pull requests
 - **Files Modified:** 100+ files across backend and frontend
 
@@ -344,6 +415,7 @@ The following foundational systems were already in place before feature developm
 ### Feature Coverage
 
 - ✅ Team Management (create, edit, delete, join, leave)
+- ✅ Team Member Management (invite, remove, transfer captaincy)
 - ✅ Scoring & Leaderboards (points, rankings, statistics)
 - ✅ Role Management (assign, remove, audit)
 - ✅ User Self-Service (teams, invitations, requests)

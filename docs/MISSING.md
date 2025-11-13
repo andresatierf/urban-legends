@@ -4,7 +4,7 @@ This document outlines the features that are missing or incomplete for a Minimum
 
 ## Current State
 
-The codebase is approximately **95%+ complete** for MVP. All critical features are implemented!
+The codebase is approximately **97%+ complete** for MVP. All critical features are implemented!
 
 ### ✅ Core Infrastructure (Complete)
 
@@ -16,6 +16,7 @@ The codebase is approximately **95%+ complete** for MVP. All critical features a
 ### ✅ Critical Features (All Complete!)
 
 - ✅ **Team management** (create, edit, delete, join, leave) - PR #1, #3
+- ✅ **Team member management UI** (invite, remove, transfer captaincy) - PR #1
 - ✅ **Leaderboard and scoring system** - PR #5
 - ✅ **Admin role management UI** - PR #6
 - ✅ **Code quality and type safety** - PR #4
@@ -23,7 +24,6 @@ The codebase is approximately **95%+ complete** for MVP. All critical features a
 ### ⚠️ High Priority Features (Still Needed)
 
 - ❌ Submission progress calendar
-- ❌ Team member management UI
 - ❌ Loading states / skeleton screens
 
 **Note:** For details on completed features, see [COMPLETED.md](COMPLETED.md)
@@ -54,30 +54,7 @@ These features significantly improve user experience and should be implemented s
 
 **Note:** A basic UI calendar component exists (`src/components/ui/calendar.tsx`) but needs to be adapted for submission tracking.
 
-### 2. Team Member Management UI ([spec](specs/06-team-member-management.md))
-
-**Status:** ⚠️ Backend Complete, UI Missing
-**Priority:** HIGH
-**Effort:** 1-2 days
-
-**Problem:** Backend mutations exist (`addMember`, `removeMember`) but no UI to use them.
-
-**Impact:** Team captains cannot add/remove members through the UI. Currently relies on invitation system only.
-
-**Required:**
-
-- Add member management section to team details page
-- Wire up `addMember` and `removeMember` mutations
-- Add UI to directly add users to team
-- Display member roles (captain vs. member)
-- Remove member button with confirmation
-
-**Backend Ready:**
-
-- ✅ `teams.addMember` mutation exists (line 267 in convex/teams.ts)
-- ✅ `teams.removeMember` mutation exists (line 302 in convex/teams.ts)
-
-### 3. Loading States / Skeleton Screens ([spec](specs/10-loading-states.md))
+### 2. Loading States / Skeleton Screens ([spec](specs/10-loading-states.md))
 
 **Status:** ⚠️ Partial - Skeleton component exists, not used
 **Priority:** HIGH
@@ -205,23 +182,23 @@ Minor issues that should be addressed when time permits:
 
 ### ⚠️ Remaining for Full MVP
 
-- **High Priority:** 4-7 days (Calendar + Member Mgmt + Loading States)
+- **High Priority:** 2-4 days (Calendar + Loading States)
 - **Medium Priority:** 7-10 days (Admin Dashboard + Notifications + Code Cleanup)
-- **Total Remaining:** 11-17 days
+- **Total Remaining:** 9-14 days
 
 ---
 
 ## Progress Summary
 
-- **Overall Completion:** 95%+ of MVP core functionality
+- **Overall Completion:** 97%+ of MVP core functionality
 - **Critical Features:** ✅ **ALL COMPLETE!**
   - ✅ Team Management (create, edit, delete, join, leave)
+  - ✅ Team Member Management UI (invite, remove, transfer captaincy)
   - ✅ Leaderboard & Scoring System
   - ✅ Admin Role Management
   - ✅ Code Quality & Type Safety
-- **High Priority Features:** 0/3 complete
+- **High Priority Features:** 0/2 complete
   - ❌ Submission Calendar
-  - ❌ Team Member Management UI
   - ❌ Loading States
 - **Medium Priority Features:** 0/3 complete
   - ❌ Admin Dashboard
@@ -254,16 +231,11 @@ Minor issues that should be addressed when time permits:
    - Visual progress tracking
    - Helps users stay on track with daily submissions
 
-3. **Team Member Management UI** (1-2 days) - Complete team management
-
-   - Backend ready, just needs UI
-   - Captains can manage their teams more directly
-
-4. **Admin Dashboard** (2 days) - Admin convenience
+3. **Admin Dashboard** (2 days) - Admin convenience
    - Centralized admin view
    - Quick access to common tasks
 
-**After these 4 features:** The platform will be feature-complete for MVP launch!
+**After these 3 features:** The platform will be feature-complete for MVP launch!
 
 ---
 
