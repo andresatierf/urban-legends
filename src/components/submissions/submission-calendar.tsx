@@ -231,7 +231,11 @@ export function SubmissionCalendar({
         {calendarDays.map((date) => {
           if (!date) return null;
 
-          const dateStr = date.toISOString().split("T")[0];
+          const dateStr = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, "0"),
+            String(date.getDate()).padStart(2, "0"),
+          ].join("-");
           const submission = submissions?.[dateStr];
           const isCurrentMonth = date.getMonth() === currentDate.getMonth();
 

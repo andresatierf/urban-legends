@@ -524,6 +524,20 @@ export const getTeamStatistics = query({
     const endDate = new Date(tournament.endDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
+    // If tournament hasn't started yet, return zeros
+    if (today < startDate) {
+      return {
+        totalDays: 0,
+        daysWithSubmissions: 0,
+        completionRate: 0,
+        currentStreak: 0,
+        approved: 0,
+        pending: 0,
+        rejected: 0,
+      };
+    }
+
     const relevantEndDate = today < endDate ? today : endDate;
 
     const totalDays =

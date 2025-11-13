@@ -45,10 +45,6 @@ export function LoggedUserCard() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
           className={cn("ml-auto", { hidden: !open })}
           asChild
         >
