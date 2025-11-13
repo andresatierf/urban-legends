@@ -200,7 +200,7 @@ export const updateRoles = mutation({
       currentUserRoles.map((ur) => {
         const role = allRoles.find((r) => r._id === ur.roleId);
         if (!role) throw new Error("Role not found");
-        return role?.name;
+        return role.name;
       }),
     );
 

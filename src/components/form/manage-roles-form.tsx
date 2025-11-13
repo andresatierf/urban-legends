@@ -95,7 +95,6 @@ export function ManageRolesFormDialog({
           form.handleSubmit();
         }}
       >
-        {children && <DialogTrigger asChild>{children}</DialogTrigger>}
         {children ? (
           <DialogTrigger asChild>{children}</DialogTrigger>
         ) : (
@@ -118,7 +117,7 @@ export function ManageRolesFormDialog({
             <FieldGroup>
               <form.AppField name="roles" mode="array">
                 {(field) => (
-                  <field.ArrayField label="Roles" roles={sortedRoles}>
+                  <field.ArrayField label="Roles" items={sortedRoles}>
                     {(role) => {
                       return (
                         <Field

@@ -15,6 +15,8 @@ export const UserDetailsCard = ({ user, className }: Props) => {
   const { isAdmin } = useUser();
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
 
+  if (user === undefined) return null; // TODO: Add skeleton
+
   const details = [
     { key: "name", value: user.name },
     { key: "email", value: user.email },
@@ -31,7 +33,6 @@ export const UserDetailsCard = ({ user, className }: Props) => {
       onClick: () => setAssignDialogOpen(true),
     },
   ];
-  if (user === undefined) return null; // TODO: Add skeleton
 
   return (
     <>

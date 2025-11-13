@@ -10,13 +10,13 @@ import { useFieldContext } from "@/hooks/form-context";
 
 export type ArrayFieldProps<T> = {
   label: string;
-  roles: T[];
+  items: T[];
   children: (item: T) => React.ReactNode;
 };
 
 export function ArrayField<T>({
   label,
-  roles,
+  items,
   children,
 }: ArrayFieldProps<T>): React.ReactElement {
   const field = useFieldContext<string[]>();
@@ -29,7 +29,7 @@ export function ArrayField<T>({
   return (
     <Field data-invalid={isInvalid}>
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-      <FieldGroup>{roles.map((item) => children(item))}</FieldGroup>
+      <FieldGroup>{items.map((item) => children(item))}</FieldGroup>
       {isInvalid && <FieldError errors={errors} />}
     </Field>
   );
