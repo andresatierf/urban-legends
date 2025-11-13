@@ -47,7 +47,7 @@ export function UpsertTeamFormDialog({
   team,
   children,
 }: Props) {
-  const { isAdmin } = useUser();
+  const { isDev } = useUser();
   const formId = useId();
   const router = useRouter();
   const [internalOpen, setInternalOpen] = useState(false);
@@ -183,7 +183,7 @@ export function UpsertTeamFormDialog({
           >
             {([isPristine, canSubmit, isSubmitting]) => (
               <DialogFooter>
-                {isAdmin && (
+                {isDev && (
                   <Button
                     type="button"
                     variant="outline"

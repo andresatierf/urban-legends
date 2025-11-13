@@ -3,11 +3,11 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input, type InputProps } from "@/components/ui/input";
 import { useFieldContext } from "@/hooks/form-context";
 
-type Props = InputProps & {
+export type TextFieldProps = InputProps & {
   label: string;
 };
 
-export default function TextField({ label, ...props }: Props) {
+export function TextField({ label, ...props }: TextFieldProps) {
   const field = useFieldContext<string>();
 
   const [isInvalid, errors] = useStore(field.store, (state) => [

@@ -24,6 +24,7 @@ import {
   EmptyDescription,
   EmptyHeader,
 } from "@/components/ui/empty";
+import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -32,13 +33,7 @@ type Props = {
 };
 
 export default function TournamentDetailsPage({ params }: Props) {
-  const user = useQuery(api.users.current);
-  const roles = useQuery(
-    api.roles.getByUserId,
-    user ? { userId: user?._id } : "skip",
-  );
-
-  const isAdmin = roles?.includes("admin");
+  const { user, isAdmin } = useUser();
 
   const { tournamentId } = use(params);
 

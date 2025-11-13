@@ -52,7 +52,7 @@ export function UpsertSubmissionFormDialog({
   submission,
   children,
 }: Props) {
-  const { user, isAdmin } = useUser();
+  const { user, isDev } = useUser();
   const formId = useId();
   const router = useRouter();
   const [internalOpen, setInternalOpen] = useState(false);
@@ -296,7 +296,7 @@ export function UpsertSubmissionFormDialog({
           >
             {([isPristine, canSubmit, isSubmitting]) => (
               <DialogFooter>
-                {isAdmin && (
+                {isDev && (
                   <Button
                     type="button"
                     variant="outline"

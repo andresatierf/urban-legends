@@ -1,5 +1,10 @@
+import { Settings } from "lucide-react";
+import { useState } from "react";
+import { useUser } from "@/hooks/useUser";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { DetailsCard } from "../details-card";
+import { ManageRolesFormDialog } from "../form/manage-roles-form";
+import { RolesBadgeList } from "./roles-badge-list";
 
 type Props = {
   user: Doc<"users"> & { roles: string[] };
@@ -7,11 +12,43 @@ type Props = {
 };
 
 export const UserDetailsCard = ({ user, className }: Props) => {
-  if (!user) return null; // TODO: Add skeleton
+  const { isAdmin } = useUser();
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
 
-  const details = [{ key: "roles", value: user.roles?.join(", ") }];
+  if (user === undefined) return null; // TODO: Add skeleton
+
+  const details = [
+    { key: "name", value: user.name },
+    { key: "email", value: user.email },
+    {
+      key: "roles",
+      value: <RolesBadgeList roles={user.roles} className="py-2" />,
+    },
+  ];
+  const actions = [
+    {
+      label: "Manage Roles",
+      icon: Settings,
+      condition: isAdmin,
+      onClick: () => setAssignDialogOpen(true),
+    },
+  ];
 
   return (
-    <DetailsCard title={user.email} details={details} className={className} />
+    <>
+      <ManageRolesFormDialog
+        open={assignDialogOpen}
+        onOpenChange={setAssignDialogOpen}
+        userId={user._id}
+        userName={user.name}
+        currentRoles={user.roles}
+      />
+      <DetailsCard
+        title={user.name}
+        details={details}
+        actions={actions}
+        className={className}
+      />
+    </>
   );
 };

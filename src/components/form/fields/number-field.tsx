@@ -3,11 +3,11 @@ import { useFieldContext } from "@/hooks/form-context";
 import { Field, FieldError, FieldLabel } from "../../ui/field";
 import { Input, type InputProps } from "../../ui/input";
 
-type Props = InputProps & {
+export type NumberFieldProps = InputProps & {
   label: string;
 };
 
-export default function NumberField({ label, ...props }: Props) {
+export function NumberField({ label, ...props }: NumberFieldProps) {
   const field = useFieldContext<number>();
 
   const [isInvalid, errors] = useStore(field.store, (state) => [

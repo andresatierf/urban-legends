@@ -5,6 +5,7 @@ import { useId, useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod";
 import { useAppForm } from "@/hooks/form";
+import { useUser } from "@/hooks/useUser";
 import { toastFormValues } from "@/lib/form";
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
@@ -60,6 +61,7 @@ export function UpsertTournamentFormDialog({
   tournament,
   children,
 }: UpsertTournamentFormProps) {
+  const { isDev } = useUser();
   const formId = useId();
   const router = useRouter();
   const [internalOpen, setInternalOpen] = useState(false);
@@ -283,13 +285,15 @@ export function UpsertTournamentFormDialog({
           >
             {([isPristine, canSubmit, isSubmitting]) => (
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => toastFormValues(form.state.values)}
-                >
-                  Check values
-                </Button>
+                {isDev && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => toastFormValues(form.state.values)}
+                  >
+                    Check values
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="outline"

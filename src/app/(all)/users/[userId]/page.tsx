@@ -20,7 +20,8 @@ export default function UserDetailsPage({ params }: Props) {
     id: resolvedParams.userId,
   });
 
-  if (!user) return null; // TODO: Add skeleton
+  if (user === undefined) return null; // TODO: Add skeleton
+  if (user === null) return null; // TODO: handle not-found state
 
   return (
     <>
@@ -32,8 +33,8 @@ export default function UserDetailsPage({ params }: Props) {
           </Link>
         </Button>
       </SectionHeader>
+
       <UserDetailsCard user={user} />
-      {/* TODO: Add teams table */}
     </>
   );
 }
