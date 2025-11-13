@@ -4,7 +4,7 @@ This document outlines the features that are missing or incomplete for a Minimum
 
 ## Current State
 
-The codebase is approximately **97%+ complete** for MVP. All critical features are implemented!
+The codebase is approximately **98%+ complete** for MVP. All critical features are implemented!
 
 ### ✅ Core Infrastructure (Complete)
 
@@ -23,7 +23,7 @@ The codebase is approximately **97%+ complete** for MVP. All critical features a
 
 ### ⚠️ High Priority Features (Still Needed)
 
-- ❌ Submission progress calendar
+- ✅ Submission progress calendar (PR #8)
 - ❌ Loading states / skeleton screens
 - ❌ Tournament Manager Dashboard
 - ❌ Reviewer Dashboard
@@ -36,27 +36,7 @@ The codebase is approximately **97%+ complete** for MVP. All critical features a
 
 These features significantly improve user experience and should be implemented soon:
 
-### 1. Submission Progress Calendar ([spec](specs/04-submission-calendar.md))
-
-**Status:** ❌ Not Implemented
-**Priority:** HIGH
-**Effort:** 1-2 days
-
-**Problem:** Users can't visualize their daily submission progress.
-
-**Impact:** Hard to track completion and identify missing days. Users need a visual way to see their tournament progress.
-
-**Required:**
-
-- Create calendar grid UI component
-- Show submission status by date (submitted/missing/approved/rejected)
-- Visual progress indicators for tournaments
-- Date highlighting for active/completed days
-- Integration with tournament date ranges
-
-**Note:** A basic UI calendar component exists (`src/components/ui/calendar.tsx`) but needs to be adapted for submission tracking.
-
-### 2. Loading States / Skeleton Screens ([spec](specs/10-loading-states.md))
+### 1. Loading States / Skeleton Screens ([spec](specs/10-loading-states.md))
 
 **Status:** ⚠️ Partial - Skeleton component exists, not used
 **Priority:** HIGH
@@ -85,7 +65,7 @@ These features significantly improve user experience and should be implemented s
 
 **Note:** Base `Skeleton` component already exists (`src/components/ui/skeleton.tsx`), just needs to be composed into layouts.
 
-### 3. Tournament Manager Dashboard ([spec](specs/11-tournament-manager-dashboard.md))
+### 2. Tournament Manager Dashboard ([spec](specs/11-tournament-manager-dashboard.md))
 
 **Status:** ❌ Not Implemented
 **Priority:** HIGH
@@ -106,7 +86,7 @@ These features significantly improve user experience and should be implemented s
 
 **Benefits:** Enables delegation of tournament management without giving full admin access, scales tournament operations.
 
-### 4. Reviewer Dashboard ([spec](specs/12-reviewer-dashboard.md))
+### 3. Reviewer Dashboard ([spec](specs/12-reviewer-dashboard.md))
 
 **Status:** ❌ Not Implemented
 **Priority:** HIGH
@@ -265,34 +245,36 @@ Minor issues that should be addressed when time permits:
 
 ## Estimated Effort Summary
 
-### ✅ Completed (11-13 days)
+### ✅ Completed (12-15 days)
 
 - Team Joining/Self-Service (3-5 days)
 - Leaderboard & Scoring (2-3 days)
 - Team Edit & Delete (0.5 days)
 - Admin Role Management (1 day)
 - Code Quality Fixes (1 day)
+- Submission Calendar (1-2 days)
 
 ### ⚠️ Remaining for Full MVP
 
-- **High Priority:** 9-13 days (Calendar + Loading States + Tournament Manager + Reviewer)
+- **High Priority:** 7-11 days (Loading States + Tournament Manager + Reviewer)
 - **Medium Priority:** 9-13 days (Team Captain + Admin Dashboard + Notifications + Code Cleanup)
 - **Low Priority:** 2-3 days (Viewer/Public Dashboard)
-- **Total Remaining:** 20-29 days
+- **Total Remaining:** 18-27 days
 
 ---
 
 ## Progress Summary
 
-- **Overall Completion:** 85%+ of enhanced MVP functionality (97%+ of core MVP)
+- **Overall Completion:** 88%+ of enhanced MVP functionality (98%+ of core MVP)
 - **Critical Features:** ✅ **ALL COMPLETE!**
   - ✅ Team Management (create, edit, delete, join, leave)
   - ✅ Team Member Management UI (invite, remove, transfer captaincy)
   - ✅ Leaderboard & Scoring System
   - ✅ Admin Role Management
   - ✅ Code Quality & Type Safety
-- **High Priority Features:** 0/4 complete
-  - ❌ Submission Calendar
+  - ✅ Submission Calendar
+- **High Priority Features:** 1/4 complete
+  - ✅ Submission Calendar (PR #8)
   - ❌ Loading States
   - ❌ Tournament Manager Dashboard
   - ❌ Reviewer Dashboard
@@ -306,6 +288,7 @@ Minor issues that should be addressed when time permits:
 
 ### Recent Merges
 
+- **PR #8:** Submission Calendar (11/13/2025)
 - **PR #7:** User Avatar/Sidebar (11/13/2025)
 - **PR #6:** Admin Role Management (11/12/2025)
 - **PR #5:** Leaderboard & Scoring (11/12/2025)
@@ -320,15 +303,13 @@ Minor issues that should be addressed when time permits:
 
 ### Recommended Priority Order
 
-#### Phase 1: Core UX Improvements (2-4 days)
+#### Phase 1: Core UX Improvements (1-2 days)
 
 1. **Loading States** (1-2 days) - Quick win, improves UX across entire app
    - Skeleton component exists, just needs to be used
    - 7 pages need updates
 
-2. **Submission Calendar** (1-2 days) - High user value
-   - Visual progress tracking
-   - Helps users stay on track with daily submissions
+~~2. **Submission Calendar** (1-2 days)~~ - ✅ **COMPLETED in PR #8**
 
 **After Phase 1:** Core user experience is complete for basic MVP!
 

@@ -4,7 +4,7 @@ This document tracks all completed features for the Urban Legends tournament tra
 
 ## Overview
 
-The platform has successfully implemented **6 major features** representing approximately **11-13 days of development effort**. These features provide core functionality for tournament management, team collaboration, scoring, and administration.
+The platform has successfully implemented **7 major features** representing approximately **12-15 days of development effort**. These features provide core functionality for tournament management, team collaboration, scoring, submission tracking, and administration.
 
 ---
 
@@ -362,6 +362,131 @@ Comprehensive code quality improvements addressing TypeScript errors, linting is
 
 ---
 
+## ✅ 7. Submission Progress Calendar
+
+**Spec:** [specs/done/04-submission-calendar.md](specs/done/04-submission-calendar.md)
+**PR:** #8
+**Completed:** 2025-11-13
+**Effort:** 1-2 days
+
+### Summary
+
+Complete submission calendar visualization system allowing users to track their daily submission progress with color-coded dates, statistics, and interactive navigation.
+
+### Implemented Features
+
+- ✅ Interactive calendar grid with month/year navigation
+- ✅ Color-coded date cells by submission state
+  - Green for approved submissions with points displayed
+  - Yellow for pending submissions
+  - Red for rejected submissions
+  - Gray for empty dates
+- ✅ Click date to create/edit submissions
+- ✅ Team selector for multi-team users (persists to localStorage)
+- ✅ Calendar statistics panel (completion rate, streak, submission counts)
+- ✅ Configurable week start day (Sunday-Saturday)
+- ✅ Tournament date range restrictions
+- ✅ Toggle between calendar and list views
+- ✅ Responsive design for mobile/tablet/desktop
+- ✅ Keyboard navigation and accessibility (ARIA labels)
+- ✅ Hover tooltips with submission details
+
+### Backend Implementation
+
+**Queries:**
+
+- `submissions.getMonthSubmissions` - Fetch submissions for specific month/year by team
+  - Returns map of date → submission data for efficient calendar rendering
+  - Validates user is member of team
+  - Filters by month and year
+- `submissions.getTeamStatistics` - Calculate comprehensive team progress metrics
+  - Total days, completion rate, current streak calculation
+  - Counts by submission state (approved/pending/rejected)
+  - Handles tournament date ranges and edge cases
+
+### Frontend Components
+
+- `SubmissionCalendar` - Full calendar grid layout (`src/components/submissions/submission-calendar.tsx`)
+  - 7-column grid with proper week structure
+  - Real-time data via Convex queries
+  - Handles timezone and date edge cases
+  - Week start preference (configurable)
+  - Legend for color-coded states
+
+- `CalendarDateCell` - Interactive date cells (`src/components/submissions/calendar-date-cell.tsx`)
+  - Color-coded by submission state (green/yellow/red/gray)
+  - Shows points earned per submission
+  - Accessible with ARIA labels and keyboard navigation
+  - Hover tooltips with submission details
+  - Click handlers for create/edit
+
+- `CalendarHeader` - Month navigation (`src/components/submissions/calendar-header.tsx`)
+  - Prev/Next/Today buttons
+  - Restricts navigation to tournament date ranges
+  - Highlights current month
+
+- `CalendarStatistics` - Progress metrics panel (`src/components/submissions/calendar-statistics.tsx`)
+  - Completion rate progress bar
+  - Current streak with fire emoji
+  - Submission status breakdown
+  - Motivational messages for achievements
+
+- `TeamSelector` - Dropdown for multi-team users (`src/components/submissions/team-selector.tsx`)
+  - Persists selection to localStorage
+  - Shows tournament context for each team
+  - Unique IDs with useId hook
+
+### Page Integration
+
+**Submissions Page (`src/app/(all)/submissions/page.tsx`):**
+
+- Toggle between calendar view and list view with icons
+- Calendar view pre-fills team and date when creating new submission
+- Empty state when user has no teams
+- Real-time updates via Convex subscriptions
+
+**Settings Page (`src/app/(all)/settings/page.tsx`):**
+
+- Week start day preference selector
+- Persists to localStorage
+- Created new settings page for user preferences
+
+**UI Components:**
+
+- Added `Tabs` component (`src/components/ui/tabs.tsx`) for view switching
+- Updated `Card` component for better calendar layout
+
+### Implementation Notes
+
+**Replaced Commented Code:**
+
+The spec mentioned 77 lines of commented calendar code. This implementation completely replaced that with a full-featured, production-ready calendar system.
+
+**Key Features Not in Original Spec:**
+
+- Configurable week start day (added based on regional preferences)
+- Settings page for user preferences
+- Team selector with localStorage persistence
+- Comprehensive statistics panel with streak tracking
+- Motivational messages for achievements
+- Tabs component for view switching
+
+**Accessibility:**
+
+- ARIA labels on all interactive elements
+- Keyboard navigation support
+- Semantic HTML with proper roles
+- Screen reader friendly descriptions
+
+**Performance:**
+
+- Efficient date calculations
+- Memoized calendar grid generation
+- LocalStorage for preference persistence
+- Convex real-time subscriptions for data updates
+
+---
+
 ## Infrastructure & Foundation
 
 The following foundational systems were already in place before feature development:
@@ -400,10 +525,10 @@ The following foundational systems were already in place before feature developm
 
 ### Development Effort
 
-- **Total Completed:** 11-13 days of development
-- **Features Completed:** 6 major features
-- **PRs Merged:** 7 pull requests
-- **Files Modified:** 100+ files across backend and frontend
+- **Total Completed:** 12-15 days of development
+- **Features Completed:** 7 major features
+- **PRs Merged:** 8 pull requests
+- **Files Modified:** 120+ files across backend and frontend
 
 ### Code Metrics
 
@@ -419,6 +544,7 @@ The following foundational systems were already in place before feature developm
 - ✅ Scoring & Leaderboards (points, rankings, statistics)
 - ✅ Role Management (assign, remove, audit)
 - ✅ User Self-Service (teams, invitations, requests)
+- ✅ Submission Calendar (visual progress tracking, statistics)
 - ✅ Code Quality (type safety, validation, linting)
 
 ### User Experience
@@ -433,6 +559,7 @@ The following foundational systems were already in place before feature developm
 
 ## Recent Merges
 
+- **PR #8:** Submission Calendar (11/13/2025)
 - **PR #7:** User Avatar/Sidebar (11/13/2025)
 - **PR #6:** Admin Role Management (11/12/2025)
 - **PR #5:** Leaderboard & Scoring (11/12/2025)
