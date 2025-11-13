@@ -136,9 +136,9 @@ export function DetailsCard({
           {details.map((detail) => (
             <div key={detail.key} className="flex flex-col">
               <strong>{startCase(detail.key)}:</strong>
-              <p className={cn("text-gray-700", detail.className)}>
+              <span className={cn("text-gray-700", detail.className)}>
                 {detail.value}
-              </p>
+              </span>
             </div>
           ))}
         </div>

@@ -2,9 +2,9 @@ import { Settings } from "lucide-react";
 import { useState } from "react";
 import { useUser } from "@/hooks/useUser";
 import type { Doc } from "../../../convex/_generated/dataModel";
-import { AssignRoleDialog } from "../admin/assign-role-dialog";
-import { RolesBadgeList } from "../admin/roles-badge-list";
 import { DetailsCard } from "../details-card";
+import { ManageRolesFormDialog } from "../form/manage-roles-form";
+import { RolesBadgeList } from "./roles-badge-list";
 
 type Props = {
   user: Doc<"users"> & { roles: string[] };
@@ -16,7 +16,12 @@ export const UserDetailsCard = ({ user, className }: Props) => {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
 
   const details = [
-    { key: "roles", value: <RolesBadgeList roles={user.roles} /> },
+    { key: "name", value: user.name },
+    { key: "email", value: user.email },
+    {
+      key: "roles",
+      value: <RolesBadgeList roles={user.roles} className="py-2" />,
+    },
   ];
   const actions = [
     {
@@ -30,7 +35,7 @@ export const UserDetailsCard = ({ user, className }: Props) => {
 
   return (
     <>
-      <AssignRoleDialog
+      <ManageRolesFormDialog
         open={assignDialogOpen}
         onOpenChange={setAssignDialogOpen}
         userId={user._id}
@@ -38,7 +43,7 @@ export const UserDetailsCard = ({ user, className }: Props) => {
         currentRoles={user.roles}
       />
       <DetailsCard
-        title={user.email}
+        title={user.name}
         details={details}
         actions={actions}
         className={className}

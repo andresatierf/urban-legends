@@ -4,7 +4,7 @@ import { useFieldContext } from "@/hooks/form-context";
 import { Combobox } from "../../ui/combobox";
 import { Field, FieldError, FieldLabel } from "../../ui/field";
 
-type Props<T> = {
+export type ComboboxFieldProps<T> = {
   label: string;
   options: { value: T; label: string }[];
   onChange?: (value: T) => void;
@@ -12,13 +12,13 @@ type Props<T> = {
   children?: React.ReactNode;
 };
 
-export default function ComboboxField<T extends string>({
+export function ComboboxField<T extends string>({
   label,
   options,
   onChange,
   placeholder,
   children,
-}: Props<T>) {
+}: ComboboxFieldProps<T>) {
   const field = useFieldContext<T>();
 
   const [isInvalid, errors] = useStore(field.store, (state) => [

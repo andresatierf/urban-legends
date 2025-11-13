@@ -9,17 +9,17 @@ import {
 import { useFieldContext } from "@/hooks/form-context";
 import { Field, FieldError, FieldLabel } from "../../ui/field";
 
-type Props<T> = {
+export type SelectFieldProps<T> = {
   label: string;
   placeholder?: string;
   options: { value: T; label: string }[];
 };
 
-export default function SelectField<T extends string>({
+export function SelectField<T extends string>({
   label,
   placeholder,
   options,
-}: Props<T>) {
+}: SelectFieldProps<T>) {
   const field = useFieldContext<string>();
 
   const [isInvalid, errors] = useStore(field.store, (state) => [

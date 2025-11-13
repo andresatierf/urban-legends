@@ -3,11 +3,11 @@ import { useFieldContext } from "@/hooks/form-context";
 import { Field, FieldError, FieldLabel } from "../../ui/field";
 import { Textarea, type TextareaProps } from "../../ui/textarea";
 
-type Props = TextareaProps & {
+export type TextareaFieldProps = TextareaProps & {
   label: string;
 };
 
-export default function TextareaField({ label, ...props }: Props) {
+export function TextareaField({ label, ...props }: TextareaFieldProps) {
   const field = useFieldContext<string>();
 
   const [isInvalid, errors] = useStore(field.store, (state) => [

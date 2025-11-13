@@ -21,6 +21,7 @@ export default function UserDetailsPage({ params }: Props) {
   });
 
   if (user === undefined) return null; // TODO: Add skeleton
+  if (user === null) return null; // TODO: handle not-found state
 
   return (
     <>

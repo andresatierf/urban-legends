@@ -37,6 +37,8 @@ export const makeFirstUserAdmin = mutation({
     await ctx.db.insert("userRoles", {
       userId: user._id,
       roleId: adminRole._id,
+      assignedBy: user._id,
+      assignedAt: new Date().toISOString(),
     });
 
     return true;
@@ -93,47 +95,6 @@ export const addUserRole = mutation({
     });
 
     return { success: true };
-  },
-});
-
-export const setUserRole = mutation({
-  args: {
-    userId: v.id("users"),
-    role: v.union(v.literal("admin"), v.literal("user")),
-  },
-  handler: async (ctx, args) => {
-    const currentUser = await getCurrentUserOrThrow(ctx);
-
-    // Check if current user is admin
-    if (!currentUser.roles.includes("admin")) {
-      throw new Error("Admin access required");
-    }
-
-    // Get the role ID for the target role
-    const targetRole = await ctx.db
-      .query("roles")
-      .withIndex("by_name", (q) => q.eq("name", args.role))
-      .first();
-
-    if (!targetRole) {
-      throw new Error("Role not found");
-    }
-
-    // Remove existing roles for this user
-    const existingRoles = await ctx.db
-      .query("userRoles")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .collect();
-
-    for (const existingRole of existingRoles) {
-      await ctx.db.delete(existingRole._id);
-    }
-
-    // Add the new role
-    await ctx.db.insert("userRoles", {
-      userId: args.userId,
-      roleId: targetRole._id,
-    });
   },
 });
 
@@ -199,13 +160,111 @@ export const removeUserRole = mutation({
   },
 });
 
-export const listRoles = query({
-  handler: async (ctx) => {
-    const user = await getCurrentUserOrThrow(ctx);
+export const updateRoles = mutation({
+  args: {
+    userId: v.id("users"),
+    roles: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await getCurrentUserOrThrow(ctx);
 
-    if (!user.roles.includes("admin")) {
+    // Verify current user is admin
+    if (!currentUser.roles.includes("admin")) {
       throw new Error("Admin access required");
     }
+
+    // Verify target user exists
+    const targetUser = await ctx.db.get(args.userId);
+    if (!targetUser) {
+      throw new Error("User not found");
+    }
+
+    // Get all roles from the database
+    const allRoles = await ctx.db.query("roles").collect();
+    const roleMap = new Map(allRoles.map((role) => [role.name, role]));
+
+    // Validate that all requested roles exist
+    for (const role of args.roles) {
+      if (!roleMap.has(role)) {
+        throw new Error(`Role "${role}" not found`);
+      }
+    }
+
+    // Get current user roles
+    const currentUserRoles = await ctx.db
+      .query("userRoles")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const currentRoleNames = new Set(
+      currentUserRoles.map((ur) => {
+        const role = allRoles.find((r) => r._id === ur.roleId);
+        if (!role) throw new Error("Role not found");
+        return role?.name;
+      }),
+    );
+
+    // Determine roles to add and remove
+    const rolesToAdd = args.roles.filter((name) => !currentRoleNames.has(name));
+    const rolesToRemove = Array.from(currentRoleNames).filter(
+      (name) => !args.roles.includes(name),
+    );
+
+    // Special check: if removing admin, ensure it's not the last admin
+    if (rolesToRemove.includes("admin")) {
+      const adminRole = roleMap.get("admin");
+      if (adminRole) {
+        const adminCount = await ctx.db
+          .query("userRoles")
+          .withIndex("by_role", (q) => q.eq("roleId", adminRole._id))
+          .collect();
+
+        if (adminCount.length <= 1) {
+          throw new Error("Cannot remove last admin user");
+        }
+
+        // Warn if removing admin from self (but allow it)
+        if (args.userId === currentUser._id) {
+          console.warn("Admin removing admin role from self");
+        }
+      }
+    }
+
+    // Remove roles that are no longer needed
+    for (const roleName of rolesToRemove) {
+      const role = roleMap.get(roleName);
+      if (!role) continue;
+
+      const userRole = currentUserRoles.find((ur) => ur.roleId === role._id);
+      if (userRole) {
+        await ctx.db.delete(userRole._id);
+      }
+    }
+
+    // Add new roles
+    for (const roleName of rolesToAdd) {
+      const role = roleMap.get(roleName);
+      if (!role) continue;
+
+      await ctx.db.insert("userRoles", {
+        userId: args.userId,
+        roleId: role._id,
+        assignedBy: currentUser._id,
+        assignedAt: new Date().toISOString(),
+      });
+    }
+
+    return {
+      success: true,
+      added: rolesToAdd,
+      removed: rolesToRemove,
+    };
+  },
+});
+
+export const listRoles = query({
+  handler: async (ctx) => {
+    await getCurrentUserOrThrow(ctx);
 
     const roles = await ctx.db.query("roles").collect();
 

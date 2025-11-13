@@ -2,7 +2,6 @@
 
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { RolesBadgeList } from "@/components/admin/roles-badge-list";
 import { SectionHeader } from "@/components/section-header";
 import { Card } from "@/components/ui/card";
 import {
@@ -14,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { RolesBadgeList } from "@/components/users/roles-badge-list";
 import { cn } from "@/lib/utils";
 import { api } from "../../../../convex/_generated/api";
 
@@ -42,22 +42,25 @@ export default function UsersPage() {
           </TableHeader>
           <TableBody>
             {users?.map((user) => (
-              <TableRow
+              <Link
                 key={user._id}
-                className={cn("border-t transition hover:bg-gray-50")}
+                href={`/users/${user._id}` || ""}
+                className="contents"
               >
-                <TableCell className="p-3 font-medium text-gray-800">
-                  <Link href={`/users/${user._id}`}>{user.name}</Link>
-                </TableCell>
-                <Link href={`/users/${user._id}` || ""}>
+                <TableRow
+                  className={cn("border-t transition hover:bg-gray-50")}
+                >
+                  <TableCell className="p-3 font-medium text-gray-800">
+                    {user.name}{" "}
+                  </TableCell>
                   <TableCell className="p-3 text-gray-600">
                     {user.email}
                   </TableCell>
-                </Link>
-                <TableCell className="p-3 text-gray-600">
-                  <RolesBadgeList roles={user.roles || []} />
-                </TableCell>
-              </TableRow>
+                  <TableCell className="p-3 text-gray-600">
+                    <RolesBadgeList roles={user.roles || []} />
+                  </TableCell>
+                </TableRow>
+              </Link>
             ))}
             {(!users || users?.length === 0) && (
               <TableRow>
