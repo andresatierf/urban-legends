@@ -25,6 +25,8 @@ The codebase is approximately **97%+ complete** for MVP. All critical features a
 
 - ❌ Submission progress calendar
 - ❌ Loading states / skeleton screens
+- ❌ Tournament Manager Dashboard
+- ❌ Reviewer Dashboard
 
 **Note:** For details on completed features, see [COMPLETED.md](COMPLETED.md)
 
@@ -83,11 +85,74 @@ These features significantly improve user experience and should be implemented s
 
 **Note:** Base `Skeleton` component already exists (`src/components/ui/skeleton.tsx`), just needs to be composed into layouts.
 
+### 3. Tournament Manager Dashboard ([spec](specs/11-tournament-manager-dashboard.md))
+
+**Status:** ❌ Not Implemented
+**Priority:** HIGH
+**Effort:** 3-4 days
+
+**Problem:** The `tournament_manager` role exists but has no dedicated interface. Tournament managers cannot execute their role-specific functions without full admin access.
+
+**Impact:** Cannot delegate tournament management responsibilities. Tournament managers have no way to manage their assigned tournaments, approve submissions, or access tournament analytics.
+
+**Required:**
+
+- Tournament assignment system (admins assign managers to specific tournaments)
+- Tournament manager dashboard showing assigned tournaments
+- Scoped submission approval queue (only for managed tournaments)
+- Tournament analytics and statistics
+- Team oversight for managed tournaments
+- Permission checks allowing tournament_manager role
+
+**Benefits:** Enables delegation of tournament management without giving full admin access, scales tournament operations.
+
+### 4. Reviewer Dashboard ([spec](specs/12-reviewer-dashboard.md))
+
+**Status:** ❌ Not Implemented
+**Priority:** HIGH
+**Effort:** 2-3 days
+
+**Problem:** The `reviewer` role exists but has no dedicated interface. Reviewers cannot focus on content moderation without full admin powers.
+
+**Impact:** Forces organizations to give full admin access to users who should only review submissions. No efficient review workflow.
+
+**Required:**
+
+- Review queue dashboard with all pending submissions
+- Inline approve/reject actions with keyboard shortcuts
+- Bulk review operations
+- Review statistics and performance tracking
+- Dispute resolution workflow
+- Permission checks allowing reviewer role
+
+**Benefits:** Enables dedicated content moderation role, improves submission review efficiency, separates concerns from admin role.
+
 ## Medium Priority (Nice to Have)
 
 These features enhance the platform but are not essential for MVP launch:
 
-### 4. Complete Admin Dashboard ([spec](specs/07-admin-dashboard.md))
+### 5. Team Captain Dashboard ([spec](specs/13-team-captain-dashboard.md))
+
+**Status:** ⚠️ Partial - Individual team management exists
+**Priority:** MEDIUM
+**Effort:** 2 days
+
+**Problem:** Team captains who manage multiple teams must navigate to each team page individually. No centralized captain dashboard.
+
+**Impact:** Inefficient management of multiple teams. Potential oversight of pending join requests or invitations across teams.
+
+**Required:**
+
+- Centralized dashboard showing all teams user captains
+- Consolidated pending actions (join requests, invitations) across all teams
+- Team performance comparison view
+- Aggregated statistics across all captain's teams
+- Quick navigation and management actions
+- Activity feed across all teams
+
+**Benefits:** Improves efficiency for captains managing multiple teams, reduces likelihood of missed actions.
+
+### 6. Complete Admin Dashboard ([spec](specs/07-admin-dashboard.md))
 
 **Status:** ❌ Not Implemented
 **Priority:** MEDIUM
@@ -105,7 +170,7 @@ These features enhance the platform but are not essential for MVP launch:
 - Recent activity feed
 - System health indicators
 
-### 5. Notifications System
+### 7. Notifications System
 
 **Status:** ❌ Not Implemented
 **Priority:** MEDIUM
@@ -124,7 +189,7 @@ These features enhance the platform but are not essential for MVP launch:
 - Notification preferences
 - Mark as read functionality
 
-### 6. Code Cleanup ([spec](specs/09-code-cleanup.md))
+### 8. Code Cleanup ([spec](specs/09-code-cleanup.md))
 
 **Status:** ❌ Not Started
 **Priority:** MEDIUM
@@ -144,6 +209,34 @@ These features enhance the platform but are not essential for MVP launch:
 - Consolidate duplicate functions
 - Document admin utility functions
 - Fix or remove unimplemented functions
+
+## Low Priority (Future Enhancements)
+
+These features would be valuable for growth but can be deferred until after MVP launch:
+
+### 9. Viewer & Public Dashboard ([spec](specs/14-viewer-public-dashboard.md))
+
+**Status:** ❌ Not Implemented
+**Priority:** LOW-MEDIUM
+**Effort:** 2-3 days
+
+**Problem:** The `viewer` role exists but has no interface. No public-facing leaderboards for non-participants to view.
+
+**Impact:** Limits platform visibility and community engagement. Potential participants cannot explore tournaments before signing up. No way to share tournament results publicly.
+
+**Required:**
+
+- Public tournament discovery page (unauthenticated access)
+- Public leaderboard views with real-time updates
+- Public team profiles (with privacy controls)
+- Viewer dashboard for authenticated users with viewer role
+- Social sharing features (Open Graph tags, embeddable widgets)
+- Favorite tournaments for viewers
+- SEO optimization for public pages
+
+**Benefits:** Increases platform visibility, enables spectators and potential participants to explore, supports marketing and recruitment, builds community engagement.
+
+**Note:** Requires middleware changes to allow public (unauthenticated) routes. Privacy controls must be implemented to protect user data.
 
 ---
 
@@ -182,28 +275,34 @@ Minor issues that should be addressed when time permits:
 
 ### ⚠️ Remaining for Full MVP
 
-- **High Priority:** 2-4 days (Calendar + Loading States)
-- **Medium Priority:** 7-10 days (Admin Dashboard + Notifications + Code Cleanup)
-- **Total Remaining:** 9-14 days
+- **High Priority:** 9-13 days (Calendar + Loading States + Tournament Manager + Reviewer)
+- **Medium Priority:** 9-13 days (Team Captain + Admin Dashboard + Notifications + Code Cleanup)
+- **Low Priority:** 2-3 days (Viewer/Public Dashboard)
+- **Total Remaining:** 20-29 days
 
 ---
 
 ## Progress Summary
 
-- **Overall Completion:** 97%+ of MVP core functionality
+- **Overall Completion:** 85%+ of enhanced MVP functionality (97%+ of core MVP)
 - **Critical Features:** ✅ **ALL COMPLETE!**
   - ✅ Team Management (create, edit, delete, join, leave)
   - ✅ Team Member Management UI (invite, remove, transfer captaincy)
   - ✅ Leaderboard & Scoring System
   - ✅ Admin Role Management
   - ✅ Code Quality & Type Safety
-- **High Priority Features:** 0/2 complete
+- **High Priority Features:** 0/4 complete
   - ❌ Submission Calendar
   - ❌ Loading States
-- **Medium Priority Features:** 0/3 complete
+  - ❌ Tournament Manager Dashboard
+  - ❌ Reviewer Dashboard
+- **Medium Priority Features:** 0/4 complete
+  - ❌ Team Captain Dashboard
   - ❌ Admin Dashboard
   - ❌ Notifications
   - ❌ Code Cleanup
+- **Low Priority Features:** 0/1 complete
+  - ❌ Viewer & Public Dashboard
 
 ### Recent Merges
 
@@ -221,21 +320,43 @@ Minor issues that should be addressed when time permits:
 
 ### Recommended Priority Order
 
-1. **Loading States** (1-2 days) - Quick win, improves UX across entire app
+#### Phase 1: Core UX Improvements (2-4 days)
 
+1. **Loading States** (1-2 days) - Quick win, improves UX across entire app
    - Skeleton component exists, just needs to be used
    - 7 pages need updates
 
 2. **Submission Calendar** (1-2 days) - High user value
-
    - Visual progress tracking
    - Helps users stay on track with daily submissions
 
-3. **Admin Dashboard** (2 days) - Admin convenience
+**After Phase 1:** Core user experience is complete for basic MVP!
+
+#### Phase 2: Role-Based Dashboards (9-13 days)
+
+3. **Tournament Manager Dashboard** (3-4 days) - Enables delegation
+   - Critical for scaling tournament operations
+   - Allows tournament management without full admin access
+
+4. **Reviewer Dashboard** (2-3 days) - Improves moderation
+   - Dedicated content moderation workflow
+   - Separates review role from admin role
+
+5. **Team Captain Dashboard** (2 days) - Captain efficiency
+   - Multi-team management
+   - Consolidated pending actions
+
+6. **Admin Dashboard** (2 days) - Admin convenience
    - Centralized admin view
    - Quick access to common tasks
 
-**After these 3 features:** The platform will be feature-complete for MVP launch!
+**After Phase 2:** All role-based interfaces complete!
+
+#### Phase 3: Optional Enhancements (5-10 days)
+
+7. **Notifications System** (3-4 days) - User engagement
+8. **Code Cleanup** (2-3 days) - Technical debt
+9. **Viewer/Public Dashboard** (2-3 days) - External visibility
 
 ---
 
