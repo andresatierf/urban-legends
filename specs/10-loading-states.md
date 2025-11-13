@@ -8,13 +8,23 @@
 
 ## Problem Statement
 
-The application currently has **9 locations** with `TODO: Add skeleton` comments where data loading states are not handled properly. When data is being fetched from Convex, users see either a blank screen or a flash of empty content before the actual data appears.
+The application has **two loading state issues**:
+
+1. **Missing Loading States**: 9 locations with `TODO: Add skeleton` comments where data loading is not handled, causing blank screens
+2. **Inconsistent Implementations**: 4 components with inline skeleton code that should be extracted into reusable components
+
+When data is being fetched from Convex, users see either a blank screen or a flash of empty content before the actual data appears.
 
 **User Experience Impact:**
 - **Jarring Experience**: Pages "pop in" suddenly rather than loading gracefully
 - **Perceived Performance**: Users may think the app is broken or slow
 - **Lack of Feedback**: No indication that data is being loaded
 - **Poor UX Standard**: Modern apps use skeleton screens to indicate loading states
+
+**Code Quality Impact:**
+- **Duplication**: ~100 lines of duplicate inline skeleton code across 4 components
+- **Inconsistency**: Different skeleton implementations for similar UI patterns
+- **Maintainability**: Changes to skeleton styles require updating multiple locations
 
 ---
 
@@ -697,6 +707,177 @@ if (!team || !members) {
 }
 ```
 
+### Phase 3: Extract Existing Inline Skeletons
+
+#### 3.1 TeamStatisticsCard
+
+**File:** `src/components/teams/team-statistics-card.tsx:39-55`
+
+**Before:**
+```typescript
+if (stats === undefined || team === undefined) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton
+        <Card key={i} className="animate-pulse">
+          <CardHeader>
+            <div className="h-5 w-32 rounded bg-muted" />
+          </CardHeader>
+          <CardContent>
+            <div className="h-8 w-20 rounded bg-muted" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+```
+
+**After:**
+```typescript
+import { StatCardsGridSkeleton } from "../ui/stat-cards-grid-skeleton";
+
+// ... in component
+if (stats === undefined || team === undefined) {
+  return (
+    <StatCardsGridSkeleton
+      count={6}
+      className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+    />
+  );
+}
+```
+
+#### 3.2 TournamentLeaderboard
+
+**File:** `src/components/tournaments/tournament-leaderboard.tsx:71-105`
+
+**Before:**
+```typescript
+if (leaderboard === undefined) {
+  return (
+    <div className="rounded-lg border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-16">Rank</TableHead>
+            <TableHead>Team Name</TableHead>
+            <TableHead className="w-24 text-right">Points</TableHead>
+            <TableHead className="w-24 text-right">Members</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 5 }).map((_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton
+            <TableRow key={i}>
+              <TableCell>
+                <div className="h-5 w-8 animate-pulse rounded bg-muted" />
+              </TableCell>
+              <TableCell>
+                <div className="h-5 w-32 animate-pulse rounded bg-muted" />
+              </TableCell>
+              <TableCell>
+                <div className="ml-auto h-5 w-12 animate-pulse rounded bg-muted" />
+              </TableCell>
+              <TableCell>
+                <div className="ml-auto h-5 w-12 animate-pulse rounded bg-muted" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+```
+
+**After:**
+```typescript
+import { TableSkeleton } from "../ui/table-skeleton";
+
+// ... in component
+if (leaderboard === undefined) {
+  return (
+    <TableSkeleton
+      columns={4}
+      headers={["Rank", "Team Name", "Points", "Members"]}
+      rows={5}
+      className="overflow-hidden"
+    />
+  );
+}
+```
+
+**Note:** The existing border and rounded styling is maintained by TableSkeleton which wraps Table in a Card.
+
+#### 3.3 LeaderboardPodium
+
+**File:** `src/components/tournaments/leaderboard-podium.tsx:53-68`
+
+**Before:**
+```typescript
+if (leaderboard === undefined) {
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {Array.from({ length: 3 }).map((_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton
+        <Card key={i} className="animate-pulse">
+          <CardContent className="flex flex-col items-center p-6">
+            <div className="mb-4 h-16 w-16 rounded-full bg-muted" />
+            <div className="mb-2 h-6 w-32 rounded bg-muted" />
+            <div className="h-8 w-16 rounded bg-muted" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+```
+
+**After:**
+```typescript
+import { PodiumSkeleton } from "../ui/podium-skeleton";
+
+// ... in component
+if (leaderboard === undefined) {
+  return <PodiumSkeleton className="grid grid-cols-1 gap-4 md:grid-cols-3" />;
+}
+```
+
+#### 3.4 WinnerAnnouncement
+
+**File:** `src/components/tournaments/winner-announcement.tsx:18-32`
+
+**Before:**
+```typescript
+if (winner === undefined) {
+  return (
+    <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+      <CardHeader>
+        <div className="h-8 w-48 animate-pulse rounded bg-muted" />
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <div className="h-6 w-32 animate-pulse rounded bg-muted" />
+          <div className="h-4 w-64 animate-pulse rounded bg-muted" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+**After:**
+```typescript
+import { WinnerAnnouncementSkeleton } from "../ui/winner-announcement-skeleton";
+
+// ... in component
+if (winner === undefined) {
+  return <WinnerAnnouncementSkeleton />;
+}
+```
+
 ---
 
 ## UI/UX Considerations
@@ -743,7 +924,7 @@ if (!team || !members) {
 
 ### Manual Testing Checklist
 
-**For Each Component:**
+**For Each New Loading State (9 components):**
 - [ ] Skeleton appears immediately when loading
 - [ ] Skeleton size/shape matches actual content
 - [ ] Animation is smooth and consistent
@@ -752,15 +933,24 @@ if (!team || !members) {
 - [ ] Accessible via keyboard navigation
 - [ ] Screen reader announces loading state
 
+**For Each Refactored Component (4 components):**
+- [ ] Skeleton appearance unchanged after refactoring
+- [ ] No visual regressions
+- [ ] Animation timing remains the same
+- [ ] Layout and spacing maintained
+- [ ] Component still functions correctly
+
 **Visual Regression:**
 - [ ] Compare skeleton layouts side-by-side with loaded content
 - [ ] Test on different screen sizes (mobile, tablet, desktop)
 - [ ] Verify grid/table layouts maintain structure
+- [ ] Verify refactored components look identical to before
 
 **Performance:**
 - [ ] Skeletons render within 50ms
 - [ ] No noticeable delay before skeleton appears
 - [ ] Smooth transition from skeleton to content
+- [ ] No performance degradation in refactored components
 
 ### Automated Tests (Optional)
 
@@ -833,24 +1023,33 @@ function useDelayedLoading(isLoading: boolean, delay = 200) {
 
 1. **Completion**
    - All 9 TODO comments replaced with skeleton implementations
+   - All 4 inline skeletons extracted to reusable components
    - Zero `return null` for loading states in production code
+   - Zero duplicate inline skeleton implementations
 
-2. **Visual Quality**
+2. **Code Quality**
+   - 7 reusable skeleton components created
+   - Consistent patterns across all loading states
+   - Reduced code duplication (removed ~100 lines of inline skeletons)
+   - Improved maintainability
+
+3. **Visual Quality**
    - Skeleton layouts match actual content structure
    - No visible layout shifts during load
    - Consistent animation across all components
+   - Existing loading states maintain their visual appearance
 
-3. **Accessibility**
+4. **Accessibility**
    - All skeletons have proper ARIA attributes
    - Screen readers announce loading states
    - Keyboard navigation works during loading
 
-4. **Performance**
+5. **Performance**
    - Skeletons render in <50ms
-   - No performance degradation vs. `return null`
-   - Bundle size increase <5KB (minified + gzipped)
+   - No performance degradation vs. inline implementations
+   - Bundle size increase <8KB (minified + gzipped) for all 7 components
 
-5. **User Feedback**
+6. **User Feedback**
    - Improved perceived performance
    - Reduced confusion about "blank" screens
    - Positive feedback on loading experience
@@ -860,23 +1059,29 @@ function useDelayedLoading(isLoading: boolean, delay = 200) {
 ## Migration & Deployment
 
 ### Pre-Deployment Checklist
-- [ ] All 9 loading states implemented
-- [ ] Skeleton components created and tested
+- [ ] All 9 new loading states implemented
+- [ ] All 4 inline skeletons refactored to use reusable components
+- [ ] 7 skeleton components created and tested
 - [ ] Visual comparison completed (skeleton vs. content)
+- [ ] Refactored components maintain visual appearance
 - [ ] Accessibility testing completed
 - [ ] Build succeeds without errors
 - [ ] Biome linting passes
 
 ### Deployment Steps
-1. Create skeleton component files (Phase 1)
-2. Update components with skeletons (Phase 2)
-3. Test locally with network throttling
-4. Merge PR to main branch
-5. Deploy to production
-6. Monitor user feedback and metrics
+1. **Phase 1**: Create core skeleton component files (4 components)
+2. **Phase 2**: Update components with new skeletons (9 components)
+3. **Phase 3**: Create specialized skeletons and refactor existing components (3 + 4 components)
+4. Test locally with network throttling
+5. Verify no visual regressions in refactored components
+6. Merge PR to main branch
+7. Deploy to production
+8. Monitor user feedback and metrics
 
 ### Post-Deployment Verification
 - [ ] All pages show skeletons when loading
+- [ ] Refactored components display skeletons correctly
+- [ ] No visual regressions in leaderboard, podium, stats, or winner components
 - [ ] No console errors or warnings
 - [ ] Lighthouse accessibility score maintained or improved
 - [ ] No user complaints about blank screens
@@ -967,9 +1172,12 @@ Create specialized skeletons for complex layouts:
 | DetailsCardSkeleton | `ui/details-card-skeleton.tsx` | Card with title, description, details | `detailsCount`, `showActions`, `className` |
 | TableSkeleton | `ui/table-skeleton.tsx` | Table with headers and rows | `columns`, `rows`, `headers`, `className` |
 | CardGridSkeleton | `ui/card-grid-skeleton.tsx` | Grid of card skeletons | `count`, `className` |
+| StatCardsGridSkeleton | `ui/stat-cards-grid-skeleton.tsx` | Statistics cards grid | `count`, `className` |
+| PodiumSkeleton | `ui/podium-skeleton.tsx` | Leaderboard podium display | `className` |
+| WinnerAnnouncementSkeleton | `ui/winner-announcement-skeleton.tsx` | Winner announcement card | `className` |
 | PageSkeleton | `ui/page-skeleton.tsx` | Full page with header and sections | `showHeader`, `headerTitle`, `sections` |
 
-### Components to Update
+### Components to Update (New Loading States)
 
 | Component | File | Type | Skeleton |
 |-----------|------|------|----------|
@@ -983,16 +1191,38 @@ Create specialized skeletons for complex layouts:
 | TournamentDetailPage | `app/(all)/tournaments/[tournamentId]/page.tsx` | Page | PageSkeleton |
 | TeamDetailPage | `app/(all)/teams/[teamId]/page.tsx` | Page | PageSkeleton |
 
+### Components to Refactor (Extract Existing Skeletons)
+
+| Component | File | Current | New Skeleton |
+|-----------|------|---------|--------------|
+| TeamStatisticsCard | `components/teams/team-statistics-card.tsx` | Inline grid skeleton | StatCardsGridSkeleton |
+| TournamentLeaderboard | `components/tournaments/tournament-leaderboard.tsx` | Inline table skeleton | TableSkeleton |
+| LeaderboardPodium | `components/tournaments/leaderboard-podium.tsx` | Inline card grid | PodiumSkeleton |
+| WinnerAnnouncement | `components/tournaments/winner-announcement.tsx` | Inline card skeleton | WinnerAnnouncementSkeleton |
+
 ### Implementation Order
 
 **Recommended order (least to most complex):**
-1. Create DetailsCardSkeleton (simplest, most reused)
-2. Update all DetailsCard components (3 components)
-3. Create TableSkeleton
-4. Update UsersPage (1 component)
-5. Create CardGridSkeleton
-6. Update TournamentsPage (1 component)
-7. Create PageSkeleton
-8. Update all page components (4 pages)
 
-**Total: 4 new components, 9 updated components/pages**
+**Phase 1: Create Core Skeleton Components**
+1. Create DetailsCardSkeleton (simplest, most reused)
+2. Create TableSkeleton
+3. Create CardGridSkeleton
+4. Create PageSkeleton
+
+**Phase 2: Add Missing Loading States**
+5. Update all DetailsCard components (3 components)
+6. Update UsersPage with TableSkeleton (1 component)
+7. Update TournamentsPage with CardGridSkeleton (1 component)
+8. Update all page components with PageSkeleton (4 pages)
+
+**Phase 3: Extract Existing Skeletons**
+9. Create StatCardsGridSkeleton
+10. Create PodiumSkeleton
+11. Create WinnerAnnouncementSkeleton
+12. Refactor TeamStatisticsCard
+13. Refactor TournamentLeaderboard
+14. Refactor LeaderboardPodium
+15. Refactor WinnerAnnouncement
+
+**Total: 7 new skeleton components, 9 new loading states, 4 refactored components**
