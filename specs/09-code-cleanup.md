@@ -23,6 +23,7 @@ The codebase has accumulated **26 unused exports** (13 frontend components/expor
 ### What Exists
 
 **Frontend Unused Components (13):**
+
 - `src/components/UserCard.tsx` - User card with teams display
 - `src/components/UserStatsCard.tsx` - User statistics card
 - `src/components/auth/sign-in-form.tsx` - Custom auth form (replaced by Clerk)
@@ -38,6 +39,7 @@ The codebase has accumulated **26 unused exports** (13 frontend components/expor
 - `src/components/ui/input.tsx` - `inputVariants` export (Input component is used)
 
 **Backend Unused Functions (13):**
+
 - `convex/admin.ts:makeFirstUserAdmin` - Bootstrap function (may be manual)
 - `convex/admin.ts:addUserRole` - Empty stub implementation
 - `convex/admin.ts:setUserRole` - Fully implemented but unused
@@ -69,22 +71,26 @@ See `/home/andre/dev/urban-legends/UNUSED_COMPONENTS.md` for complete analysis w
 ### Functional Requirements
 
 1. **Remove Safe-to-Delete Components**
+
    - Delete development/demo components
    - Delete legacy components replaced by newer implementations
    - Delete components with no imports across the entire codebase
 
 2. **Remove or Implement Stub Functions**
+
    - Either implement `tournaments.remove` or remove it and update UI
    - Remove `admin.addUserRole` empty stub
    - Decide on `admin.setUserRole` (implement UI or remove)
 
 3. **Consolidate Duplicate Functions**
+
    - Consolidate submission getters (get vs getById)
    - Consolidate submission list queries (list, listUserSubmissions, getUserSubmissions)
    - Remove duplicate team creation functions
    - Remove duplicate member addition functions
 
 4. **Document Manual/Admin Functions**
+
    - Add comments identifying functions intended for manual execution
    - Create admin utilities documentation if needed
    - Preserve bootstrap and data fix utilities with clear documentation
@@ -108,12 +114,14 @@ See `/home/andre/dev/urban-legends/UNUSED_COMPONENTS.md` for complete analysis w
 ### Phase 1: Safe Frontend Removals (Low Risk)
 
 **Files to Delete:**
+
 1. `src/components/button-demo.tsx` - Development showcase component
 2. `src/components/UserCard.tsx` - Legacy dashboard component
 3. `src/components/UserStatsCard.tsx` - Legacy dashboard component
 4. `src/components/auth/sign-in-form.tsx` - Replaced by Clerk
 
 **Verification Steps:**
+
 ```bash
 # Search for any imports before deleting
 grep -r "button-demo" src/
@@ -129,6 +137,7 @@ bun run build
 ### Phase 2: Frontend Component Removals (Medium Risk)
 
 **Files to Delete:**
+
 1. `src/components/ui/confirm-button.tsx`
 2. `src/components/ui/date-picker.tsx`
 3. `src/components/teams/teams-data-table.tsx`
@@ -137,10 +146,12 @@ bun run build
 6. `src/components/ui/data-table/view-options.tsx`
 
 **Special Handling:**
+
 - `teams-data-table.tsx` uses `DataTableSection` which IS used elsewhere - verify no indirect usage
 - `tournaments-data-table.tsx` imports `api.tournaments.remove` which throws error - needs coordination with Phase 4
 
 **Verification Steps:**
+
 ```bash
 # Search for imports
 grep -r "confirm-button" src/
@@ -160,10 +171,12 @@ bun run build
 **Files to Modify:**
 
 1. `src/components/ui/badge.tsx`
+
    - Change `export const badgeVariants` to `const badgeVariants`
    - Verify no external usage first
 
 2. `src/components/ui/input.tsx`
+
    - Change `export const inputVariants` to `const inputVariants`
    - Verify no external usage first
 
@@ -172,6 +185,7 @@ bun run build
    - Check usage in `ui/button.tsx` vs `button-demo.tsx` (removed in Phase 1)
 
 **Verification Steps:**
+
 ```bash
 # Search for variant imports
 grep -r "badgeVariants" src/
@@ -188,16 +202,19 @@ bun run build
 **Functions to Remove:**
 
 1. **`convex/admin.ts:42-48` - `addUserRole`**
+
    - Empty stub implementation
    - No frontend imports
    - Action: Delete function
 
 2. **`convex/teams.ts:230-265` - `create`**
+
    - Incomplete (TODO on line 261)
    - Superseded by `upsertUserTeam`
    - Action: Delete function
 
 3. **`convex/submissions.ts:189-196` - `getById`**
+
    - Redundant with `submissions.get`
    - Action: Delete function or add admin bypass flag to `get`
 
@@ -206,6 +223,7 @@ bun run build
    - Action: Delete function
 
 **Verification Steps:**
+
 ```bash
 # Search for usage in frontend
 grep -r "addUserRole" src/
@@ -223,10 +241,12 @@ bun run build
 **Functions to Remove/Consolidate:**
 
 1. **`convex/roles.ts:4-23` - `getByUserId`**
+
    - Duplicates `users.ts:116-127` internal helper
    - Action: Remove query, expose internal helper if needed externally
 
 2. **`convex/teams.ts:267-300` - `addMember`**
+
    - Superseded by invitation system (`teamInvitations.inviteMember`)
    - Action: Remove unless needed for admin bulk operations
 
@@ -235,6 +255,7 @@ bun run build
    - Action: Check spec 04 status; if not planned, remove
 
 **Verification Steps:**
+
 ```bash
 grep -r "roles.getByUserId" src/
 grep -r "teams.addMember" src/
@@ -246,6 +267,7 @@ grep -r "getTeamSubmissions" src/
 **Problem:** `tournaments.remove` throws "Not implemented" but is imported in UI
 
 **Option A: Implement Function**
+
 ```typescript
 // convex/tournaments.ts:156-161
 export const remove = mutation({
@@ -259,7 +281,9 @@ export const remove = mutation({
     // Check if tournament has teams/submissions
     const teams = await ctx.db
       .query("teams")
-      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", args.tournamentId),
+      )
       .first();
 
     if (teams) {
@@ -272,6 +296,7 @@ export const remove = mutation({
 ```
 
 **Option B: Remove Function and Update UI**
+
 - Delete `convex/tournaments.ts:156-161`
 - Remove import from `src/components/tournaments/tournament-details-card.tsx:24`
 - Remove import from `src/components/tournaments/tournaments-data-table.tsx:33`
@@ -284,11 +309,13 @@ export const remove = mutation({
 **Functions to Keep and Document:**
 
 1. **`convex/admin.ts:makeFirstUserAdmin`**
+
    - Purpose: Bootstrap first admin user
    - Usage: Manual execution via Convex dashboard
    - Action: Add JSDoc comment with instructions
 
 2. **`convex/tournaments.ts:determineWinner`**
+
    - Purpose: Admin sets tournament winner
    - Usage: Manual or future admin UI
    - Action: Add JSDoc comment, consider adding to admin dashboard (spec 07)
@@ -299,6 +326,7 @@ export const remove = mutation({
    - Action: Add JSDoc comment with usage instructions
 
 **Documentation Format:**
+
 ```typescript
 /**
  * ADMIN UTILITY - Manual Execution Only
@@ -326,6 +354,7 @@ export const makeFirstUserAdmin = mutation({
 ### Automated Tests
 
 1. **Build Verification**
+
    ```bash
    bun run lint
    bun run lint:fix
@@ -333,6 +362,7 @@ export const makeFirstUserAdmin = mutation({
    ```
 
 2. **Type Checking**
+
    - Ensure TypeScript compilation succeeds
    - No errors in `convex/_generated/` types
 
@@ -343,6 +373,7 @@ export const makeFirstUserAdmin = mutation({
 ### Manual Testing Checklist
 
 **After Each Phase:**
+
 - [ ] Application starts successfully (`bun run dev` + `bunx convex dev`)
 - [ ] All pages load without errors
 - [ ] No console errors in browser
@@ -353,6 +384,7 @@ export const makeFirstUserAdmin = mutation({
 - [ ] Authentication works
 
 **Specific Tests:**
+
 - [ ] Tournament deletion (if implementing Phase 6 Option A)
 - [ ] Data table components still work (use DataTableSection directly)
 - [ ] Form inputs and badges display correctly
@@ -363,22 +395,27 @@ export const makeFirstUserAdmin = mutation({
 ## Edge Cases and Considerations
 
 ### Dynamic Imports
+
 - Some components might be imported dynamically via `next/dynamic` or string-based imports
 - Search for component names in string literals: `grep -r '"UserCard"' src/`
 
 ### Barrel Exports
+
 - Check `index.ts` files that might re-export removed components
 - Common locations: `src/components/index.ts`, `src/components/ui/index.ts`
 
 ### Documentation and Comments
+
 - Search for component mentions in comments and markdown files
 - Update or remove references in `CLAUDE.md`, `README.md`, etc.
 
 ### Third-Party Dependencies
+
 - Some components might be used in Storybook stories (if present)
 - Check for usage in test files
 
 ### Backend Function References
+
 - Search for function names in:
   - Comments
   - String literals (e.g., for logging or error messages)
@@ -390,15 +427,18 @@ export const makeFirstUserAdmin = mutation({
 ## Success Metrics
 
 1. **Code Reduction**
+
    - Remove ~25KB of unused frontend code
    - Remove ~13 unused backend functions
    - Reduce total export count by 26
 
 2. **Build Performance**
+
    - Build time (should not increase)
    - Bundle size (may decrease slightly)
 
 3. **Code Quality**
+
    - Zero linting errors
    - Zero build errors
    - All tests passing
@@ -425,6 +465,7 @@ Phase 7: docs: document admin utility functions
 ```
 
 If issues arise:
+
 ```bash
 git revert <commit-hash>  # Revert specific phase
 git reset --hard HEAD~1   # Undo last commit (if not pushed)
@@ -435,18 +476,22 @@ git reset --hard HEAD~1   # Undo last commit (if not pushed)
 ## Open Questions
 
 1. **Tournament Deletion**: Should we implement `tournaments.remove` or remove it entirely?
+
    - Impact: Admin capability to delete tournaments
    - Risk: Data loss if teams/submissions exist
 
 2. **Admin Role Management**: Should we implement `admin.setUserRole` UI?
+
    - Referenced in spec 05 (admin-role-management)
    - Needs decision on single vs multiple role assignment
 
 3. **Submission Calendar**: Is spec 04 (submission-calendar) still planned?
+
    - Affects decision to keep `submissions.getTeamSubmissions`
    - May need calendar-specific queries
 
 4. **Button Type Constants**: Should `button.types.ts` be removed entirely?
+
    - Only used in `button-demo.tsx` (removed) and `ui/button.tsx`
    - Could inline constants into `button.tsx`
 
@@ -459,12 +504,15 @@ git reset --hard HEAD~1   # Undo last commit (if not pushed)
 ## Dependencies
 
 **Blocked By:**
+
 - None
 
 **Blocks:**
+
 - Spec 07 (admin-dashboard) - Admin utility functions need documentation before dashboard integration
 
 **Related Specs:**
+
 - Spec 04 (submission-calendar) - May affect `submissions.getTeamSubmissions` decision
 - Spec 05 (admin-role-management) - May affect `admin.setUserRole` decision
 - Spec 07 (admin-dashboard) - Admin utilities could be exposed in dashboard UI
@@ -474,6 +522,7 @@ git reset --hard HEAD~1   # Undo last commit (if not pushed)
 ## Migration & Deployment
 
 ### Pre-Deployment Checklist
+
 - [ ] All phases tested locally
 - [ ] Build succeeds without errors
 - [ ] No console errors in development
@@ -481,6 +530,7 @@ git reset --hard HEAD~1   # Undo last commit (if not pushed)
 - [ ] UNUSED_COMPONENTS.md updated or archived
 
 ### Deployment Steps
+
 1. Merge cleanup PR to main branch
 2. Deploy Convex backend: `bunx convex deploy --prod`
 3. Deploy Next.js frontend (automatic via hosting provider)
@@ -488,13 +538,16 @@ git reset --hard HEAD~1   # Undo last commit (if not pushed)
 5. Verify application functionality in production
 
 ### Post-Deployment Verification
+
 - [ ] Production application loads successfully
 - [ ] No JavaScript console errors
 - [ ] Core user flows work (auth, tournaments, teams, submissions)
 - [ ] Admin functionality works
 
 ### Rollback Procedure
+
 If critical issues discovered in production:
+
 1. Revert the PR merge in git
 2. Redeploy Convex backend: `bunx convex deploy --prod`
 3. Redeploy frontend
@@ -518,6 +571,7 @@ If critical issues discovered in production:
 ### Submission Queries Consolidation
 
 **Current State:**
+
 - `submissions.list` - Flexible query with many filters
 - `submissions.listUserSubmissions` - Get current user's submissions
 - `submissions.getUserSubmissions` - Get user submissions for team/date range
@@ -529,10 +583,12 @@ Keep `submissions.list` as the primary query. It can handle all use cases with p
 ### Team Management Consolidation
 
 **Current State:**
+
 - `teams.create` (admin, incomplete) vs `teams.upsertUserTeam` (user/admin, complete)
 - `teams.addMember` (admin direct) vs `teamInvitations.inviteMember` (invitation flow)
 
 **Recommendation:**
+
 - Remove `teams.create` - superseded by `upsertUserTeam`
 - Keep `teams.addMember` ONLY if bulk admin operations are needed
 - Otherwise, use invitation system for all member additions (better audit trail)
@@ -540,6 +596,7 @@ Keep `submissions.list` as the primary query. It can handle all use cases with p
 ### Role Management Consolidation
 
 **Current State:**
+
 - `roles.getByUserId` (query) vs internal `getRolesForUser` in `users.ts`
 - Both do the same thing
 

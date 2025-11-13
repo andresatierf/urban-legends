@@ -11,15 +11,18 @@ This specification addresses all TypeScript type errors, linting issues, and for
 ## Current Issues Summary
 
 ### Type Errors (1 blocking build)
+
 - **TournamentTeams.tsx:44** - Missing `members` property on team type returned from `api.teams.list`
 
 ### Lint Errors (10 errors)
+
 1. **Non-null assertions (6 errors)** - Using `!` operator in unsafe contexts
 2. **Unused imports (1 error)** - `validateIsAdmin` in `teamInvitations.ts`
 3. **Unreachable code (1 error)** - Dead code after `throw` in `tournaments.ts`
 4. **CSS at-rules (2 errors)** - Tailwind-specific at-rules flagged incorrectly
 
 ### Lint Warnings (26 warnings)
+
 - **Non-null assertions (15 warnings)** - Unsafe `!` operators throughout codebase
 - **Unused variables (4 warnings)** - Unused parameters and imports
 - **CSS at-rules (4 warnings)** - Tailwind `@apply`, `@theme`, `@custom-variant`
@@ -27,6 +30,7 @@ This specification addresses all TypeScript type errors, linting issues, and for
 - **Array index keys (1 warning)** - Using array index as React key
 
 ### Formatting Issues
+
 - ✅ No formatting issues detected
 
 ## Implementation Plan
@@ -42,18 +46,22 @@ This specification addresses all TypeScript type errors, linting issues, and for
 **Solution:** Use a separate query to fetch team members, or update the teams.list query to include member data.
 
 **Approach:**
+
 - Update `TournamentTeams` component to fetch team members separately using `api.teams.listMembers`
 - Map team IDs to their members
 - Display member emails from the mapped data
 
 **Code Changes:**
+
 ```typescript
 // Before (line 44)
-{team.members?.map((m) => m.user.email).join(", ")}
+{
+  team.members?.map((m) => m.user.email).join(", ");
+}
 
 // After
 // Fetch all members for all teams
-const teamIds = teams.map(t => t._id);
+const teamIds = teams.map((t) => t._id);
 const allMembers = useQuery(api.teams.listMembers, { teamIds });
 // Map members by teamId and display
 ```
@@ -94,12 +102,12 @@ handler: async (ctx, args) => {
   throw new Error("Not implemented");
   const user = await getCurrentUserOrThrow(ctx);
   // ... more dead code
-}
+};
 
 // After
 handler: async (ctx, args) => {
   throw new Error("Not implemented");
-}
+};
 ```
 
 ---
@@ -196,10 +204,10 @@ const wh = new Webhook(webhookSecret);
 
 ```typescript
 // Before
-q.eq("userId", user._id).eq("state", args.state!)
+q.eq("userId", user._id).eq("state", args.state!);
 
 // After
-q.eq("userId", user._id).eq("state", args.state)
+q.eq("userId", user._id).eq("state", args.state);
 // Note: args.state is already validated by Convex schema
 ```
 
@@ -242,10 +250,10 @@ q.eq("userId", user._id).eq("state", args.state)
 
 ```typescript
 // Before
-q.or(...args.userIds!.map((u) => q.eq(q.field("_id"), u)))
+q.or(...args.userIds!.map((u) => q.eq(q.field("_id"), u)));
 
 // After
-q.or(...args.userIds.map((u) => q.eq(q.field("_id"), u)))
+q.or(...args.userIds.map((u) => q.eq(q.field("_id"), u)));
 // Note: Already inside conditional checking args.userIds exists
 ```
 
@@ -403,31 +411,40 @@ Use error message as key instead of array index.
 ## Testing Plan
 
 ### 1. Type Checking
+
 ```bash
 bun run build
 ```
+
 Expected: Build completes successfully with no type errors
 
 ### 2. Linting
+
 ```bash
 bun run lint
 ```
+
 Expected: 0 errors, 0 warnings (or only intentional suppressed warnings)
 
 ### 3. Formatting
+
 ```bash
 bun run format
 ```
+
 Expected: All files properly formatted
 
 ### 4. Auto-fix
+
 ```bash
 bun run lint:fix
 bun run format:fix
 ```
+
 Expected: All auto-fixable issues resolved
 
 ### 5. Manual Testing
+
 - Test TournamentTeams component displays members correctly
 - Verify Clerk webhooks still work (authentication flow)
 - Test submissions page displays team and user data
@@ -447,6 +464,7 @@ Expected: All auto-fixable issues resolved
 ## Files to Modify
 
 ### Convex Backend (11 files)
+
 - `convex/auth.config.ts`
 - `convex/http.ts`
 - `convex/submissions.ts`
@@ -456,6 +474,7 @@ Expected: All auto-fixable issues resolved
 - `convex/users.ts`
 
 ### Frontend (4 files)
+
 - `src/components/TournamentTeams.tsx`
 - `src/app/(all)/submissions/page.tsx`
 - `src/app/ConvexClientProvider.tsx`
@@ -464,6 +483,7 @@ Expected: All auto-fixable issues resolved
 - `src/components/ui/input-group.tsx`
 
 ### Configuration (1 file)
+
 - `biome.json`
 
 ---

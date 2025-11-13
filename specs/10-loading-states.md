@@ -16,12 +16,14 @@ The application has **two loading state issues**:
 When data is being fetched from Convex, users see either a blank screen or a flash of empty content before the actual data appears.
 
 **User Experience Impact:**
+
 - **Jarring Experience**: Pages "pop in" suddenly rather than loading gracefully
 - **Perceived Performance**: Users may think the app is broken or slow
 - **Lack of Feedback**: No indication that data is being loaded
 - **Poor UX Standard**: Modern apps use skeleton screens to indicate loading states
 
 **Code Quality Impact:**
+
 - **Duplication**: ~100 lines of duplicate inline skeleton code across 4 components
 - **Inconsistency**: Different skeleton implementations for similar UI patterns
 - **Maintainability**: Changes to skeleton styles require updating multiple locations
@@ -33,11 +35,13 @@ When data is being fetched from Convex, users see either a blank screen or a fla
 ### What Exists
 
 **Skeleton Component:**
+
 - ✅ Basic `Skeleton` component exists at `src/components/ui/skeleton.tsx`
 - ✅ Used in `sidebar.tsx` for menu loading states
 - ✅ Supports customizable sizing and styling via className
 
 **Component Structure:**
+
 ```typescript
 <Skeleton className="h-4 w-full" />  // Simple animated placeholder
 ```
@@ -49,16 +53,19 @@ When data is being fetched from Convex, users see either a blank screen or a fla
 These components have custom loading states that should be extracted into reusable skeleton components for consistency:
 
 1. **`src/components/teams/team-statistics-card.tsx:40-54`**
+
    - Type: Grid of 6 stat cards (2 columns on md, 3 on lg)
    - Implementation: Inline Card skeleton with animate-pulse
    - Should use: StatCardsGridSkeleton (new component)
 
 2. **`src/components/tournaments/tournament-leaderboard.tsx:71-105`**
+
    - Type: Table with 4 columns (Rank, Team Name, Points, Members), 5 rows
    - Implementation: Inline table skeleton with custom styling
    - Should use: TableSkeleton (with leaderboard-specific styling)
 
 3. **`src/components/tournaments/leaderboard-podium.tsx:53-68`**
+
    - Type: Grid of 3 podium cards with icon, title, and score placeholders
    - Implementation: Inline Card skeleton grid
    - Should use: PodiumSkeleton (new component)
@@ -73,42 +80,50 @@ These components have custom loading states that should be extracted into reusab
 **9 Components/Pages Without Loading States:**
 
 1. **`src/components/tournaments/tournament-details-card.tsx:68`**
+
    - Component: `TournamentDetailsCard`
    - Type: DetailsCard with title, description, and key-value details
    - Loading condition: `tournament === undefined`
 
 2. **`src/app/(all)/users/page.tsx:22`**
+
    - Component: Users list page
    - Type: Table with Name, Email, Roles columns
    - Loading condition: `!users`
 
 3. **`src/components/users/user-details-card.tsx:10`**
+
    - Component: `UserDetailsCard`
    - Type: DetailsCard with user information
    - Loading condition: `!user`
    - Note: User is passed as prop, may need parent handling
 
 4. **`src/app/(all)/users/[userId]/page.tsx:23`**
+
    - Component: User detail page
    - Type: Page with UserDetailsCard and teams section
    - Loading condition: `!user`
 
 5. **`src/components/teams/team-details-card.tsx:122`**
+
    - Component: `TeamDetailsCard`
    - Type: DetailsCard with team information and members
    - Loading condition: `team === undefined`
 
 6. **`src/app/(all)/submissions/[submissionId]/page.tsx:24`**
+
    - Component: Submission detail page
    - Type: Page with submission card and details
    - Loading condition: `!submission`
 
 7. **`src/app/(all)/tournaments/page.tsx:36`**
+
    - Component: Tournaments list page
    - Type: Grid layout with TournamentCard components (2 columns on XL screens)
    - Loading condition: `!userTournaments`
 
 8. **`src/app/(all)/tournaments/[tournamentId]/page.tsx:75`**
+
    - Component: Tournament detail page
    - Type: Page with TournamentDetailsCard, tabs, and team cards
    - Loading condition: `!tournament`
@@ -121,6 +136,7 @@ These components have custom loading states that should be extracted into reusab
 ### Evidence
 
 All instances found via:
+
 ```bash
 grep -ri "TODO.*skeleton" src/
 ```
@@ -134,6 +150,7 @@ See lines referenced above for exact locations.
 ### Functional Requirements
 
 1. **Create Reusable Skeleton Components**
+
    - DetailsCardSkeleton for card-based loading states
    - TableSkeleton for table-based loading states
    - CardGridSkeleton for grid-based loading states
@@ -143,17 +160,20 @@ See lines referenced above for exact locations.
    - WinnerAnnouncementSkeleton for winner card
 
 2. **Extract Existing Inline Skeletons**
+
    - Extract team-statistics-card inline skeleton to StatCardsGridSkeleton
    - Refactor tournament-leaderboard to use TableSkeleton
    - Extract leaderboard-podium inline skeleton to PodiumSkeleton
    - Extract winner-announcement inline skeleton to WinnerAnnouncementSkeleton
 
 3. **Replace All TODO Comments**
+
    - Replace `return null` with appropriate skeleton components
    - Maintain proper component structure and sizing
    - Ensure skeletons match the layout of loaded content
 
 4. **Consistent Animation**
+
    - Use existing `animate-pulse` from Skeleton component
    - Ensure consistent timing across all skeletons
 
@@ -228,6 +248,7 @@ export function DetailsCardSkeleton({
 ```
 
 **Usage:**
+
 ```typescript
 if (tournament === undefined) {
   return <DetailsCardSkeleton detailsCount={5} />;
@@ -301,6 +322,7 @@ export function TableSkeleton({
 ```
 
 **Usage:**
+
 ```typescript
 if (!users) {
   return <TableSkeleton columns={3} headers={["Name", "Email", "Roles"]} rows={5} />;
@@ -343,6 +365,7 @@ export function CardGridSkeleton({ count = 4, className }: Props) {
 ```
 
 **Usage:**
+
 ```typescript
 if (!tournaments) {
   return (
@@ -391,6 +414,7 @@ export function StatCardsGridSkeleton({ count = 6, className }: Props) {
 ```
 
 **Usage:**
+
 ```typescript
 // In team-statistics-card.tsx
 if (stats === undefined || team === undefined) {
@@ -433,6 +457,7 @@ export function PodiumSkeleton({ className }: Props) {
 ```
 
 **Usage:**
+
 ```typescript
 // In leaderboard-podium.tsx
 if (leaderboard === undefined) {
@@ -470,6 +495,7 @@ export function WinnerAnnouncementSkeleton({ className }: Props) {
 ```
 
 **Usage:**
+
 ```typescript
 // In winner-announcement.tsx
 if (winner === undefined) {
@@ -521,11 +547,13 @@ export function PageSkeleton({
 **File:** `src/components/tournaments/tournament-details-card.tsx:68`
 
 **Before:**
+
 ```typescript
 if (tournament === undefined) return null; // TODO: Add skeleton
 ```
 
 **After:**
+
 ```typescript
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 
@@ -540,11 +568,13 @@ if (tournament === undefined) {
 **File:** `src/app/(all)/users/page.tsx:22`
 
 **Before:**
+
 ```typescript
 if (!users) return null; // TODO: Add skeleton
 ```
 
 **After:**
+
 ```typescript
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { SectionHeader } from "@/components/section-header";
@@ -569,11 +599,13 @@ if (!users) {
 **File:** `src/components/users/user-details-card.tsx:10`
 
 **Before:**
+
 ```typescript
 if (!user) return null; // TODO: Add skeleton
 ```
 
 **After:**
+
 ```typescript
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 
@@ -588,11 +620,13 @@ if (!user) {
 **File:** `src/app/(all)/users/[userId]/page.tsx:23`
 
 **Before:**
+
 ```typescript
 if (!user) return null; // TODO: Add skeleton
 ```
 
 **After:**
+
 ```typescript
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 
@@ -607,11 +641,13 @@ if (!user) {
 **File:** `src/components/teams/team-details-card.tsx:122`
 
 **Before:**
+
 ```typescript
 if (team === undefined) return null; // TODO: Add skeleton
 ```
 
 **After:**
+
 ```typescript
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 
@@ -626,11 +662,13 @@ if (team === undefined) {
 **File:** `src/app/(all)/submissions/[submissionId]/page.tsx:24`
 
 **Before:**
+
 ```typescript
 if (!submission) return null; // TODO: add skeleton
 ```
 
 **After:**
+
 ```typescript
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 
@@ -645,11 +683,13 @@ if (!submission) {
 **File:** `src/app/(all)/tournaments/page.tsx:36`
 
 **Before:**
+
 ```typescript
 if (!userTournaments) return null; // TODO: Add skeleton
 ```
 
 **After:**
+
 ```typescript
 import { CardGridSkeleton } from "@/components/ui/card-grid-skeleton";
 
@@ -674,11 +714,13 @@ if (!userTournaments) {
 **File:** `src/app/(all)/tournaments/[tournamentId]/page.tsx:75`
 
 **Before:**
+
 ```typescript
 if (!tournament) return null; // TODO: Add skeleton
 ```
 
 **After:**
+
 ```typescript
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 
@@ -693,11 +735,13 @@ if (!tournament) {
 **File:** `src/app/(all)/teams/[teamId]/page.tsx:38`
 
 **Before:**
+
 ```typescript
 if (!team || !members) return null; // TODO: Add skeleton
 ```
 
 **After:**
+
 ```typescript
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 
@@ -714,6 +758,7 @@ if (!team || !members) {
 **File:** `src/components/teams/team-statistics-card.tsx:39-55`
 
 **Before:**
+
 ```typescript
 if (stats === undefined || team === undefined) {
   return (
@@ -735,6 +780,7 @@ if (stats === undefined || team === undefined) {
 ```
 
 **After:**
+
 ```typescript
 import { StatCardsGridSkeleton } from "../ui/stat-cards-grid-skeleton";
 
@@ -754,6 +800,7 @@ if (stats === undefined || team === undefined) {
 **File:** `src/components/tournaments/tournament-leaderboard.tsx:71-105`
 
 **Before:**
+
 ```typescript
 if (leaderboard === undefined) {
   return (
@@ -793,6 +840,7 @@ if (leaderboard === undefined) {
 ```
 
 **After:**
+
 ```typescript
 import { TableSkeleton } from "../ui/table-skeleton";
 
@@ -816,6 +864,7 @@ if (leaderboard === undefined) {
 **File:** `src/components/tournaments/leaderboard-podium.tsx:53-68`
 
 **Before:**
+
 ```typescript
 if (leaderboard === undefined) {
   return (
@@ -836,6 +885,7 @@ if (leaderboard === undefined) {
 ```
 
 **After:**
+
 ```typescript
 import { PodiumSkeleton } from "../ui/podium-skeleton";
 
@@ -850,6 +900,7 @@ if (leaderboard === undefined) {
 **File:** `src/components/tournaments/winner-announcement.tsx:18-32`
 
 **Before:**
+
 ```typescript
 if (winner === undefined) {
   return (
@@ -869,6 +920,7 @@ if (winner === undefined) {
 ```
 
 **After:**
+
 ```typescript
 import { WinnerAnnouncementSkeleton } from "../ui/winner-announcement-skeleton";
 
@@ -885,16 +937,19 @@ if (winner === undefined) {
 ### Design Principles
 
 1. **Match Content Layout**
+
    - Skeletons should mirror the structure of loaded content
    - Use similar spacing, sizing, and card layouts
    - Maintain responsive grid/table layouts
 
 2. **Visual Hierarchy**
+
    - Larger skeletons for titles (h-6 to h-7)
    - Medium skeletons for descriptions (h-4)
    - Smaller skeletons for labels (h-3 to h-4)
 
 3. **Animation Timing**
+
    - Use existing `animate-pulse` from Tailwind
    - Consider adding optional delay (200ms) before showing skeleton to avoid flash on fast loads
 
@@ -906,6 +961,7 @@ if (winner === undefined) {
 ### Accessibility
 
 **ARIA Attributes:**
+
 ```typescript
 <div role="status" aria-busy="true">
   {/* Skeleton content */}
@@ -914,6 +970,7 @@ if (winner === undefined) {
 ```
 
 **Screen Reader Considerations:**
+
 - Add hidden text describing loading state
 - Use `aria-busy` to indicate dynamic content
 - Ensure focus management during state transitions
@@ -925,6 +982,7 @@ if (winner === undefined) {
 ### Manual Testing Checklist
 
 **For Each New Loading State (9 components):**
+
 - [ ] Skeleton appears immediately when loading
 - [ ] Skeleton size/shape matches actual content
 - [ ] Animation is smooth and consistent
@@ -934,6 +992,7 @@ if (winner === undefined) {
 - [ ] Screen reader announces loading state
 
 **For Each Refactored Component (4 components):**
+
 - [ ] Skeleton appearance unchanged after refactoring
 - [ ] No visual regressions
 - [ ] Animation timing remains the same
@@ -941,12 +1000,14 @@ if (winner === undefined) {
 - [ ] Component still functions correctly
 
 **Visual Regression:**
+
 - [ ] Compare skeleton layouts side-by-side with loaded content
 - [ ] Test on different screen sizes (mobile, tablet, desktop)
 - [ ] Verify grid/table layouts maintain structure
 - [ ] Verify refactored components look identical to before
 
 **Performance:**
+
 - [ ] Skeletons render within 50ms
 - [ ] No noticeable delay before skeleton appears
 - [ ] Smooth transition from skeleton to content
@@ -981,6 +1042,7 @@ describe("TournamentDetailsCard", () => {
 ## Edge Cases and Considerations
 
 ### Fast Network Connections
+
 - **Problem**: Skeleton may flash briefly before content loads
 - **Solution**: Add optional 200ms delay before showing skeleton
 - **Implementation**: Use `useDeferredValue` or custom hook with delay
@@ -1003,16 +1065,19 @@ function useDelayedLoading(isLoading: boolean, delay = 200) {
 ```
 
 ### Multiple Loading States
+
 - **Problem**: Some pages have multiple queries (e.g., team + members)
 - **Solution**: Show skeleton if ANY required data is loading
 - **Example**: `if (!team || !members) return <PageSkeleton />;`
 
 ### Error States
+
 - **Problem**: Skeleton doesn't handle query errors
 - **Solution**: Add error handling after this spec (separate concern)
 - **Note**: Error states are a separate feature not covered here
 
 ### Partial Data
+
 - **Problem**: Some data may be optional (e.g., description field)
 - **Solution**: Skeleton shows all possible fields, actual component hides optional ones
 - **Trade-off**: Slight visual difference, but better than complex conditional skeletons
@@ -1022,29 +1087,34 @@ function useDelayedLoading(isLoading: boolean, delay = 200) {
 ## Success Metrics
 
 1. **Completion**
+
    - All 9 TODO comments replaced with skeleton implementations
    - All 4 inline skeletons extracted to reusable components
    - Zero `return null` for loading states in production code
    - Zero duplicate inline skeleton implementations
 
 2. **Code Quality**
+
    - 7 reusable skeleton components created
    - Consistent patterns across all loading states
    - Reduced code duplication (removed ~100 lines of inline skeletons)
    - Improved maintainability
 
 3. **Visual Quality**
+
    - Skeleton layouts match actual content structure
    - No visible layout shifts during load
    - Consistent animation across all components
    - Existing loading states maintain their visual appearance
 
 4. **Accessibility**
+
    - All skeletons have proper ARIA attributes
    - Screen readers announce loading states
    - Keyboard navigation works during loading
 
 5. **Performance**
+
    - Skeletons render in <50ms
    - No performance degradation vs. inline implementations
    - Bundle size increase <8KB (minified + gzipped) for all 7 components
@@ -1059,6 +1129,7 @@ function useDelayedLoading(isLoading: boolean, delay = 200) {
 ## Migration & Deployment
 
 ### Pre-Deployment Checklist
+
 - [ ] All 9 new loading states implemented
 - [ ] All 4 inline skeletons refactored to use reusable components
 - [ ] 7 skeleton components created and tested
@@ -1069,6 +1140,7 @@ function useDelayedLoading(isLoading: boolean, delay = 200) {
 - [ ] Biome linting passes
 
 ### Deployment Steps
+
 1. **Phase 1**: Create core skeleton component files (4 components)
 2. **Phase 2**: Update components with new skeletons (9 components)
 3. **Phase 3**: Create specialized skeletons and refactor existing components (3 + 4 components)
@@ -1079,6 +1151,7 @@ function useDelayedLoading(isLoading: boolean, delay = 200) {
 8. Monitor user feedback and metrics
 
 ### Post-Deployment Verification
+
 - [ ] All pages show skeletons when loading
 - [ ] Refactored components display skeletons correctly
 - [ ] No visual regressions in leaderboard, podium, stats, or winner components
@@ -1088,7 +1161,9 @@ function useDelayedLoading(isLoading: boolean, delay = 200) {
 - [ ] Analytics show improved time-to-interactive perception
 
 ### Rollback Procedure
+
 If critical issues discovered:
+
 1. Revert PR merge in git
 2. Redeploy previous version
 3. Investigate issues in development
@@ -1101,18 +1176,26 @@ Low risk: Changes are purely visual enhancements with no logic changes.
 ## Future Enhancements
 
 ### Optional Delayed Loading
+
 Add delayed skeleton display to avoid flash on fast connections:
+
 ```typescript
 const showSkeleton = useDelayedLoading(isLoading, 200);
 if (showSkeleton) return <Skeleton />;
 ```
 
 ### Shimmer Effect
+
 Enhance animation with shimmer/shine effect:
+
 ```css
 @keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
 }
 
 .skeleton-shimmer {
@@ -1123,7 +1206,9 @@ Enhance animation with shimmer/shine effect:
 ```
 
 ### Progressive Loading
+
 Show skeleton for individual cards as they load (for paginated data):
+
 ```typescript
 {items.map((item) =>
   item ? <Card data={item} /> : <CardSkeleton />
@@ -1131,7 +1216,9 @@ Show skeleton for individual cards as they load (for paginated data):
 ```
 
 ### Skeleton Variants
+
 Create specialized skeletons for complex layouts:
+
 - `DashboardSkeleton` for multi-widget layouts
 - `CalendarSkeleton` for submission calendar (spec 04)
 - `LeaderboardSkeleton` for leaderboard tables (spec 02)
@@ -1141,12 +1228,15 @@ Create specialized skeletons for complex layouts:
 ## Dependencies
 
 **Blocked By:**
+
 - None (can be implemented immediately)
 
 **Blocks:**
+
 - None (standalone improvement)
 
 **Related Specs:**
+
 - Spec 04 (submission-calendar) - Will need CalendarSkeleton
 - Spec 07 (admin-dashboard) - Will need DashboardSkeleton
 - Future error handling spec - Should complement skeleton states
@@ -1167,62 +1257,52 @@ Create specialized skeletons for complex layouts:
 
 ### Components to Create
 
-| Component | File | Purpose | Props |
-|-----------|------|---------|-------|
-| DetailsCardSkeleton | `ui/details-card-skeleton.tsx` | Card with title, description, details | `detailsCount`, `showActions`, `className` |
-| TableSkeleton | `ui/table-skeleton.tsx` | Table with headers and rows | `columns`, `rows`, `headers`, `className` |
-| CardGridSkeleton | `ui/card-grid-skeleton.tsx` | Grid of card skeletons | `count`, `className` |
-| StatCardsGridSkeleton | `ui/stat-cards-grid-skeleton.tsx` | Statistics cards grid | `count`, `className` |
-| PodiumSkeleton | `ui/podium-skeleton.tsx` | Leaderboard podium display | `className` |
-| WinnerAnnouncementSkeleton | `ui/winner-announcement-skeleton.tsx` | Winner announcement card | `className` |
-| PageSkeleton | `ui/page-skeleton.tsx` | Full page with header and sections | `showHeader`, `headerTitle`, `sections` |
+| Component                  | File                                  | Purpose                               | Props                                      |
+| -------------------------- | ------------------------------------- | ------------------------------------- | ------------------------------------------ |
+| DetailsCardSkeleton        | `ui/details-card-skeleton.tsx`        | Card with title, description, details | `detailsCount`, `showActions`, `className` |
+| TableSkeleton              | `ui/table-skeleton.tsx`               | Table with headers and rows           | `columns`, `rows`, `headers`, `className`  |
+| CardGridSkeleton           | `ui/card-grid-skeleton.tsx`           | Grid of card skeletons                | `count`, `className`                       |
+| StatCardsGridSkeleton      | `ui/stat-cards-grid-skeleton.tsx`     | Statistics cards grid                 | `count`, `className`                       |
+| PodiumSkeleton             | `ui/podium-skeleton.tsx`              | Leaderboard podium display            | `className`                                |
+| WinnerAnnouncementSkeleton | `ui/winner-announcement-skeleton.tsx` | Winner announcement card              | `className`                                |
+| PageSkeleton               | `ui/page-skeleton.tsx`                | Full page with header and sections    | `showHeader`, `headerTitle`, `sections`    |
 
 ### Components to Update (New Loading States)
 
-| Component | File | Type | Skeleton |
-|-----------|------|------|----------|
-| TournamentDetailsCard | `components/tournaments/tournament-details-card.tsx` | Card | DetailsCardSkeleton |
-| UsersPage | `app/(all)/users/page.tsx` | Table | TableSkeleton |
-| UserDetailsCard | `components/users/user-details-card.tsx` | Card | DetailsCardSkeleton |
-| UserDetailPage | `app/(all)/users/[userId]/page.tsx` | Page | PageSkeleton |
-| TeamDetailsCard | `components/teams/team-details-card.tsx` | Card | DetailsCardSkeleton |
-| SubmissionDetailPage | `app/(all)/submissions/[submissionId]/page.tsx` | Page | PageSkeleton |
-| TournamentsPage | `app/(all)/tournaments/page.tsx` | Grid | CardGridSkeleton |
-| TournamentDetailPage | `app/(all)/tournaments/[tournamentId]/page.tsx` | Page | PageSkeleton |
-| TeamDetailPage | `app/(all)/teams/[teamId]/page.tsx` | Page | PageSkeleton |
+| Component             | File                                                 | Type  | Skeleton            |
+| --------------------- | ---------------------------------------------------- | ----- | ------------------- |
+| TournamentDetailsCard | `components/tournaments/tournament-details-card.tsx` | Card  | DetailsCardSkeleton |
+| UsersPage             | `app/(all)/users/page.tsx`                           | Table | TableSkeleton       |
+| UserDetailsCard       | `components/users/user-details-card.tsx`             | Card  | DetailsCardSkeleton |
+| UserDetailPage        | `app/(all)/users/[userId]/page.tsx`                  | Page  | PageSkeleton        |
+| TeamDetailsCard       | `components/teams/team-details-card.tsx`             | Card  | DetailsCardSkeleton |
+| SubmissionDetailPage  | `app/(all)/submissions/[submissionId]/page.tsx`      | Page  | PageSkeleton        |
+| TournamentsPage       | `app/(all)/tournaments/page.tsx`                     | Grid  | CardGridSkeleton    |
+| TournamentDetailPage  | `app/(all)/tournaments/[tournamentId]/page.tsx`      | Page  | PageSkeleton        |
+| TeamDetailPage        | `app/(all)/teams/[teamId]/page.tsx`                  | Page  | PageSkeleton        |
 
 ### Components to Refactor (Extract Existing Skeletons)
 
-| Component | File | Current | New Skeleton |
-|-----------|------|---------|--------------|
-| TeamStatisticsCard | `components/teams/team-statistics-card.tsx` | Inline grid skeleton | StatCardsGridSkeleton |
-| TournamentLeaderboard | `components/tournaments/tournament-leaderboard.tsx` | Inline table skeleton | TableSkeleton |
-| LeaderboardPodium | `components/tournaments/leaderboard-podium.tsx` | Inline card grid | PodiumSkeleton |
-| WinnerAnnouncement | `components/tournaments/winner-announcement.tsx` | Inline card skeleton | WinnerAnnouncementSkeleton |
+| Component             | File                                                | Current               | New Skeleton               |
+| --------------------- | --------------------------------------------------- | --------------------- | -------------------------- |
+| TeamStatisticsCard    | `components/teams/team-statistics-card.tsx`         | Inline grid skeleton  | StatCardsGridSkeleton      |
+| TournamentLeaderboard | `components/tournaments/tournament-leaderboard.tsx` | Inline table skeleton | TableSkeleton              |
+| LeaderboardPodium     | `components/tournaments/leaderboard-podium.tsx`     | Inline card grid      | PodiumSkeleton             |
+| WinnerAnnouncement    | `components/tournaments/winner-announcement.tsx`    | Inline card skeleton  | WinnerAnnouncementSkeleton |
 
 ### Implementation Order
 
 **Recommended order (least to most complex):**
 
 **Phase 1: Create Core Skeleton Components**
+
 1. Create DetailsCardSkeleton (simplest, most reused)
 2. Create TableSkeleton
 3. Create CardGridSkeleton
 4. Create PageSkeleton
 
-**Phase 2: Add Missing Loading States**
-5. Update all DetailsCard components (3 components)
-6. Update UsersPage with TableSkeleton (1 component)
-7. Update TournamentsPage with CardGridSkeleton (1 component)
-8. Update all page components with PageSkeleton (4 pages)
+**Phase 2: Add Missing Loading States** 5. Update all DetailsCard components (3 components) 6. Update UsersPage with TableSkeleton (1 component) 7. Update TournamentsPage with CardGridSkeleton (1 component) 8. Update all page components with PageSkeleton (4 pages)
 
-**Phase 3: Extract Existing Skeletons**
-9. Create StatCardsGridSkeleton
-10. Create PodiumSkeleton
-11. Create WinnerAnnouncementSkeleton
-12. Refactor TeamStatisticsCard
-13. Refactor TournamentLeaderboard
-14. Refactor LeaderboardPodium
-15. Refactor WinnerAnnouncement
+**Phase 3: Extract Existing Skeletons** 9. Create StatCardsGridSkeleton 10. Create PodiumSkeleton 11. Create WinnerAnnouncementSkeleton 12. Refactor TeamStatisticsCard 13. Refactor TournamentLeaderboard 14. Refactor LeaderboardPodium 15. Refactor WinnerAnnouncement
 
 **Total: 7 new skeleton components, 9 new loading states, 4 refactored components**
