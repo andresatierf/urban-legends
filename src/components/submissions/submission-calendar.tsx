@@ -1,17 +1,13 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { useEffect, useId, useMemo, useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { capitalize, startCase } from "lodash";
+import { useEffect, useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { CalendarDateCell } from "./calendar-date-cell";
+import type { Doc, Id } from "../../../convex/_generated/dataModel";
+import { Card, CardContent } from "../ui/card";
+import { CalendarDateCell, cellStyles } from "./calendar-date-cell";
 import { CalendarHeader } from "./calendar-header";
 
 interface SubmissionCalendarProps {
@@ -19,16 +15,6 @@ interface SubmissionCalendarProps {
   tournamentId: Id<"tournaments">;
   onDateClick?: (date: string, submissionId?: Id<"submissions">) => void;
 }
-
-const WEEKDAY_LABELS_FULL = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
 
 const WEEKDAY_LABELS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -41,9 +27,8 @@ export function SubmissionCalendar({
 }: SubmissionCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [weekStartsOn, setWeekStartsOn] = useState<number>(0); // 0 = Sunday, 1 = Monday, etc.
-  const weekStartSelectId = useId();
 
-  // Load week start preference from localStorage
+  // Load week start preference from localStorage and listen for changes
   useEffect(() => {
     const stored = localStorage.getItem(WEEK_START_STORAGE_KEY);
     if (stored !== null) {
@@ -52,14 +37,20 @@ export function SubmissionCalendar({
         setWeekStartsOn(parsed);
       }
     }
-  }, []);
 
-  // Save week start preference to localStorage
-  const handleWeekStartChange = (value: string) => {
-    const newStart = Number.parseInt(value, 10);
-    setWeekStartsOn(newStart);
-    localStorage.setItem(WEEK_START_STORAGE_KEY, value);
-  };
+    // Listen for storage changes from the settings page or other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === WEEK_START_STORAGE_KEY && e.newValue !== null) {
+        const parsed = Number.parseInt(e.newValue, 10);
+        if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 6) {
+          setWeekStartsOn(parsed);
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   // Get rotated weekday labels based on week start
   const weekdayLabels = useMemo(() => {
@@ -204,9 +195,11 @@ export function SubmissionCalendar({
 
   if (!tournament) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-lg border-2 border-gray-300 border-dashed bg-gray-50">
-        <p className="text-gray-500">Loading calendar...</p>
-      </div>
+      <Card variant="dashed">
+        <CardContent className="flex h-64 items-center justify-center">
+          <p className="text-gray-500">Loading calendar...</p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -220,28 +213,6 @@ export function SubmissionCalendar({
         canGoPrev={canNavigate.prev}
         canGoNext={canNavigate.next}
       />
-
-      {/* Week start selector */}
-      <div className="mb-4 flex items-center justify-end gap-2">
-        <label htmlFor={weekStartSelectId} className="text-gray-600 text-sm">
-          Week starts on:
-        </label>
-        <Select
-          value={weekStartsOn.toString()}
-          onValueChange={handleWeekStartChange}
-        >
-          <SelectTrigger id={weekStartSelectId} className="w-[140px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {WEEKDAY_LABELS_FULL.map((day, index) => (
-              <SelectItem key={day} value={index.toString()}>
-                {day}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
 
       {/* Weekday headers */}
       <div className="mb-2 grid grid-cols-7 gap-2">
@@ -281,22 +252,35 @@ export function SubmissionCalendar({
 
       {/* Legend */}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-4 border-t pt-4 text-xs">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded border-2 border-gray-300 border-dashed bg-white" />
-          <span className="text-gray-600">No submission</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded border-2 border-yellow-500 bg-yellow-50" />
-          <span className="text-gray-600">Pending</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded border-2 border-green-500 bg-green-50" />
-          <span className="text-gray-600">Approved</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded border-2 border-red-500 bg-red-50" />
-          <span className="text-gray-600">Rejected</span>
-        </div>
+        {(
+          [undefined, "pending", "approved", "rejected"] as (
+            | undefined
+            | Doc<"submissions">["state"]
+          )[]
+        ).map((state) => (
+          <div key={state} className="flex items-center gap-2">
+            <div
+              className={cn("h-4 w-4 rounded border-2", cellStyles({ state }))}
+            />
+            <span className="text-gray-600">
+              {state ? capitalize(state) : "No submission"}
+            </span>
+          </div>
+        ))}
+        <div className="flex-1"></div>
+        {["isOutsideTournament", "isDisabled", "isToday"].map((options) => (
+          <div key={options} className="flex items-center gap-2">
+            <div
+              className={cn(
+                "h-4 w-4 rounded border-2",
+                cellStyles({ [options]: true }),
+              )}
+            />
+            <span className="text-gray-600">
+              {startCase(options).split(" ").slice(1).join(" ")}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

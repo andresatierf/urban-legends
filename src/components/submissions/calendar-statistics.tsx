@@ -4,6 +4,8 @@ import { useQuery } from "convex/react";
 import { Progress } from "@/components/ui/progress";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { Card, CardContent } from "../ui/card";
+import { Skeleton } from "../ui/skeleton";
 
 interface CalendarStatisticsProps {
   teamId: Id<"teams">;
@@ -21,18 +23,18 @@ export function CalendarStatistics({
 
   if (!statistics) {
     return (
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 w-32 rounded bg-gray-200" />
-          <div className="h-2 w-full rounded bg-gray-200" />
+      <Card>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-4 w-32 rounded" />
+          <Skeleton className="h-2 w-full rounded" />
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="h-16 rounded bg-gray-200" />
-            <div className="h-16 rounded bg-gray-200" />
-            <div className="h-16 rounded bg-gray-200" />
-            <div className="h-16 rounded bg-gray-200" />
+            <Skeleton className="h-16 rounded" />
+            <Skeleton className="h-16 rounded" />
+            <Skeleton className="h-16 rounded" />
+            <Skeleton className="h-16 rounded" />
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
