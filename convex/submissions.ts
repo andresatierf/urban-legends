@@ -424,3 +424,149 @@ export const reject = mutation({
     }
   },
 });
+
+export const getMonthSubmissions = query({
+  args: {
+    teamId: v.id("teams"),
+    year: v.number(),
+    month: v.number(), // 1-12
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    // Validate user is member of team
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team_and_user", (q) =>
+        q.eq("teamId", args.teamId).eq("userId", user._id),
+      )
+      .first();
+
+    if (!membership) {
+      throw new Error("Not a member of this team");
+    }
+
+    // Calculate date range for month
+    const startDate = `${args.year}-${String(args.month).padStart(2, "0")}-01`;
+    const lastDayOfMonth = new Date(args.year, args.month, 0).getDate();
+    const endDate = `${args.year}-${String(args.month).padStart(2, "0")}-${String(lastDayOfMonth).padStart(2, "0")}`;
+
+    // Fetch submissions for month
+    const submissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_team_and_date", (q) => q.eq("teamId", args.teamId))
+      .filter((q) =>
+        q.and(
+          q.gte(q.field("date"), startDate),
+          q.lte(q.field("date"), endDate),
+        ),
+      )
+      .collect();
+
+    // Return map of date -> submission
+    return submissions.reduce(
+      (acc, sub) => {
+        acc[sub.date] = {
+          _id: sub._id,
+          state: sub.state,
+          description: sub.description,
+          teammates: sub.teammates,
+          pointsEarned: sub.pointsEarned || 0,
+        };
+        return acc;
+      },
+      {} as Record<
+        string,
+        {
+          _id: string;
+          state: "pending" | "approved" | "rejected" | "deleted";
+          description: string | undefined;
+          teammates: string[];
+          pointsEarned: number;
+        }
+      >,
+    );
+  },
+});
+
+export const getTeamStatistics = query({
+  args: {
+    teamId: v.id("teams"),
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    // Validate user is member of team
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team_and_user", (q) =>
+        q.eq("teamId", args.teamId).eq("userId", user._id),
+      )
+      .first();
+
+    if (!membership) {
+      throw new Error("Not a member of this team");
+    }
+
+    const tournament = await ctx.db.get(args.tournamentId);
+    if (!tournament) throw new Error("Tournament not found");
+
+    const submissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .collect();
+
+    const startDate = new Date(tournament.startDate);
+    const endDate = new Date(tournament.endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const relevantEndDate = today < endDate ? today : endDate;
+
+    const totalDays =
+      Math.floor(
+        (relevantEndDate.getTime() - startDate.getTime()) /
+          (1000 * 60 * 60 * 24),
+      ) + 1;
+
+    const daysWithSubmissions = new Set(submissions.map((s) => s.date)).size;
+    const completionRate =
+      totalDays > 0 ? (daysWithSubmissions / totalDays) * 100 : 0;
+
+    // Calculate streak - count backwards from today
+    let currentStreak = 0;
+    const sortedDates = Array.from(
+      new Set(submissions.map((s) => s.date)),
+    ).sort();
+
+    for (let i = 0; i < totalDays; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
+
+      // Skip if date is before tournament start
+      if (date < startDate) break;
+
+      if (sortedDates.includes(dateStr)) {
+        currentStreak++;
+      } else {
+        // Only break if this is not today (allow for today not being submitted yet)
+        if (i > 0) break;
+      }
+    }
+
+    const stateCounts = {
+      approved: submissions.filter((s) => s.state === "approved").length,
+      pending: submissions.filter((s) => s.state === "pending").length,
+      rejected: submissions.filter((s) => s.state === "rejected").length,
+    };
+
+    return {
+      totalDays,
+      daysWithSubmissions,
+      completionRate: Math.round(completionRate),
+      currentStreak,
+      ...stateCounts,
+    };
+  },
+});
