@@ -1,7 +1,14 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { CalendarDateCell } from "./calendar-date-cell";
@@ -13,7 +20,19 @@ interface SubmissionCalendarProps {
   onDateClick?: (date: string, submissionId?: Id<"submissions">) => void;
 }
 
-const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAY_LABELS_FULL = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+const WEEKDAY_LABELS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const WEEK_START_STORAGE_KEY = "calendarWeekStartsOn";
 
 export function SubmissionCalendar({
   teamId,
@@ -21,6 +40,34 @@ export function SubmissionCalendar({
   onDateClick,
 }: SubmissionCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [weekStartsOn, setWeekStartsOn] = useState<number>(0); // 0 = Sunday, 1 = Monday, etc.
+  const weekStartSelectId = useId();
+
+  // Load week start preference from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem(WEEK_START_STORAGE_KEY);
+    if (stored !== null) {
+      const parsed = Number.parseInt(stored, 10);
+      if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 6) {
+        setWeekStartsOn(parsed);
+      }
+    }
+  }, []);
+
+  // Save week start preference to localStorage
+  const handleWeekStartChange = (value: string) => {
+    const newStart = Number.parseInt(value, 10);
+    setWeekStartsOn(newStart);
+    localStorage.setItem(WEEK_START_STORAGE_KEY, value);
+  };
+
+  // Get rotated weekday labels based on week start
+  const weekdayLabels = useMemo(() => {
+    return [
+      ...WEEKDAY_LABELS_SHORT.slice(weekStartsOn),
+      ...WEEKDAY_LABELS_SHORT.slice(0, weekStartsOn),
+    ];
+  }, [weekStartsOn]);
 
   const tournament = useQuery(api.tournaments.get, {
     tournamentId: tournamentId,
@@ -46,8 +93,13 @@ export function SubmissionCalendar({
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
 
-    // Calculate padding for start of week
-    const startPadding = firstDay.getDay();
+    // Calculate padding for start of week, adjusted for week start preference
+    // firstDay.getDay() returns 0-6 (Sun-Sat)
+    // We need to adjust based on weekStartsOn
+    let startPadding = firstDay.getDay() - weekStartsOn;
+    if (startPadding < 0) {
+      startPadding += 7;
+    }
 
     // Generate all dates to display
     const days: (Date | null)[] = [];
@@ -72,7 +124,7 @@ export function SubmissionCalendar({
     }
 
     return days;
-  }, [currentDate]);
+  }, [currentDate, weekStartsOn]);
 
   // Navigation handlers
   const handlePrevMonth = () => {
@@ -169,9 +221,31 @@ export function SubmissionCalendar({
         canGoNext={canNavigate.next}
       />
 
+      {/* Week start selector */}
+      <div className="mb-4 flex items-center justify-end gap-2">
+        <label htmlFor={weekStartSelectId} className="text-gray-600 text-sm">
+          Week starts on:
+        </label>
+        <Select
+          value={weekStartsOn.toString()}
+          onValueChange={handleWeekStartChange}
+        >
+          <SelectTrigger id={weekStartSelectId} className="w-[140px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {WEEKDAY_LABELS_FULL.map((day, index) => (
+              <SelectItem key={day} value={index.toString()}>
+                {day}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Weekday headers */}
       <div className="mb-2 grid grid-cols-7 gap-2">
-        {WEEKDAY_LABELS.map((day) => (
+        {weekdayLabels.map((day) => (
           <div
             key={day}
             className="text-center font-semibold text-gray-700 text-sm"
