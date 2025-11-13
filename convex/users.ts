@@ -25,7 +25,11 @@ export const list = query({
     return await Promise.all(
       users.map(async (user) => {
         const roles = await getRolesForUser(ctx, user._id);
-        return { ...user, roles };
+        return {
+          ...user,
+          roles,
+          roleNames: roles.map(({ name }) => name),
+        };
       }),
     );
   },
@@ -47,6 +51,7 @@ export const getById = query({
     return {
       ...user,
       roles,
+      roleNames: roles.map(({ name }) => name),
     };
   },
 });
@@ -95,7 +100,11 @@ export async function getCurrentUserOrThrow(ctx: QueryCtx) {
   const userRecord = await getCurrentUser(ctx);
   if (!userRecord) throw new Error("Can't get current user");
   const roles = await getRolesForUser(ctx, userRecord._id);
-  return { ...userRecord, roles };
+  return {
+    ...userRecord,
+    roles,
+    roleNames: roles.map(({ name }) => name),
+  };
 }
 
 export async function getCurrentUser(ctx: QueryCtx) {
@@ -121,15 +130,18 @@ async function getRolesForUser(ctx: QueryCtx, userId: Id<"users">) {
   const roles = await Promise.all(
     userRoles.map(({ roleId }) => ctx.db.get(roleId)),
   );
-  return roles
-    .map((r) => r?.name)
-    .filter((role): role is string => Boolean(role));
+  return (
+    roles
+      // .map((r) => r?.name)
+      .filter((role): role is NonNullable<typeof role> => Boolean(role))
+  );
 }
 
 export function validateIsAdmin(
   user: Awaited<ReturnType<typeof getCurrentUserOrThrow>>,
+  message?: string,
 ) {
-  if (!user.roles.includes("admin")) {
-    throw new Error("Admin access required");
+  if (!user.roleNames.includes("admin")) {
+    throw new Error(message ?? "Admin access required");
   }
 }

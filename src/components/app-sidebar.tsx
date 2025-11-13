@@ -1,6 +1,5 @@
 "use client";
 
-import { useClerk } from "@clerk/nextjs";
 import {
   ClipboardList,
   LayoutDashboard,
@@ -28,7 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useUser } from "@/hooks/useUser";
 import { UpsertSubmissionFormDialog } from "./form/upsert-submission-form";
-import { Button } from "./ui/button";
+import { LoggedUserCard } from "./logged-user-card";
 
 type SidebarItem = {
   title: string;
@@ -38,10 +37,9 @@ type SidebarItem = {
   | ({ icon: LucideIcon } & ({ href: string } | { onClick: () => void }))
 );
 
-function useSidebarItems() {
+function useSidebarItems(setSubmissionFormOpen: (state: boolean) => void) {
   const tUserItems = useTranslations("sidebar.items.user");
   const tAdminItems = useTranslations("sidebar.items.admin");
-  const [submissionFormOpen, setSubmissionFormOpen] = useState(false);
 
   const sidebar: SidebarItem[] = useMemo(
     () => [
@@ -58,7 +56,11 @@ function useSidebarItems() {
             href: "/tournaments",
             icon: Trophy,
           },
-          { title: tUserItems("teams"), href: "/teams", icon: Users },
+          {
+            title: tUserItems("teams"),
+            href: "/teams",
+            icon: Users,
+          },
           {
             title: tUserItems("submissions"),
             href: "/submissions",
@@ -77,40 +79,31 @@ function useSidebarItems() {
         ],
       },
     ],
-    [tUserItems, tAdminItems],
+    [tUserItems, tAdminItems, setSubmissionFormOpen],
   );
 
-  return {
-    items: sidebar,
-    open: submissionFormOpen,
-    setOpen: setSubmissionFormOpen,
-  };
+  return { items: sidebar };
 }
 
 export function Sidebar() {
-  const t = useTranslations("sidebar");
-
   const { user } = useUser();
-  const { items: sidebarItems, open, setOpen } = useSidebarItems();
-  const { signOut } = useClerk();
+
+  const [submissionFormOpen, setSubmissionFormOpen] = useState(false);
+  const { items: sidebarItems } = useSidebarItems(setSubmissionFormOpen);
 
   return (
     <SidebarBase collapsible="icon">
       <SidebarHeader />
       <SidebarContent>
-        {sidebarItems.map((item) => renderItem(item, user?.roles || []))}
-        <UpsertSubmissionFormDialog open={open} onOpenChange={setOpen} />
+        {sidebarItems.map((item) => renderItem(item, user?.roleNames || []))}
+        <UpsertSubmissionFormDialog
+          open={submissionFormOpen}
+          onOpenChange={setSubmissionFormOpen}
+        />
       </SidebarContent>
       <SidebarSeparator />
-      <SidebarFooter className="space-y-2">
-        <span className="flex flex-col items-center">
-          <p className="badge">
-            {user?.name
-              ? t("user.loggedInAs", { name: user.name })
-              : t("user.loggedIn")}
-          </p>
-        </span>
-        <Button onClick={() => signOut()}>Sign Out</Button>
+      <SidebarFooter className="">
+        <LoggedUserCard />
       </SidebarFooter>
     </SidebarBase>
   );
@@ -120,6 +113,7 @@ function renderItem(item: SidebarItem, userRoles: string[]) {
   if (item?.roles && !userRoles.some((role) => item?.roles?.includes(role))) {
     return;
   }
+
   if ("items" in item)
     return (
       <SidebarGroup key={item.title}>
