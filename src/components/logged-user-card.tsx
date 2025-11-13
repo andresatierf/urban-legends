@@ -1,5 +1,4 @@
-import { useClerk } from "@clerk/nextjs";
-import { DoorOpen } from "lucide-react";
+import { Settings } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
@@ -12,7 +11,6 @@ import { getHighestRankingRole, getInitials } from "./users/utils";
 export function LoggedUserCard() {
   const { user } = useUser();
   const { open } = useSidebar();
-  const { signOut } = useClerk();
 
   if (user === undefined) return null; // TODO: add skeleton
 
@@ -25,10 +23,13 @@ export function LoggedUserCard() {
     );
 
   return (
-    <Link href={`/users/${user._id}`} className="transition">
-      <Card className={cn("transition hover:bg-muted", { "p-0": !open })}>
-        <CardContent
-          className={cn("flex items-center gap-2 p-3", { "p-0": !open })}
+    <Card className={cn("transition hover:bg-muted", { "p-0": !open })}>
+      <CardContent
+        className={cn("flex items-center gap-2 p-3", { "p-0": !open })}
+      >
+        <Link
+          href={`/users/${user._id}`}
+          className="flex flex-1 items-center gap-2 transition"
         >
           <Avatar>
             <AvatarImage />
@@ -40,19 +41,18 @@ export function LoggedUserCard() {
               {getHighestRankingRole(user.roles)}
             </p>
           </div>
-          <Button
-            size="icon"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              signOut();
-            }}
-            className={cn("ml-auto", { hidden: !open })}
-          >
-            <DoorOpen className="size-5" />
-          </Button>
-        </CardContent>
-      </Card>
-    </Link>
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn("ml-auto", { hidden: !open })}
+          asChild
+        >
+          <Link href="/settings">
+            <Settings className="h-4 w-4" />
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

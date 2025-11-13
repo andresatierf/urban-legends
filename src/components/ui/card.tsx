@@ -3,7 +3,7 @@ import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "rounded-xl border bg-card text-card-foreground shadow",
+  "rounded-lg border bg-card text-card-foreground shadow",
   {
     variants: {
       variant: {
@@ -11,6 +11,7 @@ const cardVariants = cva(
         admin:
           "border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 shadow-md",
         info: "border-blue-200 bg-blue-50",
+        dashed: "border-2 border-gray-300 border-dashed bg-gray-50 shadow-none",
       },
     },
     defaultVariants: {
