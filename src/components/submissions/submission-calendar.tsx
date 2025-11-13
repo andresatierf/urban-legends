@@ -251,7 +251,7 @@ export function SubmissionCalendar({
       </div>
 
       {/* Legend */}
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-4 border-t pt-4 text-xs">
+      <div className="mt-6 flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-center gap-4 border-t pt-4 text-xs">
         {(
           [undefined, "pending", "approved", "rejected"] as (
             | undefined

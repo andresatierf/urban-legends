@@ -19,10 +19,11 @@ export default function Submissions() {
   const { user, isAdmin } = useUser();
   const router = useRouter();
 
-  const [_viewMode, _setViewMode] = useState<"calendar" | "list">("calendar");
-  const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams"> | null>(
-    null,
-  );
+  const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams">>();
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<Doc<"submissions">>();
+  const [selectedDate, setSelectedDate] = useState<string>();
+  const [upsertSubmissionOpen, setUpsertSubmissionOpen] = useState(false);
 
   const submissions =
     useQuery(
@@ -113,23 +114,39 @@ export default function Submissions() {
   );
 
   const handleDateClick = (date: string, submissionId?: Id<"submissions">) => {
-    if (submissionId) {
-      // Navigate to edit page
-      router.push(`/submissions/${submissionId}/edit`);
-    } else {
-      // Navigate to create page with pre-filled date and team
-      const searchParams = new URLSearchParams({
-        date,
-        teamId: selectedTeamId || "",
-      });
-      router.push(`/submissions/new?${searchParams.toString()}`);
+    const submission = submissionId
+      ? allSubmissions.find((s) => s._id === submissionId)
+      : undefined;
+    if (submission?.state === "approved") {
+      router.push(`/submissions/${submission._id}`);
+      return;
+    }
+
+    setSelectedSubmission(submission);
+    setSelectedDate(date);
+    setUpsertSubmissionOpen(true);
+  };
+
+  const handleClose = (newOpen: boolean) => {
+    setUpsertSubmissionOpen(newOpen);
+    if (!newOpen) {
+      setTimeout(() => {
+        setSelectedSubmission(undefined);
+        setSelectedDate(undefined);
+      }, 200);
     }
   };
 
   return (
     <>
       <SectionHeader as="h1" title="Submissions">
-        <UpsertSubmissionFormDialog />
+        <UpsertSubmissionFormDialog
+          open={upsertSubmissionOpen}
+          onOpenChange={handleClose}
+          teamId={selectedTeamId ?? undefined}
+          submission={selectedSubmission ?? undefined}
+          date={selectedDate ?? undefined}
+        />
       </SectionHeader>
       <Tabs defaultValue="calendar">
         <TabsList>

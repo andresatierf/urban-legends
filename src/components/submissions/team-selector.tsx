@@ -12,7 +12,7 @@ import type { Doc, Id } from "../../../convex/_generated/dataModel";
 
 interface TeamSelectorProps {
   teams: Array<Doc<"teams"> & { tournament?: Doc<"tournaments"> | null }>;
-  selectedTeamId: Id<"teams"> | null;
+  selectedTeamId?: Id<"teams">;
   onTeamChange: (teamId: Id<"teams">) => void;
 }
 
@@ -62,13 +62,13 @@ export function TeamSelector({
         value={selectedTeamId || undefined}
         onValueChange={handleValueChange}
       >
-        <SelectTrigger id={selectId} className="w-[280px]">
+        <SelectTrigger id={selectId} className="h-12 w-[280px]">
           <SelectValue placeholder="Select a team..." />
         </SelectTrigger>
         <SelectContent>
           {teams.map((team) => (
             <SelectItem key={team._id} value={team._id}>
-              <div className="flex flex-col">
+              <div className="flex flex-col items-start">
                 <span className="font-medium">{team.name}</span>
                 {team.tournament && (
                   <span className="text-gray-500 text-xs">

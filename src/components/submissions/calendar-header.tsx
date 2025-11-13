@@ -34,7 +34,7 @@ export function CalendarHeader({
   };
 
   return (
-    <div className="mb-6 flex items-center justify-between">
+    <div className="mb-6 flex xs:flex-row flex-col items-center justify-between gap-4 text-center">
       <h2 className="font-semibold text-2xl">{monthYear}</h2>
 
       <div className="flex gap-2">

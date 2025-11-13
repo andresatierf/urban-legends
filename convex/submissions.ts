@@ -145,6 +145,10 @@ export const upsert = mutation({
         throw new Error("You do not have permission to update this submission");
       }
 
+      if (submission.state === "approved") {
+        throw new Error("You cannot update an approved submission");
+      }
+
       return await ctx.db.patch(args._id, data);
     }
 

@@ -42,14 +42,18 @@ const formSchema = z.object({
 type Props = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  teamId?: Id<"teams">;
   submission?: Doc<"submissions">;
+  date?: string;
   children?: React.ReactNode;
 };
 
 export function UpsertSubmissionFormDialog({
   open: controlledOpen,
   onOpenChange,
+  teamId,
   submission,
+  date,
   children,
 }: Props) {
   const { user, isDev } = useUser();
@@ -71,9 +75,9 @@ export function UpsertSubmissionFormDialog({
 
   const form = useAppForm({
     defaultValues: {
-      date: submission?.date ?? "",
+      date: submission?.date ?? date ?? "",
       description: submission?.description ?? "",
-      teamId: submission?.teamId ?? "",
+      teamId: submission?.teamId ?? teamId ?? "",
       teammateIds: submission?.teammates ?? [],
       tier: submission?.tier ?? "base",
     } as z.input<typeof formSchema>,
@@ -100,12 +104,12 @@ export function UpsertSubmissionFormDialog({
     },
   });
 
-  const teamId = useStore(
+  const formTeamId = useStore(
     form.store,
     (state) => state.values.teamId as Id<"teams">,
   );
 
-  const team = teams.find((t) => t._id === teamId);
+  const team = teams.find((t) => t._id === formTeamId);
 
   const tournament = useQuery(
     api.tournaments.get,
@@ -115,7 +119,7 @@ export function UpsertSubmissionFormDialog({
   const teamMembers =
     useQuery(
       api.teams.listTeamMembers,
-      teamId ? { teamId, excludeSelf: true } : "skip",
+      formTeamId ? { teamId: formTeamId, excludeSelf: true } : "skip",
     ) || [];
 
   const teammateOptions = useMemo(
@@ -163,21 +167,24 @@ export function UpsertSubmissionFormDialog({
               {submission
                 ? "Edit the submission details"
                 : "Create a new submission"}
+              {date && ` for ${date}`}
             </DialogDescription>
           </DialogHeader>
 
           <FieldGroup>
-            <form.AppField name="teamId">
-              {(field) => (
-                <field.ComboboxField
-                  label="Team"
-                  options={teamOptions}
-                  onChange={() => {
-                    form.clearFieldValues("teammateIds");
-                  }}
-                />
-              )}
-            </form.AppField>
+            {!teamId && (
+              <form.AppField name="teamId">
+                {(field) => (
+                  <field.ComboboxField
+                    label="Team"
+                    options={teamOptions}
+                    onChange={() => {
+                      form.clearFieldValues("teammateIds");
+                    }}
+                  />
+                )}
+              </form.AppField>
+            )}
             <form.AppField name="description">
               {(field) => (
                 <field.TextField
@@ -186,9 +193,11 @@ export function UpsertSubmissionFormDialog({
                 />
               )}
             </form.AppField>
-            <form.AppField name="date">
-              {(field) => <field.DateField label="Date" />}
-            </form.AppField>
+            {!date && (
+              <form.AppField name="date">
+                {(field) => <field.DateField label="Date" />}
+              </form.AppField>
+            )}
             <form.AppField name="tier">
               {(field) => (
                 <field.SelectField
@@ -213,7 +222,7 @@ export function UpsertSubmissionFormDialog({
                           variant="outline"
                           size="sm"
                           onClick={() =>
-                            teamId !== "" &&
+                            formTeamId !== "" &&
                             field.state.value.length <
                               Math.min(
                                 tournament?.teamMaxSize || 9999,
@@ -223,7 +232,7 @@ export function UpsertSubmissionFormDialog({
                               : undefined
                           }
                           disabled={
-                            teamId === "" ||
+                            formTeamId === "" ||
                             field.state.value.length >=
                               Math.min(
                                 tournament?.teamMaxSize || 9999,
@@ -257,7 +266,7 @@ export function UpsertSubmissionFormDialog({
                                       }}
                                       noSelectionText="Select a teammate..."
                                       placeholder="Search teammate..."
-                                      disabled={teamId === ""}
+                                      disabled={formTeamId === ""}
                                     />
                                     <Button
                                       type="button"
