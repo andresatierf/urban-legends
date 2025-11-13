@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
@@ -470,7 +471,6 @@ export const getMonthSubmissions = query({
           _id: sub._id,
           state: sub.state,
           description: sub.description,
-          teammates: sub.teammates,
           pointsEarned: sub.pointsEarned || 0,
         };
         return acc;
@@ -478,10 +478,9 @@ export const getMonthSubmissions = query({
       {} as Record<
         string,
         {
-          _id: string;
+          _id: Id<"submissions">;
           state: "pending" | "approved" | "rejected" | "deleted";
           description: string | undefined;
-          teammates: string[];
           pointsEarned: number;
         }
       >,
