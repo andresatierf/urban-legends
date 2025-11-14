@@ -34,7 +34,7 @@ type Props = {
 };
 
 export default function TournamentDetailsPage({ params }: Props) {
-  const { user, isAdmin } = useUser();
+  const { user } = useUser();
 
   const { tournamentId } = use(params);
 
@@ -86,11 +86,7 @@ export default function TournamentDetailsPage({ params }: Props) {
         </Button>
       </SectionHeader>
 
-      <TournamentDetailsCard
-        tournament={tournament}
-        enableActions={isAdmin}
-        teams={teams ?? []}
-      />
+      <TournamentDetailsCard tournament={tournament} teams={teams ?? []} />
 
       <SectionHeader title="Teams" />
 
