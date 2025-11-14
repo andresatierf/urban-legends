@@ -256,13 +256,6 @@ export const upsert = mutation({
   },
 });
 
-export const remove = mutation({
-  args: { tournamentId: v.id("tournaments") },
-  handler: async (_ctx, _args) => {
-    throw new Error("Not implemented");
-  },
-});
-
 // Get users not in any team for a given tournament
 export const getAvailableUsersForTournament = query({
   args: {
