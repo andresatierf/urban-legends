@@ -195,12 +195,20 @@ Use the CodeRabbit CLI to get AI-powered code review:
 coderabbit --prompt-only
 ```
 
-**If CodeRabbit suggests improvements:**
+**IMPORTANT: Let CodeRabbit run to completion!**
 
-- Review the suggestions carefully
+- CodeRabbit may take several minutes to analyze all changes
+- **NEVER kill or interrupt the coderabbit process** - let it run until it finishes naturally
+- Wait for the full analysis to complete before proceeding
+- The tool will exit on its own when finished
+
+**After CodeRabbit completes:**
+
+- Review ALL suggestions carefully
 - Create todos for each significant issue using TodoWrite
-- Fix issues systematically
-- Re-run `coderabbit review --base main` after fixes
+- Fix issues systematically, addressing each suggestion
+- After making fixes, commit them with descriptive messages
+- Re-run `coderabbit --prompt-only` to verify fixes
 - Continue until CodeRabbit feedback is minimal/acceptable
 
 **CodeRabbit checks for:**
@@ -211,6 +219,9 @@ coderabbit --prompt-only
 - Performance concerns
 - Best practice violations
 - Documentation gaps
+- Inconsistencies with codebase patterns
+
+**Note:** If CodeRabbit identifies issues, treat them seriously. Address each one or document why it can be safely ignored.
 
 ### 7.4: Fix Any Issues
 
@@ -234,25 +245,163 @@ Once all checks pass, provide a summary:
 Implementation is ready for PR creation.
 ```
 
-## Step 8: Final Summary
+## Step 8: Create Draft Pull Request
 
-Provide a summary of:
+After all validation passes, create a draft PR automatically:
 
-- What was implemented
-- Which files were created/modified
-- Any remaining TODOs or future enhancements
-- How to test the feature
-- Worktree location and how to access it
-- How to clean up the worktree when done
-- Next steps (create PR, merge, etc.)
+### 8.1: Push Branch to Remote
 
-Show the git log:
+First, ensure the branch is pushed to the remote:
 
 ```bash
-git log main..HEAD --oneline
+# Check if remote branch exists
+git remote -v
+
+# Push branch to origin with upstream tracking
+git push -u origin andre/feat/[feature-name]
 ```
 
-**Worktree Information:**
+### 8.2: Generate PR Description
+
+Analyze all commits in the branch to create a comprehensive PR description:
+
+```bash
+# View all commits for context
+git log --oneline main..HEAD
+
+# View detailed changes
+git diff --stat main..HEAD
+```
+
+Create a PR description that includes:
+
+1. **Summary section** - Brief overview of the feature (2-3 sentences)
+2. **Changes section** - Organized list of what was implemented:
+   - Schema changes (if any)
+   - Backend mutations and queries added
+   - Frontend components created
+   - Pages added/modified
+3. **Testing section** - How to test the feature
+4. **Spec reference** - Link to the spec file that was implemented
+
+**Format:**
+
+```markdown
+## Summary
+
+[Brief overview of the feature and what problem it solves]
+
+## Changes
+
+### Schema
+
+- [List schema changes]
+
+### Backend
+
+- [List new mutations]
+- [List new queries]
+
+### Frontend
+
+- [List new components]
+- [List modified/new pages]
+
+## Testing
+
+1. [Step-by-step testing instructions]
+2. [Include URLs to test]
+3. [Edge cases to verify]
+
+## Spec
+
+Implements `specs/[spec-filename].md`
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+### 8.3: Create Draft PR
+
+Use `gh` CLI to create a draft PR assigned to the user:
+
+```bash
+# Create draft PR with description
+gh pr create \
+  --draft \
+  --assignee "@me" \
+  --title "feat: [descriptive title based on feature]" \
+  --body "$(/usr/bin/cat <<'EOF'
+[Your generated PR description here]
+EOF
+)"
+```
+
+**Important:**
+
+- Use `--draft` flag to create as draft PR
+- Use `--assignee "@me"` to assign to the current user
+- Title should start with `feat:` and clearly describe the feature
+- Include all relevant sections in the body
+
+### 8.4: Capture PR URL
+
+After creating the PR:
+
+- Save the PR URL from the command output
+- Include it in the final summary for easy access
+- Inform user that PR is created as draft and assigned to them
+
+Example output:
+
+```
+✅ Draft PR created: https://github.com/owner/repo/pull/123
+   - Status: Draft
+   - Assigned to: @me
+   - Ready for review when you mark it as ready
+```
+
+## Step 9: Final Summary
+
+Provide a comprehensive summary in this order:
+
+### 9.1: Pull Request Information
+
+**Display the PR details prominently:**
+
+```
+🎉 Implementation Complete!
+
+📋 Pull Request: [PR URL from Step 8.4]
+   - Status: Draft
+   - Assigned to: @me
+   - Branch: andre/feat/[feature-name]
+   - Ready to mark as "Ready for review" when you're satisfied
+```
+
+### 9.2: Implementation Summary
+
+Provide details on:
+
+- What was implemented (feature overview)
+- Which files were created/modified
+- Any remaining TODOs or future enhancements noted during implementation
+
+Show the commit history:
+
+```bash
+git log --oneline main..HEAD
+```
+
+### 9.3: Testing Instructions
+
+Explain how to test the feature:
+
+1. Access the feature at the provided URL
+2. Key user flows to test
+3. Edge cases to verify
+4. Admin features to test (if applicable)
+
+### 9.4: Worktree Information
 
 Tell the user:
 
@@ -284,6 +433,26 @@ The main repository at /home/andre/dev/urban-legends is unchanged.
 
 **Important:** Replace `[NEXT_PORT]` and `[CONVEX_PORT]` with actual port numbers calculated during setup.
 
+### 9.5: Next Steps
+
+Tell the user what to do next:
+
+```
+🚀 Next Steps:
+
+1. Test the feature thoroughly at http://localhost:[NEXT_PORT]
+2. Review the PR description and make any updates if needed
+3. When satisfied, mark the PR as "Ready for review":
+   - Visit the PR URL
+   - Click "Ready for review" button
+   - Request reviewers if needed
+4. Address any review feedback
+5. Merge when approved
+6. Clean up the worktree after merging
+
+The draft PR is assigned to you and ready for your review!
+```
+
 ## Important Guidelines
 
 - **Work in the worktree** - All file operations happen in the worktree directory, not the main repo
@@ -296,6 +465,8 @@ The main repository at /home/andre/dev/urban-legends is unchanged.
 - **Handle errors gracefully** - Add proper error handling and validation
 - **Consider edge cases** - The spec lists many edge cases; handle them
 - **Remember the path** - You're working in `../urban-legends-[feature-name]`, not the original repo
+- **Let CodeRabbit complete** - Never interrupt or kill the coderabbit process; wait for natural completion
+- **Create draft PR** - Always create a draft PR assigned to @me after validation passes
 - **Bash** - always wrap bash commands with `bash -c`
 
 ## What NOT to Do
@@ -307,6 +478,9 @@ The main repository at /home/andre/dev/urban-legends is unchanged.
 - Don't forget to update the TodoWrite list
 - Don't make breaking changes to existing features
 - Don't commit generated files (convex/\_generated/)
+- Don't skip validation steps (CI, typecheck, CodeRabbit)
+- Don't interrupt or kill the CodeRabbit process - let it finish naturally
+- Don't forget to create the draft PR after validation
 
 ## When Complete
 
@@ -315,11 +489,12 @@ Tell the user:
 1. The worktree location (full path)
 2. The branch name created
 3. Summary of what was implemented
-4. How to test the feature in the worktree
-5. How to create a PR from the worktree branch
-6. How to clean up the worktree when done
-7. Any dependencies (e.g., "run `bunx convex dev` to apply schema changes")
-8. Reminder that the main repository is unchanged and they can continue working there
+4. **The PR URL** - Draft PR is automatically created and assigned to @me
+5. How to test the feature in the worktree
+6. How to mark the PR as ready for review when satisfied
+7. How to clean up the worktree when done
+8. Any dependencies (e.g., "run `bunx convex dev` to apply schema changes")
+9. Reminder that the main repository is unchanged and they can continue working there
 
 ## Example Usage
 
@@ -343,7 +518,18 @@ You would:
 11. Commit: "feat(ui): add team joining components"
 12. Update pages to integrate new features
 13. Commit: "feat(pages): integrate team joining UI"
-14. Run linting and formatting
-15. Provide summary with worktree location, ports, and cleanup instructions
+14. Run validation checks:
+    - Run `bun --bun run ci` and fix any issues
+    - Run `bun --bun run typecheck` and fix type errors
+    - Run `coderabbit --prompt-only` and address all suggestions
+    - Wait for CodeRabbit to complete (never interrupt it)
+    - Fix issues and commit: "fix: address code quality issues"
+15. Push branch to remote: `git push -u origin andre/feat/team-joining`
+16. Create draft PR with `gh pr create --draft --assignee "@me"`
+17. Provide summary with:
+    - PR URL (draft, assigned to user)
+    - Worktree location and ports
+    - Testing instructions
+    - Cleanup instructions
 
-The main repository remains on the `main` branch, allowing the user to continue working there while the feature is implemented in the worktree. Each feature gets unique ports (based on name hash) so multiple features can run simultaneously without conflicts.
+The main repository remains on the `main` branch, allowing the user to continue working there while the feature is implemented in the worktree. Each feature gets unique ports (based on name hash) so multiple features can run simultaneously without conflicts. A draft PR is automatically created and assigned to the user for review.
