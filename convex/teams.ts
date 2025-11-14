@@ -651,7 +651,45 @@ export async function validateTeamHasSpace(
   return team;
 }
 
-// Admin utility to recalculate team points from approved submissions
+/**
+ * ADMIN UTILITY - Manual Execution for Data Fixes
+ *
+ * Recalculates a team's total points from all approved submissions.
+ * Use this utility to fix point calculation inconsistencies caused by:
+ * - Data migration issues
+ * - Bugs in scoring logic (now fixed)
+ * - Manual database modifications
+ * - Missing pointsEarned values on submissions
+ *
+ * **Usage:**
+ * 1. Identify a team with incorrect point totals
+ * 2. Run this mutation via Convex dashboard with the team ID
+ * 3. The function will recalculate all submission points using the
+ *    tournament's flexible scoring configuration
+ * 4. Team points will be updated to match the sum of all approved submissions
+ *
+ * **What it does:**
+ * - Fetches all approved submissions for the team
+ * - For submissions missing pointsEarned, calculates points using:
+ *   - Tournament scoring configuration (individual/team, base/advanced)
+ *   - Team member participation rate
+ *   - Team exercise threshold detection
+ * - Updates submissions with calculated pointsEarned values
+ * - Recalculates team total from actual submission points
+ *
+ * **Safety:**
+ * - Admin-only access
+ * - Read-only on existing approved submissions (preserves pointsEarned if set)
+ * - Only updates submissions missing pointsEarned values
+ * - Atomic operation per submission
+ *
+ * @param teamId - The ID of the team to recalculate points for
+ * @returns Object with totalPoints and count of submissions updated
+ *
+ * @internal This function is for manual data fixes and maintenance.
+ *          Should not be needed in normal operation once all submissions
+ *          have proper pointsEarned values.
+ */
 export const recalculatePoints = mutation({
   args: {
     teamId: v.id("teams"),

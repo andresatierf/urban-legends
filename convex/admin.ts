@@ -3,6 +3,27 @@ import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
+/**
+ * ADMIN UTILITY - Manual Execution Only
+ *
+ * Makes the first user in the system an admin. This is a bootstrap function
+ * intended to be run once after initial deployment to create the first admin user.
+ *
+ * **Usage:**
+ * 1. Deploy the application
+ * 2. Create the first user account via Clerk authentication
+ * 3. Run this mutation manually via the Convex dashboard
+ * 4. The authenticated user will receive the admin role
+ *
+ * **Safety:**
+ * - Will not create duplicate admins (checks if any admin exists first)
+ * - Automatically seeds roles if they don't exist
+ * - Returns false if an admin already exists
+ *
+ * @returns {boolean} true if admin was created, false if admin already exists
+ *
+ * @internal This function is not exposed to the frontend
+ */
 export const makeFirstUserAdmin = mutation({
   args: {},
   handler: async (ctx) => {
