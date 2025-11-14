@@ -91,6 +91,111 @@ export const get = query({
   },
 });
 
+/**
+ * Get comprehensive tournament details with all related entities and permissions.
+ * This query follows the pattern established by submissions.getDetails to provide
+ * a single, efficient query for detail pages.
+ */
+export const getDetails = query({
+  args: {
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    // Fetch tournament
+    const tournament = await ctx.db.get(args.tournamentId);
+    if (!tournament) {
+      throw new Error("Tournament not found");
+    }
+
+    // Fetch all teams for this tournament
+    const teams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", args.tournamentId),
+      )
+      .collect();
+
+    // Fetch member counts and member details for each team in parallel
+    const teamsWithMembers = await Promise.all(
+      teams.map(async (team) => {
+        const members = await ctx.db
+          .query("teamMembers")
+          .withIndex("by_team", (q) => q.eq("teamId", team._id))
+          .collect();
+
+        // Fetch user details for each member
+        const memberUsers = await Promise.all(
+          members.map((member) => ctx.db.get(member.userId)),
+        );
+
+        return {
+          ...team,
+          memberCount: members.length,
+          members: memberUsers.filter((u) => u !== null),
+        };
+      }),
+    );
+
+    // Find user's team in this tournament
+    const userTeamMemberships = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    const userTeamIds = userTeamMemberships.map((m) => m.teamId);
+    const userTeam = teamsWithMembers.find((team) =>
+      userTeamIds.includes(team._id),
+    );
+
+    // Calculate tournament status
+    const nowIso = new Date().toISOString();
+    let status: "active" | "upcoming" | "ended";
+    if (tournament.startDate <= nowIso && tournament.endDate >= nowIso) {
+      status = "active";
+    } else if (tournament.startDate > nowIso) {
+      status = "upcoming";
+    } else {
+      status = "ended";
+    }
+
+    // Determine permissions
+    const isAdmin = user.roleNames.includes("admin");
+    const canEdit = isAdmin;
+    const canDelete = isAdmin;
+    const canViewLeaderboard = true; // Anyone can view leaderboard
+
+    // Calculate statistics
+    const totalTeams = teams.length;
+    const totalParticipants = teamsWithMembers.reduce(
+      (sum, team) => sum + team.memberCount,
+      0,
+    );
+    const averageTeamSize = totalTeams > 0 ? totalParticipants / totalTeams : 0;
+
+    return {
+      tournament,
+      teams: teamsWithMembers,
+      userTeam: userTeam
+        ? {
+            ...userTeam,
+            memberCount: userTeam.memberCount,
+          }
+        : null,
+      status,
+      canEdit,
+      canDelete,
+      canViewLeaderboard,
+      statistics: {
+        totalTeams,
+        totalParticipants,
+        averageTeamSize,
+      },
+    };
+  },
+});
+
 export const upsert = mutation({
   args: {
     _id: v.optional(v.id("tournaments")),

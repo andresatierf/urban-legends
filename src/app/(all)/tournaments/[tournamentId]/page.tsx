@@ -25,7 +25,6 @@ import {
   EmptyHeader,
 } from "@/components/ui/empty";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
-import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -34,50 +33,21 @@ type Props = {
 };
 
 export default function TournamentDetailsPage({ params }: Props) {
-  const { user } = useUser();
-
   const { tournamentId } = use(params);
 
-  const tournament = useQuery(
-    api.tournaments.get,
-    tournamentId ? { tournamentId } : "skip",
-  );
-  const teams = useQuery(
-    api.teams.list,
+  const data = useQuery(
+    api.tournaments.getDetails,
     tournamentId ? { tournamentId } : "skip",
   );
 
-  const userTeam = useQuery(
-    api.teams.get,
-    user && tournamentId ? { userId: user._id, tournamentId } : "skip",
-  );
-
-  const teamMembers = useQuery(
-    api.teams.listMembers,
-    teams ? { teamIds: teams.map((t) => t._id) } : "skip",
-  );
-
-  const teamMemberCounts = teamMembers
-    ? teams?.reduce(
-        (acc, team) => {
-          const members = teamMembers.filter((m) => m.teamId === team._id);
-          acc[team._id] = members;
-          return acc;
-        },
-        {} as Record<Id<"teams">, typeof teamMembers>,
-      )
-    : {};
-
-  if (tournament === undefined) {
+  if (!data) {
     return <PageSkeleton headerTitle="Tournament Details" sections={2} />;
   }
-
-  if (tournament === null) return null;
 
   return (
     <>
       <SectionHeader as="h1" title="Tournament Details">
-        {!userTeam && <UpsertTeamFormDialog tournamentId={tournamentId} />}
+        {!data.userTeam && <UpsertTeamFormDialog tournamentId={tournamentId} />}
         <Button variant="outline" asChild>
           <Link href="/tournaments">
             <ArrowLeft />
@@ -86,13 +56,12 @@ export default function TournamentDetailsPage({ params }: Props) {
         </Button>
       </SectionHeader>
 
-      <TournamentDetailsCard tournament={tournament} teams={teams ?? []} />
+      <TournamentDetailsCard data={data} />
 
       <SectionHeader title="Teams" />
 
-      {teams &&
-        teams.length !== 0 &&
-        (userTeam ? (
+      {data.teams.length !== 0 &&
+        (data.userTeam ? (
           <Card variant="info">
             <CardHeader>
               <CardTitle>Your Team</CardTitle>
@@ -102,9 +71,9 @@ export default function TournamentDetailsPage({ params }: Props) {
             </CardHeader>
             <CardContent className="flex items-center justify-between">
               <div>
-                <p className="font-medium">{userTeam.name}</p>
+                <p className="font-medium">{data.userTeam.name}</p>
                 <Badge variant="secondary">
-                  {teamMemberCounts?.[userTeam._id]?.length || 0} members
+                  {data.userTeam.memberCount} members
                 </Badge>
               </div>
               <Button
@@ -112,7 +81,7 @@ export default function TournamentDetailsPage({ params }: Props) {
                 variant="outline"
                 className="flex gap-2 xs:self-auto self-end"
               >
-                <Link href={`/teams/${userTeam._id}`}>View Team</Link>
+                <Link href={`/teams/${data.userTeam._id}`}>View Team</Link>
               </Button>
             </CardContent>
           </Card>
@@ -121,14 +90,14 @@ export default function TournamentDetailsPage({ params }: Props) {
         ))}
 
       <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
-        {teams && teams.length !== 0 ? (
-          teams.map((team) => (
+        {data.teams.length !== 0 ? (
+          data.teams.map((team) => (
             <TeamCard
               key={team._id}
               team={team}
-              memberCount={teamMemberCounts?.[team._id]?.length || 0}
-              isUserMember={userTeam?._id === team._id}
-              isUserInTeam={!!userTeam}
+              memberCount={team.memberCount}
+              isUserMember={data.userTeam?._id === team._id}
+              isUserInTeam={!!data.userTeam}
             />
           ))
         ) : (

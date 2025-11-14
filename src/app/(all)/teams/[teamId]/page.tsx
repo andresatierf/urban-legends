@@ -24,27 +24,24 @@ export default function TeamDetailsPage({ params }: Props) {
   const { teamId } = use(params);
   const { user } = useUser();
 
-  const team = useQuery(api.teams.get, teamId ? { teamId } : "skip");
-  const members =
-    useQuery(api.teams.listTeamMembers, teamId ? { teamId } : "skip") || [];
+  const data = useQuery(api.teams.getDetails, teamId ? { teamId } : "skip");
+
   const removeMember = useMutation(api.teams.removeMember);
 
-  const userMembership = members?.find((m) => m._id === user?._id);
-  const isCaptain = userMembership?.role === "captain";
-
-  // Separate captain and regular members
-  const captain = members.find((member) => member.role === "captain");
-  const regularMembers = members.filter((member) => member.role === "member");
-
-  if (!team || !members) {
+  if (!data) {
     return <PageSkeleton headerTitle="Team Details" sections={3} />;
   }
+
+  const regularMembers = data.members.filter(
+    (member) => member.role === "member",
+  );
+  const isCaptain = data.userMembership?.role === "captain";
 
   return (
     <>
       <SectionHeader as="h1" title="Team Details">
         <Button variant="outline" asChild>
-          <Link href={`/tournaments/${team?.tournamentId}`}>
+          <Link href={`/tournaments/${data.team.tournamentId}`}>
             <Trophy />
             View Tournament
           </Link>
@@ -57,14 +54,14 @@ export default function TeamDetailsPage({ params }: Props) {
         </Button>
       </SectionHeader>
 
-      <TeamDetailsCard team={team} />
+      <TeamDetailsCard data={data} />
 
-      {(captain || regularMembers.length !== 0) && (
+      {(data.captain || regularMembers.length !== 0) && (
         <>
           <SectionHeader title="Team" />
-          {captain ? (
+          {data.captain ? (
             <TeamMemberCard
-              member={captain}
+              member={data.captain}
               memberRole="captain"
               canRemove={false}
             />
@@ -90,14 +87,16 @@ export default function TeamDetailsPage({ params }: Props) {
               ))}
             </div>
           ) : (
-            <InviteMemberCard team={team} isCaptain={isCaptain} />
+            <InviteMemberCard team={data.team} isCaptain={isCaptain} />
           )}
         </>
       )}
 
       <SectionHeader title="Invites and Requests" />
       <InvitedUsersList teamId={teamId} canCancel={isCaptain} />
-      {team.visibility !== "private" && <JoinRequestsList teamId={teamId} />}
+      {data.team.visibility !== "private" && (
+        <JoinRequestsList teamId={teamId} />
+      )}
     </>
   );
 }

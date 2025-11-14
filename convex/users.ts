@@ -56,6 +56,89 @@ export const getById = query({
   },
 });
 
+/**
+ * Get comprehensive user details with all related entities and permissions.
+ * This query follows the pattern established by submissions.getDetails to provide
+ * a single, efficient query for detail pages.
+ */
+export const getDetails = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await getCurrentUserOrThrow(ctx);
+
+    // Fetch user
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Fetch roles for the target user
+    const [roles, teamMemberships, allSubmissions] = await Promise.all([
+      getRolesForUser(ctx, user._id),
+      ctx.db
+        .query("teamMembers")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .collect(),
+      ctx.db
+        .query("submissions")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .collect(),
+    ]);
+
+    // Fetch teams with tournament context
+    const teamsWithTournaments = await Promise.all(
+      teamMemberships.map(async (membership) => {
+        const team = await ctx.db.get(membership.teamId);
+        if (!team) return null;
+
+        const tournament = await ctx.db.get(team.tournamentId);
+
+        return {
+          ...team,
+          tournamentName: tournament?.name || "Unknown Tournament",
+          role: membership.role,
+        };
+      }),
+    );
+
+    const teams = teamsWithTournaments.filter((t) => t !== null);
+
+    const approvedSubmissions = allSubmissions.filter(
+      (s) => s.state === "approved",
+    );
+
+    // Calculate total points earned
+    const totalPointsEarned = approvedSubmissions.reduce(
+      (sum, s) => sum + (s.pointsEarned || 0),
+      0,
+    );
+
+    // Determine permissions
+    const isAdmin = currentUser.roleNames.includes("admin");
+    const canManageRoles = isAdmin;
+    const isViewingSelf = currentUser._id === args.userId;
+
+    return {
+      user: {
+        ...user,
+        roles,
+        roleNames: roles.map((r) => r.name),
+      },
+      statistics: {
+        teamCount: teams.length,
+        submissionCount: allSubmissions.length,
+        approvedSubmissionCount: approvedSubmissions.length,
+        totalPointsEarned,
+      },
+      teams,
+      canManageRoles,
+      isViewingSelf,
+    };
+  },
+});
+
 export const current = query({
   args: {},
   handler: async (ctx) => {

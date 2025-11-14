@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import {
   ChartArea,
   Crown,
@@ -11,85 +12,84 @@ import {
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useUser } from "@/hooks/useUser";
 import { api } from "../../../convex/_generated/api";
-import type { Doc } from "../../../convex/_generated/dataModel";
 import { DetailsCard } from "../details-card";
 import { InviteMemberFormDialog } from "../form/invite-member-form";
 import { TransferCaptaincyFormDialog } from "../form/transfer-captaincy-form";
 import { UpsertTeamFormDialog } from "../form/upsert-team-form";
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 
-type Props = {
-  team?: Doc<"teams">;
-  score?: number;
+interface TeamDetailsCardProps {
+  data?: FunctionReturnType<typeof api.teams.getDetails>;
   className?: string;
-};
+}
 
-export function TeamDetailsCard({ team, score, className }: Props) {
-  const { user } = useUser();
+export function TeamDetailsCard({ data, className }: TeamDetailsCardProps) {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [editTeamDialogOpen, setEditTeamDialogOpen] = useState(false);
   const [transferCaptaincyDialogOpen, setTransferCaptaincyDialogOpen] =
     useState(false);
 
-  const tournament = useQuery(
-    api.tournaments.get,
-    team ? { tournamentId: team.tournamentId } : "skip",
-  );
-  const teamMembers = useQuery(
-    api.teams.listMembers,
-    team ? { teamIds: team._id } : "skip",
-  );
-
   const deleteTeam = useMutation(api.teams.removeUserTeam);
   const leaveTeam = useMutation(api.teams.leaveTeam);
 
-  const userMembership = teamMembers?.find((m) => m.userId === user?._id);
-  const isCaptain = userMembership?.role === "captain";
-
   const handleDeleteTeam = useCallback(async () => {
-    if (!team) return;
+    if (!data) return;
 
     try {
-      await deleteTeam({ teamId: team._id });
+      await deleteTeam({ teamId: data.team._id });
       toast.success("Team deleted successfully");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to delete team",
       );
     }
-  }, [deleteTeam, team]);
+  }, [deleteTeam, data]);
 
   const handleLeaveTeam = useCallback(async () => {
-    if (!team) return;
+    if (!data) return;
 
     try {
-      await leaveTeam({ teamId: team._id });
+      await leaveTeam({ teamId: data.team._id });
       toast.success("Successfully left the team");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to leave team",
       );
     }
-  }, [leaveTeam, team]);
+  }, [leaveTeam, data]);
 
   const details = useMemo(() => {
-    if (!team) return [];
+    if (!data) return [];
 
-    return [
-      { key: "tournament", value: tournament?.name || "" },
-      { key: "score", value: `${score || 0} pts` },
+    const baseDetails = [
+      { key: "tournament", value: data.tournament?.name || "Unknown" },
+      { key: "score", value: `${data.statistics.points} pts` },
+      { key: "members", value: `${data.statistics.memberCount}` },
+      { key: "submissions", value: `${data.statistics.submissionCount}` },
+      {
+        key: "approval rate",
+        value: `${(data.statistics.approvalRate * 100).toFixed(1)}%`,
+      },
     ];
-  }, [score, tournament, team]);
+
+    if (data.captain) {
+      baseDetails.push({
+        key: "captain",
+        value: data.captain.name,
+      });
+    }
+
+    return baseDetails;
+  }, [data]);
 
   const actions = useMemo(() => {
-    if (!team) return [];
+    if (!data) return [];
 
     return [
       {
         label: "View statistics",
-        href: `/teams/${team._id}/statistics`,
+        href: `/teams/${data.team._id}/statistics`,
         icon: ChartArea,
         condition: true,
         separator: "after" as const,
@@ -99,37 +99,37 @@ export function TeamDetailsCard({ team, score, className }: Props) {
         label: "Invite member",
         onClick: () => setInviteDialogOpen(true),
         icon: UserPlus,
-        condition: isCaptain,
+        condition: data.canInvite,
       },
       {
         label: "Edit team",
         onClick: () => setEditTeamDialogOpen(true),
         icon: Pencil,
-        condition: isCaptain,
+        condition: data.canEdit,
       },
       {
         label: "Transfer captaincy",
         onClick: () => setTransferCaptaincyDialogOpen(true),
         icon: Crown,
-        condition: isCaptain,
+        condition: data.canTransferCaptaincy,
       },
       {
         label: "Leave team",
         onClick: handleLeaveTeam,
         icon: DoorOpen,
-        condition: !isCaptain,
+        condition: data.canLeave,
       },
       {
         label: "Delete team",
         onClick: handleDeleteTeam,
         icon: Trash2,
-        condition: isCaptain,
+        condition: data.canDelete,
         separator: "before" as const,
       },
     ];
-  }, [handleDeleteTeam, handleLeaveTeam, isCaptain, team]);
+  }, [data, handleDeleteTeam, handleLeaveTeam]);
 
-  if (!team) {
+  if (!data) {
     return <DetailsCardSkeleton detailsCount={2} className={className} />;
   }
 
@@ -138,22 +138,22 @@ export function TeamDetailsCard({ team, score, className }: Props) {
       <InviteMemberFormDialog
         open={inviteDialogOpen}
         onOpenChange={setInviteDialogOpen}
-        teamId={team._id}
-        tournamentId={team.tournamentId}
+        teamId={data.team._id}
+        tournamentId={data.team.tournamentId}
       />
       <UpsertTeamFormDialog
         open={editTeamDialogOpen}
         onOpenChange={setEditTeamDialogOpen}
-        tournamentId={team.tournamentId}
-        team={team}
+        tournamentId={data.team.tournamentId}
+        team={data.team}
       />
       <TransferCaptaincyFormDialog
         open={transferCaptaincyDialogOpen}
         onOpenChange={setTransferCaptaincyDialogOpen}
-        teamId={team._id}
+        teamId={data.team._id}
       />
       <DetailsCard
-        title={team.name}
+        title={data.team.name}
         details={details}
         actions={actions}
         className={className}
