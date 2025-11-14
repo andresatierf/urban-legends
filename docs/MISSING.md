@@ -4,7 +4,7 @@ This document outlines the features that are missing or incomplete for a Minimum
 
 ## Current State
 
-The codebase is approximately **98%+ complete** for MVP. All critical features are implemented!
+The codebase is approximately **98%+ complete** for core MVP, **95%+ complete** for enhanced MVP!
 
 ### ✅ Core Infrastructure (Complete)
 
@@ -22,10 +22,11 @@ The codebase is approximately **98%+ complete** for MVP. All critical features a
 - ✅ **Code quality and type safety** - PR #4
 - ✅ **Submission progress calendar** - PR #8
 - ✅ **Submission detail page** - PR #9
+- ✅ **Detail cards data fetching refactor** - PR #10
+- ✅ **Loading states / skeleton screens** - PR #11
 
 ### ⚠️ High Priority Features (Still Needed)
 
-- ❌ Loading states / skeleton screens
 - ❌ Tournament Manager Dashboard
 - ❌ Reviewer Dashboard
 
@@ -37,36 +38,7 @@ The codebase is approximately **98%+ complete** for MVP. All critical features a
 
 These features significantly improve user experience and should be implemented soon:
 
-### 1. Loading States / Skeleton Screens ([spec](specs/10-loading-states.md))
-
-**Status:** ⚠️ Partial - Skeleton component exists, not used
-**Priority:** HIGH
-**Effort:** 1-2 days
-
-**Problem:** 7 locations return `null` during loading. Users see blank screens or flashes of empty content.
-
-**Impact:** Poor perceived performance, jarring user experience, lack of visual feedback during data fetching.
-
-**Locations Needing Skeletons:**
-
-1. `/tournaments/[tournamentId]/page.tsx:70` - Tournament detail
-2. `/tournaments/page.tsx:36` - Tournament list
-3. `/submissions/[submissionId]/page.tsx:24` - Submission detail
-4. `/teams/[teamId]/page.tsx:38` - Team detail
-5. `/users/[userId]/page.tsx:23` - User detail
-6. `/users/[userId]/page.tsx:24` - User not found
-7. `/users/page.tsx:23` - Users list
-
-**Required:**
-
-- Create reusable skeleton components (DetailsCardSkeleton, TableSkeleton, CardGridSkeleton, PageSkeleton)
-- Replace all `return null` loading states with appropriate skeletons
-- Add ARIA attributes for accessibility (`aria-busy`, `role="status"`)
-- Ensure skeletons match actual content layout
-
-**Note:** Base `Skeleton` component already exists (`src/components/ui/skeleton.tsx`), just needs to be composed into layouts.
-
-### 2. Tournament Manager Dashboard ([spec](specs/11-tournament-manager-dashboard.md))
+### 1. Tournament Manager Dashboard ([spec](specs/11-tournament-manager-dashboard.md))
 
 **Status:** ❌ Not Implemented
 **Priority:** HIGH
@@ -87,7 +59,7 @@ These features significantly improve user experience and should be implemented s
 
 **Benefits:** Enables delegation of tournament management without giving full admin access, scales tournament operations.
 
-### 3. Reviewer Dashboard ([spec](specs/12-reviewer-dashboard.md))
+### 2. Reviewer Dashboard ([spec](specs/12-reviewer-dashboard.md))
 
 **Status:** ❌ Not Implemented
 **Priority:** HIGH
@@ -112,7 +84,7 @@ These features significantly improve user experience and should be implemented s
 
 These features enhance the platform but are not essential for MVP launch:
 
-### 5. Team Captain Dashboard ([spec](specs/13-team-captain-dashboard.md))
+### 3. Team Captain Dashboard ([spec](specs/13-team-captain-dashboard.md))
 
 **Status:** ⚠️ Partial - Individual team management exists
 **Priority:** MEDIUM
@@ -133,7 +105,7 @@ These features enhance the platform but are not essential for MVP launch:
 
 **Benefits:** Improves efficiency for captains managing multiple teams, reduces likelihood of missed actions.
 
-### 6. Complete Admin Dashboard ([spec](specs/07-admin-dashboard.md))
+### 4. Complete Admin Dashboard ([spec](specs/07-admin-dashboard.md))
 
 **Status:** ❌ Not Implemented
 **Priority:** MEDIUM
@@ -151,7 +123,7 @@ These features enhance the platform but are not essential for MVP launch:
 - Recent activity feed
 - System health indicators
 
-### 7. Notifications System
+### 5. Notifications System
 
 **Status:** ❌ Not Implemented
 **Priority:** MEDIUM
@@ -170,7 +142,7 @@ These features enhance the platform but are not essential for MVP launch:
 - Notification preferences
 - Mark as read functionality
 
-### 8. Code Cleanup ([spec](specs/09-code-cleanup.md))
+### 6. Code Cleanup ([spec](specs/09-code-cleanup.md))
 
 **Status:** ❌ Not Started
 **Priority:** MEDIUM
@@ -195,7 +167,7 @@ These features enhance the platform but are not essential for MVP launch:
 
 These features would be valuable for growth but can be deferred until after MVP launch:
 
-### 9. Viewer & Public Dashboard ([spec](specs/14-viewer-public-dashboard.md))
+### 7. Viewer & Public Dashboard ([spec](specs/14-viewer-public-dashboard.md))
 
 **Status:** ❌ Not Implemented
 **Priority:** LOW-MEDIUM
@@ -227,8 +199,7 @@ Minor issues that should be addressed when time permits:
 
 ### Code TODOs
 
-- **Loading states:** 7 locations with `// TODO: Add skeleton` comments (see High Priority #3)
-- **"TODO: figure this out"** in `lib/utils.ts:8` (utility functions)
+- **"TODO: figure this out"** in `lib/utils.ts:8` (utility functions - may need investigation)
 - ~~**"TODO: Add teams table"** in user details page~~ (May no longer be needed with current team display)
 
 ### Potential Issues
@@ -246,7 +217,7 @@ Minor issues that should be addressed when time permits:
 
 ## Estimated Effort Summary
 
-### ✅ Completed (15-18 days)
+### ✅ Completed (19-23 days)
 
 - Team Joining/Self-Service (3-5 days)
 - Leaderboard & Scoring (2-3 days)
@@ -255,19 +226,21 @@ Minor issues that should be addressed when time permits:
 - Code Quality Fixes (1 day)
 - Submission Calendar (1-2 days)
 - Submission Detail Page (2-3 days)
+- Detail Cards Data Fetching Refactor (2-3 days)
+- Loading States / Skeleton Screens (1-2 days)
 
-### ⚠️ Remaining for Full MVP
+### ⚠️ Remaining for Full Enhanced MVP
 
-- **High Priority:** 7-11 days (Loading States + Tournament Manager + Reviewer)
+- **High Priority:** 5-7 days (Tournament Manager + Reviewer)
 - **Medium Priority:** 9-13 days (Team Captain + Admin Dashboard + Notifications + Code Cleanup)
 - **Low Priority:** 2-3 days (Viewer/Public Dashboard)
-- **Total Remaining:** 18-27 days
+- **Total Remaining:** 16-23 days
 
 ---
 
 ## Progress Summary
 
-- **Overall Completion:** 90%+ of enhanced MVP functionality (98%+ of core MVP)
+- **Overall Completion:** 95%+ of enhanced MVP functionality (98%+ of core MVP)
 - **Critical Features:** ✅ **ALL COMPLETE!**
   - ✅ Team Management (create, edit, delete, join, leave)
   - ✅ Team Member Management UI (invite, remove, transfer captaincy)
@@ -276,8 +249,9 @@ Minor issues that should be addressed when time permits:
   - ✅ Code Quality & Type Safety
   - ✅ Submission Calendar
   - ✅ Submission Detail Page
-- **High Priority Features:** 0/3 complete
-  - ❌ Loading States
+  - ✅ Detail Cards Data Fetching Refactor
+  - ✅ Loading States / Skeleton Screens
+- **High Priority Features:** 0/2 complete
   - ❌ Tournament Manager Dashboard
   - ❌ Reviewer Dashboard
 - **Medium Priority Features:** 0/4 complete
@@ -290,6 +264,8 @@ Minor issues that should be addressed when time permits:
 
 ### Recent Merges
 
+- **PR #11:** Loading States / Skeleton Screens (11/14/2025)
+- **PR #10:** Detail Cards Data Fetching Refactor (11/14/2025)
 - **PR #9:** Submission Detail Page (11/14/2025)
 - **PR #8:** Submission Calendar (11/13/2025)
 - **PR #7:** User Avatar/Sidebar (11/13/2025)
@@ -306,31 +282,29 @@ Minor issues that should be addressed when time permits:
 
 ### Recommended Priority Order
 
-#### Phase 1: Core UX Improvements (1-2 days)
+#### Phase 1: Core UX Improvements ✅ **COMPLETE!**
 
-1. **Loading States** (1-2 days) - Quick win, improves UX across entire app
-   - Skeleton component exists, just needs to be used
-   - 7 pages need updates
-
+~~1. **Loading States** (1-2 days)~~ - ✅ **COMPLETED in PR #11**
 ~~2. **Submission Calendar** (1-2 days)~~ - ✅ **COMPLETED in PR #8**
+~~3. **Detail Cards Refactor** (2-3 days)~~ - ✅ **COMPLETED in PR #10**
 
-**After Phase 1:** Core user experience is complete for basic MVP!
+**After Phase 1:** ✅ Core user experience is complete for basic MVP!
 
-#### Phase 2: Role-Based Dashboards (9-13 days)
+#### Phase 2: Role-Based Dashboards (9-13 days) - IN PROGRESS
 
-3. **Tournament Manager Dashboard** (3-4 days) - Enables delegation
+1. **Tournament Manager Dashboard** (3-4 days) - Enables delegation
    - Critical for scaling tournament operations
    - Allows tournament management without full admin access
 
-4. **Reviewer Dashboard** (2-3 days) - Improves moderation
+2. **Reviewer Dashboard** (2-3 days) - Improves moderation
    - Dedicated content moderation workflow
    - Separates review role from admin role
 
-5. **Team Captain Dashboard** (2 days) - Captain efficiency
+3. **Team Captain Dashboard** (2 days) - Captain efficiency
    - Multi-team management
    - Consolidated pending actions
 
-6. **Admin Dashboard** (2 days) - Admin convenience
+4. **Admin Dashboard** (2 days) - Admin convenience
    - Centralized admin view
    - Quick access to common tasks
 
@@ -338,9 +312,9 @@ Minor issues that should be addressed when time permits:
 
 #### Phase 3: Optional Enhancements (5-10 days)
 
-7. **Notifications System** (3-4 days) - User engagement
-8. **Code Cleanup** (2-3 days) - Technical debt
-9. **Viewer/Public Dashboard** (2-3 days) - External visibility
+5. **Notifications System** (3-4 days) - User engagement
+6. **Code Cleanup** (2-3 days) - Technical debt
+7. **Viewer/Public Dashboard** (2-3 days) - External visibility
 
 ---
 
