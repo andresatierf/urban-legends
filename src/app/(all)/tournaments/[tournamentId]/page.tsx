@@ -68,9 +68,11 @@ export default function TournamentDetailsPage({ params }: Props) {
       )
     : {};
 
-  if (!tournament) {
+  if (tournament === undefined) {
     return <PageSkeleton headerTitle="Tournament Details" sections={2} />;
   }
+
+  if (tournament === null) return null;
 
   return (
     <>

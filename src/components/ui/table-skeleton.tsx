@@ -23,7 +23,7 @@ export function TableSkeleton({
   className,
 }: Props) {
   return (
-    <Card className={className}>
+    <Card className={className} role="status" aria-busy="true">
       <Table>
         <TableHeader className="bg-gray-50">
           <TableRow>
