@@ -20,10 +20,11 @@ The codebase is approximately **98%+ complete** for MVP. All critical features a
 - ✅ **Leaderboard and scoring system** - PR #5
 - ✅ **Admin role management UI** - PR #6
 - ✅ **Code quality and type safety** - PR #4
+- ✅ **Submission progress calendar** - PR #8
+- ✅ **Submission detail page** - PR #9
 
 ### ⚠️ High Priority Features (Still Needed)
 
-- ✅ Submission progress calendar (PR #8)
 - ❌ Loading states / skeleton screens
 - ❌ Tournament Manager Dashboard
 - ❌ Reviewer Dashboard
@@ -245,7 +246,7 @@ Minor issues that should be addressed when time permits:
 
 ## Estimated Effort Summary
 
-### ✅ Completed (12-15 days)
+### ✅ Completed (15-18 days)
 
 - Team Joining/Self-Service (3-5 days)
 - Leaderboard & Scoring (2-3 days)
@@ -253,6 +254,7 @@ Minor issues that should be addressed when time permits:
 - Admin Role Management (1 day)
 - Code Quality Fixes (1 day)
 - Submission Calendar (1-2 days)
+- Submission Detail Page (2-3 days)
 
 ### ⚠️ Remaining for Full MVP
 
@@ -265,7 +267,7 @@ Minor issues that should be addressed when time permits:
 
 ## Progress Summary
 
-- **Overall Completion:** 88%+ of enhanced MVP functionality (98%+ of core MVP)
+- **Overall Completion:** 90%+ of enhanced MVP functionality (98%+ of core MVP)
 - **Critical Features:** ✅ **ALL COMPLETE!**
   - ✅ Team Management (create, edit, delete, join, leave)
   - ✅ Team Member Management UI (invite, remove, transfer captaincy)
@@ -273,8 +275,8 @@ Minor issues that should be addressed when time permits:
   - ✅ Admin Role Management
   - ✅ Code Quality & Type Safety
   - ✅ Submission Calendar
-- **High Priority Features:** 1/4 complete
-  - ✅ Submission Calendar (PR #8)
+  - ✅ Submission Detail Page
+- **High Priority Features:** 0/3 complete
   - ❌ Loading States
   - ❌ Tournament Manager Dashboard
   - ❌ Reviewer Dashboard
@@ -288,6 +290,7 @@ Minor issues that should be addressed when time permits:
 
 ### Recent Merges
 
+- **PR #9:** Submission Detail Page (11/14/2025)
 - **PR #8:** Submission Calendar (11/13/2025)
 - **PR #7:** User Avatar/Sidebar (11/13/2025)
 - **PR #6:** Admin Role Management (11/12/2025)

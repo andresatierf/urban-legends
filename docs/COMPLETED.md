@@ -4,7 +4,7 @@ This document tracks all completed features for the Urban Legends tournament tra
 
 ## Overview
 
-The platform has successfully implemented **7 major features** representing approximately **12-15 days of development effort**. These features provide core functionality for tournament management, team collaboration, scoring, submission tracking, and administration.
+The platform has successfully implemented **8 major features** representing approximately **15-18 days of development effort**. These features provide core functionality for tournament management, team collaboration, scoring, submission tracking, detailed submission views, and administration.
 
 ---
 
@@ -487,6 +487,185 @@ The spec mentioned 77 lines of commented calendar code. This implementation comp
 
 ---
 
+## ✅ 8. Submission Detail Page
+
+**Spec:** [specs/done/16-submission-detail-page.md](specs/done/16-submission-detail-page.md)
+**PR:** #9
+**Completed:** 2025-11-14
+**Effort:** 2-3 days
+
+### Summary
+
+Comprehensive submission detail page providing full visibility into submission information, participants, approval status, and context for team members, captains, and admins.
+
+### Implemented Features
+
+- ✅ Complete submission information display (date, description, tier, state, points)
+- ✅ Team exercise vs individual exercise classification
+- ✅ Submitter and participant information with avatars
+- ✅ Tournament and team context with navigation links
+- ✅ Approval/rejection metadata (who managed, when)
+- ✅ Admin action controls (approve, reject, delete)
+- ✅ Edit capability for submission owners
+- ✅ Permission-based access control (owner, team members, admins)
+- ✅ Real-time updates via Convex subscriptions
+
+### Backend Implementation
+
+**Query:**
+
+- `submissions.getDetail` - Comprehensive detail query with permission checks
+  - Fetches submission with all related entities (team, tournament, users)
+  - Validates user is owner, team member, or admin
+  - Calculates team exercise status and participation rate
+  - Returns permission flags (canEdit, canApprove, canReject, canDelete)
+  - Enriches users with role information
+  - Handles deleted entities gracefully
+
+**Permission Model:**
+
+- Access allowed for: submission owner, team members, admins
+- Edit allowed for: owner (if not approved)
+- Approve/Reject allowed for: admins (if pending)
+- Delete allowed for: owner and admins (if not rejected/deleted)
+
+### Frontend Implementation
+
+**Components:**
+
+- `SubmissionDetailsCard` - Main detail display card
+  - Uses DetailsCard pattern for consistency
+  - Shows all submission fields with badges
+  - Action dropdown with role-based buttons
+  - Integrates edit dialog
+  - Links to related entities (team, tournament)
+- `SubmitterInfo` - Participant display section
+  - Shows submitter with avatar and badges
+  - Lists all teammates who participated
+  - Displays admin badges where applicable
+  - Responsive card layout
+
+**Page:**
+
+- `/submissions/[submissionId]` - Complete detail page
+  - Replaced edit-only view with comprehensive display
+  - Back navigation to submissions list
+  - Two-section layout: details + participants
+  - Loading states with skeleton placeholders
+
+### Key Features
+
+**Transparency:**
+
+- Complete visibility into submission status
+- Clear approval workflow tracking
+- Who approved/rejected with metadata
+- Points calculation display
+
+**Navigation:**
+
+- Links to team detail page
+- Links to tournament detail page
+- Back to submissions list
+- Edit submission (if allowed)
+
+**Role-Based Actions:**
+
+- Submission owner: Edit (if pending), Delete
+- Team members: View only
+- Admins: Approve, Reject, Delete, View all details
+
+**Accessibility:**
+
+- ARIA labels on all interactive elements
+- Keyboard navigation support
+- Screen reader friendly
+- Color contrast compliant badges
+
+**Real-Time Updates:**
+
+- Instant reflection of approval/rejection
+- Live state changes via Convex
+- Toast notifications for actions
+- Optimistic UI updates
+
+### Implementation Notes
+
+**Permission Architecture:**
+
+The backend enforces strict access control:
+- Submission owner can always view
+- Any team member can view (not just captain)
+- Admins have full access
+- Non-authorized users get permission error
+
+**Data Enrichment:**
+
+Query fetches and enriches related data:
+- Submission with full details
+- Team and tournament information
+- Submitter with role information
+- All teammates with role information
+- Manager (admin who approved/rejected)
+
+**Team Exercise Detection:**
+
+Reuses existing calculation logic:
+- Counts teammates participating
+- Calculates participation rate vs total team size
+- Compares to tournament threshold
+- Determines team vs individual exercise
+- Displays appropriately in UI
+
+**Points Display:**
+
+- Shows points earned if approved
+- Explains tier (base vs advanced)
+- Shows exercise type (team vs individual)
+- Contextualizes with tournament scoring rules
+
+### Database Schema
+
+**No schema changes required.**
+
+Used existing fields:
+- `submissions.managedBy` - Who approved/rejected
+- `submissions.pointsEarned` - Points calculated on approval
+- `submissions.tier` - Base or advanced classification
+- `submissions.teammates` - Participating users array
+
+### Benefits
+
+**For Users:**
+
+- Understand submission status clearly
+- See who participated in activity
+- Track points earned
+- Know who approved/rejected and why
+
+**For Team Captains:**
+
+- Monitor team submissions
+- Verify participation
+- Track team performance
+- View approval history
+
+**For Admins:**
+
+- Complete context for approval decisions
+- Quick access to approve/reject actions
+- View all submission details
+- Audit trail of approvals
+
+**For Platform:**
+
+- Improved transparency
+- Reduced confusion about status
+- Better user experience
+- Enhanced trust in approval process
+
+---
+
 ## Infrastructure & Foundation
 
 The following foundational systems were already in place before feature development:
@@ -525,15 +704,15 @@ The following foundational systems were already in place before feature developm
 
 ### Development Effort
 
-- **Total Completed:** 12-15 days of development
-- **Features Completed:** 7 major features
-- **PRs Merged:** 8 pull requests
-- **Files Modified:** 120+ files across backend and frontend
+- **Total Completed:** 15-18 days of development
+- **Features Completed:** 8 major features
+- **PRs Merged:** 9 pull requests
+- **Files Modified:** 130+ files across backend and frontend
 
 ### Code Metrics
 
-- **Backend Functions:** 50+ Convex mutations and queries
-- **Frontend Components:** 40+ React components
+- **Backend Functions:** 55+ Convex mutations and queries
+- **Frontend Components:** 45+ React components
 - **Database Tables:** 15+ Convex tables
 - **Type Safety:** 0 TypeScript errors, 0 linting errors
 
@@ -545,6 +724,7 @@ The following foundational systems were already in place before feature developm
 - ✅ Role Management (assign, remove, audit)
 - ✅ User Self-Service (teams, invitations, requests)
 - ✅ Submission Calendar (visual progress tracking, statistics)
+- ✅ Submission Detail Pages (comprehensive submission view, approval workflow)
 - ✅ Code Quality (type safety, validation, linting)
 
 ### User Experience
@@ -559,6 +739,7 @@ The following foundational systems were already in place before feature developm
 
 ## Recent Merges
 
+- **PR #9:** Submission Detail Page (11/14/2025)
 - **PR #8:** Submission Calendar (11/13/2025)
 - **PR #7:** User Avatar/Sidebar (11/13/2025)
 - **PR #6:** Admin Role Management (11/12/2025)
@@ -578,14 +759,15 @@ See [MISSING.md](MISSING.md) for remaining features and priorities.
 
 **High Priority:**
 
-- Submission Progress Calendar (1-2 days)
-- Team Member Management UI (1-2 days)
 - Loading States / Skeleton Screens (1-2 days)
+- Tournament Manager Dashboard (3-4 days)
+- Reviewer Dashboard (2-3 days)
 
 **Medium Priority:**
 
+- Team Captain Dashboard (2 days)
 - Complete Admin Dashboard (2 days)
 - Code Cleanup (2-3 days)
 - Notifications System (3-4 days)
 
-**Overall MVP Status:** 90-95% complete
+**Overall MVP Status:** 92-96% complete
