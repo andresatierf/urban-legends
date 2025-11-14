@@ -739,7 +739,7 @@ export const recalculatePoints = mutation({
       const totalTeamMembers = teamMembers.length;
       const participantCount = Math.min(
         totalTeamMembers,
-        submission.teammates.length + 1,
+        (submission.teammates?.length ?? 0) + 1,
       );
       const participationRate =
         totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;

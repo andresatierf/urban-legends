@@ -2,7 +2,6 @@
 
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery } from "convex/react";
-import { CircleX, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -13,7 +12,6 @@ import { useUser } from "@/hooks/useUser";
 import { toastFormValues } from "@/lib/form";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
-import { Combobox } from "../ui/combobox";
 import {
   Dialog,
   DialogClose,
@@ -24,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
+import { FieldGroup } from "../ui/field";
 
 const formSchema = z.object({
   teamId: z.custom<Id<"teams">>(
@@ -33,9 +31,7 @@ const formSchema = z.object({
   ),
   description: z.string().optional(),
   date: z.string().min(1, "You must select a date."),
-  teammateIds: z.array(
-    z.custom<Id<"users">>((val) => typeof val === "string" && val.length >= 1),
-  ),
+  submissionType: z.union([z.literal("individual"), z.literal("team")]),
   tier: z.union([z.literal("base"), z.literal("advanced")]),
 });
 
@@ -78,7 +74,7 @@ export function UpsertSubmissionFormDialog({
       date: submission?.date ?? date ?? "",
       description: submission?.description ?? "",
       teamId: submission?.teamId ?? teamId ?? "",
-      teammateIds: submission?.teammates ?? [],
+      submissionType: submission?.submissionType ?? "individual",
       tier: submission?.tier ?? "base",
     } as z.input<typeof formSchema>,
     validators: {
@@ -109,27 +105,6 @@ export function UpsertSubmissionFormDialog({
     (state) => state.values.teamId as Id<"teams">,
   );
 
-  const team = teams.find((t) => t._id === formTeamId);
-
-  const tournament = useQuery(
-    api.tournaments.get,
-    team ? { tournamentId: team.tournamentId } : "skip",
-  );
-
-  const teamMembers =
-    useQuery(
-      api.teams.listTeamMembers,
-      formTeamId ? { teamId: formTeamId, excludeSelf: true } : "skip",
-    ) || [];
-
-  const teammateOptions = useMemo(
-    () =>
-      teamMembers?.map((teammate) => ({
-        value: teammate._id,
-        label: `${teammate.name || "unknown name"} (${teammate.email})`,
-      })) ?? [],
-    [teamMembers],
-  );
 
   return (
     <Dialog
@@ -174,15 +149,7 @@ export function UpsertSubmissionFormDialog({
           <FieldGroup>
             {!teamId && (
               <form.AppField name="teamId">
-                {(field) => (
-                  <field.ComboboxField
-                    label="Team"
-                    options={teamOptions}
-                    onChange={() => {
-                      form.clearFieldValues("teammateIds");
-                    }}
-                  />
-                )}
+                {(field) => <field.ComboboxField label="Team" options={teamOptions} />}
               </form.AppField>
             )}
             <form.AppField name="description">
@@ -209,92 +176,18 @@ export function UpsertSubmissionFormDialog({
                 />
               )}
             </form.AppField>
+            <form.AppField name="submissionType">
+              {(field) => (
+                <field.SelectField
+                  label="Submission Type"
+                  options={[
+                    { value: "individual", label: "Individual" },
+                    { value: "team", label: "Team" },
+                  ]}
+                />
+              )}
+            </form.AppField>
           </FieldGroup>
-          {teamMembers.length > 0 && (
-            <FieldGroup className="mt-6">
-              <form.Field name="teammateIds" mode="array">
-                {(field) => {
-                  return (
-                    <Field>
-                      <div className="flex justify-between">
-                        <FieldLabel>Teammates</FieldLabel>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            formTeamId !== "" &&
-                            field.state.value.length <
-                              Math.min(
-                                tournament?.teamMaxSize || 9999,
-                                teamMembers.length,
-                              )
-                              ? field.pushValue("" as Id<"users">)
-                              : undefined
-                          }
-                          disabled={
-                            formTeamId === "" ||
-                            field.state.value.length >=
-                              Math.min(
-                                tournament?.teamMaxSize || 9999,
-                                teamMembers.length,
-                              )
-                          }
-                          type="button"
-                        >
-                          <Plus />
-                          Add teammate
-                        </Button>
-                      </div>
-                      {field.state.value.map((_, i) => {
-                        return (
-                          // biome-ignore lint/suspicious/noArrayIndexKey: no other key
-                          <form.Field key={i} name={`teammateIds[${i}]`}>
-                            {(subField) => {
-                              const isInvalid =
-                                subField.state.meta.isTouched &&
-                                !subField.state.meta.isValid;
-
-                              return (
-                                <Field>
-                                  <FieldLabel>Email</FieldLabel>
-                                  <div className="flex gap-2">
-                                    <Combobox
-                                      value={subField.state.value}
-                                      options={teammateOptions}
-                                      setValue={(value) => {
-                                        subField.handleChange(value);
-                                      }}
-                                      noSelectionText="Select a teammate..."
-                                      placeholder="Search teammate..."
-                                      disabled={formTeamId === ""}
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="solid"
-                                      color="destructive"
-                                      size="icon"
-                                      onClick={() => field.removeValue(i)}
-                                    >
-                                      <CircleX />
-                                    </Button>
-                                  </div>
-                                  {isInvalid && (
-                                    <FieldError
-                                      errors={subField.state.meta.errors}
-                                    />
-                                  )}
-                                </Field>
-                              );
-                            }}
-                          </form.Field>
-                        );
-                      })}
-                    </Field>
-                  );
-                }}
-              </form.Field>
-            </FieldGroup>
-          )}
 
           <form.Subscribe
             selector={(state) => [

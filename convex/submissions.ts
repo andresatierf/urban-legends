@@ -1,11 +1,156 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import {
   getCurrentUserOrThrow,
   getRolesForUser,
   validateIsAdmin,
 } from "./users";
+
+/**
+ * Internal helper function to create or update a submission group.
+ * Only processes TEAM activity submissions - individual submissions are not grouped.
+ */
+async function upsertSubmissionGroup(
+  ctx: MutationCtx,
+  args: {
+    teamId: Id<"teams">;
+    tournamentId: Id<"tournaments">;
+    date: string;
+  },
+) {
+  // Find all TEAM activity submissions for this team on this date
+  // (Individual submissions are NOT grouped)
+  const submissions = await ctx.db
+    .query("submissions")
+    .withIndex("by_team_and_date", (q) =>
+      q.eq("teamId", args.teamId).eq("date", args.date),
+    )
+    .filter((q) =>
+      q.and(
+        q.eq(q.field("submissionType"), "team"),
+        q.neq(q.field("state"), "deleted"),
+      ),
+    )
+    .collect();
+
+  if (submissions.length === 0) {
+    // All submissions deleted - delete group if exists
+    const existingGroup = await ctx.db
+      .query("submissionGroups")
+      .withIndex("by_team_and_date", (q) =>
+        q.eq("teamId", args.teamId).eq("date", args.date),
+      )
+      .first();
+
+    if (existingGroup) {
+      await ctx.db.delete(existingGroup._id);
+    }
+    return;
+  }
+
+  // Get current team member count
+  const teamMembers = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+    .collect();
+
+  const totalTeamMembers = teamMembers.length;
+  const participantCount = submissions.length;
+  const participationRate =
+    totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
+
+  // Get tournament for threshold
+  const tournament = await ctx.db.get(args.tournamentId);
+  if (!tournament) throw new Error("Tournament not found");
+
+  const scoringConfig = tournament.scoringConfig || {
+    individualPoints: { base: 1, advanced: 1 },
+    teamExercisePoints: { base: 1, advanced: 1 },
+    teamExerciseThreshold: 0.5,
+  };
+
+  const isTeamExercise =
+    participationRate >= scoringConfig.teamExerciseThreshold;
+
+  // Determine tier - use highest tier if mixed
+  const hasAdvanced = submissions.some((s) => s.tier === "advanced");
+  const tier: "base" | "advanced" = hasAdvanced ? "advanced" : "base";
+
+  // Determine group state - all must be same state
+  const states = new Set(submissions.map((s) => s.state));
+  let groupState: "pending" | "approved" | "rejected" | "deleted";
+
+  if (states.size === 1) {
+    groupState = Array.from(states)[0] as typeof groupState;
+  } else {
+    // Mixed states - default to pending
+    groupState = "pending";
+  }
+
+  // Calculate points if approved
+  let pointsEarned = 0;
+  if (groupState === "approved") {
+    pointsEarned = isTeamExercise
+      ? scoringConfig.teamExercisePoints[tier]
+      : scoringConfig.individualPoints[tier];
+  }
+
+  const now = new Date().toISOString();
+
+  // Find existing group
+  const existingGroup = await ctx.db
+    .query("submissionGroups")
+    .withIndex("by_team_and_date", (q) =>
+      q.eq("teamId", args.teamId).eq("date", args.date),
+    )
+    .first();
+
+  const groupData = {
+    teamId: args.teamId,
+    tournamentId: args.tournamentId,
+    date: args.date,
+    state: groupState,
+    tier,
+    participantCount,
+    totalTeamMembers,
+    participationRate,
+    isTeamExercise,
+    pointsEarned,
+    updatedAt: now,
+  };
+
+  if (existingGroup) {
+    // Update existing group
+    await ctx.db.patch(existingGroup._id, groupData);
+
+    // Update all submissions with group reference
+    for (const submission of submissions) {
+      if (submission.submissionGroupId !== existingGroup._id) {
+        await ctx.db.patch(submission._id, {
+          submissionGroupId: existingGroup._id,
+        });
+      }
+    }
+
+    return existingGroup._id;
+  }
+  // Create new group
+  const groupId = await ctx.db.insert("submissionGroups", {
+    ...groupData,
+    createdAt: now,
+  });
+
+  // Link all submissions to group
+  for (const submission of submissions) {
+    await ctx.db.patch(submission._id, {
+      submissionGroupId: groupId,
+    });
+  }
+
+  return groupId;
+}
 
 export const list = query({
   args: {
@@ -111,12 +256,13 @@ export const upsert = mutation({
     date: v.string(),
     teamId: v.id("teams"),
     description: v.optional(v.string()),
-    teammateIds: v.array(v.id("users")),
     tier: v.optional(v.union(v.literal("base"), v.literal("advanced"))),
+    submissionType: v.union(v.literal("individual"), v.literal("team")), // NEW - required
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
+    // Validate team membership
     const [membership, team] = await Promise.all([
       ctx.db
         .query("teamMembers")
@@ -130,38 +276,133 @@ export const upsert = mutation({
     if (!membership) throw new Error("You are not a member of this team");
     if (!team) throw new Error("Team not found");
 
+    // Get tournament for validation
+    const tournament = await ctx.db.get(team.tournamentId);
+    if (!tournament) throw new Error("Tournament not found");
+
+    // CONSTRAINT: Check daily submission limit per user
+    if (tournament.maxSubmissionsPerDay && !args._id) {
+      // Count existing submissions for this user on this date
+      const existingSubmissions = await ctx.db
+        .query("submissions")
+        .withIndex("by_user_and_date", (q) =>
+          q.eq("userId", user._id).eq("date", args.date),
+        )
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("tournamentId"), team.tournamentId),
+            q.neq(q.field("state"), "deleted"),
+          ),
+        )
+        .collect();
+
+      if (existingSubmissions.length >= tournament.maxSubmissionsPerDay) {
+        throw new Error(
+          `Daily submission limit reached (${tournament.maxSubmissionsPerDay} per day). You have already submitted ${existingSubmissions.length} time(s) today.`,
+        );
+      }
+    }
+
+    // CONSTRAINT: Only one team activity group per team per day
+    if (args.submissionType === "team") {
+      const existingGroup = await ctx.db
+        .query("submissionGroups")
+        .withIndex("by_team_and_date", (q) =>
+          q.eq("teamId", args.teamId).eq("date", args.date),
+        )
+        .first();
+
+      // Check if user already submitted for this team activity
+      if (existingGroup && !args._id) {
+        const userInGroup = await ctx.db
+          .query("submissions")
+          .withIndex("by_group", (q) =>
+            q.eq("submissionGroupId", existingGroup._id),
+          )
+          .filter((q) => q.eq(q.field("userId"), user._id))
+          .first();
+
+        if (userInGroup) {
+          throw new Error(
+            "You have already submitted for this team activity today",
+          );
+        }
+        // Otherwise, user can join the existing group
+      }
+    }
+
     const data = {
       date: args.date,
       userId: user._id,
       teamId: args.teamId,
       tournamentId: team.tournamentId,
       description: args.description,
-      teammates: args.teammateIds,
       tier: args.tier || "base",
+      submissionType: args.submissionType,
     };
 
+    let submissionId: Id<"submissions">;
+
     if (args._id) {
+      // UPDATE EXISTING SUBMISSION
       const submission = await ctx.db.get(args._id);
 
       if (!submission) throw new Error("Submission not found");
-
       if (submission.createdBy !== user._id) {
         throw new Error("You do not have permission to update this submission");
       }
-
       if (submission.state === "approved") {
         throw new Error("You cannot update an approved submission");
       }
 
-      return await ctx.db.patch(args._id, data);
+      // If changing submission type, need to handle grouping changes
+      const typeChanged = submission.submissionType !== args.submissionType;
+
+      await ctx.db.patch(args._id, data);
+      submissionId = args._id;
+
+      // If type changed, update groups accordingly
+      if (typeChanged) {
+        if (args.submissionType === "team") {
+          // Changed from individual to team - create/join group
+          await upsertSubmissionGroup(ctx, {
+            teamId: args.teamId,
+            tournamentId: team.tournamentId,
+            date: args.date,
+          });
+        } else {
+          // Changed from team to individual - remove from group
+          if (submission.submissionGroupId) {
+            await ctx.db.patch(submissionId, { submissionGroupId: undefined });
+            // Recalculate group without this submission
+            await upsertSubmissionGroup(ctx, {
+              teamId: args.teamId,
+              tournamentId: team.tournamentId,
+              date: args.date,
+            });
+          }
+        }
+      }
+    } else {
+      // CREATE NEW SUBMISSION
+      submissionId = await ctx.db.insert("submissions", {
+        ...data,
+        state: "pending",
+        createdBy: user._id,
+        pointsEarned: 0, // Will be calculated on approval
+      });
     }
 
-    return await ctx.db.insert("submissions", {
-      ...data,
-      state: "pending",
-      createdBy: user._id,
-      pointsEarned: 0, // Will be calculated on approval
-    });
+    // UPSERT SUBMISSION GROUP (only for team activities)
+    if (args.submissionType === "team") {
+      await upsertSubmissionGroup(ctx, {
+        teamId: args.teamId,
+        tournamentId: team.tournamentId,
+        date: args.date,
+      });
+    }
+
+    return submissionId;
   },
 });
 
@@ -241,19 +482,21 @@ export const getDetails = query({
       roleNames: submitterRoles.map(({ name }) => name),
     };
 
-    // Fetch teammates
-    const teammates = await Promise.all(
-      submission.teammates.map(async (teammateId) => {
-        const user = await ctx.db.get(teammateId);
-        if (!user) return null;
-        const roles = await getRolesForUser(ctx, user._id);
-        return {
-          ...user,
-          roles,
-          roleNames: roles.map(({ name }) => name),
-        };
-      }),
-    );
+    // Fetch teammates (if they exist)
+    const teammates = submission.teammates
+      ? await Promise.all(
+          submission.teammates.map(async (teammateId) => {
+            const user = await ctx.db.get(teammateId);
+            if (!user) return null;
+            const roles = await getRolesForUser(ctx, user._id);
+            return {
+              ...user,
+              roles,
+              roleNames: roles.map(({ name }) => name),
+            };
+          }),
+        )
+      : [];
     const validTeammates = teammates.filter(
       (t): t is NonNullable<typeof t> => t !== null,
     );
@@ -280,7 +523,7 @@ export const getDetails = query({
     const totalTeamMembers = teamMembers.length;
     const participantCount = Math.min(
       totalTeamMembers,
-      submission.teammates.length + 1,
+      (submission.teammates?.length || 0) + 1,
     );
     const participationRate =
       totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
@@ -341,17 +584,46 @@ export const remove = mutation({
     }
 
     const previousState = submission.state;
-    const previousPoints = submission.pointsEarned || 0;
+    const wasApproved = previousState === "approved";
 
+    // Mark submission as deleted
     await ctx.db.patch(args.submissionId, {
       state: "deleted",
       managedBy: user._id,
     });
 
-    // Decrement points if the submission was approved before deletion
-    if (previousState === "approved" && previousPoints > 0) {
-      const team = await ctx.db.get(submission.teamId);
-      if (team) {
+    // Update the submission group if this was a team submission
+    const team = await ctx.db.get(submission.teamId);
+    if (team && submission.submissionType === "team") {
+      // This will recalculate group participation and points
+      await upsertSubmissionGroup(ctx, {
+        teamId: submission.teamId,
+        tournamentId: submission.tournamentId,
+        date: submission.date,
+      });
+
+      // If group was approved and points changed, adjust team points
+      if (wasApproved && submission.submissionGroupId) {
+        const updatedGroup = await ctx.db.get(submission.submissionGroupId);
+
+        if (updatedGroup) {
+          // Recalculate points difference
+          const oldPoints = submission.pointsEarned || 0;
+          const newPoints = updatedGroup.pointsEarned || 0;
+          const pointsDiff = newPoints - oldPoints;
+
+          if (pointsDiff !== 0) {
+            await ctx.db.patch(submission.teamId, {
+              points: Math.max(0, (team.points || 0) + pointsDiff),
+              lastActivityAt: new Date().toISOString(),
+            });
+          }
+        }
+      }
+    } else if (wasApproved && submission.submissionType === "individual") {
+      // For individual submissions, just decrement the points
+      const previousPoints = submission.pointsEarned || 0;
+      if (previousPoints > 0 && team) {
         const currentPoints = team.points ?? 0;
         await ctx.db.patch(submission.teamId, {
           points: Math.max(0, currentPoints - previousPoints),
@@ -409,7 +681,7 @@ export const approve = mutation({
     const totalTeamMembers = teamMembers.length;
     const participantCount = Math.min(
       totalTeamMembers,
-      submission.teammates.length + 1,
+      (submission.teammates?.length || 0) + 1,
     );
     const participationRate =
       totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
