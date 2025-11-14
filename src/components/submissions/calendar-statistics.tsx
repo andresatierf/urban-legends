@@ -95,7 +95,7 @@ export function CalendarStatistics({
       </div>
 
       {/* Key metrics */}
-      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 xs:grid-cols-2 gap-4 md:grid-cols-4">
         {stats.map((stat) => (
           <div
             key={stat.label}

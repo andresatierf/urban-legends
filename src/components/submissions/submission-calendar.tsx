@@ -255,36 +255,43 @@ export function SubmissionCalendar({
       </div>
 
       {/* Legend */}
-      <div className="mt-6 flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-center gap-4 border-t pt-4 text-xs">
-        {(
-          [undefined, "pending", "approved", "rejected"] as (
-            | undefined
-            | Doc<"submissions">["state"]
-          )[]
-        ).map((state) => (
-          <div key={state} className="flex items-center gap-2">
-            <div
-              className={cn("h-4 w-4 rounded border-2", cellStyles({ state }))}
-            />
-            <span className="text-gray-600">
-              {state ? capitalize(state) : "No submission"}
-            </span>
-          </div>
-        ))}
-        <div className="flex-1"></div>
-        {["isOutsideTournament", "isDisabled", "isToday"].map((options) => (
-          <div key={options} className="flex items-center gap-2">
-            <div
-              className={cn(
-                "h-4 w-4 rounded border-2",
-                cellStyles({ [options]: true }),
-              )}
-            />
-            <span className="text-gray-600">
-              {startCase(options).split(" ").slice(1).join(" ")}
-            </span>
-          </div>
-        ))}
+      <div className="mt-6 flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-between gap-4 border-t pt-4 text-xs">
+        <div className="flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-center gap-4">
+          {(
+            [undefined, "pending", "approved", "rejected"] as (
+              | undefined
+              | Doc<"submissions">["state"]
+            )[]
+          ).map((state) => (
+            <div key={state} className="flex items-center gap-2">
+              <div
+                className={cn(
+                  "h-4 w-4 rounded border-2",
+                  cellStyles({ state }),
+                )}
+              />
+              <span className="text-gray-600">
+                {state ? capitalize(state) : "No submission"}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-center gap-4">
+          {["isOutsideTournament", "isDisabled", "isToday"].map((options) => (
+            <div key={options} className="flex items-center gap-2">
+              <div
+                className={cn(
+                  "h-4 w-4 rounded border-2",
+                  cellStyles({ [options]: true }),
+                )}
+              />
+              {/* Remove 'is' */}
+              <span className="text-gray-600">
+                {startCase(options).split(" ").slice(1).join(" ")}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
