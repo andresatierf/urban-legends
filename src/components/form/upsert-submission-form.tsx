@@ -1,6 +1,5 @@
 "use client";
 
-import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
@@ -100,12 +99,6 @@ export function UpsertSubmissionFormDialog({
     },
   });
 
-  const formTeamId = useStore(
-    form.store,
-    (state) => state.values.teamId as Id<"teams">,
-  );
-
-
   return (
     <Dialog
       open={open}
@@ -149,7 +142,9 @@ export function UpsertSubmissionFormDialog({
           <FieldGroup>
             {!teamId && (
               <form.AppField name="teamId">
-                {(field) => <field.ComboboxField label="Team" options={teamOptions} />}
+                {(field) => (
+                  <field.ComboboxField label="Team" options={teamOptions} />
+                )}
               </form.AppField>
             )}
             <form.AppField name="description">
@@ -165,6 +160,23 @@ export function UpsertSubmissionFormDialog({
                 {(field) => <field.DateField label="Date" />}
               </form.AppField>
             )}
+            <form.AppField name="submissionType">
+              {(field) => (
+                <field.SelectField
+                  label="Submission Type"
+                  options={[
+                    {
+                      value: "individual",
+                      label: "Individual (you completed this on your own)",
+                    },
+                    {
+                      value: "team",
+                      label: "Team Activity (multiple members worked together)",
+                    },
+                  ]}
+                />
+              )}
+            </form.AppField>
             <form.AppField name="tier">
               {(field) => (
                 <field.SelectField
