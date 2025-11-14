@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, type useQuery } from "convex/react";
+import { useMutation } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { format } from "date-fns";
 import { Check, Pencil, Trash2, Trophy, Users, X } from "lucide-react";
 import Link from "next/link";
@@ -15,9 +16,7 @@ import { Button } from "../ui/button";
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 
 interface SubmissionDetailsCardProps {
-  data?: NonNullable<
-    ReturnType<typeof useQuery<typeof api.submissions.getDetails>>
-  >;
+  data: FunctionReturnType<typeof api.submissions.getDetails>;
   className?: string;
 }
 

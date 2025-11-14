@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, type useQuery } from "convex/react";
+import { useMutation } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import {
   ChartArea,
   Crown,
@@ -19,7 +20,7 @@ import { UpsertTeamFormDialog } from "../form/upsert-team-form";
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 
 interface TeamDetailsCardProps {
-  data: NonNullable<ReturnType<typeof useQuery<typeof api.teams.getDetails>>>;
+  data: FunctionReturnType<typeof api.teams.getDetails>;
   className?: string;
 }
 

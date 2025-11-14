@@ -102,17 +102,14 @@ export const getDetails = query({
     const teams = teamsWithTournaments.filter((t) => t !== null);
 
     // Fetch user's submissions
-    const [allSubmissions, approvedSubmissions] = await Promise.all([
-      ctx.db
-        .query("submissions")
-        .withIndex("by_user", (q) => q.eq("userId", args.userId))
-        .collect(),
-      ctx.db
-        .query("submissions")
-        .withIndex("by_user", (q) => q.eq("userId", args.userId))
-        .filter((q) => q.eq(q.field("state"), "approved"))
-        .collect(),
-    ]);
+    const allSubmissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const approvedSubmissions = allSubmissions.filter(
+      (s) => s.state === "approved",
+    );
 
     // Calculate total points earned
     const totalPointsEarned = approvedSubmissions.reduce(

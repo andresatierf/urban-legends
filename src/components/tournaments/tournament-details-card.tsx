@@ -1,18 +1,16 @@
-import { useMutation, type useQuery } from "convex/react";
+import { useMutation } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { Pencil, Trash2, Trophy } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DetailsCard } from "@/components/details-card";
 import { DetailsCardSkeleton } from "@/components/ui/details-card-skeleton";
-import { useUser } from "@/hooks/useUser";
 import { api } from "../../../convex/_generated/api";
 import { UpsertTournamentFormDialog } from "../form/upsert-tournament-form";
 import { getStatusBadge } from "./utils";
 
 interface TournamentDetailsCardProps {
-  data: NonNullable<
-    ReturnType<typeof useQuery<typeof api.tournaments.getDetails>>
-  >;
+  data: FunctionReturnType<typeof api.tournaments.getDetails>;
   className?: string;
 }
 

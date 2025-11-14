@@ -84,42 +84,33 @@ export function DetailsCard({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
-                  {actions?.map((action) => {
-                    if (action.condition === false) return null;
-
-                    if ("href" in action)
+                  {actions
+                    .filter((action) => action.condition)
+                    .map((action, index) => {
                       return (
                         <Fragment key={action.label}>
-                          {action.separator === "before" && (
+                          {action.separator === "before" && index !== 0 && (
                             <DropdownMenuSeparator />
                           )}
-                          <DropdownMenuItem asChild>
-                            <Link href={action.href}>
+                          {"href" in action ? (
+                            <DropdownMenuItem asChild>
+                              <Link href={action.href}>
+                                <action.icon className="h-4 w-4" />
+                                {action.label}
+                              </Link>
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onSelect={action.onClick}>
                               <action.icon className="h-4 w-4" />
                               {action.label}
-                            </Link>
-                          </DropdownMenuItem>
+                            </DropdownMenuItem>
+                          )}
                           {action.separator === "after" && (
                             <DropdownMenuSeparator />
                           )}
                         </Fragment>
                       );
-
-                    return (
-                      <Fragment key={action.label}>
-                        {action.separator === "before" && (
-                          <DropdownMenuSeparator />
-                        )}
-                        <DropdownMenuItem onSelect={action.onClick}>
-                          <action.icon className="h-4 w-4" />
-                          {action.label}
-                        </DropdownMenuItem>
-                        {action.separator === "after" && (
-                          <DropdownMenuSeparator />
-                        )}
-                      </Fragment>
-                    );
-                  })}
+                    })}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
