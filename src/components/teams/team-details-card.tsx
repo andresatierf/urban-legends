@@ -20,7 +20,7 @@ import { UpsertTeamFormDialog } from "../form/upsert-team-form";
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 
 interface TeamDetailsCardProps {
-  data: FunctionReturnType<typeof api.teams.getDetails>;
+  data?: FunctionReturnType<typeof api.teams.getDetails>;
   className?: string;
 }
 

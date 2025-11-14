@@ -10,7 +10,7 @@ import { UpsertTournamentFormDialog } from "../form/upsert-tournament-form";
 import { getStatusBadge } from "./utils";
 
 interface TournamentDetailsCardProps {
-  data: FunctionReturnType<typeof api.tournaments.getDetails>;
+  data?: FunctionReturnType<typeof api.tournaments.getDetails>;
   className?: string;
 }
 

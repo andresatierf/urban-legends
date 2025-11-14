@@ -75,13 +75,17 @@ export const getDetails = query({
     }
 
     // Fetch roles for the target user
-    const roles = await getRolesForUser(ctx, user._id);
-
-    // Fetch user's team memberships
-    const teamMemberships = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .collect();
+    const [roles, teamMemberships, allSubmissions] = await Promise.all([
+      getRolesForUser(ctx, user._id),
+      ctx.db
+        .query("teamMembers")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .collect(),
+      ctx.db
+        .query("submissions")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .collect(),
+    ]);
 
     // Fetch teams with tournament context
     const teamsWithTournaments = await Promise.all(
@@ -100,12 +104,6 @@ export const getDetails = query({
     );
 
     const teams = teamsWithTournaments.filter((t) => t !== null);
-
-    // Fetch user's submissions
-    const allSubmissions = await ctx.db
-      .query("submissions")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .collect();
 
     const approvedSubmissions = allSubmissions.filter(
       (s) => s.state === "approved",

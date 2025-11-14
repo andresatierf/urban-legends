@@ -8,7 +8,7 @@ import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 import { RolesBadgeList } from "./roles-badge-list";
 
 interface UserDetailsCardProps {
-  data: FunctionReturnType<typeof api.users.getDetails>;
+  data?: FunctionReturnType<typeof api.users.getDetails>;
   className?: string;
 }
 
@@ -41,7 +41,8 @@ export const UserDetailsCard = ({ data, className }: UserDetailsCardProps) => {
       {
         label: "View Teams",
         icon: Users,
-        condition: false && data.teams.length > 0,
+        // condition: data.teams.length > 0,
+        condition: false, // TODO: handle this
         onClick: () => {
           // Could navigate to a teams list view
         },
@@ -49,7 +50,8 @@ export const UserDetailsCard = ({ data, className }: UserDetailsCardProps) => {
       {
         label: "View Submissions",
         icon: Trophy,
-        condition: false && data.statistics.submissionCount > 0,
+        // condition: data.statistics.submissionCount > 0,
+        condition: false, // TODO: handle this
         onClick: () => {
           // Could navigate to submissions list view
         },

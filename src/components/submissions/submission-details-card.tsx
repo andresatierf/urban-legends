@@ -16,7 +16,7 @@ import { Button } from "../ui/button";
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 
 interface SubmissionDetailsCardProps {
-  data: FunctionReturnType<typeof api.submissions.getDetails>;
+  data?: FunctionReturnType<typeof api.submissions.getDetails>;
   className?: string;
 }
 
