@@ -195,15 +195,6 @@ export const listUserSubmissions = query({
   },
 });
 
-export const getById = query({
-  args: { id: v.id("submissions") },
-  handler: async (ctx, args) => {
-    await getCurrentUserOrThrow(ctx);
-
-    return await ctx.db.get(args.id);
-  },
-});
-
 export const getDetails = query({
   args: { submissionId: v.id("submissions") },
   handler: async (ctx, args) => {
@@ -368,29 +359,6 @@ export const remove = mutation({
         });
       }
     }
-  },
-});
-
-export const getUserSubmissions = query({
-  args: {
-    teamId: v.id("teams"),
-    startDate: v.string(),
-    endDate: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    return await ctx.db
-      .query("submissions")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("teamId"), args.teamId),
-          q.gte(q.field("date"), args.startDate),
-          q.lte(q.field("date"), args.endDate),
-        ),
-      )
-      .collect();
   },
 });
 

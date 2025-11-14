@@ -45,56 +45,6 @@ export const makeFirstUserAdmin = mutation({
   },
 });
 
-export const addUserRole = mutation({
-  args: {
-    userId: v.id("users"),
-    roleName: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const currentUser = await getCurrentUserOrThrow(ctx);
-
-    validateIsAdmin(currentUser);
-
-    // Verify target user exists
-    const targetUser = await ctx.db.get(args.userId);
-    if (!targetUser) {
-      throw new Error("User not found");
-    }
-
-    // Get role by name
-    const role = await ctx.db
-      .query("roles")
-      .withIndex("by_name", (q) => q.eq("name", args.roleName))
-      .first();
-
-    if (!role) {
-      throw new Error(`Role "${args.roleName}" not found`);
-    }
-
-    // Check if user already has this role
-    const existingUserRole = await ctx.db
-      .query("userRoles")
-      .withIndex("by_user_role", (q) =>
-        q.eq("userId", args.userId).eq("roleId", role._id),
-      )
-      .first();
-
-    if (existingUserRole) {
-      throw new Error("User already has this role");
-    }
-
-    // Add role
-    await ctx.db.insert("userRoles", {
-      userId: args.userId,
-      roleId: role._id,
-      assignedBy: currentUser._id,
-      assignedAt: new Date().toISOString(),
-    });
-
-    return { success: true };
-  },
-});
-
 export const removeUserRole = mutation({
   args: {
     userId: v.id("users"),
