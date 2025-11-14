@@ -18,6 +18,7 @@ import { DetailsCard } from "../details-card";
 import { InviteMemberFormDialog } from "../form/invite-member-form";
 import { TransferCaptaincyFormDialog } from "../form/transfer-captaincy-form";
 import { UpsertTeamFormDialog } from "../form/upsert-team-form";
+import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 
 type Props = {
   team: Doc<"teams">;
@@ -119,7 +120,9 @@ export function TeamDetailsCard({ team, score, className }: Props) {
     [handleDeleteTeam, handleLeaveTeam, isCaptain, team._id],
   );
 
-  if (team === undefined) return null; // TODO: Add skeleton
+  if (team === undefined) {
+    return <DetailsCardSkeleton detailsCount={4} className={className} />;
+  }
 
   return (
     <div>

@@ -24,6 +24,7 @@ import {
   EmptyDescription,
   EmptyHeader,
 } from "@/components/ui/empty";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
@@ -67,7 +68,9 @@ export default function TournamentDetailsPage({ params }: Props) {
       )
     : {};
 
-  if (!tournament) return null; // TODO: Add skeleton
+  if (!tournament) {
+    return <PageSkeleton headerTitle="Tournament Details" sections={2} />;
+  }
 
   return (
     <>

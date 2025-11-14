@@ -7,6 +7,7 @@ import { UpsertTournamentFormDialog } from "@/components/form/upsert-tournament-
 import { SectionHeader } from "@/components/section-header";
 import { TournamentCard } from "@/components/tournaments/tournament-card";
 import { Card, CardContent } from "@/components/ui/card";
+import { CardGridSkeleton } from "@/components/ui/card-grid-skeleton";
 import {
   Empty,
   EmptyContent,
@@ -33,7 +34,19 @@ export default function TournamentsPage() {
     }, new Map());
   }, [teams]);
 
-  if (!userTournaments) return null; // TODO: Add skeleton
+  if (!userTournaments) {
+    return (
+      <>
+        <SectionHeader as="h1" title="Tournaments">
+          {isAdmin && <UpsertTournamentFormDialog />}
+        </SectionHeader>
+        <CardGridSkeleton
+          count={6}
+          className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2"
+        />
+      </>
+    );
+  }
 
   return (
     <>

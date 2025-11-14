@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { RolesBadgeList } from "@/components/users/roles-badge-list";
 import { cn } from "@/lib/utils";
 import { api } from "../../../../convex/_generated/api";
@@ -20,7 +21,18 @@ import { api } from "../../../../convex/_generated/api";
 export default function UsersPage() {
   const users = useQuery(api.users.list, {});
 
-  if (!users) return null; // TODO: Add skeleton
+  if (!users) {
+    return (
+      <>
+        <SectionHeader as="h1" title="Users" />
+        <TableSkeleton
+          columns={3}
+          headers={["Name", "Email", "Roles"]}
+          rows={8}
+        />
+      </>
+    );
+  }
 
   return (
     <>

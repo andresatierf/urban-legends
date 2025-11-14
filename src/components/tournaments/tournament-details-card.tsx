@@ -3,6 +3,7 @@ import { Pencil, Trash2, Trophy } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { DetailsCard } from "@/components/details-card";
+import { DetailsCardSkeleton } from "@/components/ui/details-card-skeleton";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
@@ -65,7 +66,9 @@ export function TournamentDetailsCard({ tournament, teams, className }: Props) {
     },
   ];
 
-  if (tournament === undefined) return null; // TODO: Add skeleton
+  if (tournament === undefined) {
+    return <DetailsCardSkeleton detailsCount={4} className={className} />;
+  }
 
   return (
     <div>
