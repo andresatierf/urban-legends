@@ -18,9 +18,10 @@ import { DetailsCard } from "../details-card";
 import { InviteMemberFormDialog } from "../form/invite-member-form";
 import { TransferCaptaincyFormDialog } from "../form/transfer-captaincy-form";
 import { UpsertTeamFormDialog } from "../form/upsert-team-form";
+import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 
 type Props = {
-  team: Doc<"teams">;
+  team?: Doc<"teams">;
   score?: number;
   className?: string;
 };
@@ -47,12 +48,9 @@ export function TeamDetailsCard({ team, score, className }: Props) {
   const userMembership = teamMembers?.find((m) => m.userId === user?._id);
   const isCaptain = userMembership?.role === "captain";
 
-  const details = [
-    { key: "tournament", value: tournament?.name || "" },
-    { key: "score", value: `${score || 0} pts` },
-  ];
-
   const handleDeleteTeam = useCallback(async () => {
+    if (!team) return;
+
     try {
       await deleteTeam({ teamId: team._id });
       toast.success("Team deleted successfully");
@@ -61,9 +59,11 @@ export function TeamDetailsCard({ team, score, className }: Props) {
         error instanceof Error ? error.message : "Failed to delete team",
       );
     }
-  }, [deleteTeam, team._id]);
+  }, [deleteTeam, team]);
 
   const handleLeaveTeam = useCallback(async () => {
+    if (!team) return;
+
     try {
       await leaveTeam({ teamId: team._id });
       toast.success("Successfully left the team");
@@ -72,10 +72,21 @@ export function TeamDetailsCard({ team, score, className }: Props) {
         error instanceof Error ? error.message : "Failed to leave team",
       );
     }
-  }, [leaveTeam, team._id]);
+  }, [leaveTeam, team]);
 
-  const actions = useMemo(
-    () => [
+  const details = useMemo(() => {
+    if (!team) return [];
+
+    return [
+      { key: "tournament", value: tournament?.name || "" },
+      { key: "score", value: `${score || 0} pts` },
+    ];
+  }, [score, tournament, team]);
+
+  const actions = useMemo(() => {
+    if (!team) return [];
+
+    return [
       {
         label: "View statistics",
         href: `/teams/${team._id}/statistics`,
@@ -115,11 +126,12 @@ export function TeamDetailsCard({ team, score, className }: Props) {
         condition: isCaptain,
         separator: "before" as const,
       },
-    ],
-    [handleDeleteTeam, handleLeaveTeam, isCaptain, team._id],
-  );
+    ];
+  }, [handleDeleteTeam, handleLeaveTeam, isCaptain, team]);
 
-  if (team === undefined) return null; // TODO: Add skeleton
+  if (!team) {
+    return <DetailsCardSkeleton detailsCount={2} className={className} />;
+  }
 
   return (
     <div>

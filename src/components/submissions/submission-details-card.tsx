@@ -12,9 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { api } from "../../../convex/_generated/api";
 import { UpsertSubmissionFormDialog } from "../form/upsert-submission-form";
 import { Button } from "../ui/button";
+import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 
 interface SubmissionDetailsCardProps {
-  data: NonNullable<
+  data?: NonNullable<
     ReturnType<typeof useQuery<typeof api.submissions.getDetails>>
   >;
   className?: string;
@@ -27,13 +28,16 @@ export function SubmissionDetailsCard({
   const router = useRouter();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  const submissionId = data.submission._id;
+  const submissionId = data?.submission._id;
 
   const approveSubmission = useMutation(api.submissions.approve);
   const rejectSubmission = useMutation(api.submissions.reject);
   const removeSubmission = useMutation(api.submissions.remove);
 
   const handleApprove = useCallback(async () => {
+    if (!data) return;
+    if (!submissionId) return;
+
     try {
       await approveSubmission({ submissionId });
       toast.success("Submission approved successfully");
@@ -42,9 +46,12 @@ export function SubmissionDetailsCard({
         error instanceof Error ? error.message : "Failed to approve submission",
       );
     }
-  }, [approveSubmission, submissionId]);
+  }, [approveSubmission, submissionId, data]);
 
   const handleReject = useCallback(async () => {
+    if (!data) return;
+    if (!submissionId) return;
+
     try {
       await rejectSubmission({ submissionId });
       toast.success("Submission rejected");
@@ -53,9 +60,12 @@ export function SubmissionDetailsCard({
         error instanceof Error ? error.message : "Failed to reject submission",
       );
     }
-  }, [rejectSubmission, submissionId]);
+  }, [rejectSubmission, submissionId, data]);
 
   const handleDelete = useCallback(async () => {
+    if (!data) return;
+    if (!submissionId) return;
+
     try {
       await removeSubmission({ submissionId });
       toast.success("Submission deleted successfully");
@@ -65,10 +75,12 @@ export function SubmissionDetailsCard({
         error instanceof Error ? error.message : "Failed to delete submission",
       );
     }
-  }, [removeSubmission, submissionId, router]);
+  }, [removeSubmission, submissionId, router, data]);
 
-  const details = useMemo(
-    () => [
+  const details = useMemo(() => {
+    if (!data) return [];
+
+    return [
       {
         key: "Date",
         value: data.submission.date,
@@ -153,12 +165,13 @@ export function SubmissionDetailsCard({
             },
           ]
         : []),
-    ],
-    [data],
-  );
+    ];
+  }, [data]);
 
-  const actions = useMemo(
-    () => [
+  const actions = useMemo(() => {
+    if (!data) return [];
+
+    return [
       {
         label: "Approve",
         onClick: handleApprove,
@@ -201,9 +214,12 @@ export function SubmissionDetailsCard({
         condition: data.canDelete,
         separator: "before" as const,
       },
-    ],
-    [data, handleApprove, handleReject, handleDelete],
-  );
+    ];
+  }, [data, handleApprove, handleReject, handleDelete]);
+
+  if (!data) {
+    return <DetailsCardSkeleton detailsCount={9} className={className} />;
+  }
 
   return (
     <>

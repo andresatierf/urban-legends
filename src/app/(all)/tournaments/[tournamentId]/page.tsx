@@ -24,6 +24,7 @@ import {
   EmptyDescription,
   EmptyHeader,
 } from "@/components/ui/empty";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
@@ -33,7 +34,7 @@ type Props = {
 };
 
 export default function TournamentDetailsPage({ params }: Props) {
-  const { user, isAdmin } = useUser();
+  const { user } = useUser();
 
   const { tournamentId } = use(params);
 
@@ -67,7 +68,11 @@ export default function TournamentDetailsPage({ params }: Props) {
       )
     : {};
 
-  if (!tournament) return null; // TODO: Add skeleton
+  if (tournament === undefined) {
+    return <PageSkeleton headerTitle="Tournament Details" sections={2} />;
+  }
+
+  if (tournament === null) return null;
 
   return (
     <>
@@ -81,11 +86,7 @@ export default function TournamentDetailsPage({ params }: Props) {
         </Button>
       </SectionHeader>
 
-      <TournamentDetailsCard
-        tournament={tournament}
-        enableActions={isAdmin}
-        teams={teams ?? []}
-      />
+      <TournamentDetailsCard tournament={tournament} teams={teams ?? []} />
 
       <SectionHeader title="Teams" />
 

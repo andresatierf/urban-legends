@@ -4,6 +4,7 @@ import { useUser } from "@/hooks/useUser";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { DetailsCard } from "../details-card";
 import { ManageRolesFormDialog } from "../form/manage-roles-form";
+import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 import { RolesBadgeList } from "./roles-badge-list";
 
 type Props = {
@@ -15,7 +16,15 @@ export const UserDetailsCard = ({ user, className }: Props) => {
   const { isAdmin } = useUser();
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
 
-  if (user === undefined) return null; // TODO: Add skeleton
+  if (user === undefined) {
+    return (
+      <DetailsCardSkeleton
+        detailsCount={3}
+        showActions={isAdmin}
+        className={className}
+      />
+    );
+  }
 
   const details = [
     { key: "name", value: user.name },

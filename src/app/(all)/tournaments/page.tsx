@@ -7,6 +7,7 @@ import { UpsertTournamentFormDialog } from "@/components/form/upsert-tournament-
 import { SectionHeader } from "@/components/section-header";
 import { TournamentCard } from "@/components/tournaments/tournament-card";
 import { Card, CardContent } from "@/components/ui/card";
+import { CardGridSkeleton } from "@/components/ui/card-grid-skeleton";
 import {
   Empty,
   EmptyContent,
@@ -20,9 +21,13 @@ import type { Id } from "../../../../convex/_generated/dataModel";
 export default function TournamentsPage() {
   const { user, isAdmin } = useUser();
 
-  const userTournaments =
-    useQuery(api.tournaments.list, { userId: user?._id }) || [];
-  const allTournaments = useQuery(api.tournaments.list, {}) || [];
+  const userTournamentsRaw = useQuery(api.tournaments.list, {
+    userId: user?._id,
+  });
+  const allTournamentsRaw = useQuery(api.tournaments.list, {});
+
+  const userTournaments = userTournamentsRaw || [];
+  const allTournaments = allTournamentsRaw || [];
 
   const teams = useQuery(api.teams.list, {}) || [];
   const teamCount = useMemo(() => {
@@ -33,7 +38,19 @@ export default function TournamentsPage() {
     }, new Map());
   }, [teams]);
 
-  if (!userTournaments) return null; // TODO: Add skeleton
+  if (userTournamentsRaw === undefined) {
+    return (
+      <>
+        <SectionHeader as="h1" title="Tournaments">
+          {isAdmin && <UpsertTournamentFormDialog />}
+        </SectionHeader>
+        <CardGridSkeleton
+          count={6}
+          className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2"
+        />
+      </>
+    );
+  }
 
   return (
     <>

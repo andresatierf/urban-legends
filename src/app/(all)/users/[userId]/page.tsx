@@ -6,6 +6,7 @@ import Link from "next/link";
 import { use } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { UserDetailsCard } from "@/components/users/user-details-card";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
@@ -20,7 +21,9 @@ export default function UserDetailsPage({ params }: Props) {
     id: resolvedParams.userId,
   });
 
-  if (user === undefined) return null; // TODO: Add skeleton
+  if (user === undefined) {
+    return <PageSkeleton headerTitle="User Details" sections={2} />;
+  }
   if (user === null) return null; // TODO: handle not-found state
 
   return (

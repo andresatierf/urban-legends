@@ -13,6 +13,7 @@ import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
+import { StatCardsGridSkeleton } from "../ui/stat-cards-grid-skeleton";
 
 type Props = {
   teamId: Id<"teams">;
@@ -38,19 +39,10 @@ export function TeamStatisticsCard({ teamId }: Props) {
 
   if (stats === undefined || team === undefined) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton
-          <Card key={i} className="animate-pulse">
-            <CardHeader>
-              <div className="h-5 w-32 rounded bg-muted" />
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 w-20 rounded bg-muted" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <StatCardsGridSkeleton
+        count={6}
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+      />
     );
   }
 

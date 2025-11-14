@@ -11,6 +11,7 @@ import { InviteMemberCard } from "@/components/teams/invite-member-card";
 import { TeamDetailsCard } from "@/components/teams/team-details-card";
 import { TeamMemberCard } from "@/components/teams/team-member-card";
 import { Button } from "@/components/ui/button";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
@@ -35,7 +36,9 @@ export default function TeamDetailsPage({ params }: Props) {
   const captain = members.find((member) => member.role === "captain");
   const regularMembers = members.filter((member) => member.role === "member");
 
-  if (!team || !members) return null; // TODO: Add skeleton
+  if (!team || !members) {
+    return <PageSkeleton headerTitle="Team Details" sections={3} />;
+  }
 
   return (
     <>
