@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import { TableSkeleton } from "../ui/table-skeleton";
 
 const getRankBadge = (rank: number, _isWinner: boolean) => {
   if (rank === 1) {
@@ -70,37 +71,12 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
 
   if (leaderboard === undefined) {
     return (
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-16">Rank</TableHead>
-              <TableHead>Team Name</TableHead>
-              <TableHead className="w-24 text-right">Points</TableHead>
-              <TableHead className="w-24 text-right">Members</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton
-              <TableRow key={i}>
-                <TableCell>
-                  <div className="h-5 w-8 animate-pulse rounded bg-muted" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-5 w-32 animate-pulse rounded bg-muted" />
-                </TableCell>
-                <TableCell>
-                  <div className="ml-auto h-5 w-12 animate-pulse rounded bg-muted" />
-                </TableCell>
-                <TableCell>
-                  <div className="ml-auto h-5 w-12 animate-pulse rounded bg-muted" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <TableSkeleton
+        columns={4}
+        headers={["Rank", "Team Name", "Points", "Members"]}
+        rows={5}
+        className="overflow-hidden"
+      />
     );
   }
 

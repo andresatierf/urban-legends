@@ -7,6 +7,7 @@ import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { WinnerAnnouncementSkeleton } from "../ui/winner-announcement-skeleton";
 
 type Props = {
   tournamentId: Id<"tournaments">;
@@ -16,19 +17,7 @@ export function WinnerAnnouncement({ tournamentId }: Props) {
   const winner = useQuery(api.tournaments.getWinner, { tournamentId });
 
   if (winner === undefined) {
-    return (
-      <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
-        <CardHeader>
-          <div className="h-8 w-48 animate-pulse rounded bg-muted" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="h-6 w-32 animate-pulse rounded bg-muted" />
-            <div className="h-4 w-64 animate-pulse rounded bg-muted" />
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <WinnerAnnouncementSkeleton />;
   }
 
   if (!winner) {
