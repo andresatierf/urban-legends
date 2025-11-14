@@ -2,7 +2,11 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, type QueryCtx, query } from "./_generated/server";
 import { validateUserNotInTournamentTeam } from "./tournaments";
-import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
+import {
+  getCurrentUserOrThrow,
+  getRolesForUser,
+  validateIsAdmin,
+} from "./users";
 
 export const list = query({
   args: {
@@ -140,7 +144,6 @@ export const getDetails = query({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    const { getRolesForUser } = await import("./users");
 
     // Fetch team
     const team = await ctx.db.get(args.teamId);
@@ -202,16 +205,10 @@ export const getDetails = query({
     const canEdit = isAdmin || isCaptain;
     const canDelete = isAdmin || isCaptain;
     const canInvite = isAdmin || isCaptain;
-    const canLeave = isMember && !isCaptain; // Non-captains can leave directly
+    const canLeave =
+      (isMember && !isCaptain) || (isCaptain && members.length === 1);
     const canTransferCaptaincy = isCaptain && members.length > 1;
     const canManageMembers = isAdmin || isCaptain;
-
-    // If captain, can only leave after transferring captaincy
-    if (isCaptain && members.length > 1) {
-      // canLeave remains false
-    } else if (isCaptain && members.length === 1) {
-      // Last member (captain) can leave (will delete team)
-    }
 
     return {
       team,
