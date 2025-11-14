@@ -679,8 +679,8 @@ export async function validateTeamHasSpace(
  *
  * **Safety:**
  * - Admin-only access
- * - Read-only on existing approved submissions (preserves pointsEarned if set)
- * - Only updates submissions missing pointsEarned values
+ * - Recalculates and updates pointsEarned for all approved submissions
+ * - Overwrites any existing pointsEarned values with fresh calculations
  * - Atomic operation per submission
  *
  * @param teamId - The ID of the team to recalculate points for

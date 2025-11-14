@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
 /**
@@ -24,7 +24,7 @@ import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
  *
  * @internal This function is not exposed to the frontend
  */
-export const makeFirstUserAdmin = mutation({
+export const makeFirstUserAdmin = internalMutation({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -63,66 +63,6 @@ export const makeFirstUserAdmin = mutation({
     });
 
     return true;
-  },
-});
-
-export const removeUserRole = mutation({
-  args: {
-    userId: v.id("users"),
-    roleName: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const currentUser = await getCurrentUserOrThrow(ctx);
-
-    validateIsAdmin(currentUser);
-
-    // Get role by name
-    const role = await ctx.db
-      .query("roles")
-      .withIndex("by_name", (q) => q.eq("name", args.roleName))
-      .first();
-
-    if (!role) {
-      throw new Error(`Role "${args.roleName}" not found`);
-    }
-
-    // Special check: cannot remove "user" role
-    if (args.roleName === "user") {
-      throw new Error("Cannot remove basic user role");
-    }
-
-    // Special check: cannot remove last admin
-    if (args.roleName === "admin") {
-      const adminCount = await ctx.db
-        .query("userRoles")
-        .withIndex("by_role", (q) => q.eq("roleId", role._id))
-        .collect();
-
-      if (adminCount.length <= 1) {
-        throw new Error("Cannot remove last admin user");
-      }
-
-      // Warn if removing admin from self (but allow it)
-      if (args.userId === currentUser._id) {
-        console.warn("Admin removing admin role from self");
-      }
-    }
-
-    // Find and remove userRole
-    const userRole = await ctx.db
-      .query("userRoles")
-      .withIndex("by_user_role", (q) =>
-        q.eq("userId", args.userId).eq("roleId", role._id),
-      )
-      .first();
-
-    if (!userRole) {
-      throw new Error("User does not have this role");
-    }
-
-    await ctx.db.delete(userRole._id);
-
-    return { success: true };
   },
 });
 
