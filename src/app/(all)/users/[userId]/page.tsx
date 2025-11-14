@@ -17,14 +17,15 @@ type Props = {
 
 export default function UserDetailsPage({ params }: Props) {
   const resolvedParams = use(params);
-  const user = useQuery(api.users.getById, {
-    id: resolvedParams.userId,
-  });
 
-  if (user === undefined) {
+  const data = useQuery(
+    api.users.getDetails,
+    resolvedParams.userId ? { userId: resolvedParams.userId } : "skip",
+  );
+
+  if (!data) {
     return <PageSkeleton headerTitle="User Details" sections={2} />;
   }
-  if (user === null) return null; // TODO: handle not-found state
 
   return (
     <>
@@ -37,7 +38,7 @@ export default function UserDetailsPage({ params }: Props) {
         </Button>
       </SectionHeader>
 
-      <UserDetailsCard user={user} />
+      <UserDetailsCard data={data} />
     </>
   );
 }
