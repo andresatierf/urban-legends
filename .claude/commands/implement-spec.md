@@ -296,6 +296,7 @@ The main repository at /home/andre/dev/urban-legends is unchanged.
 - **Handle errors gracefully** - Add proper error handling and validation
 - **Consider edge cases** - The spec lists many edge cases; handle them
 - **Remember the path** - You're working in `../urban-legends-[feature-name]`, not the original repo
+- **Bash** - always wrap bash commands with `bash -c`
 
 ## What NOT to Do
 

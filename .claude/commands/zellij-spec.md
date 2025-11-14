@@ -59,9 +59,9 @@ Example port assignments:
 - `leaderboard`: Next.js → 3042, Convex → 3252
 - `admin-roles`: Next.js → 3067, Convex → 3277
 
-## Step 4: Create Zellij Tab with Layout File
+## Step 4: Create Zellij Tab
 
-Set up a new Zellij tab using the `dev-spec` layout file with calculated ports:
+Set up a new Zellij tab with calculated ports:
 
 ```bash
 # Calculate ports
