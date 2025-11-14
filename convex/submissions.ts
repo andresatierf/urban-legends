@@ -649,7 +649,7 @@ export const getTeamStatistics = query({
     const startDate = new Date(tournament.startDate);
     const endDate = new Date(tournament.endDate);
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
 
     // If tournament hasn't started yet, return zeros
     if (today < startDate) {
@@ -665,6 +665,20 @@ export const getTeamStatistics = query({
     }
 
     const relevantEndDate = today < endDate ? today : endDate;
+    const formatDateKey = (date: Date) =>
+      [
+        date.getUTCFullYear(),
+        String(date.getUTCMonth() + 1).padStart(2, "0"),
+        String(date.getUTCDate()).padStart(2, "0"),
+      ].join("-");
+    const startDateKey = formatDateKey(startDate);
+    const relevantEndDateKey = formatDateKey(relevantEndDate);
+    const relevantSubmissions = submissions.filter((s) => {
+      if (s.state === "deleted") return false;
+      if (s.date < startDateKey) return false;
+      if (s.date > relevantEndDateKey) return false;
+      return true;
+    });
 
     const totalDays =
       Math.floor(
@@ -672,20 +686,28 @@ export const getTeamStatistics = query({
           (1000 * 60 * 60 * 24),
       ) + 1;
 
-    const daysWithSubmissions = new Set(submissions.map((s) => s.date)).size;
+    const daysWithSubmissions = new Set(relevantSubmissions.map((s) => s.date))
+      .size;
     const completionRate =
       totalDays > 0 ? (daysWithSubmissions / totalDays) * 100 : 0;
 
     // Calculate streak - count backwards from today
     let currentStreak = 0;
     const sortedDates = Array.from(
-      new Set(submissions.map((s) => s.date)),
+      new Set(relevantSubmissions.map((s) => s.date)),
     ).sort();
+
+    const toDateKey = (date: Date) =>
+      [
+        date.getUTCFullYear(),
+        String(date.getUTCMonth() + 1).padStart(2, "0"),
+        String(date.getUTCDate()).padStart(2, "0"),
+      ].join("-");
 
     for (let i = 0; i < totalDays; i++) {
       const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split("T")[0];
+      date.setUTCDate(date.getUTCDate() - i);
+      const dateStr = toDateKey(date);
 
       // Skip if date is before tournament start
       if (date < startDate) break;
@@ -699,9 +721,11 @@ export const getTeamStatistics = query({
     }
 
     const stateCounts = {
-      approved: submissions.filter((s) => s.state === "approved").length,
-      pending: submissions.filter((s) => s.state === "pending").length,
-      rejected: submissions.filter((s) => s.state === "rejected").length,
+      approved: relevantSubmissions.filter((s) => s.state === "approved")
+        .length,
+      pending: relevantSubmissions.filter((s) => s.state === "pending").length,
+      rejected: relevantSubmissions.filter((s) => s.state === "rejected")
+        .length,
     };
 
     return {

@@ -67,10 +67,8 @@ export function SubmissionDetailsCard({
     }
   }, [removeSubmission, submissionId, router]);
 
-  const details = useMemo(() => {
-    if (!data) return [];
-
-    return [
+  const details = useMemo(
+    () => [
       {
         key: "Date",
         value: data.submission.date,
@@ -155,13 +153,12 @@ export function SubmissionDetailsCard({
             },
           ]
         : []),
-    ];
-  }, [data]);
+    ],
+    [data],
+  );
 
-  const actions = useMemo(() => {
-    if (!data) return [];
-
-    return [
+  const actions = useMemo(
+    () => [
       {
         label: "Approve",
         onClick: handleApprove,
@@ -204,8 +201,9 @@ export function SubmissionDetailsCard({
         condition: data.canDelete,
         separator: "before" as const,
       },
-    ];
-  }, [data, handleApprove, handleReject, handleDelete]);
+    ],
+    [data, handleApprove, handleReject, handleDelete],
+  );
 
   return (
     <>
