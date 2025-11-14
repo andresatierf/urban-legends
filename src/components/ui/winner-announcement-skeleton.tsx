@@ -13,6 +13,9 @@ export function WinnerAnnouncementSkeleton({ className }: Props) {
         "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20",
         className,
       )}
+      role="status"
+      aria-busy="true"
+      aria-label="Loading winner announcement"
     >
       <CardHeader>
         <Skeleton className="h-8 w-48" />

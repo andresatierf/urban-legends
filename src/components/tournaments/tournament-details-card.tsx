@@ -13,7 +13,6 @@ import { getStatusBadge } from "./utils";
 type Props = {
   tournament?: Doc<"tournaments">;
   teams?: Doc<"teams">[];
-  enableActions?: boolean;
   className?: string;
 };
 
@@ -76,7 +75,7 @@ export function TournamentDetailsCard({ tournament, teams, className }: Props) {
     ];
   }, [handleDeleteTournament, isAdmin, tournament]);
 
-  if (tournament === undefined) {
+  if (!tournament) {
     return <DetailsCardSkeleton detailsCount={4} className={className} />;
   }
 

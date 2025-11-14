@@ -78,7 +78,7 @@ export function SubmissionDetailsCard({
   }, [removeSubmission, submissionId, router, data]);
 
   const details = useMemo(() => {
-    if (!data) return;
+    if (!data) return [];
 
     return [
       {
@@ -169,7 +169,7 @@ export function SubmissionDetailsCard({
   }, [data]);
 
   const actions = useMemo(() => {
-    if (!data) return;
+    if (!data) return [];
 
     return [
       {

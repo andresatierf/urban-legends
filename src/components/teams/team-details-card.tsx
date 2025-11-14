@@ -129,7 +129,7 @@ export function TeamDetailsCard({ team, score, className }: Props) {
     ];
   }, [handleDeleteTeam, handleLeaveTeam, isCaptain, team]);
 
-  if (team === undefined) {
+  if (!team) {
     return <DetailsCardSkeleton detailsCount={2} className={className} />;
   }
 
