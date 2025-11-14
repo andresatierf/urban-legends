@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Doc } from "../../../convex/_generated/dataModel";
+import { getInitials } from "../users/utils";
 
 interface SubmitterInfoProps {
   submitter: Doc<"users"> & { roleNames: string[] };
@@ -9,15 +10,6 @@ interface SubmitterInfoProps {
 }
 
 export function SubmitterInfo({ submitter, teammates }: SubmitterInfoProps) {
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
     <Card>
       <CardHeader>

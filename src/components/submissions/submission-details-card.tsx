@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, type useQuery } from "convex/react";
+import { format } from "date-fns";
 import { Check, Pencil, Trash2, Trophy, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,26 +10,24 @@ import { toast } from "sonner";
 import { DetailsCard } from "@/components/details-card";
 import { Badge } from "@/components/ui/badge";
 import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
 import { UpsertSubmissionFormDialog } from "../form/upsert-submission-form";
 import { Button } from "../ui/button";
 
 interface SubmissionDetailsCardProps {
-  submissionId: Id<"submissions">;
+  data: NonNullable<
+    ReturnType<typeof useQuery<typeof api.submissions.getDetails>>
+  >;
   className?: string;
 }
 
 export function SubmissionDetailsCard({
-  submissionId,
+  data,
   className,
 }: SubmissionDetailsCardProps) {
   const router = useRouter();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  const data = useQuery(
-    api.submissions.getDetail,
-    submissionId ? { submissionId } : "skip",
-  );
+  const submissionId = data.submission._id;
 
   const approveSubmission = useMutation(api.submissions.approve);
   const rejectSubmission = useMutation(api.submissions.reject);
@@ -208,8 +207,6 @@ export function SubmissionDetailsCard({
     ];
   }, [data, handleApprove, handleReject, handleDelete]);
 
-  if (!data) return null; // TODO: Add skeleton
-
   return (
     <>
       <UpsertSubmissionFormDialog
@@ -218,7 +215,7 @@ export function SubmissionDetailsCard({
         submission={data.submission}
       />
       <DetailsCard
-        title={`Submission - ${data.submission.date}`}
+        title={format(new Date(data.submission.date), "EEEE, LLLL do, yyyy")}
         description={data.submission.description || "No description provided."}
         details={details}
         actions={actions}

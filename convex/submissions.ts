@@ -204,7 +204,7 @@ export const getById = query({
   },
 });
 
-export const getDetail = query({
+export const getDetails = query({
   args: { submissionId: v.id("submissions") },
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
