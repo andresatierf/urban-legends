@@ -335,41 +335,6 @@ export const listTeamMembers = query({
   },
 });
 
-export const addMember = mutation({
-  args: {
-    teamId: v.id("teams"),
-    userEmail: v.string(),
-    role: v.union(v.literal("member"), v.literal("captain")),
-  },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    validateIsAdmin(user);
-
-    // Find user by email
-    const userToAdd = await ctx.db
-      .query("users")
-      .filter((q) => q.eq(q.field("email"), args.userEmail))
-      .first();
-
-    if (!userToAdd) {
-      throw new Error("User not found");
-    }
-
-    await validateIsTeamMember(ctx, {
-      teamId: args.teamId,
-      userId: userToAdd._id,
-      invert: true,
-    });
-
-    await ctx.db.insert("teamMembers", {
-      teamId: args.teamId,
-      userId: userToAdd._id,
-      role: args.role,
-    });
-  },
-});
-
 export const removeMember = mutation({
   args: {
     teamId: v.id("teams"),

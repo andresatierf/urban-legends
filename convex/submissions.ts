@@ -362,46 +362,6 @@ export const remove = mutation({
   },
 });
 
-export const getTeamSubmissions = query({
-  args: {
-    teamId: v.id("teams"),
-    date: v.string(),
-  },
-  handler: async (ctx, args) => {
-    await getCurrentUserOrThrow(ctx);
-
-    const submissions = await ctx.db
-      .query("submissions")
-      .withIndex("by_team_and_date", (q) =>
-        q.eq("teamId", args.teamId).eq("date", args.date),
-      )
-      .filter((q) => q.eq(q.field("state"), "approved"))
-      .collect();
-
-    const submissionsWithUsers = [];
-    for (const submission of submissions) {
-      const user = await ctx.db.get(submission.userId);
-      if (user) {
-        const teammatesWithUsers = [];
-        for (const teammateId of submission.teammates) {
-          const teammate = await ctx.db.get(teammateId);
-          if (teammate) {
-            teammatesWithUsers.push(teammate);
-          }
-        }
-
-        submissionsWithUsers.push({
-          ...submission,
-          user,
-          teammatesWithUsers,
-        });
-      }
-    }
-
-    return submissionsWithUsers;
-  },
-});
-
 export const approve = mutation({
   args: { submissionId: v.id("submissions") },
   handler: async (ctx, args) => {
