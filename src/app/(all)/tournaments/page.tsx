@@ -21,9 +21,13 @@ import type { Id } from "../../../../convex/_generated/dataModel";
 export default function TournamentsPage() {
   const { user, isAdmin } = useUser();
 
-  const userTournaments =
-    useQuery(api.tournaments.list, { userId: user?._id }) || [];
-  const allTournaments = useQuery(api.tournaments.list, {}) || [];
+  const userTournamentsRaw = useQuery(api.tournaments.list, {
+    userId: user?._id,
+  });
+  const allTournamentsRaw = useQuery(api.tournaments.list, {});
+
+  const userTournaments = userTournamentsRaw || [];
+  const allTournaments = allTournamentsRaw || [];
 
   const teams = useQuery(api.teams.list, {}) || [];
   const teamCount = useMemo(() => {
@@ -34,7 +38,7 @@ export default function TournamentsPage() {
     }, new Map());
   }, [teams]);
 
-  if (!userTournaments) {
+  if (userTournamentsRaw === undefined) {
     return (
       <>
         <SectionHeader as="h1" title="Tournaments">

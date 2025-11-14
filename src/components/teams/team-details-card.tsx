@@ -121,7 +121,7 @@ export function TeamDetailsCard({ team, score, className }: Props) {
   );
 
   if (team === undefined) {
-    return <DetailsCardSkeleton detailsCount={4} className={className} />;
+    return <DetailsCardSkeleton detailsCount={2} className={className} />;
   }
 
   return (

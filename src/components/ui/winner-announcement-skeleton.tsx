@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader } from "./card";
 import { Skeleton } from "./skeleton";
 
@@ -8,7 +9,10 @@ type Props = {
 export function WinnerAnnouncementSkeleton({ className }: Props) {
   return (
     <Card
-      className={`border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20 ${className}`}
+      className={cn(
+        "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20",
+        className,
+      )}
     >
       <CardHeader>
         <Skeleton className="h-8 w-48" />
