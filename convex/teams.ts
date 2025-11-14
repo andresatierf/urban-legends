@@ -129,6 +129,117 @@ export const get = query({
   },
 });
 
+/**
+ * Get comprehensive team details with all related entities and permissions.
+ * This query follows the pattern established by submissions.getDetails to provide
+ * a single, efficient query for detail pages.
+ */
+export const getDetails = query({
+  args: {
+    teamId: v.id("teams"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    const { getRolesForUser } = await import("./users");
+
+    // Fetch team
+    const team = await ctx.db.get(args.teamId);
+    if (!team) {
+      throw new Error("Team not found");
+    }
+
+    // Fetch tournament (in parallel with other fetches)
+    const [tournament, teamMembers, submissions] = await Promise.all([
+      ctx.db.get(team.tournamentId),
+      ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+        .collect(),
+      ctx.db
+        .query("submissions")
+        .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+        .collect(),
+    ]);
+
+    // Fetch user details for each member with their roles
+    const membersWithRoles = await Promise.all(
+      teamMembers.map(async (member) => {
+        const memberUser = await ctx.db.get(member.userId);
+        if (!memberUser) return null;
+
+        const roles = await getRolesForUser(ctx, member.userId);
+        return {
+          ...memberUser,
+          roleNames: roles.map((r) => r.name),
+          role: member.role,
+          membershipId: member._id,
+        };
+      }),
+    );
+
+    // Filter out null users (deleted users)
+    const members = membersWithRoles.filter((m) => m !== null);
+
+    // Find captain
+    const captain = members.find((m) => m.role === "captain") || null;
+
+    // Find current user's membership
+    const userMembership = teamMembers.find((m) => m.userId === user._id);
+
+    // Calculate statistics
+    const approvedSubmissions = submissions.filter(
+      (s) => s.state === "approved",
+    );
+    const totalSubmissions = submissions.length;
+    const approvalRate =
+      totalSubmissions > 0 ? approvedSubmissions.length / totalSubmissions : 0;
+
+    // Determine permissions
+    const isAdmin = user.roleNames.includes("admin");
+    const isCaptain = userMembership?.role === "captain";
+    const isMember = Boolean(userMembership);
+
+    const canEdit = isAdmin || isCaptain;
+    const canDelete = isAdmin || isCaptain;
+    const canInvite = isAdmin || isCaptain;
+    const canLeave = isMember && !isCaptain; // Non-captains can leave directly
+    const canTransferCaptaincy = isCaptain && members.length > 1;
+    const canManageMembers = isAdmin || isCaptain;
+
+    // If captain, can only leave after transferring captaincy
+    if (isCaptain && members.length > 1) {
+      // canLeave remains false
+    } else if (isCaptain && members.length === 1) {
+      // Last member (captain) can leave (will delete team)
+    }
+
+    return {
+      team,
+      tournament,
+      members,
+      captain,
+      userMembership: userMembership
+        ? {
+            role: userMembership.role,
+            userId: userMembership.userId,
+          }
+        : null,
+      statistics: {
+        points: team.points ?? 0,
+        memberCount: members.length,
+        submissionCount: totalSubmissions,
+        approvalRate,
+      },
+      canEdit,
+      canDelete,
+      canInvite,
+      canLeave,
+      canTransferCaptaincy,
+      canManageMembers,
+    };
+  },
+});
+
 export const removeUserTeam = mutation({
   args: { teamId: v.id("teams") },
   handler: async (ctx, args) => {
