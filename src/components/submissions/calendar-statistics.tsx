@@ -17,7 +17,7 @@ export function CalendarStatistics({
   tournamentId,
 }: CalendarStatisticsProps) {
   const statistics = useQuery(
-    api.submissions.getTeamStatistics,
+    api.submissions.getUserStatistics,
     teamId && tournamentId ? { teamId, tournamentId } : "skip",
   );
 

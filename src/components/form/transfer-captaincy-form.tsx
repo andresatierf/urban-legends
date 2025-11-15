@@ -3,9 +3,9 @@
 import { useMutation, useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useId, useMemo, useState } from "react";
-import { toast } from "sonner";
 import z from "zod";
 import { useAppForm } from "@/hooks/form";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -70,20 +70,14 @@ export function TransferCaptaincyFormDialog({
       onChange: formSchema,
     },
     onSubmit: async ({ value: { newCaptainId } }) => {
-      try {
-        await transferCaptaincy({
-          teamId,
-          newCaptainId: newCaptainId,
-        });
-        toast.success("Captaincy transferred successfully!");
-        setOpen(false);
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to transfer captaincy",
-        );
-      }
+      await tryMutate({
+        fn: () => transferCaptaincy({ teamId, newCaptainId }),
+        onSuccess: () => {
+          setOpen(false);
+        },
+        successToast: "Captaincy transferred successfully!",
+        defaultFailureToast: "Failed to transfer captaincy",
+      });
     },
   });
 

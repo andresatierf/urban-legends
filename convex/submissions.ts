@@ -127,11 +127,12 @@ async function upsertSubmissionGroup(
 
     // Update all submissions with group reference
     for (const submission of submissions) {
-      if (submission.submissionGroupId !== existingGroup._id) {
-        await ctx.db.patch(submission._id, {
-          submissionGroupId: existingGroup._id,
-        });
-      }
+      await ctx.db.patch(submission._id, {
+        submissionGroupId: existingGroup._id,
+        pointsEarned: isTeamExercise
+          ? pointsEarned / participantCount
+          : pointsEarned,
+      });
     }
 
     return existingGroup._id;
@@ -319,7 +320,12 @@ export const upsert = mutation({
           .withIndex("by_group", (q) =>
             q.eq("submissionGroupId", existingGroup._id),
           )
-          .filter((q) => q.eq(q.field("userId"), user._id))
+          .filter((q) =>
+            q.and(
+              q.eq(q.field("userId"), user._id),
+              q.neq(q.field("state"), "deleted"),
+            ),
+          )
           .first();
 
         if (userInGroup) {
@@ -390,6 +396,7 @@ export const upsert = mutation({
         state: "pending",
         createdBy: user._id,
         pointsEarned: 0, // Will be calculated on approval
+        submissionGroupId: undefined,
       });
     }
 
@@ -677,19 +684,37 @@ export const approve = mutation({
       teamExerciseThreshold: 0.5,
     };
 
-    // Determine if this is a team exercise
-    const totalTeamMembers = teamMembers.length;
-    const participantCount = Math.min(
-      totalTeamMembers,
-      (submission.teammates?.length || 0) + 1,
-    );
-    const participationRate =
-      totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
-    const isTeamExercise =
-      participationRate >= scoringConfig.teamExerciseThreshold;
+    const teamSubmissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_group", (q) =>
+        q.eq("submissionGroupId", submission.submissionGroupId),
+      )
+      .collect();
 
-    if (isTeamExercise) {
-      pointsEarned = scoringConfig.teamExercisePoints[tier];
+    // Determine if this is a team exercise
+    if (submission.submissionType === "team") {
+      const totalTeamMembers = teamMembers.length;
+
+      const participationRate =
+        totalTeamMembers > 0
+          ? (teamSubmissions.length ?? 0) / totalTeamMembers
+          : 0;
+      const isTeamExercise =
+        participationRate >= scoringConfig.teamExerciseThreshold;
+
+      pointsEarned = isTeamExercise
+        ? scoringConfig.teamExercisePoints[tier]
+        : scoringConfig.individualPoints[tier];
+
+      await Promise.all(
+        teamSubmissions.map((s) =>
+          ctx.db.patch(s._id, {
+            state: "approved",
+            managedBy: user._id,
+            pointsEarned: pointsEarned / teamSubmissions.length,
+          }),
+        ),
+      );
     } else {
       pointsEarned = scoringConfig.individualPoints[tier];
     }
@@ -697,8 +722,19 @@ export const approve = mutation({
     await ctx.db.patch(args.submissionId, {
       state: "approved",
       managedBy: user._id,
-      pointsEarned,
+      pointsEarned:
+        submission.submissionType === "team"
+          ? pointsEarned / teamSubmissions.length
+          : pointsEarned,
     });
+
+    if (submission.submissionGroupId) {
+      await ctx.db.patch(submission.submissionGroupId, {
+        state: "approved",
+        managedBy: user._id,
+        pointsEarned,
+      });
+    }
 
     const currentPoints = team.points ?? 0;
 
@@ -759,6 +795,7 @@ export const reject = mutation({
 export const getMonthSubmissions = query({
   args: {
     teamId: v.id("teams"),
+    userId: v.optional(v.id("users")),
     year: v.number(),
     month: v.number(), // 1-12
   },
@@ -785,11 +822,20 @@ export const getMonthSubmissions = query({
     // Fetch submissions for month
     const submissions = await ctx.db
       .query("submissions")
-      .withIndex("by_team_and_date", (q) => q.eq("teamId", args.teamId))
+      .withIndex("by_team_and_user", (q) => {
+        const filter = q.eq("teamId", args.teamId);
+
+        if (args.userId) {
+          return filter.eq("userId", args.userId);
+        }
+
+        return filter;
+      })
       .filter((q) =>
         q.and(
           q.gte(q.field("date"), startDate),
           q.lte(q.field("date"), endDate),
+          q.neq(q.field("state"), "deleted"),
         ),
       )
       .collect();
@@ -802,6 +848,7 @@ export const getMonthSubmissions = query({
           state: sub.state,
           description: sub.description,
           pointsEarned: sub.pointsEarned || 0,
+          userId: sub.userId,
         };
         return acc;
       },
@@ -812,9 +859,136 @@ export const getMonthSubmissions = query({
           state: "pending" | "approved" | "rejected" | "deleted";
           description: string | undefined;
           pointsEarned: number;
+          userId: Id<"users">;
         }
       >,
     );
+  },
+});
+
+export const getUserStatistics = query({
+  args: {
+    teamId: v.id("teams"),
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    // Validate user is member of team
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team_and_user", (q) =>
+        q.eq("teamId", args.teamId).eq("userId", user._id),
+      )
+      .first();
+
+    if (!membership) {
+      throw new Error("Not a member of this team");
+    }
+
+    const tournament = await ctx.db.get(args.tournamentId);
+    if (!tournament) throw new Error("Tournament not found");
+
+    const submissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_team_and_user", (q) =>
+        q.eq("teamId", args.teamId).eq("userId", user._id),
+      )
+      .collect();
+
+    const startDate = new Date(tournament.startDate);
+    const endDate = new Date(tournament.endDate);
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    // If tournament hasn't started yet, return zeros
+    if (today < startDate) {
+      return {
+        totalDays: 0,
+        daysWithSubmissions: 0,
+        completionRate: 0,
+        currentStreak: 0,
+        approved: 0,
+        pending: 0,
+        rejected: 0,
+      };
+    }
+
+    const relevantEndDate = today < endDate ? today : endDate;
+    const formatDateKey = (date: Date) =>
+      [
+        date.getUTCFullYear(),
+        String(date.getUTCMonth() + 1).padStart(2, "0"),
+        String(date.getUTCDate()).padStart(2, "0"),
+      ].join("-");
+    const startDateKey = formatDateKey(startDate);
+    const relevantEndDateKey = formatDateKey(relevantEndDate);
+    const relevantSubmissions = submissions.filter((s) => {
+      if (s.state === "deleted") return false;
+      if (s.date < startDateKey) return false;
+      if (s.date > relevantEndDateKey) return false;
+      return true;
+    });
+
+    const totalDays =
+      Math.floor(
+        (relevantEndDate.getTime() - startDate.getTime()) /
+          (1000 * 60 * 60 * 24),
+      ) + 1;
+
+    const daysWithSubmissions = new Set(relevantSubmissions.map((s) => s.date))
+      .size;
+    const completionRate =
+      totalDays > 0 ? (daysWithSubmissions / totalDays) * 100 : 0;
+
+    // Calculate streak - count backwards from today
+    let currentStreak = 0;
+    const sortedDates = Array.from(
+      new Set(
+        relevantSubmissions
+          .filter((s) => s.state === "approved")
+          .map((s) => s.date),
+      ),
+    ).sort();
+
+    const toDateKey = (date: Date) =>
+      [
+        date.getUTCFullYear(),
+        String(date.getUTCMonth() + 1).padStart(2, "0"),
+        String(date.getUTCDate()).padStart(2, "0"),
+      ].join("-");
+
+    for (let i = 0; i < totalDays; i++) {
+      const date = new Date(today);
+      date.setUTCDate(date.getUTCDate() - i);
+      const dateStr = toDateKey(date);
+
+      // Skip if date is before tournament start
+      if (date < startDate) break;
+
+      if (sortedDates.includes(dateStr)) {
+        currentStreak++;
+      } else {
+        // Only break if this is not today (allow for today not being submitted yet)
+        if (i > 0) break;
+      }
+    }
+
+    const stateCounts = {
+      approved: relevantSubmissions.filter((s) => s.state === "approved")
+        .length,
+      pending: relevantSubmissions.filter((s) => s.state === "pending").length,
+      rejected: relevantSubmissions.filter((s) => s.state === "rejected")
+        .length,
+    };
+
+    return {
+      totalDays,
+      daysWithSubmissions,
+      completionRate: Math.round(completionRate),
+      currentStreak,
+      ...stateCounts,
+    };
   },
 });
 

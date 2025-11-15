@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
@@ -45,34 +45,24 @@ export function JoinRequestsList({ teamId }: Props) {
 
   const handleApprove = async (requestId: Id<"joinRequests">) => {
     setProcessingId(requestId);
-    try {
-      await respondToRequest({ requestId, approve: true });
-      toast.success("Join request approved!");
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to approve join request",
-      );
-    } finally {
-      setProcessingId(null);
-    }
+
+    await tryMutate({
+      fn: () => respondToRequest({ requestId, approve: true }),
+      onFinally: () => setProcessingId(null),
+      successToast: "Join request approved!",
+      defaultFailureToast: "Failed to approve join request",
+    });
   };
 
   const handleReject = async (requestId: Id<"joinRequests">) => {
     setProcessingId(requestId);
-    try {
-      await respondToRequest({ requestId, approve: false });
-      toast.success("Join request rejected");
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to reject join request",
-      );
-    } finally {
-      setProcessingId(null);
-    }
+
+    await tryMutate({
+      fn: () => respondToRequest({ requestId, approve: false }),
+      onFinally: () => setProcessingId(null),
+      successToast: "Join request rejected",
+      defaultFailureToast: "Failed to reject join request",
+    });
   };
 
   if (requests.length === 0) {

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
@@ -44,30 +44,24 @@ export function TeamInvitationsList() {
 
   const handleAccept = async (invitationId: Id<"teamInvitations">) => {
     setProcessingId(invitationId);
-    try {
-      await respondToInvitation({ invitationId, accept: true });
-      toast.success("Invitation accepted! You've joined the team.");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to accept invitation",
-      );
-    } finally {
-      setProcessingId(null);
-    }
+
+    await tryMutate({
+      fn: () => respondToInvitation({ invitationId, accept: true }),
+      onFinally: () => setProcessingId(null),
+      successToast: "Invitation accepted! You've joined the team.",
+      defaultFailureToast: "Failed to accept invitation",
+    });
   };
 
   const handleReject = async (invitationId: Id<"teamInvitations">) => {
     setProcessingId(invitationId);
-    try {
-      await respondToInvitation({ invitationId, accept: false });
-      toast.success("Invitation declined");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to decline invitation",
-      );
-    } finally {
-      setProcessingId(null);
-    }
+
+    await tryMutate({
+      fn: () => respondToInvitation({ invitationId, accept: false }),
+      onFinally: () => setProcessingId(null),
+      successToast: "Invitation declined",
+      defaultFailureToast: "Failed to decline invitation",
+    });
   };
 
   if (invitations.length === 0) {

@@ -3,12 +3,12 @@
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { useAppForm } from "@/hooks/form";
 import { useUser } from "@/hooks/useUser";
 import { toastFormValues } from "@/lib/form";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import {
@@ -82,20 +82,16 @@ export function UpsertSubmissionFormDialog({
       // onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        await upsertSubmission({ ...value, _id: submission?._id });
-        toast.success(
-          `Submission ${submission ? "updated" : "created"} successfully!`,
-        );
-        router.push("/submissions");
-        setOpen(false);
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : `Failed to ${submission ? "update" : "create"} submission`,
-        );
-      }
+      await tryMutate({
+        fn: () => upsertSubmission({ ...value, _id: submission?._id }),
+        onSuccess: () => {
+          router.push("/submissions");
+          setOpen(false);
+          form.reset();
+        },
+        successToast: `Submission ${submission ? "updated" : "created"} successfully!`,
+        defaultFailureToast: `Failed to ${submission ? "update" : "create"} submission`,
+      });
     },
   });
 
@@ -184,17 +180,6 @@ export function UpsertSubmissionFormDialog({
                   options={[
                     { value: "base", label: "Base" },
                     { value: "advanced", label: "Advanced" },
-                  ]}
-                />
-              )}
-            </form.AppField>
-            <form.AppField name="submissionType">
-              {(field) => (
-                <field.SelectField
-                  label="Submission Type"
-                  options={[
-                    { value: "individual", label: "Individual" },
-                    { value: "team", label: "Team" },
                   ]}
                 />
               )}

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
@@ -51,16 +51,12 @@ export function InvitedUsersList({ teamId, canCancel }: Props) {
     invitationId: Id<"teamInvitations">,
   ) => {
     setProcessingId(invitationId);
-    try {
-      await cancelInvitation({ invitationId });
-      toast.success("Invitation cancelled");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to cancel invitation",
-      );
-    } finally {
-      setProcessingId(null);
-    }
+    await tryMutate({
+      fn: () => cancelInvitation({ invitationId }),
+      onFinally: () => setProcessingId(null),
+      successToast: "Invitation cancelled",
+      defaultFailureToast: "Failed to cancel invitation",
+    });
   };
 
   if (invitations.length === 0) {

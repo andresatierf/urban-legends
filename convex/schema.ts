@@ -91,6 +91,7 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "date"])
     .index("by_team", ["teamId"])
+    .index("by_team_and_user", ["teamId", "userId"])
     .index("by_team_and_date", ["teamId", "date"])
     .index("by_team_and_type", ["teamId", "submissionType"]) // NEW
     .index("by_tournament_and_date", ["tournamentId", "date"])

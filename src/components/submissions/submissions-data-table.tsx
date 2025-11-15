@@ -1,10 +1,11 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMutation } from "convex/react";
+import { capitalize } from "lodash";
 import { Check, Pencil, Trash, X } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
-import { toast } from "sonner";
 import { useUser } from "@/hooks/useUser";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import {
@@ -51,6 +52,11 @@ export function SubmissionsDataTable<T, V>({
       { accessorKey: "team.name", header: "Team" },
       { accessorKey: "user.email", header: "Submitted by" },
       { accessorKey: "description", header: "Description" },
+      {
+        accessorKey: "submissionType",
+        header: "Type",
+        cell: ({ cell }) => capitalize(cell.getValue() as string),
+      },
     ];
 
     if (showActions) {
@@ -66,13 +72,16 @@ export function SubmissionsDataTable<T, V>({
                     variant="solid"
                     color="green"
                     size="icon"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      approveSubmission({ submissionId: submission._id });
-                      toast(
-                        `The submission by '${submission.user?.email}' on '${submission.date}' has been approved`,
-                      );
+
+                      await tryMutate({
+                        fn: () =>
+                          approveSubmission({ submissionId: submission._id }),
+                        successToast: `The submission by '${submission.user?.email}' on '${submission.date}' has been approved`,
+                        defaultFailureToast: "Failed to approve submission",
+                      });
                     }}
                     className="z-10"
                   >
@@ -82,13 +91,16 @@ export function SubmissionsDataTable<T, V>({
                     variant="solid"
                     color="orange"
                     size="icon"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      rejectSubmission({ submissionId: submission._id });
-                      toast(
-                        `The submission by '${submission.user?.email}' on '${submission.date}' has been rejected`,
-                      );
+
+                      await tryMutate({
+                        fn: () =>
+                          rejectSubmission({ submissionId: submission._id }),
+                        successToast: `The submission by '${submission.user?.email}' on '${submission.date}' has been rejected`,
+                        defaultFailureToast: "Failed to reject submission",
+                      });
                     }}
                     className="z-10"
                   >
@@ -111,13 +123,16 @@ export function SubmissionsDataTable<T, V>({
                 variant="solid"
                 color="destructive"
                 size="icon"
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  removeSubmission({ submissionId: submission._id });
-                  toast(
-                    `The submission by '${submission.user?.email}' on '${submission.date}' has been removed`,
-                  );
+
+                  await tryMutate({
+                    fn: () =>
+                      removeSubmission({ submissionId: submission._id }),
+                    successToast: `The submission by '${submission.user?.email}' on '${submission.date}' has been removed`,
+                    defaultFailureToast: "Failed to remove submission",
+                  });
                 }}
                 className="z-10"
               >

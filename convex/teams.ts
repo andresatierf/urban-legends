@@ -735,12 +735,17 @@ export const recalculatePoints = mutation({
     for (const submission of submissions) {
       let pointsEarned = submission.pointsEarned;
 
+      const teamSubmissions = await ctx.db
+        .query("submissions")
+        .withIndex("by_group", (q) =>
+          q.eq("submissionGroupId", submission.submissionGroupId),
+        )
+        // .filter((q) => q.neq(q.field("_id"), submission._id))
+        .collect();
+
       const tier = submission.tier || "base";
       const totalTeamMembers = teamMembers.length;
-      const participantCount = Math.min(
-        totalTeamMembers,
-        (submission.teammates?.length ?? 0) + 1,
-      );
+      const participantCount = teamSubmissions.length;
       const participationRate =
         totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
       const isTeamExercise =
@@ -751,10 +756,25 @@ export const recalculatePoints = mutation({
         : scoringConfig.individualPoints[tier];
 
       // Update the submission with calculated points
-      await ctx.db.patch(submission._id, { pointsEarned });
+      await ctx.db.patch(submission._id, {
+        pointsEarned:
+          submission.submissionType === "team"
+            ? pointsEarned / teamSubmissions.length
+            : pointsEarned,
+      });
+
+      if (submission.submissionGroupId) {
+        await ctx.db.patch(submission.submissionGroupId, {
+          pointsEarned,
+        });
+      }
+
       updatedCount++;
 
-      totalPoints += pointsEarned;
+      totalPoints +=
+        submission.submissionType === "team"
+          ? pointsEarned / teamSubmissions.length
+          : pointsEarned;
     }
 
     // Find most recent submission for lastActivityAt

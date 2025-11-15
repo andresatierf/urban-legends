@@ -13,8 +13,10 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
           className="z-10 size-6 bg-muted transition-colors focus-visible:outline-hidden [&_svg]:size-4"
         />
       </div>
-      <div className="flex min-h-screen w-full flex-col bg-gray-50">
-        <main className="m-4 flex flex-1 flex-col gap-4">{children}</main>
+      <div className="flex min-h-screen w-full flex-col items-center bg-gray-50">
+        <main className="flex w-full max-w-5xl flex-1 flex-col gap-4 p-4">
+          {children}
+        </main>
         <Toaster />
       </div>
     </SidebarProvider>

@@ -11,7 +11,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import { DetailsCard } from "../details-card";
 import { InviteMemberFormDialog } from "../form/invite-member-form";
@@ -36,27 +36,21 @@ export function TeamDetailsCard({ data, className }: TeamDetailsCardProps) {
   const handleDeleteTeam = useCallback(async () => {
     if (!data) return;
 
-    try {
-      await deleteTeam({ teamId: data.team._id });
-      toast.success("Team deleted successfully");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to delete team",
-      );
-    }
+    await tryMutate({
+      fn: () => deleteTeam({ teamId: data.team._id }),
+      successToast: "Team deleted successfully",
+      defaultFailureToast: "Failed to delete team",
+    });
   }, [deleteTeam, data]);
 
   const handleLeaveTeam = useCallback(async () => {
     if (!data) return;
 
-    try {
-      await leaveTeam({ teamId: data.team._id });
-      toast.success("Successfully left the team");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to leave team",
-      );
-    }
+    await tryMutate({
+      fn: () => leaveTeam({ teamId: data.team._id }),
+      successToast: "Successfully left the team",
+      defaultFailureToast: "Failed to leave team",
+    });
   }, [leaveTeam, data]);
 
   const details = useMemo(() => {

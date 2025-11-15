@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { capitalize, startCase } from "lodash";
 import { useEffect, useMemo, useState } from "react";
+import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
@@ -25,6 +26,7 @@ export function SubmissionCalendar({
   tournamentId,
   onDateClick,
 }: SubmissionCalendarProps) {
+  const { user } = useUser();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [weekStartsOn, setWeekStartsOn] = useState<number>(0); // 0 = Sunday, 1 = Monday, etc.
 
@@ -66,9 +68,10 @@ export function SubmissionCalendar({
 
   const submissions = useQuery(
     api.submissions.getMonthSubmissions,
-    teamId
+    teamId && user
       ? {
           teamId,
+          userId: user?._id,
           year: currentDate.getFullYear(),
           month: currentDate.getMonth() + 1,
         }
@@ -254,44 +257,46 @@ export function SubmissionCalendar({
         })}
       </div>
 
-      {/* Legend */}
-      <div className="mt-6 flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-between gap-4 border-t pt-4 text-xs">
-        <div className="flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-center gap-4">
-          {(
-            [undefined, "pending", "approved", "rejected"] as (
-              | undefined
-              | Doc<"submissions">["state"]
-            )[]
-          ).map((state) => (
-            <div key={state} className="flex items-center gap-2">
-              <div
-                className={cn(
-                  "h-4 w-4 rounded border-2",
-                  cellStyles({ state }),
-                )}
-              />
-              <span className="text-gray-600">
-                {state ? capitalize(state) : "No submission"}
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-center gap-4">
-          {["isOutsideTournament", "isDisabled", "isToday"].map((options) => (
-            <div key={options} className="flex items-center gap-2">
-              <div
-                className={cn(
-                  "h-4 w-4 rounded border-2",
-                  cellStyles({ [options]: true }),
-                )}
-              />
-              {/* Remove 'is' */}
-              <span className="text-gray-600">
-                {startCase(options).split(" ").slice(1).join(" ")}
-              </span>
-            </div>
-          ))}
-        </div>
+      <CalendarLegend />
+    </div>
+  );
+}
+
+function CalendarLegend() {
+  return (
+    <div className="mt-6 flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-between gap-4 border-t pt-4 text-xs">
+      <div className="flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-center gap-4">
+        {(
+          [undefined, "pending", "approved", "rejected"] as (
+            | undefined
+            | Doc<"submissions">["state"]
+          )[]
+        ).map((state) => (
+          <div key={state} className="flex items-center gap-2">
+            <div
+              className={cn("h-4 w-4 rounded border-2", cellStyles({ state }))}
+            />
+            <span className="text-gray-600">
+              {state ? capitalize(state) : "No submission"}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-center gap-4">
+        {["isOutsideTournament", "isDisabled", "isToday"].map((options) => (
+          <div key={options} className="flex items-center gap-2">
+            <div
+              className={cn(
+                "h-4 w-4 rounded border-2",
+                cellStyles({ [options]: true }),
+              )}
+            />
+            {/* Remove 'is' */}
+            <span className="text-gray-600">
+              {startCase(options).split(" ").slice(1).join(" ")}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

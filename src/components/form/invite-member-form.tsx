@@ -3,9 +3,9 @@
 import { useMutation, useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useId, useMemo, useState } from "react";
-import { toast } from "sonner";
 import z from "zod";
 import { useAppForm } from "@/hooks/form";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -68,15 +68,14 @@ export function InviteMemberFormDialog({
       onChange: formSchema,
     },
     onSubmit: async ({ value: { email } }) => {
-      try {
-        await inviteMember({ teamId, email: email.trim() });
-        toast.success("Invitation sent successfully!");
-        setOpen(false);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to send invitation",
-        );
-      }
+      await tryMutate({
+        fn: () => inviteMember({ teamId, email: email.trim() }),
+        onSuccess: () => {
+          setOpen(false);
+        },
+        successToast: "Invitation sent successfully!",
+        defaultFailureToast: "Failed to send invitation",
+      });
     },
   });
 

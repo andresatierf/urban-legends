@@ -3,19 +3,18 @@
 import { useQuery } from "convex/react";
 import { Calendar, List } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { UpsertSubmissionFormDialog } from "@/components/form/upsert-submission-form";
 import { SectionHeader } from "@/components/section-header";
 import { CalendarStatistics } from "@/components/submissions/calendar-statistics";
 import { SubmissionCalendar } from "@/components/submissions/submission-calendar";
-import { SubmissionsDataTable } from "@/components/submissions/submissions-data-table";
 import { TeamSelector } from "@/components/submissions/team-selector";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../convex/_generated/api";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
-export default function Submissions() {
+export default function SubmissionsPage() {
   const { user, isAdmin } = useUser();
   const router = useRouter();
 
@@ -25,16 +24,24 @@ export default function Submissions() {
   const [selectedDate, setSelectedDate] = useState<string>();
   const [upsertSubmissionOpen, setUpsertSubmissionOpen] = useState(false);
 
-  const submissions =
-    useQuery(
-      api.submissions.list,
-      user
-        ? { userId: user._id, state: ["approved", "pending", "rejected"] }
-        : "skip",
-    ) || [];
-  const pendingSubmissions =
-    useQuery(api.submissions.list, { state: "pending" }) || [];
+  // const submissions =
+  //   useQuery(
+  //     api.submissions.list,
+  //     user
+  //       ? { userId: user._id, state: ["approved", "pending", "rejected"] }
+  //       : "skip",
+  //   ) || [];
   const allSubmissions = useQuery(api.submissions.list, {}) || [];
+  //
+  // const pendingSubmissions = allSubmissions.filter(
+  //   (s) => s.state === "pending",
+  // );
+  // const approvedSubmissions = allSubmissions.filter(
+  //   (s) => s.state === "approved",
+  // );
+  // const rejectedSubmissions = allSubmissions.filter(
+  //   (s) => s.state === "rejected",
+  // );
 
   // Fetch user's teams with tournament data
   const userTeams = useQuery(
@@ -72,53 +79,66 @@ export default function Submissions() {
     (t) => t._id === selectedTeamId,
   );
 
-  const teams = useQuery(api.teams.list, {}) || [];
-  const teamIdMap = useMemo(() => {
-    return teams.reduce<Map<Id<"teams">, Doc<"teams">>>(
-      (acc, team) => acc.set(team._id, team),
-      new Map(),
-    );
-  }, [teams]);
+  // const teams = useQuery(api.teams.list, {}) || [];
+  // const teamIdMap = useMemo(() => {
+  //   return teams.reduce<Map<Id<"teams">, Doc<"teams">>>(
+  //     (acc, team) => acc.set(team._id, team),
+  //     new Map(),
+  //   );
+  // }, [teams]);
 
-  const users = useQuery(api.users.list, {}) || [];
-  const userIdMap = useMemo(() => {
-    return users.reduce<Map<Id<"users">, Doc<"users">>>(
-      (acc, user) => acc.set(user._id, user),
-      new Map(),
-    );
-  }, [users]);
+  // const users = useQuery(api.users.list, {}) || [];
+  // const userIdMap = useMemo(() => {
+  //   return users.reduce<Map<Id<"users">, Doc<"users">>>(
+  //     (acc, user) => acc.set(user._id, user),
+  //     new Map(),
+  //   );
+  // }, [users]);
 
-  const augmentSubmissions = useCallback(
-    (subs: Doc<"submissions">[]) =>
-      subs
-        .map((submission) => {
-          const team = teamIdMap.get(submission.teamId);
-          const user = userIdMap.get(submission.userId);
-
-          if (!team || !user) {
-            console.error(
-              "Missing team or user for submission",
-              submission._id,
-            );
-            return null;
-          }
-
-          return {
-            ...submission,
-            team,
-            user,
-          };
-        })
-        .filter((s): s is NonNullable<typeof s> => s !== null),
-    [teamIdMap, userIdMap],
-  );
+  // const augmentSubmissions = useCallback(
+  //   (subs: Doc<"submissions">[]) =>
+  //     subs
+  //       .map((submission) => {
+  //         const team = teamIdMap.get(submission.teamId);
+  //         const user = userIdMap.get(submission.userId);
+  //
+  //         if (!team || !user) {
+  //           console.error(
+  //             "Missing team or user for submission",
+  //             submission._id,
+  //           );
+  //           return null;
+  //         }
+  //
+  //         return {
+  //           ...submission,
+  //           team,
+  //           user,
+  //         };
+  //       })
+  //       .filter((s): s is NonNullable<typeof s> => s !== null),
+  //   [teamIdMap, userIdMap],
+  // );
 
   const handleDateClick = (date: string, submissionId?: Id<"submissions">) => {
-    const submission = submissionId
-      ? allSubmissions.find((s) => s._id === submissionId)
-      : undefined;
+    if (!submissionId) {
+      setSelectedSubmission(undefined);
+      setSelectedDate(date);
+      setUpsertSubmissionOpen(true);
+      return;
+    }
+
+    const submission = allSubmissions.find((s) => s._id === submissionId);
+
     if (submission?.state === "approved") {
       router.push(`/submissions/${submission._id}`);
+      return;
+    }
+
+    if (submission?.state === "rejected" || submission?.state === "deleted") {
+      setSelectedSubmission(undefined);
+      setSelectedDate(date);
+      setUpsertSubmissionOpen(true);
       return;
     }
 
@@ -128,13 +148,11 @@ export default function Submissions() {
   };
 
   const handleClose = (newOpen: boolean) => {
-    setUpsertSubmissionOpen(newOpen);
     if (!newOpen) {
-      setTimeout(() => {
-        setSelectedSubmission(undefined);
-        setSelectedDate(undefined);
-      }, 200);
+      setSelectedSubmission(undefined);
+      setSelectedDate(undefined);
     }
+    setUpsertSubmissionOpen(newOpen);
   };
 
   return (
@@ -203,28 +221,28 @@ export default function Submissions() {
           )}
         </TabsContent>
         <TabsContent value="list">
-          <div className="space-y-6">
-            <SubmissionsDataTable
-              title="Your Submissions"
-              submissions={augmentSubmissions(submissions)}
-              showActions
-            />
-            {isAdmin && (
-              <>
-                <SubmissionsDataTable
-                  title="Pending Submissions"
-                  submissions={augmentSubmissions(pendingSubmissions)}
-                  showActions
-                />
-                <SubmissionsDataTable
-                  title="All Submissions"
-                  submissions={augmentSubmissions(allSubmissions)}
-                  showActions
-                  enableSearch
-                />
-              </>
-            )}
-          </div>
+          {/* <div className="space-y-6"> */}
+          {/*   <SubmissionsDataTable */}
+          {/*     title="Your Submissions" */}
+          {/*     submissions={augmentSubmissions(submissions)} */}
+          {/*     showActions */}
+          {/*   /> */}
+          {/*   {isAdmin && ( */}
+          {/*     <> */}
+          {/*       <SubmissionsDataTable */}
+          {/*         title="Pending Submissions" */}
+          {/*         submissions={augmentSubmissions(pendingSubmissions)} */}
+          {/*         showActions */}
+          {/*       /> */}
+          {/*       <SubmissionsDataTable */}
+          {/*         title="All Submissions" */}
+          {/*         submissions={augmentSubmissions(allSubmissions)} */}
+          {/*         showActions */}
+          {/*         enableSearch */}
+          {/*       /> */}
+          {/*     </> */}
+          {/*   )} */}
+          {/* </div> */}
         </TabsContent>
       </Tabs>
     </>

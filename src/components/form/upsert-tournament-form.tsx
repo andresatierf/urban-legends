@@ -2,11 +2,11 @@ import { useMutation } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { toast } from "sonner";
 import * as z from "zod";
 import { useAppForm } from "@/hooks/form";
 import { useUser } from "@/hooks/useUser";
 import { toastFormValues } from "@/lib/form";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -93,23 +93,15 @@ export function UpsertTournamentFormDialog({
       // onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        const upsertedId = await upsertTournament({
-          ...value,
-          _id: tournament?._id,
-        });
-        toast.success(
-          `Tournament ${tournament ? "updated" : "created"} successfully!`,
-        );
-        router.push(`/tournaments/${upsertedId}`);
-        setOpen(false);
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : `Failed to ${tournament ? "update" : "create"} tournament`,
-        );
-      }
+      await tryMutate({
+        fn: () => upsertTournament({ ...value, _id: tournament?._id }),
+        onSuccess: (upsertedId) => {
+          router.push(`/tournaments/${upsertedId}`);
+          setOpen(false);
+        },
+        successToast: `Tournament ${tournament ? "updated" : "created"} successfully!`,
+        defaultFailureToast: `Failed to ${tournament ? "update" : "create"} tournament`,
+      });
     },
   });
 
