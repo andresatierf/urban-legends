@@ -15,7 +15,7 @@ export const makeFirstUserAdmin = mutation({
     let adminRole = await adminQuery.first();
 
     if (!adminRole) {
-      await ctx.runMutation(internal.roles.seedRoles);
+      await ctx.runMutation(internal.seed.seedRoles);
 
       adminRole = await adminQuery.first();
 

@@ -14,9 +14,10 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as admin from "../admin.js";
+import type * as data from "../data.js";
 import type * as http from "../http.js";
 import type * as joinRequests from "../joinRequests.js";
-import type * as roles from "../roles.js";
+import type * as seed from "../seed.js";
 import type * as submissions from "../submissions.js";
 import type * as teamInvitations from "../teamInvitations.js";
 import type * as teams from "../teams.js";
@@ -33,9 +34,10 @@ import type * as users from "../users.js";
  */
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  data: typeof data;
   http: typeof http;
   joinRequests: typeof joinRequests;
-  roles: typeof roles;
+  seed: typeof seed;
   submissions: typeof submissions;
   teamInvitations: typeof teamInvitations;
   teams: typeof teams;
