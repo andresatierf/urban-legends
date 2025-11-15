@@ -1,25 +1,12 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import {
-  BUTTON_COLORS,
-  BUTTON_SHAPES,
-  BUTTON_SIZES,
-  BUTTON_VARIANTS,
-  type ButtonColorValues,
-  type ButtonShapeValues,
-  type ButtonSizeValues,
-  type ButtonVariantValues,
-} from "./button.types";
-
-// Re-export for convenience
-export { BUTTON_COLORS, BUTTON_SHAPES, BUTTON_SIZES, BUTTON_VARIANTS };
-export type {
+import type {
   ButtonColorValues,
   ButtonShapeValues,
   ButtonSizeValues,
   ButtonVariantValues,
-};
+} from "./button.types";
 
 export const buttonVariants = cva(
   cn(

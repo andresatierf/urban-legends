@@ -1,9 +1,30 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
-export const makeFirstUserAdmin = mutation({
+/**
+ * ADMIN UTILITY - Manual Execution Only
+ *
+ * Makes the first user in the system an admin. This is a bootstrap function
+ * intended to be run once after initial deployment to create the first admin user.
+ *
+ * **Usage:**
+ * 1. Deploy the application
+ * 2. Create the first user account via Clerk authentication
+ * 3. Run this mutation manually via the Convex dashboard
+ * 4. The authenticated user will receive the admin role
+ *
+ * **Safety:**
+ * - Will not create duplicate admins (checks if any admin exists first)
+ * - Automatically seeds roles if they don't exist
+ * - Returns false if an admin already exists
+ *
+ * @returns {boolean} true if admin was created, false if admin already exists
+ *
+ * @internal This function is not exposed to the frontend
+ */
+export const makeFirstUserAdmin = internalMutation({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -42,116 +63,6 @@ export const makeFirstUserAdmin = mutation({
     });
 
     return true;
-  },
-});
-
-export const addUserRole = mutation({
-  args: {
-    userId: v.id("users"),
-    roleName: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const currentUser = await getCurrentUserOrThrow(ctx);
-
-    validateIsAdmin(currentUser);
-
-    // Verify target user exists
-    const targetUser = await ctx.db.get(args.userId);
-    if (!targetUser) {
-      throw new Error("User not found");
-    }
-
-    // Get role by name
-    const role = await ctx.db
-      .query("roles")
-      .withIndex("by_name", (q) => q.eq("name", args.roleName))
-      .first();
-
-    if (!role) {
-      throw new Error(`Role "${args.roleName}" not found`);
-    }
-
-    // Check if user already has this role
-    const existingUserRole = await ctx.db
-      .query("userRoles")
-      .withIndex("by_user_role", (q) =>
-        q.eq("userId", args.userId).eq("roleId", role._id),
-      )
-      .first();
-
-    if (existingUserRole) {
-      throw new Error("User already has this role");
-    }
-
-    // Add role
-    await ctx.db.insert("userRoles", {
-      userId: args.userId,
-      roleId: role._id,
-      assignedBy: currentUser._id,
-      assignedAt: new Date().toISOString(),
-    });
-
-    return { success: true };
-  },
-});
-
-export const removeUserRole = mutation({
-  args: {
-    userId: v.id("users"),
-    roleName: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const currentUser = await getCurrentUserOrThrow(ctx);
-
-    validateIsAdmin(currentUser);
-
-    // Get role by name
-    const role = await ctx.db
-      .query("roles")
-      .withIndex("by_name", (q) => q.eq("name", args.roleName))
-      .first();
-
-    if (!role) {
-      throw new Error(`Role "${args.roleName}" not found`);
-    }
-
-    // Special check: cannot remove "user" role
-    if (args.roleName === "user") {
-      throw new Error("Cannot remove basic user role");
-    }
-
-    // Special check: cannot remove last admin
-    if (args.roleName === "admin") {
-      const adminCount = await ctx.db
-        .query("userRoles")
-        .withIndex("by_role", (q) => q.eq("roleId", role._id))
-        .collect();
-
-      if (adminCount.length <= 1) {
-        throw new Error("Cannot remove last admin user");
-      }
-
-      // Warn if removing admin from self (but allow it)
-      if (args.userId === currentUser._id) {
-        console.warn("Admin removing admin role from self");
-      }
-    }
-
-    // Find and remove userRole
-    const userRole = await ctx.db
-      .query("userRoles")
-      .withIndex("by_user_role", (q) =>
-        q.eq("userId", args.userId).eq("roleId", role._id),
-      )
-      .first();
-
-    if (!userRole) {
-      throw new Error("User does not have this role");
-    }
-
-    await ctx.db.delete(userRole._id);
-
-    return { success: true };
   },
 });
 

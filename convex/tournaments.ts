@@ -256,13 +256,6 @@ export const upsert = mutation({
   },
 });
 
-export const remove = mutation({
-  args: { tournamentId: v.id("tournaments") },
-  handler: async (_ctx, _args) => {
-    throw new Error("Not implemented");
-  },
-});
-
 // Get users not in any team for a given tournament
 export const getAvailableUsersForTournament = query({
   args: {
@@ -449,7 +442,33 @@ export const getWinner = query({
   },
 });
 
-// Determine winner for a tournament (admin only)
+/**
+ * ADMIN UTILITY - Manual Execution Only
+ *
+ * Determines and records the winner of a tournament based on the leaderboard.
+ * This function automatically selects the team with the highest points as the winner.
+ *
+ * **Usage:**
+ * 1. Ensure the tournament has ended (enforced by validation)
+ * 2. Run this mutation via the Convex dashboard or future admin UI
+ * 3. The winning team will be recorded in the tournament record
+ *
+ * **Logic:**
+ * - Validates that the tournament has ended
+ * - Sorts teams by points (descending) with lastActivityAt as tie-breaker
+ * - Sets the top team as the winner
+ * - Records completion timestamp
+ *
+ * **Safety:**
+ * - Admin-only access
+ * - Cannot be run before tournament end date
+ * - Requires at least one team to exist
+ *
+ * @param tournamentId - The ID of the tournament to determine winner for
+ *
+ * @internal This function is intended for manual execution by admins.
+ *          May be integrated into admin dashboard UI in the future.
+ */
 export const determineWinner = mutation({
   args: {
     tournamentId: v.id("tournaments"),

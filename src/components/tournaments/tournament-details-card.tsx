@@ -1,11 +1,9 @@
-import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { Pencil, Trash2, Trophy } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { Pencil, Trophy } from "lucide-react";
+import { useMemo, useState } from "react";
 import { DetailsCard } from "@/components/details-card";
 import { DetailsCardSkeleton } from "@/components/ui/details-card-skeleton";
-import { api } from "../../../convex/_generated/api";
+import type { api } from "../../../convex/_generated/api";
 import { UpsertTournamentFormDialog } from "../form/upsert-tournament-form";
 import { getStatusBadge } from "./utils";
 
@@ -20,21 +18,6 @@ export function TournamentDetailsCard({
 }: TournamentDetailsCardProps) {
   const [editTournamentDialogOpen, setEditTournamentDialogOpen] =
     useState(false);
-
-  const deleteTournament = useMutation(api.tournaments.remove);
-
-  const handleDeleteTournament = useCallback(async () => {
-    if (!data) return;
-
-    try {
-      await deleteTournament({ tournamentId: data.tournament._id });
-      toast.success("Tournament deleted successfully");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to delete tournament",
-      );
-    }
-  }, [data, deleteTournament]);
 
   const details = useMemo(() => {
     if (!data) return [];
@@ -80,15 +63,8 @@ export function TournamentDetailsCard({
         icon: Pencil,
         condition: data.canEdit,
       },
-      {
-        label: "Delete tournament",
-        onClick: handleDeleteTournament,
-        icon: Trash2,
-        condition: data.canDelete,
-        separator: "before" as const,
-      },
     ];
-  }, [data, handleDeleteTournament]);
+  }, [data]);
 
   if (!data) {
     return <DetailsCardSkeleton detailsCount={4} className={className} />;

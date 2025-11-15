@@ -335,78 +335,6 @@ export const listTeamMembers = query({
   },
 });
 
-export const create = mutation({
-  args: {
-    name: v.string(),
-    tournamentId: v.id("tournaments"),
-    members: v.array(v.id("users")),
-    visibility: v.optional(v.union(v.literal("public"), v.literal("private"))),
-  },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    validateIsAdmin(user);
-
-    await validateUniqueTeamName(ctx, {
-      tournamentId: args.tournamentId,
-      name: args.name,
-    });
-
-    const tournament = await ctx.db.get(args.tournamentId);
-    if (!tournament) {
-      throw new Error("Tournament not found");
-    }
-
-    const team = await ctx.db.insert("teams", {
-      name: args.name,
-      tournamentId: args.tournamentId,
-      createdBy: user._id,
-      visibility: args.visibility ?? "public",
-      maxMembers: tournament.teamMaxSize,
-      points: 0,
-    });
-
-    // TODO: add members if provided
-
-    return team;
-  },
-});
-
-export const addMember = mutation({
-  args: {
-    teamId: v.id("teams"),
-    userEmail: v.string(),
-    role: v.union(v.literal("member"), v.literal("captain")),
-  },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    validateIsAdmin(user);
-
-    // Find user by email
-    const userToAdd = await ctx.db
-      .query("users")
-      .filter((q) => q.eq(q.field("email"), args.userEmail))
-      .first();
-
-    if (!userToAdd) {
-      throw new Error("User not found");
-    }
-
-    await validateIsTeamMember(ctx, {
-      teamId: args.teamId,
-      userId: userToAdd._id,
-      invert: true,
-    });
-
-    await ctx.db.insert("teamMembers", {
-      teamId: args.teamId,
-      userId: userToAdd._id,
-      role: args.role,
-    });
-  },
-});
-
 export const removeMember = mutation({
   args: {
     teamId: v.id("teams"),
@@ -723,7 +651,45 @@ export async function validateTeamHasSpace(
   return team;
 }
 
-// Admin utility to recalculate team points from approved submissions
+/**
+ * ADMIN UTILITY - Manual Execution for Data Fixes
+ *
+ * Recalculates a team's total points from all approved submissions.
+ * Use this utility to fix point calculation inconsistencies caused by:
+ * - Data migration issues
+ * - Bugs in scoring logic (now fixed)
+ * - Manual database modifications
+ * - Missing pointsEarned values on submissions
+ *
+ * **Usage:**
+ * 1. Identify a team with incorrect point totals
+ * 2. Run this mutation via Convex dashboard with the team ID
+ * 3. The function will recalculate all submission points using the
+ *    tournament's flexible scoring configuration
+ * 4. Team points will be updated to match the sum of all approved submissions
+ *
+ * **What it does:**
+ * - Fetches all approved submissions for the team
+ * - For submissions missing pointsEarned, calculates points using:
+ *   - Tournament scoring configuration (individual/team, base/advanced)
+ *   - Team member participation rate
+ *   - Team exercise threshold detection
+ * - Updates submissions with calculated pointsEarned values
+ * - Recalculates team total from actual submission points
+ *
+ * **Safety:**
+ * - Admin-only access
+ * - Recalculates and updates pointsEarned for all approved submissions
+ * - Overwrites any existing pointsEarned values with fresh calculations
+ * - Atomic operation per submission
+ *
+ * @param teamId - The ID of the team to recalculate points for
+ * @returns Object with totalPoints and count of submissions updated
+ *
+ * @internal This function is for manual data fixes and maintenance.
+ *          Should not be needed in normal operation once all submissions
+ *          have proper pointsEarned values.
+ */
 export const recalculatePoints = mutation({
   args: {
     teamId: v.id("teams"),
