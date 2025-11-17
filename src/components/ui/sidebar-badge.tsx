@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { useMemo } from "react";
 import { api } from "../../../convex/_generated/api";
 import { Badge } from "./badge";
 
@@ -10,17 +11,39 @@ interface SidebarBadgeProps {
 }
 
 export function SidebarBadge({ query, color = "default" }: SidebarBadgeProps) {
-  // Parse query string to Convex API call
-  const [namespace, method] = query.split(".");
+  // Parse and validate query string at render time (not conditionally)
+  const apiMethod = useMemo(() => {
+    if (!query.includes(".")) {
+      console.error(
+        `Invalid badge query format: "${query}". Expected "namespace.method"`,
+      );
+      return null;
+    }
 
-  // Dynamically access the API based on the query string
-  const apiNamespace = api[namespace as keyof typeof api] as Record<
-    string,
-    // biome-ignore lint/suspicious/noExplicitAny: Dynamic API access requires any
-    any
-  >;
-  const count = useQuery(apiNamespace?.[method]);
+    const [namespace, method] = query.split(".");
 
+    // Validate namespace exists in API
+    const apiNamespace = api[namespace as keyof typeof api];
+    if (!apiNamespace || typeof apiNamespace !== "object") {
+      console.error(`Invalid namespace in badge query: "${namespace}"`);
+      return null;
+    }
+
+    // Validate method exists in namespace
+    const resolvedMethod = (apiNamespace as Record<string, unknown>)[method];
+    if (typeof resolvedMethod !== "function") {
+      console.error(`Invalid method in badge query: "${namespace}.${method}"`);
+      return null;
+    }
+
+    return resolvedMethod;
+  }, [query]);
+
+  // biome-ignore lint/suspicious/noExplicitAny: Dynamic API access requires any
+  const count = useQuery(apiMethod as any);
+
+  // Early returns after all hooks have been called
+  if (!apiMethod) return null;
   if (!count || count === 0) return null;
 
   return (
