@@ -168,10 +168,11 @@ export async function upsertSubmissionGroup(
     await ctx.db.patch(existingGroup._id, groupData);
 
     // Update all submissions with group reference only
-    // Points will be recalculated by recalculateSubmissionPoints
+    // Clear points since group is being recalculated
     for (const submission of submissions) {
       await ctx.db.patch(submission._id, {
         submissionGroupId: existingGroup._id,
+        pointsEarned: 0,
       });
     }
 
@@ -235,7 +236,7 @@ export const approve = mutation({
       await ctx.db.patch(submission._id, {
         state: "approved",
         managedBy: user._id,
-        pointsEarned, // Each submission gets same points (for consistency)
+        pointsEarned: pointsEarned / submissions.length, // Each submission gets same points (for consistency)
       });
     }
 
