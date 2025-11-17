@@ -1,10 +1,12 @@
 "use client";
 
+import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery } from "convex/react";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 import z from "zod";
 import { useAppForm } from "@/hooks/form";
+import { useUser } from "@/hooks/useUser";
 import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -22,14 +24,17 @@ import {
 import { FieldGroup } from "../ui/field";
 
 const formSchema = z.object({
+  teamId: z.custom<Id<"teams">>(
+    (val) => typeof val === "string" && val.length >= 1,
+    "Please select a team",
+  ),
   email: z.email(),
 });
 
 type Props = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  teamId: Id<"teams">;
-  tournamentId: Id<"tournaments">;
+  teamId?: Id<"teams">;
   children?: React.ReactNode;
 };
 
@@ -37,19 +42,55 @@ export function InviteMemberFormDialog({
   open: controlledOpen,
   onOpenChange,
   teamId,
-  tournamentId,
   children,
 }: Props) {
   const formId = useId();
+  const { user } = useUser();
   const [internalOpen, setInternalOpen] = useState(false);
 
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
 
   const inviteMember = useMutation(api.teamInvitations.inviteMember);
+
+  const form = useAppForm({
+    defaultValues: {
+      teamId: teamId ?? "",
+      email: "",
+    } as z.input<typeof formSchema>,
+    validators: {
+      onChange: formSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await tryMutate({
+        fn: () =>
+          inviteMember({
+            ...value,
+            email: value.email.trim(),
+          }),
+        onSuccess: () => {
+          setOpen(false);
+        },
+        successToast: "Invitation sent successfully!",
+        defaultFailureToast: "Failed to send invitation",
+      });
+    },
+  });
+
+  const teams = useQuery(
+    api.teams.list,
+    !teamId && user ? { userId: user._id } : "skip",
+  );
+  const teamOptions = useMemo(
+    () => teams?.map((t) => ({ value: t._id, label: t.name })) ?? [],
+    [teams],
+  );
+
+  const formTeamId = useStore(form.store, (state) => state.values.teamId);
+
   const availableUsers = useQuery(
-    api.tournaments.getAvailableUsersForTournament,
-    { tournamentId },
+    api.tournaments.getAvailableUsersForTeam,
+    teamId || formTeamId ? { teamId: teamId ?? formTeamId } : "skip",
   );
   const userOptions = useMemo(
     () =>
@@ -59,25 +100,6 @@ export function InviteMemberFormDialog({
       })) ?? [],
     [availableUsers],
   );
-
-  const form = useAppForm({
-    defaultValues: {
-      email: "",
-    } as z.input<typeof formSchema>,
-    validators: {
-      onChange: formSchema,
-    },
-    onSubmit: async ({ value: { email } }) => {
-      await tryMutate({
-        fn: () => inviteMember({ teamId, email: email.trim() }),
-        onSuccess: () => {
-          setOpen(false);
-        },
-        successToast: "Invitation sent successfully!",
-        defaultFailureToast: "Failed to send invitation",
-      });
-    },
-  });
 
   return (
     <Dialog
@@ -94,7 +116,19 @@ export function InviteMemberFormDialog({
           form.handleSubmit();
         }}
       >
-        {children && <DialogTrigger asChild>{children}</DialogTrigger>}
+        {children ? (
+          <DialogTrigger asChild>{children}</DialogTrigger>
+        ) : (
+          controlledOpen === undefined &&
+          onOpenChange === undefined && (
+            <DialogTrigger asChild>
+              <Button type="button">
+                <UserPlus />
+                Invite Member
+              </Button>
+            </DialogTrigger>
+          )
+        )}
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Invite Team Member</DialogTitle>
@@ -106,6 +140,13 @@ export function InviteMemberFormDialog({
           </DialogHeader>
 
           <FieldGroup>
+            {!teamId && (
+              <form.AppField name="teamId">
+                {(field) => (
+                  <field.ComboboxField label="Team" options={teamOptions} />
+                )}
+              </form.AppField>
+            )}
             <form.AppField name="email">
               {(field) => (
                 <field.ComboboxField label="User" options={userOptions} />

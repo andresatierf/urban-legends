@@ -27,10 +27,7 @@ export function InviteMemberCard({ team, isCaptain }: Props) {
           </EmptyDescription>
           {isCaptain && (
             <EmptyContent>
-              <InviteMemberFormDialog
-                teamId={team._id}
-                tournamentId={team.tournamentId}
-              >
+              <InviteMemberFormDialog teamId={team._id}>
                 <Button>Invite a Member</Button>
               </InviteMemberFormDialog>
             </EmptyContent>

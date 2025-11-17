@@ -133,7 +133,6 @@ export function TeamDetailsCard({ data, className }: TeamDetailsCardProps) {
         open={inviteDialogOpen}
         onOpenChange={setInviteDialogOpen}
         teamId={data.team._id}
-        tournamentId={data.team.tournamentId}
       />
       <UpsertTeamFormDialog
         open={editTeamDialogOpen}

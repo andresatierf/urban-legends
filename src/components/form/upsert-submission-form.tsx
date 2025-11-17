@@ -61,10 +61,9 @@ export function UpsertSubmissionFormDialog({
 
   const upsertSubmission = useMutation(api.submissions.upsert);
 
-  const teams =
-    useQuery(api.teams.list, user ? { userId: user._id } : "skip") || [];
+  const teams = useQuery(api.teams.list, user ? { userId: user._id } : "skip");
   const teamOptions = useMemo(
-    () => teams.map((t) => ({ value: t._id, label: t.name })),
+    () => teams?.map((t) => ({ value: t._id, label: t.name })) ?? [],
     [teams],
   );
 
