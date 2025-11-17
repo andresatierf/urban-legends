@@ -1,12 +1,13 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import type { FunctionReference } from "convex/server";
 import { useMemo } from "react";
 import { api } from "../../../convex/_generated/api";
 import { Badge } from "./badge";
 
 interface SidebarBadgeProps {
-  query: string; // e.g., "captain.getPendingActionsCount"
+  query: string;
   color?: "default" | "destructive" | "secondary" | "outline";
 }
 
@@ -30,8 +31,10 @@ export function SidebarBadge({ query, color = "default" }: SidebarBadgeProps) {
     }
 
     // Validate method exists in namespace
-    const resolvedMethod = (apiNamespace as Record<string, unknown>)[method];
-    if (typeof resolvedMethod !== "function") {
+    const resolvedMethod = (
+      apiNamespace as Record<string, FunctionReference<"query">>
+    )[method];
+    if (typeof resolvedMethod !== "object") {
       console.error(`Invalid method in badge query: "${namespace}.${method}"`);
       return null;
     }
@@ -39,8 +42,7 @@ export function SidebarBadge({ query, color = "default" }: SidebarBadgeProps) {
     return resolvedMethod;
   }, [query]);
 
-  // biome-ignore lint/suspicious/noExplicitAny: Dynamic API access requires any
-  const count = useQuery(apiMethod as any);
+  const count = useQuery(apiMethod as FunctionReference<"query">);
 
   // Early returns after all hooks have been called
   if (!apiMethod) return null;

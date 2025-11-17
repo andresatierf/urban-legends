@@ -2,7 +2,7 @@
   "sidebar": {
     "items": {
       "user": {
-        "group": "Main",
+        "group": "Player",
         "dashboard": "Dashboard",
         "tournaments": "Tournaments",
         "teams": "Teams",
@@ -45,10 +45,6 @@
         "live": "Live Tournaments",
         "favorites": "Favorites"
       }
-    },
-    "user": {
-      "loggedIn": "Logged in",
-      "loggedInAs": "Logged in as {name}"
     }
   }
 }

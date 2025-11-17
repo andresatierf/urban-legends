@@ -259,18 +259,21 @@ export const upsert = mutation({
 });
 
 // Get users not in any team for a given tournament
-export const getAvailableUsersForTournament = query({
+export const getAvailableUsersForTeam = query({
   args: {
-    tournamentId: v.id("tournaments"),
+    teamId: v.id("teams"),
   },
   handler: async (ctx, args) => {
     await getCurrentUserOrThrow(ctx);
+
+    const team = await ctx.db.get(args.teamId);
+    if (!team) throw new Error("Team not found");
 
     // Get all teams in this tournament
     const teams = await ctx.db
       .query("teams")
       .withIndex("by_tournament", (q) =>
-        q.eq("tournamentId", args.tournamentId),
+        q.eq("tournamentId", team.tournamentId),
       )
       .collect();
 
