@@ -26,12 +26,16 @@ export async function recalculateSubmissionPoints(
     submissionId: Id<"submissions">;
     previousState?: "pending" | "approved" | "rejected" | "deleted";
     managedBy?: Id<"users">;
+    skipTeamRecalculation?: boolean;
   },
 ): Promise<number> {
   const submission = await ctx.db.get(args.submissionId);
   if (!submission) {
     throw new Error("Submission not found");
   }
+
+  // Track old points to calculate difference
+  const oldPoints = submission.pointsEarned || 0;
 
   // Get tournament and team for scoring calculations
   const [tournament, team] = await Promise.all([
@@ -146,9 +150,14 @@ export async function recalculateSubmissionPoints(
 
   // Recalculate team points from all approved submissions
   // This ensures correctness even when group composition changes
-  await recalculateTeamPoints(ctx, submission.teamId);
+  if (!args.skipTeamRecalculation) {
+    await recalculateTeamPoints(ctx, submission.teamId);
+  }
 
-  return 0;
+  // Fetch updated submission to get new points
+  const updatedSubmission = await ctx.db.get(args.submissionId);
+  const newPoints = updatedSubmission?.pointsEarned || 0;
+  return newPoints - oldPoints;
 }
 
 export const list = query({

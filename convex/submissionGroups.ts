@@ -282,7 +282,8 @@ export const list = query({
     endDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await getCurrentUserOrThrow(ctx);
+    const user = await getCurrentUserOrThrow(ctx);
+    validateIsAdmin(user);
 
     let query = ctx.db.query("submissionGroups");
 
@@ -321,10 +322,23 @@ export const list = query({
 export const getWithSubmissions = query({
   args: { groupId: v.id("submissionGroups") },
   handler: async (ctx, args) => {
-    await getCurrentUserOrThrow(ctx);
+    const currentUser = await getCurrentUserOrThrow(ctx);
 
     const group = await ctx.db.get(args.groupId);
     if (!group) return null;
+
+    const isAdmin = currentUser.roleNames.includes("admin");
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team_and_user", (q) =>
+        q.eq("teamId", group.teamId).eq("userId", currentUser._id),
+      )
+      .first();
+
+    if (!isAdmin && !membership) {
+      throw new Error("You do not have permission to view this group");
+    }
+    await getCurrentUserOrThrow(ctx);
 
     // Get all individual submissions
     const submissions = await ctx.db

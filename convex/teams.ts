@@ -772,9 +772,13 @@ export const recalculatePoints = mutation({
         submissionId: submission._id,
         previousState: submission.state,
         managedBy: user._id,
+        skipTeamRecalculation: true,
       });
       updatedCount++;
     }
+
+    // Recalculate team points once after all submissions updated
+    await recalculateTeamPoints(ctx, args.teamId);
 
     // Get final team state
     const updatedTeam = await ctx.db.get(args.teamId);
