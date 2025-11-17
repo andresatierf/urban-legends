@@ -2,7 +2,10 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
-import { upsertSubmissionGroup } from "./submissionGroups";
+import {
+  calculateGroupMetrics,
+  upsertSubmissionGroup,
+} from "./submissionGroups";
 import { recalculateTeamPoints } from "./teams";
 import {
   getCurrentUserOrThrow,
@@ -99,18 +102,6 @@ export async function recalculateSubmissionPoints(
       throw new Error("Group not found");
     }
 
-    const participantCount = await getParticipantCount(ctx, submission);
-    const teamMembers = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
-      .collect();
-
-    const totalTeamMembers = teamMembers.length;
-    const participationRate =
-      totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
-    const isTeamExercise =
-      participationRate >= scoringConfig.teamExerciseThreshold;
-
     // Get all submissions in the group (excluding deleted and rejected ones)
     const groupSubmissions = await ctx.db
       .query("submissions")
@@ -125,48 +116,36 @@ export async function recalculateSubmissionPoints(
       )
       .collect();
 
-    // Determine group tier (highest tier wins)
-    const hasAdvanced = groupSubmissions.some((s) => s.tier === "advanced");
-    const groupTier: "base" | "advanced" = hasAdvanced ? "advanced" : "base";
-
-    // Determine group state (all must be same for approved, otherwise pending)
-    const states = new Set(groupSubmissions.map((s) => s.state));
-    let groupState: "pending" | "approved" | "rejected" | "deleted";
-
-    if (states.size === 1) {
-      groupState = Array.from(states)[0] as typeof groupState;
-    } else {
-      groupState = "pending";
-    }
-
-    // Calculate total group points if approved
-    let totalGroupPoints = 0;
-    if (groupState === "approved") {
-      totalGroupPoints = isTeamExercise
-        ? scoringConfig.teamExercisePoints[groupTier]
-        : scoringConfig.individualPoints[groupTier];
-    }
+    // Calculate group metrics using shared logic
+    const metrics = await calculateGroupMetrics(ctx, {
+      groupSubmissions,
+      teamId: submission.teamId,
+      tournamentId: submission.tournamentId,
+    });
 
     // Update group
     await ctx.db.patch(submission.submissionGroupId, {
-      state: groupState,
-      tier: groupTier,
-      participantCount,
-      participationRate,
-      isTeamExercise,
-      pointsEarned: totalGroupPoints,
+      state: metrics.groupState,
+      tier: metrics.tier,
+      participantCount: metrics.participantCount,
+      totalTeamMembers: metrics.totalTeamMembers,
+      participationRate: metrics.participationRate,
+      isTeamExercise: metrics.isTeamExercise,
+      pointsEarned: metrics.pointsEarned,
       managedBy: args.managedBy,
       updatedAt: new Date().toISOString(),
     });
 
     // Update all submissions in group with their share of points
     const pointsPerSubmission =
-      participantCount > 0 ? totalGroupPoints / participantCount : 0;
+      metrics.participantCount > 0
+        ? metrics.pointsEarned / metrics.participantCount
+        : 0;
 
     for (const groupSubmission of groupSubmissions) {
       await ctx.db.patch(groupSubmission._id, {
         pointsEarned: pointsPerSubmission,
-        state: groupState,
+        state: metrics.groupState,
         managedBy: args.managedBy,
       });
     }
