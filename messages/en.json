@@ -9,13 +9,41 @@
         "submissions": "Submissions",
         "newSubmission": "Submit Activity"
       },
+      "captain": {
+        "group": "Team Captain",
+        "myTeams": "My Teams",
+        "comparison": "Team Comparison",
+        "inviteMember": "Invite Member"
+      },
+      "reviewer": {
+        "group": "Review",
+        "queue": "Review Queue",
+        "statistics": "Review Stats",
+        "flagged": "Flagged Submissions"
+      },
+      "tournamentManager": {
+        "group": "Tournament Manager",
+        "dashboard": "Manager Dashboard",
+        "tournaments": "My Tournaments",
+        "approvals": "Pending Approvals",
+        "analytics": "Analytics",
+        "createTournament": "Create Tournament"
+      },
       "admin": {
         "group": "Admin",
-        "dashboard": "Dashboard",
-        "submissions": "Submissions",
+        "dashboard": "Admin Dashboard",
         "tournaments": "Tournaments",
-        "teams": "Teams",
-        "users": "Users"
+        "users": "Users",
+        "submissions": "All Submissions",
+        "submissionGroups": "Submission Groups",
+        "system": "System Health"
+      },
+      "viewer": {
+        "group": "Discover",
+        "dashboard": "Viewer Dashboard",
+        "publicLeaderboards": "Public Leaderboards",
+        "live": "Live Tournaments",
+        "favorites": "Favorites"
       }
     },
     "user": {
