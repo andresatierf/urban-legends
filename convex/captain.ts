@@ -38,11 +38,14 @@ export const getPendingActionsCount = query({
     );
 
     // Count pending invitations sent by the user
-    const invitations = await ctx.db
+    const allPendingInvitations = await ctx.db
       .query("teamInvitations")
-      .withIndex("by_inviter", (q) => q.eq("invitedBy", user._id))
-      .filter((q) => q.eq(q.field("status"), "pending"))
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
       .collect();
+
+    const invitations = allPendingInvitations.filter(
+      (inv) => inv.invitedBy === user._id,
+    );
 
     return relevantJoinRequests.length + invitations.length;
   },
