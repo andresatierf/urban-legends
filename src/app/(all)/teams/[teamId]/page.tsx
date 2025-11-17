@@ -33,7 +33,7 @@ export default function TeamDetailsPage({ params }: Props) {
   }
 
   const regularMembers = data.members.filter(
-    (member) => member.role === "member",
+    (member) => member.memberRole === "member",
   );
   const isCaptain = data.userMembership?.role === "captain";
 

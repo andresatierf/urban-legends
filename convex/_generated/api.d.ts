@@ -18,6 +18,7 @@ import type * as data from "../data.js";
 import type * as http from "../http.js";
 import type * as joinRequests from "../joinRequests.js";
 import type * as seed from "../seed.js";
+import type * as submissionGroups from "../submissionGroups.js";
 import type * as submissions from "../submissions.js";
 import type * as teamInvitations from "../teamInvitations.js";
 import type * as teams from "../teams.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   joinRequests: typeof joinRequests;
   seed: typeof seed;
+  submissionGroups: typeof submissionGroups;
   submissions: typeof submissions;
   teamInvitations: typeof teamInvitations;
   teams: typeof teams;

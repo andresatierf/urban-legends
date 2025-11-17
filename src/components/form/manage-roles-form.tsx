@@ -3,11 +3,11 @@
 import { useMutation, useQuery } from "convex/react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useId, useState } from "react";
-import { toast } from "sonner";
 import z from "zod";
 import { useAppForm } from "@/hooks/form";
 import { useUser } from "@/hooks/useUser";
 import { toastFormValues } from "@/lib/form";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -68,15 +68,14 @@ export function ManageRolesFormDialog({
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        await updateRoles({ userId, ...value });
-        toast.success("Roles updated successfully!");
-        setOpen(false);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to update roles",
-        );
-      }
+      await tryMutate({
+        fn: () => updateRoles({ userId, ...value }),
+        onSuccess: () => {
+          setOpen(false);
+        },
+        successToast: "Roles updated successfully!",
+        defaultFailureToast: "Failed to update roles",
+      });
     },
   });
 

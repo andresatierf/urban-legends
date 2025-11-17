@@ -15,7 +15,7 @@ import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../convex/_generated/api";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
-export default function Submissions() {
+export default function SubmissionsPage() {
   const { user, isAdmin } = useUser();
   const router = useRouter();
 
@@ -32,9 +32,17 @@ export default function Submissions() {
         ? { userId: user._id, state: ["approved", "pending", "rejected"] }
         : "skip",
     ) || [];
-  const pendingSubmissions =
-    useQuery(api.submissions.list, { state: "pending" }) || [];
   const allSubmissions = useQuery(api.submissions.list, {}) || [];
+
+  const pendingSubmissions = allSubmissions.filter(
+    (s) => s.state === "pending",
+  );
+  // const approvedSubmissions = allSubmissions.filter(
+  //   (s) => s.state === "approved",
+  // );
+  // const rejectedSubmissions = allSubmissions.filter(
+  //   (s) => s.state === "rejected",
+  // );
 
   // Fetch user's teams with tournament data
   const userTeams = useQuery(
@@ -114,11 +122,26 @@ export default function Submissions() {
   );
 
   const handleDateClick = (date: string, submissionId?: Id<"submissions">) => {
-    const submission = submissionId
-      ? allSubmissions.find((s) => s._id === submissionId)
-      : undefined;
+    if (!allSubmissions) return;
+
+    if (!submissionId) {
+      setSelectedSubmission(undefined);
+      setSelectedDate(date);
+      setUpsertSubmissionOpen(true);
+      return;
+    }
+
+    const submission = allSubmissions.find((s) => s._id === submissionId);
+
     if (submission?.state === "approved") {
       router.push(`/submissions/${submission._id}`);
+      return;
+    }
+
+    if (submission?.state === "rejected" || submission?.state === "deleted") {
+      setSelectedSubmission(undefined);
+      setSelectedDate(date);
+      setUpsertSubmissionOpen(true);
       return;
     }
 
@@ -128,13 +151,11 @@ export default function Submissions() {
   };
 
   const handleClose = (newOpen: boolean) => {
-    setUpsertSubmissionOpen(newOpen);
     if (!newOpen) {
-      setTimeout(() => {
-        setSelectedSubmission(undefined);
-        setSelectedDate(undefined);
-      }, 200);
+      setSelectedSubmission(undefined);
+      setSelectedDate(undefined);
     }
+    setUpsertSubmissionOpen(newOpen);
   };
 
   return (
@@ -149,16 +170,29 @@ export default function Submissions() {
         />
       </SectionHeader>
       <Tabs defaultValue="calendar">
-        <TabsList>
-          <TabsTrigger value="calendar">
-            <Calendar className="mr-2 h-4 w-4" />
-            Calendar
-          </TabsTrigger>
-          <TabsTrigger value="list">
-            <List className="mr-2 h-4 w-4" />
-            List
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex items-start justify-between">
+          <TabsList>
+            <TabsTrigger value="calendar">
+              <Calendar className="mr-2 h-4 w-4" />
+              Calendar
+            </TabsTrigger>
+            <TabsTrigger value="list">
+              <List className="mr-2 h-4 w-4" />
+              List
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="calendar">
+            {teamsWithTournaments.length > 1 && (
+              <div className="flex justify-end">
+                <TeamSelector
+                  teams={teamsWithTournaments}
+                  selectedTeamId={selectedTeamId}
+                  onTeamChange={setSelectedTeamId}
+                />
+              </div>
+            )}
+          </TabsContent>
+        </div>
         <TabsContent value="calendar">
           {teamsWithTournaments.length === 0 ? (
             <div className="rounded-lg border border-gray-300 border-dashed bg-white p-12 text-center shadow-sm">
@@ -173,17 +207,6 @@ export default function Submissions() {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Team selector for multi-team users */}
-              {teamsWithTournaments.length > 1 && (
-                <div className="flex justify-end">
-                  <TeamSelector
-                    teams={teamsWithTournaments}
-                    selectedTeamId={selectedTeamId}
-                    onTeamChange={setSelectedTeamId}
-                  />
-                </div>
-              )}
-
               {/* Calendar */}
               {selectedTeam?.tournament && selectedTeamId && (
                 <>

@@ -7,9 +7,9 @@ import { Check, Pencil, Trash2, Trophy, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
-import { toast } from "sonner";
 import { DetailsCard } from "@/components/details-card";
 import { Badge } from "@/components/ui/badge";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import { UpsertSubmissionFormDialog } from "../form/upsert-submission-form";
 import { Button } from "../ui/button";
@@ -37,43 +37,36 @@ export function SubmissionDetailsCard({
     if (!data) return;
     if (!submissionId) return;
 
-    try {
-      await approveSubmission({ submissionId });
-      toast.success("Submission approved successfully");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to approve submission",
-      );
-    }
+    await tryMutate({
+      fn: () => approveSubmission({ submissionId }),
+      successToast: "Submission approved successfully",
+      defaultFailureToast: "Failed to approve submission",
+    });
   }, [approveSubmission, submissionId, data]);
 
   const handleReject = useCallback(async () => {
     if (!data) return;
     if (!submissionId) return;
 
-    try {
-      await rejectSubmission({ submissionId });
-      toast.success("Submission rejected");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to reject submission",
-      );
-    }
+    await tryMutate({
+      fn: () => rejectSubmission({ submissionId }),
+      successToast: "Submission rejected successfully",
+      defaultFailureToast: "Failed to reject submission",
+    });
   }, [rejectSubmission, submissionId, data]);
 
   const handleDelete = useCallback(async () => {
     if (!data) return;
     if (!submissionId) return;
 
-    try {
-      await removeSubmission({ submissionId });
-      toast.success("Submission deleted successfully");
-      router.push("/submissions");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to delete submission",
-      );
-    }
+    await tryMutate({
+      fn: () => removeSubmission({ submissionId }),
+      onSuccess: () => {
+        router.push("/submissions");
+      },
+      successToast: "Submission deleted successfully",
+      defaultFailureToast: "Failed to delete submission",
+    });
   }, [removeSubmission, submissionId, router, data]);
 
   const details = useMemo(() => {
@@ -148,7 +141,7 @@ export function SubmissionDetailsCard({
         key: "Teammates",
         value:
           data.teammates.length > 0
-            ? data.teammates.map((t) => t.name).join(", ")
+            ? data.teammates.map((t: { name: string }) => t.name).join(", ")
             : "None",
       },
       ...(data.submission.state !== "pending" && data.managedByUser

@@ -1,12 +1,42 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 import { mutation, type QueryCtx, query } from "./_generated/server";
+import { upsertSubmissionGroup } from "./submissionGroups";
+import { recalculateSubmissionPoints } from "./submissions";
 import { validateUserNotInTournamentTeam } from "./tournaments";
-import {
-  getCurrentUserOrThrow,
-  getRolesForUser,
-  validateIsAdmin,
-} from "./users";
+import { getCurrentUserOrThrow, getUser, validateIsAdmin } from "./users";
+
+/**
+ * Internal helper to recalculate and update a team's total points
+ * based on all approved submissions.
+ *
+ * This is the most efficient way to ensure team points are correct,
+ * especially after submission state changes.
+ */
+export async function recalculateTeamPoints(
+  ctx: MutationCtx,
+  teamId: Id<"teams">,
+): Promise<void> {
+  // Get all approved submissions for the team
+  const approvedSubmissions = await ctx.db
+    .query("submissions")
+    .withIndex("by_team", (q) => q.eq("teamId", teamId))
+    .filter((q) => q.eq(q.field("state"), "approved"))
+    .collect();
+
+  // Sum up all points from approved submissions
+  const totalPoints = approvedSubmissions.reduce(
+    (sum, submission) => sum + (submission.pointsEarned || 0),
+    0,
+  );
+
+  // Update team with recalculated points
+  await ctx.db.patch(teamId, {
+    points: totalPoints,
+    lastActivityAt: new Date().toISOString(),
+  });
+}
 
 export const list = query({
   args: {
@@ -167,15 +197,14 @@ export const getDetails = query({
     // Fetch user details for each member with their roles
     const membersWithRoles = await Promise.all(
       teamMembers.map(async (member) => {
-        const memberUser = await ctx.db.get(member.userId);
+        const memberUser = await getUser(ctx, {
+          userId: member.userId,
+          throw: false,
+        });
         if (!memberUser) return null;
-
-        const roles = await getRolesForUser(ctx, member.userId);
         return {
           ...memberUser,
-          roleNames: roles.map((r) => r.name),
-          role: member.role,
-          membershipId: member._id,
+          memberRole: member.role,
         };
       }),
     );
@@ -184,7 +213,7 @@ export const getDetails = query({
     const members = membersWithRoles.filter((m) => m !== null);
 
     // Find captain
-    const captain = members.find((m) => m.role === "captain") || null;
+    const captain = members.find((m) => m.memberRole === "captain") || null;
 
     // Find current user's membership
     const userMembership = teamMembers.find((m) => m.userId === user._id);
@@ -696,83 +725,63 @@ export const recalculatePoints = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateIsAdmin(user);
+    validateIsAdmin(
+      user,
+      "You do not have permission to recalculate team points",
+    );
 
     const team = await ctx.db.get(args.teamId);
     if (!team) {
       throw new Error("Team not found");
     }
 
-    // Get tournament for scoring config
-    const tournament = await ctx.db.get(team.tournamentId);
-    if (!tournament) {
-      throw new Error("Tournament not found");
-    }
-
-    const scoringConfig = tournament.scoringConfig || {
-      individualPoints: { base: 1, advanced: 1 },
-      teamExercisePoints: { base: 1, advanced: 1 },
-      teamExerciseThreshold: 0.5,
-    };
-
-    // Get all team members for participation calculation
-    const teamMembers = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
-      .collect();
-
-    // Get all approved submissions for team
-    const submissions = await ctx.db
+    // Get all submissions for team (all states, all dates)
+    const allSubmissions = await ctx.db
       .query("submissions")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
-      .filter((q) => q.eq(q.field("state"), "approved"))
       .collect();
 
-    let totalPoints = 0;
-    let updatedCount = 0;
-
-    // Calculate points for each submission
-    for (const submission of submissions) {
-      let pointsEarned = submission.pointsEarned;
-
-      const tier = submission.tier || "base";
-      const totalTeamMembers = teamMembers.length;
-      const participantCount = Math.min(
-        totalTeamMembers,
-        submission.teammates.length + 1,
-      );
-      const participationRate =
-        totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
-      const isTeamExercise =
-        participationRate >= scoringConfig.teamExerciseThreshold;
-
-      pointsEarned = isTeamExercise
-        ? scoringConfig.teamExercisePoints[tier]
-        : scoringConfig.individualPoints[tier];
-
-      // Update the submission with calculated points
-      await ctx.db.patch(submission._id, { pointsEarned });
-      updatedCount++;
-
-      totalPoints += pointsEarned;
+    // Group submissions by date for team activities
+    const submissionsByDate = new Map<string, typeof allSubmissions>();
+    for (const submission of allSubmissions) {
+      if (submission.submissionType === "team") {
+        const dateSubmissions = submissionsByDate.get(submission.date) || [];
+        dateSubmissions.push(submission);
+        submissionsByDate.set(submission.date, dateSubmissions);
+      }
     }
 
-    // Find most recent submission for lastActivityAt
-    const sortedSubmissions = submissions.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-    );
-    const lastActivityAt = sortedSubmissions[0]?.date;
+    // Rebuild all submission groups
+    for (const [date, _] of Array.from(submissionsByDate.entries())) {
+      await upsertSubmissionGroup(ctx, {
+        teamId: args.teamId,
+        tournamentId: team.tournamentId,
+        date,
+      });
+    }
 
-    // Update team points
-    await ctx.db.patch(args.teamId, {
-      points: totalPoints,
-      lastActivityAt,
-    });
+    // Recalculate points for all submissions
+    let updatedCount = 0;
+    for (const submission of allSubmissions) {
+      await recalculateSubmissionPoints(ctx, {
+        submissionId: submission._id,
+        previousState: submission.state,
+        managedBy: user._id,
+        skipTeamRecalculation: true,
+      });
+      updatedCount++;
+    }
+
+    // Recalculate team points once after all submissions updated
+    await recalculateTeamPoints(ctx, args.teamId);
+
+    // Get final team state
+    const updatedTeam = await ctx.db.get(args.teamId);
 
     return {
       teamId: args.teamId,
-      points: totalPoints,
-      lastActivityAt,
+      points: updatedTeam?.points || 0,
+      lastActivityAt: updatedTeam?.lastActivityAt,
       submissionsUpdated: updatedCount,
     };
   },

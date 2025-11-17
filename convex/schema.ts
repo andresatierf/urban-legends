@@ -23,6 +23,7 @@ export default defineSchema({
       }),
       teamExerciseThreshold: v.number(),
     }),
+    maxSubmissionsPerDay: v.optional(v.number()), // Limit submissions per user per day
   }).index("by_name", ["name"]),
 
   teams: defineTable({
@@ -70,7 +71,7 @@ export default defineSchema({
     tournamentId: v.id("tournaments"),
     date: v.string(),
     description: v.optional(v.string()),
-    teammates: v.array(v.id("users")),
+    submissionType: v.union(v.literal("individual"), v.literal("team")),
     state: v.union(
       v.literal("pending"),
       v.literal("approved"),
@@ -82,14 +83,43 @@ export default defineSchema({
     // Scoring fields
     tier: v.union(v.literal("base"), v.literal("advanced")),
     pointsEarned: v.number(), // Calculated when approved
+    submissionGroupId: v.optional(v.id("submissionGroups")), // NEW - reference to group
   })
     .index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "date"])
     .index("by_team", ["teamId"])
+    .index("by_team_and_user", ["teamId", "userId"])
     .index("by_team_and_date", ["teamId", "date"])
+    .index("by_team_and_type", ["teamId", "submissionType"]) // NEW
     .index("by_tournament_and_date", ["tournamentId", "date"])
     .index("by_state", ["state"])
-    .index("by_user_and_state", ["userId", "state"]),
+    .index("by_user_and_state", ["userId", "state"])
+    .index("by_group", ["submissionGroupId"]), // NEW
+
+  submissionGroups: defineTable({
+    teamId: v.id("teams"),
+    tournamentId: v.id("tournaments"),
+    date: v.string(), // YYYY-MM-DD
+    state: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+      v.literal("deleted"),
+    ),
+    tier: v.union(v.literal("base"), v.literal("advanced")), // Derived from submissions (highest tier wins)
+    participantCount: v.number(), // How many members submitted for this team activity
+    totalTeamMembers: v.number(), // Team size at time of submission
+    participationRate: v.number(), // participantCount / totalTeamMembers
+    isTeamExercise: v.boolean(), // participationRate >= threshold
+    pointsEarned: v.number(), // Total points for team (calculated on approval)
+    managedBy: v.optional(v.id("users")), // Admin who approved/rejected
+    createdAt: v.string(), // First submission in group
+    updatedAt: v.string(), // Last modification
+  })
+    .index("by_team", ["teamId"])
+    .index("by_team_and_date", ["teamId", "date"]) // Ensures uniqueness: one group per team per date
+    .index("by_tournament_and_date", ["tournamentId", "date"])
+    .index("by_state", ["state"]),
 
   users: defineTable({
     email: v.string(),

@@ -4,11 +4,11 @@ import { useMutation, useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
-import { toast } from "sonner";
 import z from "zod";
 import { useAppForm } from "@/hooks/form";
 import { useUser } from "@/hooks/useUser";
 import { toastFormValues } from "@/lib/form";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -82,21 +82,15 @@ export function UpsertTeamFormDialog({
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        const upsertedTeamId = await upsertUserTeam({
-          _id: team?._id,
-          ...value,
-        });
-        toast.success(`Team ${team ? "updated" : "created"} successfully!`);
-        router.push(`/teams/${upsertedTeamId}`);
-        setOpen(false);
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : `Failed to ${team ? "update" : "create"} team`,
-        );
-      }
+      await tryMutate({
+        fn: () => upsertUserTeam({ _id: team?._id, ...value }),
+        onSuccess: (upsertedTeamId) => {
+          router.push(`/teams/${upsertedTeamId}`);
+          setOpen(false);
+        },
+        successToast: `Team ${team ? "updated" : "created"} successfully!`,
+        defaultFailureToast: `Failed to ${team ? "update" : "create"} team`,
+      });
     },
   });
 

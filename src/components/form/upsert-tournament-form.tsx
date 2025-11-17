@@ -2,11 +2,11 @@ import { useMutation } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
-import { toast } from "sonner";
 import * as z from "zod";
 import { useAppForm } from "@/hooks/form";
 import { useUser } from "@/hooks/useUser";
 import { toastFormValues } from "@/lib/form";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -29,6 +29,7 @@ const formSchema = z.object({
   endDate: z.string().min(1, "Please select an end date"),
   teamMinSize: z.number().min(1, "Team minimum size must be at least 1"),
   teamMaxSize: z.number().min(1, "Team maximum size must be at least 1"),
+  maxSubmissionsPerDay: z.number().int().min(1).optional(),
   // Scoring configuration
   scoringConfig: z
     .object({
@@ -79,6 +80,7 @@ export function UpsertTournamentFormDialog({
       endDate: tournament?.endDate ?? "",
       teamMinSize: tournament?.teamMinSize ?? 1,
       teamMaxSize: tournament?.teamMaxSize ?? 5,
+      maxSubmissionsPerDay: tournament?.maxSubmissionsPerDay ?? undefined,
       scoringConfig: tournament?.scoringConfig ?? {
         individualPoints: { base: 2, advanced: 3 },
         teamExercisePoints: { base: 20, advanced: 30 },
@@ -91,23 +93,15 @@ export function UpsertTournamentFormDialog({
       // onSubmit: formSchema,
     },
     onSubmit: async ({ value }) => {
-      try {
-        const upsertedId = await upsertTournament({
-          ...value,
-          _id: tournament?._id,
-        });
-        toast.success(
-          `Tournament ${tournament ? "updated" : "created"} successfully!`,
-        );
-        router.push(`/tournaments/${upsertedId}`);
-        setOpen(false);
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : `Failed to ${tournament ? "update" : "create"} tournament`,
-        );
-      }
+      await tryMutate({
+        fn: () => upsertTournament({ ...value, _id: tournament?._id }),
+        onSuccess: (upsertedId) => {
+          router.push(`/tournaments/${upsertedId}`);
+          setOpen(false);
+        },
+        successToast: `Tournament ${tournament ? "updated" : "created"} successfully!`,
+        defaultFailureToast: `Failed to ${tournament ? "update" : "create"} tournament`,
+      });
     },
   });
 
@@ -200,6 +194,14 @@ export function UpsertTournamentFormDialog({
                 {(field) => <field.NumberField label="Maximum Team Size" />}
               </form.AppField>
             </FieldGroup>
+            <form.AppField name="maxSubmissionsPerDay">
+              {(field) => (
+                <field.NumberField
+                  label="Max Submissions Per Day (leave empty for unlimited)"
+                  placeholder="Unlimited"
+                />
+              )}
+            </form.AppField>
             <FieldGroup className="flex-row">
               <form.AppField
                 name="startDate"

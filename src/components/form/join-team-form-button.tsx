@@ -3,9 +3,9 @@
 import { useMutation, useQuery } from "convex/react";
 import { Loader2, UserPlus } from "lucide-react";
 import { useId, useState } from "react";
-import { toast } from "sonner";
 import z from "zod";
 import { useAppForm } from "@/hooks/form";
+import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -59,36 +59,26 @@ export function JoinTeamFormButton({
       onChange: formSchema,
     },
     onSubmit: async ({ value: { message } }) => {
-      try {
-        await requestToJoin({
-          teamId,
-          message: message?.trim() || undefined,
-        });
-        toast.success("Join request sent successfully!");
-        setOpen(false);
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to send join request",
-        );
-      } finally {
-      }
+      await tryMutate({
+        fn: () =>
+          requestToJoin({ teamId, message: message?.trim() || undefined }),
+        onSuccess: () => {
+          setOpen(false);
+        },
+        successToast: "Join request sent successfully!",
+        defaultFailureToast: "Failed to send join request",
+      });
     },
   });
 
   const handleCancelRequest = async () => {
     if (!joinRequest) return;
 
-    try {
-      await cancelRequest({ requestId: joinRequest._id });
-      toast.success("Join request cancelled");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to cancel request",
-      );
-    } finally {
-    }
+    await tryMutate({
+      fn: () => cancelRequest({ requestId: joinRequest._id }),
+      successToast: "Join request cancelled",
+      defaultFailureToast: "Failed to cancel join request",
+    });
   };
 
   // Pending request - show cancel option
@@ -208,7 +198,7 @@ export function JoinTeamFormButton({
                 <Button
                   type="submit"
                   form={formId}
-                  disabled={isSubmitting || isPristine || !canSubmit}
+                  disabled={isSubmitting || !canSubmit}
                 >
                   {isSubmitting && <Loader2 className="animate-spin" />}
                   Send Request
