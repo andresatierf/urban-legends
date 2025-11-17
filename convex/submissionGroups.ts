@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+import { recalculateTeamPoints } from "./teams";
 import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
 /**
@@ -201,8 +202,6 @@ export const approve = mutation({
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Submission group not found");
 
-    const previousState = group.state;
-
     // Get tournament for scoring
     const tournament = await ctx.db.get(group.tournamentId);
     if (!tournament) throw new Error("Tournament not found");
@@ -240,26 +239,8 @@ export const approve = mutation({
       });
     }
 
-    // Update team points (only if transitioning to approved)
-    if (previousState !== "approved") {
-      const team = await ctx.db.get(group.teamId);
-      if (team) {
-        await ctx.db.patch(group.teamId, {
-          points: (team.points || 0) + pointsEarned,
-          lastActivityAt: new Date().toISOString(),
-        });
-      }
-    } else if (group.pointsEarned !== pointsEarned) {
-      // Re-approval with different points (e.g., participation changed)
-      const team = await ctx.db.get(group.teamId);
-      if (team) {
-        const pointsDiff = pointsEarned - (group.pointsEarned || 0);
-        await ctx.db.patch(group.teamId, {
-          points: (team.points || 0) + pointsDiff,
-          lastActivityAt: new Date().toISOString(),
-        });
-      }
-    }
+    // Recalculate team points from all approved submissions for consistency
+    await recalculateTeamPoints(ctx, group.teamId);
   },
 });
 
@@ -271,9 +252,6 @@ export const reject = mutation({
 
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Submission group not found");
-
-    const previousState = group.state;
-    const previousPoints = group.pointsEarned || 0;
 
     // Update group
     await ctx.db.patch(args.groupId, {
@@ -297,16 +275,8 @@ export const reject = mutation({
       });
     }
 
-    // Decrement team points if previously approved
-    if (previousState === "approved" && previousPoints > 0) {
-      const team = await ctx.db.get(group.teamId);
-      if (team) {
-        await ctx.db.patch(group.teamId, {
-          points: Math.max(0, (team.points || 0) - previousPoints),
-          lastActivityAt: new Date().toISOString(),
-        });
-      }
-    }
+    // Recalculate team points from all approved submissions for consistency
+    await recalculateTeamPoints(ctx, group.teamId);
   },
 });
 
@@ -382,8 +352,6 @@ export const getWithSubmissions = query({
     if (!isAdmin && !membership) {
       throw new Error("You do not have permission to view this group");
     }
-    await getCurrentUserOrThrow(ctx);
-
     // Get all individual submissions
     const submissions = await ctx.db
       .query("submissions")
