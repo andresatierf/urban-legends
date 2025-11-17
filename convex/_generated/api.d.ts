@@ -17,7 +17,6 @@ import type * as admin from "../admin.js";
 import type * as data from "../data.js";
 import type * as http from "../http.js";
 import type * as joinRequests from "../joinRequests.js";
-import type * as migrations from "../migrations.js";
 import type * as seed from "../seed.js";
 import type * as submissionGroups from "../submissionGroups.js";
 import type * as submissions from "../submissions.js";
@@ -39,7 +38,6 @@ declare const fullApi: ApiFromModules<{
   data: typeof data;
   http: typeof http;
   joinRequests: typeof joinRequests;
-  migrations: typeof migrations;
   seed: typeof seed;
   submissionGroups: typeof submissionGroups;
   submissions: typeof submissions;
