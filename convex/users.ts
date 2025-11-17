@@ -238,3 +238,22 @@ export function validateIsAdmin(
     throw new Error(message ?? "Admin access required");
   }
 }
+
+/**
+ * Get the count of teams the current user captains.
+ * Used for sidebar conditional rendering.
+ */
+export const getCaptainedTeamsCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    const captainedTeams = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("role"), "captain"))
+      .collect();
+
+    return captainedTeams.length;
+  },
+});

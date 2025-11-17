@@ -382,3 +382,29 @@ export const getWithSubmissions = query({
     };
   },
 });
+
+/**
+ * Get the count of pending submission groups.
+ * Only accessible to admins, reviewers, and tournament managers.
+ */
+export const getPendingCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    // Only admins, reviewers, and tournament managers can see this
+    const hasAccess =
+      user.roleNames.includes("admin") ||
+      user.roleNames.includes("reviewer") ||
+      user.roleNames.includes("tournament_manager");
+
+    if (!hasAccess) return 0;
+
+    const pending = await ctx.db
+      .query("submissionGroups")
+      .withIndex("by_state", (q) => q.eq("state", "pending"))
+      .collect();
+
+    return pending.length;
+  },
+});
