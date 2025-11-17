@@ -2,6 +2,8 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+import { upsertSubmissionGroup } from "./submissionGroups";
+import { recalculateTeamPoints } from "./teams";
 import {
   getCurrentUserOrThrow,
   getRolesForUser,
@@ -9,61 +11,36 @@ import {
 } from "./users";
 
 /**
- * Internal helper function to create or update a submission group.
- * Only processes TEAM activity submissions - individual submissions are not grouped.
+ * Recalculates points for a submission and its group (if applicable).
+ * This function should be called whenever a submission's state changes
+ * (approved, rejected, deleted) to ensure points are correctly calculated
+ * and updated for both the submission and its team.
+ *
+ * @param ctx - Mutation context
+ * @param args - Submission ID and optional previous state
+ * @returns The updated points difference (positive = points added, negative = points removed)
  */
-async function upsertSubmissionGroup(
+export async function recalculateSubmissionPoints(
   ctx: MutationCtx,
   args: {
-    teamId: Id<"teams">;
-    tournamentId: Id<"tournaments">;
-    date: string;
+    submissionId: Id<"submissions">;
+    previousState?: "pending" | "approved" | "rejected" | "deleted";
+    managedBy?: Id<"users">;
   },
-) {
-  // Find all TEAM activity submissions for this team on this date
-  // (Individual submissions are NOT grouped)
-  const submissions = await ctx.db
-    .query("submissions")
-    .withIndex("by_team_and_date", (q) =>
-      q.eq("teamId", args.teamId).eq("date", args.date),
-    )
-    .filter((q) =>
-      q.and(
-        q.eq(q.field("submissionType"), "team"),
-        q.neq(q.field("state"), "deleted"),
-      ),
-    )
-    .collect();
-
-  if (submissions.length === 0) {
-    // All submissions deleted - delete group if exists
-    const existingGroup = await ctx.db
-      .query("submissionGroups")
-      .withIndex("by_team_and_date", (q) =>
-        q.eq("teamId", args.teamId).eq("date", args.date),
-      )
-      .first();
-
-    if (existingGroup) {
-      await ctx.db.delete(existingGroup._id);
-    }
-    return;
+): Promise<number> {
+  const submission = await ctx.db.get(args.submissionId);
+  if (!submission) {
+    throw new Error("Submission not found");
   }
 
-  // Get current team member count
-  const teamMembers = await ctx.db
-    .query("teamMembers")
-    .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
-    .collect();
+  // Get tournament and team for scoring calculations
+  const [tournament, team] = await Promise.all([
+    ctx.db.get(submission.tournamentId),
+    ctx.db.get(submission.teamId),
+  ]);
 
-  const totalTeamMembers = teamMembers.length;
-  const participantCount = submissions.length;
-  const participationRate =
-    totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
-
-  // Get tournament for threshold
-  const tournament = await ctx.db.get(args.tournamentId);
   if (!tournament) throw new Error("Tournament not found");
+  if (!team) throw new Error("Team not found");
 
   const scoringConfig = tournament.scoringConfig || {
     individualPoints: { base: 1, advanced: 1 },
@@ -71,86 +48,107 @@ async function upsertSubmissionGroup(
     teamExerciseThreshold: 0.5,
   };
 
-  const isTeamExercise =
-    participationRate >= scoringConfig.teamExerciseThreshold;
+  const tier = submission.tier || "base";
 
-  // Determine tier - use highest tier if mixed
-  const hasAdvanced = submissions.some((s) => s.tier === "advanced");
-  const tier: "base" | "advanced" = hasAdvanced ? "advanced" : "base";
-
-  // Determine group state - all must be same state
-  const states = new Set(submissions.map((s) => s.state));
-  let groupState: "pending" | "approved" | "rejected" | "deleted";
-
-  if (states.size === 1) {
-    groupState = Array.from(states)[0] as typeof groupState;
-  } else {
-    // Mixed states - default to pending
-    groupState = "pending";
-  }
-
-  // Calculate points if approved
-  let pointsEarned = 0;
-  if (groupState === "approved") {
-    pointsEarned = isTeamExercise
-      ? scoringConfig.teamExercisePoints[tier]
-      : scoringConfig.individualPoints[tier];
-  }
-
-  const now = new Date().toISOString();
-
-  // Find existing group
-  const existingGroup = await ctx.db
-    .query("submissionGroups")
-    .withIndex("by_team_and_date", (q) =>
-      q.eq("teamId", args.teamId).eq("date", args.date),
-    )
-    .first();
-
-  const groupData = {
-    teamId: args.teamId,
-    tournamentId: args.tournamentId,
-    date: args.date,
-    state: groupState,
-    tier,
-    participantCount,
-    totalTeamMembers,
-    participationRate,
-    isTeamExercise,
-    pointsEarned,
-    updatedAt: now,
-  };
-
-  if (existingGroup) {
-    // Update existing group
-    await ctx.db.patch(existingGroup._id, groupData);
-
-    // Update all submissions with group reference
-    for (const submission of submissions) {
-      await ctx.db.patch(submission._id, {
-        submissionGroupId: existingGroup._id,
-        pointsEarned: isTeamExercise
-          ? pointsEarned / participantCount
-          : pointsEarned,
-      });
+  // Calculate new points based on submission type and state
+  if (submission.submissionType === "team" && submission.submissionGroupId) {
+    // For team submissions, recalculate the entire group
+    const group = await ctx.db.get(submission.submissionGroupId);
+    if (!group) {
+      // Group doesn't exist yet, will be created by upsertSubmissionGroup
+      throw new Error("Group not found");
     }
 
-    return existingGroup._id;
-  }
-  // Create new group
-  const groupId = await ctx.db.insert("submissionGroups", {
-    ...groupData,
-    createdAt: now,
-  });
+    // Get all submissions in the group (excluding deleted and rejected ones)
+    const groupSubmissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_group", (q) =>
+        q.eq("submissionGroupId", submission.submissionGroupId),
+      )
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("state"), "deleted"),
+          q.neq(q.field("state"), "rejected"),
+        ),
+      )
+      .collect();
 
-  // Link all submissions to group
-  for (const submission of submissions) {
+    const participantCount = groupSubmissions.length;
+    const teamMembers = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
+      .collect();
+
+    const totalTeamMembers = teamMembers.length;
+    const participationRate =
+      totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
+    const isTeamExercise =
+      participationRate >= scoringConfig.teamExerciseThreshold;
+
+    // Determine group tier (highest tier wins)
+    const hasAdvanced = groupSubmissions.some((s) => s.tier === "advanced");
+    const groupTier: "base" | "advanced" = hasAdvanced ? "advanced" : "base";
+
+    // Determine group state (all must be same for approved, otherwise pending)
+    const states = new Set(groupSubmissions.map((s) => s.state));
+    let groupState: "pending" | "approved" | "rejected" | "deleted";
+
+    if (states.size === 1) {
+      groupState = Array.from(states)[0] as typeof groupState;
+    } else {
+      groupState = "pending";
+    }
+
+    // Calculate total group points if approved
+    let totalGroupPoints = 0;
+    if (groupState === "approved") {
+      totalGroupPoints = isTeamExercise
+        ? scoringConfig.teamExercisePoints[groupTier]
+        : scoringConfig.individualPoints[groupTier];
+    }
+
+    // Update group
+    await ctx.db.patch(submission.submissionGroupId, {
+      state: groupState,
+      tier: groupTier,
+      participantCount,
+      participationRate,
+      isTeamExercise,
+      pointsEarned: totalGroupPoints,
+      managedBy: args.managedBy,
+      updatedAt: new Date().toISOString(),
+    });
+
+    // Update all submissions in group with their share of points
+    const pointsPerSubmission =
+      participantCount > 0 ? totalGroupPoints / participantCount : 0;
+
+    for (const groupSubmission of groupSubmissions) {
+      await ctx.db.patch(groupSubmission._id, {
+        pointsEarned: pointsPerSubmission,
+        state: groupState,
+        managedBy: args.managedBy,
+      });
+    }
+  } else {
+    // Individual submission
+    const newPoints =
+      submission.state === "approved"
+        ? scoringConfig.individualPoints[tier]
+        : 0;
+
+    // Update submission points
     await ctx.db.patch(submission._id, {
-      submissionGroupId: groupId,
+      pointsEarned: newPoints,
+      managedBy: args.managedBy,
     });
   }
 
-  return groupId;
+  // Recalculate team points from all approved submissions
+  // This ensures correctness even when group composition changes
+  await recalculateTeamPoints(ctx, submission.teamId);
+
+  return 0;
 }
 
 export const list = query({
@@ -591,7 +589,6 @@ export const remove = mutation({
     }
 
     const previousState = submission.state;
-    const wasApproved = previousState === "approved";
 
     // Mark submission as deleted
     await ctx.db.patch(args.submissionId, {
@@ -599,45 +596,21 @@ export const remove = mutation({
       managedBy: user._id,
     });
 
-    // Update the submission group if this was a team submission
-    const team = await ctx.db.get(submission.teamId);
-    if (team && submission.submissionType === "team") {
-      // This will recalculate group participation and points
+    // For team submissions, ensure group exists before recalculating
+    if (submission.submissionType === "team") {
       await upsertSubmissionGroup(ctx, {
         teamId: submission.teamId,
         tournamentId: submission.tournamentId,
         date: submission.date,
       });
-
-      // If group was approved and points changed, adjust team points
-      if (wasApproved && submission.submissionGroupId) {
-        const updatedGroup = await ctx.db.get(submission.submissionGroupId);
-
-        if (updatedGroup) {
-          // Recalculate points difference
-          const oldPoints = submission.pointsEarned || 0;
-          const newPoints = updatedGroup.pointsEarned || 0;
-          const pointsDiff = newPoints - oldPoints;
-
-          if (pointsDiff !== 0) {
-            await ctx.db.patch(submission.teamId, {
-              points: Math.max(0, (team.points || 0) + pointsDiff),
-              lastActivityAt: new Date().toISOString(),
-            });
-          }
-        }
-      }
-    } else if (wasApproved && submission.submissionType === "individual") {
-      // For individual submissions, just decrement the points
-      const previousPoints = submission.pointsEarned || 0;
-      if (previousPoints > 0 && team) {
-        const currentPoints = team.points ?? 0;
-        await ctx.db.patch(submission.teamId, {
-          points: Math.max(0, currentPoints - previousPoints),
-          lastActivityAt: new Date().toISOString(),
-        });
-      }
     }
+
+    // Recalculate points for this submission (and its group if applicable)
+    await recalculateSubmissionPoints(ctx, {
+      submissionId: args.submissionId,
+      previousState,
+      managedBy: user._id,
+    });
   },
 });
 
@@ -646,6 +619,7 @@ export const approve = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
+    // FIX: should be reviewer and up
     validateIsAdmin(
       user,
       "You do not have permission to approve this submission",
@@ -658,100 +632,52 @@ export const approve = mutation({
 
     const previousState = submission.state;
 
-    // Get tournament to access scoring config
-    const tournament = await ctx.db.get(submission.tournamentId);
-    if (!tournament) {
-      throw new Error("Tournament not found");
-    }
+    // For team submissions, approve ALL submissions in the group
+    if (submission.submissionType === "team" && submission.submissionGroupId) {
+      // Get all submissions in the group (excluding deleted and rejected)
+      const groupSubmissions = await ctx.db
+        .query("submissions")
+        .withIndex("by_group", (q) =>
+          q.eq("submissionGroupId", submission.submissionGroupId),
+        )
+        .filter((q) =>
+          q.and(
+            q.neq(q.field("state"), "deleted"),
+            q.neq(q.field("state"), "rejected"),
+          ),
+        )
+        .collect();
 
-    // Get team and team members for scoring calculation
-    const team = await ctx.db.get(submission.teamId);
-    if (!team) {
-      throw new Error("Team not found");
-    }
-
-    const teamMembers = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
-      .collect();
-
-    // Calculate points based on tier and team exercise
-    let pointsEarned = 0;
-    const tier = submission.tier || "base";
-    const scoringConfig = tournament.scoringConfig || {
-      individualPoints: { base: 1, advanced: 1 },
-      teamExercisePoints: { base: 1, advanced: 1 },
-      teamExerciseThreshold: 0.5,
-    };
-
-    const teamSubmissions = await ctx.db
-      .query("submissions")
-      .withIndex("by_group", (q) =>
-        q.eq("submissionGroupId", submission.submissionGroupId),
-      )
-      .collect();
-
-    // Determine if this is a team exercise
-    if (submission.submissionType === "team") {
-      const totalTeamMembers = teamMembers.length;
-
-      const participationRate =
-        totalTeamMembers > 0
-          ? (teamSubmissions.length ?? 0) / totalTeamMembers
-          : 0;
-      const isTeamExercise =
-        participationRate >= scoringConfig.teamExerciseThreshold;
-
-      pointsEarned = isTeamExercise
-        ? scoringConfig.teamExercisePoints[tier]
-        : scoringConfig.individualPoints[tier];
-
-      await Promise.all(
-        teamSubmissions.map((s) =>
-          ctx.db.patch(s._id, {
-            state: "approved",
-            managedBy: user._id,
-            pointsEarned: pointsEarned / teamSubmissions.length,
-          }),
-        ),
-      );
+      // Update all submissions in group to approved
+      for (const groupSubmission of groupSubmissions) {
+        await ctx.db.patch(groupSubmission._id, {
+          state: "approved",
+          managedBy: user._id,
+        });
+      }
     } else {
-      pointsEarned = scoringConfig.individualPoints[tier];
-    }
-
-    await ctx.db.patch(args.submissionId, {
-      state: "approved",
-      managedBy: user._id,
-      pointsEarned:
-        submission.submissionType === "team"
-          ? pointsEarned / teamSubmissions.length
-          : pointsEarned,
-    });
-
-    if (submission.submissionGroupId) {
-      await ctx.db.patch(submission.submissionGroupId, {
+      // Individual submission - just update this one
+      await ctx.db.patch(args.submissionId, {
         state: "approved",
         managedBy: user._id,
-        pointsEarned,
       });
     }
 
-    const currentPoints = team.points ?? 0;
-
-    // Only increment points if transitioning from non-approved state to approved
-    if (previousState !== "approved") {
-      await ctx.db.patch(submission.teamId, {
-        points: currentPoints + pointsEarned,
-        lastActivityAt: new Date().toISOString(),
-      });
-    } else if (submission.pointsEarned !== pointsEarned) {
-      // Re-approval with different points (e.g., tier changed)
-      const pointsDiff = pointsEarned - (submission.pointsEarned || 0);
-      await ctx.db.patch(submission.teamId, {
-        points: currentPoints + pointsDiff,
-        lastActivityAt: new Date().toISOString(),
+    // For team submissions, ensure group exists before recalculating
+    if (submission.submissionType === "team") {
+      await upsertSubmissionGroup(ctx, {
+        teamId: submission.teamId,
+        tournamentId: submission.tournamentId,
+        date: submission.date,
       });
     }
+
+    // Recalculate points for this submission (and its group if applicable)
+    await recalculateSubmissionPoints(ctx, {
+      submissionId: args.submissionId,
+      previousState,
+      managedBy: user._id,
+    });
   },
 });
 
@@ -770,25 +696,24 @@ export const reject = mutation({
       throw new Error("Submission not found");
     }
 
-    const previousState = submission.state;
-    const previousPoints = submission.pointsEarned || 0;
-
+    // Update submission state to rejected and clear points
     await ctx.db.patch(args.submissionId, {
       state: "rejected",
+      pointsEarned: 0,
       managedBy: user._id,
     });
 
-    // Only decrement points if transitioning from approved state to rejected
-    if (previousState === "approved" && previousPoints > 0) {
-      const team = await ctx.db.get(submission.teamId);
-      if (team) {
-        const currentPoints = team.points ?? 0;
-        await ctx.db.patch(submission.teamId, {
-          points: Math.max(0, currentPoints - previousPoints),
-          lastActivityAt: new Date().toISOString(),
-        });
-      }
+    // For team submissions, update the group (rejected submission will be excluded)
+    if (submission.submissionType === "team") {
+      await upsertSubmissionGroup(ctx, {
+        teamId: submission.teamId,
+        tournamentId: submission.tournamentId,
+        date: submission.date,
+      });
     }
+
+    // Recalculate team points from all approved submissions
+    await recalculateTeamPoints(ctx, submission.teamId);
   },
 });
 
@@ -1108,6 +1033,41 @@ export const getTeamStatistics = query({
       completionRate: Math.round(completionRate),
       currentStreak,
       ...stateCounts,
+    };
+  },
+});
+
+/**
+ * Admin mutation to manually recalculate points for a submission.
+ * This can be used to fix point discrepancies or after changing scoring rules.
+ */
+export const recalculatePoints = mutation({
+  args: {
+    submissionId: v.id("submissions"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    validateIsAdmin(
+      user,
+      "You do not have permission to recalculate submission points",
+    );
+
+    const submission = await ctx.db.get(args.submissionId);
+    if (!submission) {
+      throw new Error("Submission not found");
+    }
+
+    const pointsDiff = await recalculateSubmissionPoints(ctx, {
+      submissionId: args.submissionId,
+      previousState: submission.state,
+      managedBy: user._id,
+    });
+
+    return {
+      success: true,
+      pointsDiff,
+      message: `Points recalculated. Difference: ${pointsDiff}`,
     };
   },
 });

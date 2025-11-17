@@ -1,6 +1,152 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { type MutationCtx, mutation, query } from "./_generated/server";
 import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
+
+/**
+ * Internal helper function to create or update a submission group.
+ * Only processes TEAM activity submissions - individual submissions are not grouped.
+ */
+export async function upsertSubmissionGroup(
+  ctx: MutationCtx,
+  args: {
+    teamId: Id<"teams">;
+    tournamentId: Id<"tournaments">;
+    date: string;
+  },
+) {
+  // Find all TEAM activity submissions for this team on this date
+  // (Individual submissions are NOT grouped)
+  // Exclude deleted and rejected submissions from the group
+  const submissions = await ctx.db
+    .query("submissions")
+    .withIndex("by_team_and_date", (q) =>
+      q.eq("teamId", args.teamId).eq("date", args.date),
+    )
+    .filter((q) =>
+      q.and(
+        q.eq(q.field("submissionType"), "team"),
+        q.neq(q.field("state"), "deleted"),
+        q.neq(q.field("state"), "rejected"),
+      ),
+    )
+    .collect();
+
+  if (submissions.length === 0) {
+    // All submissions deleted - delete group if exists
+    const existingGroup = await ctx.db
+      .query("submissionGroups")
+      .withIndex("by_team_and_date", (q) =>
+        q.eq("teamId", args.teamId).eq("date", args.date),
+      )
+      .first();
+
+    if (existingGroup) {
+      await ctx.db.delete(existingGroup._id);
+    }
+    return;
+  }
+
+  // Get current team member count
+  const teamMembers = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+    .collect();
+
+  const totalTeamMembers = teamMembers.length;
+  const participantCount = submissions.length;
+  const participationRate =
+    totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
+
+  // Get tournament for threshold
+  const tournament = await ctx.db.get(args.tournamentId);
+  if (!tournament) throw new Error("Tournament not found");
+
+  const scoringConfig = tournament.scoringConfig || {
+    individualPoints: { base: 1, advanced: 1 },
+    teamExercisePoints: { base: 1, advanced: 1 },
+    teamExerciseThreshold: 0.5,
+  };
+
+  const isTeamExercise =
+    participationRate >= scoringConfig.teamExerciseThreshold;
+
+  // Determine tier - use highest tier if mixed
+  const hasAdvanced = submissions.some((s) => s.tier === "advanced");
+  const tier: "base" | "advanced" = hasAdvanced ? "advanced" : "base";
+
+  // Determine group state - all must be same state
+  const states = new Set(submissions.map((s) => s.state));
+  let groupState: "pending" | "approved" | "rejected" | "deleted";
+
+  if (states.size === 1) {
+    groupState = Array.from(states)[0] as typeof groupState;
+  } else {
+    // Mixed states - default to pending
+    groupState = "pending";
+  }
+
+  // Calculate points if approved
+  let pointsEarned = 0;
+  if (groupState === "approved") {
+    pointsEarned = isTeamExercise
+      ? scoringConfig.teamExercisePoints[tier]
+      : scoringConfig.individualPoints[tier];
+  }
+
+  const now = new Date().toISOString();
+
+  // Find existing group
+  const existingGroup = await ctx.db
+    .query("submissionGroups")
+    .withIndex("by_team_and_date", (q) =>
+      q.eq("teamId", args.teamId).eq("date", args.date),
+    )
+    .first();
+
+  const groupData = {
+    teamId: args.teamId,
+    tournamentId: args.tournamentId,
+    date: args.date,
+    state: groupState,
+    tier,
+    participantCount,
+    totalTeamMembers,
+    participationRate,
+    isTeamExercise,
+    pointsEarned,
+    updatedAt: now,
+  };
+
+  if (existingGroup) {
+    // Update existing group
+    await ctx.db.patch(existingGroup._id, groupData);
+
+    // Update all submissions with group reference only
+    // Points will be recalculated by recalculateSubmissionPoints
+    for (const submission of submissions) {
+      await ctx.db.patch(submission._id, {
+        submissionGroupId: existingGroup._id,
+      });
+    }
+
+    return existingGroup._id;
+  }
+  // Create new group
+  const groupId = await ctx.db.insert("submissionGroups", {
+    ...groupData,
+    createdAt: now,
+  });
+
+  // Link all submissions to group
+  for (const submission of submissions) {
+    await ctx.db.patch(submission._id, {
+      submissionGroupId: groupId,
+    });
+  }
+
+  return groupId;
+}
 
 export const approve = mutation({
   args: { groupId: v.id("submissionGroups") },
