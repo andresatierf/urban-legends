@@ -186,9 +186,9 @@ bun --bun run typecheck
 - Re-run `bun --bun run typecheck` until clean
 - Do NOT proceed until typecheck passes
 
-### 7.3: CodeRabbit AI Review
+### 7.3: CodeRabbit AI Review (Iterative)
 
-Use the CodeRabbit CLI to get AI-powered code review:
+Use the CodeRabbit CLI to get AI-powered code review and iterate until all issues are resolved:
 
 ```bash
 # Review all changes against main branch
@@ -202,14 +202,48 @@ coderabbit --prompt-only
 - Wait for the full analysis to complete before proceeding
 - The tool will exit on its own when finished
 
-**After CodeRabbit completes:**
+**Iterative Review Process:**
 
-- Review ALL suggestions carefully
-- Create todos for each significant issue using TodoWrite
-- Fix issues systematically, addressing each suggestion
-- After making fixes, commit them with descriptive messages
-- Re-run `coderabbit --prompt-only` to verify fixes
-- Continue until CodeRabbit feedback is minimal/acceptable
+This is an iterative process. You must repeat these steps until CodeRabbit reports no significant issues:
+
+1. **Run CodeRabbit Review**
+   - Execute `coderabbit --prompt-only`
+   - Wait for completion (never interrupt)
+   - Capture all suggestions and issues
+
+2. **Analyze Feedback**
+   - Read ALL suggestions carefully
+   - Categorize issues by severity (critical, important, minor)
+   - Create todos for each significant issue using TodoWrite
+   - If no significant issues found, proceed to next validation step
+
+3. **Fix Issues Systematically**
+   - Address each issue one by one
+   - Make atomic commits for each fix or group of related fixes
+   - Use descriptive commit messages: `fix: [description of what was fixed]`
+   - Examples:
+     - `fix: add null checks for user data access`
+     - `fix: improve error handling in team mutations`
+     - `fix: remove unused imports and variables`
+
+4. **Re-run CodeRabbit**
+   - After fixing all issues, run `coderabbit --prompt-only` again
+   - This verifies that fixes are correct and no new issues were introduced
+   - Wait for completion
+
+5. **Repeat Until Clean**
+   - If new issues are found, return to step 2
+   - Continue this cycle until CodeRabbit gives minimal/acceptable feedback
+   - Typically 2-3 iterations are sufficient
+   - Maximum 5 iterations (if more needed, reassess approach)
+
+**What constitutes "acceptable" feedback:**
+
+- No critical security vulnerabilities
+- No potential bugs or logic errors
+- No significant code quality issues
+- Minor style preferences are acceptable to ignore if consistent with codebase
+- Documentation suggestions can be addressed in follow-up if extensive
 
 **CodeRabbit checks for:**
 
@@ -221,7 +255,21 @@ coderabbit --prompt-only
 - Documentation gaps
 - Inconsistencies with codebase patterns
 
-**Note:** If CodeRabbit identifies issues, treat them seriously. Address each one or document why it can be safely ignored.
+**Tracking Progress:**
+
+Use TodoWrite to track the iteration:
+
+```
+- Run CodeRabbit review (iteration 1)
+- Fix CodeRabbit issues (iteration 1)
+- Run CodeRabbit review (iteration 2)
+- Fix CodeRabbit issues (iteration 2)
+...
+```
+
+Mark each iteration as completed only when that cycle is fully done.
+
+**Note:** If CodeRabbit identifies issues, treat them seriously. Address each one or document in code comments why it can be safely ignored (with clear reasoning).
 
 ### 7.4: Fix Any Issues
 
@@ -480,6 +528,8 @@ The draft PR is assigned to you and ready for your review!
 - Don't commit generated files (convex/\_generated/)
 - Don't skip validation steps (CI, typecheck, CodeRabbit)
 - Don't interrupt or kill the CodeRabbit process - let it finish naturally
+- Don't run CodeRabbit just once - iterate until issues are resolved
+- Don't ignore CodeRabbit feedback - fix issues or document why they're safe to ignore
 - Don't forget to create the draft PR after validation
 
 ## When Complete
@@ -521,9 +571,12 @@ You would:
 14. Run validation checks:
     - Run `bun --bun run ci` and fix any issues
     - Run `bun --bun run typecheck` and fix type errors
-    - Run `coderabbit --prompt-only` and address all suggestions
+    - Run `coderabbit --prompt-only` (iteration 1)
     - Wait for CodeRabbit to complete (never interrupt it)
-    - Fix issues and commit: "fix: address code quality issues"
+    - Fix issues and commit: "fix: address CodeRabbit feedback (iteration 1)"
+    - Run `coderabbit --prompt-only` (iteration 2)
+    - Continue iterating until no significant issues remain
+    - Commit final fixes if needed: "fix: final code quality improvements"
 15. Push branch to remote: `git push -u origin andre/feat/team-joining`
 16. Create draft PR with `gh pr create --draft --assignee "@me"`
 17. Provide summary with:
