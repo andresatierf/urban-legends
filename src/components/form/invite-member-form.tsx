@@ -26,6 +26,7 @@ import { FieldGroup } from "../ui/field";
 const formSchema = z.object({
   teamId: z.custom<Id<"teams">>(
     (val) => typeof val === "string" && val.length >= 1,
+    "Please select a team",
   ),
   email: z.email(),
 });

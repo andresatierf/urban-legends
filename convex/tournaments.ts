@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, type QueryCtx, query } from "./_generated/server";
-import { getTeams } from "./teams";
+import { getTeams, validateIsTeamMember } from "./teams";
 import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
 export const list = query({
@@ -264,7 +264,13 @@ export const getAvailableUsersForTeam = query({
     teamId: v.id("teams"),
   },
   handler: async (ctx, args) => {
-    await getCurrentUserOrThrow(ctx);
+    const user = await getCurrentUserOrThrow(ctx);
+
+    await validateIsTeamMember(ctx, {
+      teamId: args.teamId,
+      userId: user._id,
+      captain: true,
+    });
 
     const team = await ctx.db.get(args.teamId);
     if (!team) throw new Error("Team not found");
@@ -287,16 +293,16 @@ export const getAvailableUsersForTeam = query({
       ),
     );
 
-    const allTeamMembers = teamMembers.flat();
-    const userIdsInTeams = new Set(allTeamMembers.map((m) => m.userId));
-
-    // Get all users
-    const allUsers = await ctx.db.query("users").collect();
-
-    // Filter out users who are already in a team
-    const availableUsers = allUsers.filter(
-      (user) => !userIdsInTeams.has(user._id),
+    const userIdsInTeams = Array.from(
+      new Set(teamMembers.flat().map((m) => m.userId)),
     );
+
+    const availableUsers = await ctx.db
+      .query("users")
+      .filter((q) =>
+        q.and(...userIdsInTeams.map((id) => q.neq(q.field("_id"), id))),
+      )
+      .collect();
 
     return availableUsers;
   },

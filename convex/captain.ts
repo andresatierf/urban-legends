@@ -20,6 +20,7 @@ export const getPendingActionsCount = query({
       .collect();
 
     const teamIds = captainedTeams.map((tm) => tm.teamId);
+    const teamIdsSet = new Set(teamIds);
 
     // If user doesn't captain any teams, return 0
     if (teamIds.length === 0) {
@@ -29,12 +30,12 @@ export const getPendingActionsCount = query({
     // Count pending join requests for all teams the user captains
     const joinRequests = await ctx.db
       .query("joinRequests")
-      .filter((q) => q.eq(q.field("status"), "pending"))
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
       .collect();
 
     // Filter join requests to only those for captain's teams
     const relevantJoinRequests = joinRequests.filter((jr) =>
-      teamIds.includes(jr.teamId),
+      teamIdsSet.has(jr.teamId),
     );
 
     // Count pending invitations sent by the user
@@ -48,5 +49,25 @@ export const getPendingActionsCount = query({
     );
 
     return relevantJoinRequests.length + invitations.length;
+  },
+});
+
+/**
+ * Get the count of teams the current user captains.
+ * Used for sidebar conditional rendering.
+ */
+export const getCaptainedTeamsCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx, { throw: false });
+    if (!user) return 0;
+
+    const captainedTeams = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("role"), "captain"))
+      .collect();
+
+    return captainedTeams.length;
   },
 });

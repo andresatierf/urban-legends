@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import type { FunctionReference } from "convex/server";
 import {
   Activity,
   BarChart3,
@@ -52,15 +53,15 @@ import { LoggedUserCard } from "./logged-user-card";
 
 type SidebarItem = {
   title: string;
-  roles?: string[]; // User must have at least one of these roles
-  requiredCondition?: (captainCount: number) => boolean; // Custom condition function
-  publicAccess?: boolean; // Visible without authentication
+  roles?: string[];
+  condition?: (context: { captainedTeamsCount: number }) => boolean;
+  publicAccess?: boolean;
   badge?: {
-    query: string; // Convex query to fetch badge count
+    query: FunctionReference<"query">;
     color?: "default" | "destructive" | "secondary" | "outline";
   };
 } & (
-  | { items: SidebarItem[] } // Group with sub-items
+  | { items: SidebarItem[] }
   | ({ icon: LucideIcon } & ({ href: string } | { onClick: () => void }))
 );
 
@@ -69,41 +70,36 @@ function useSidebarItems(
   setInviteMemberDialogOpen: (state: boolean) => void,
   setCreateTournamentDialogOpen: (state: boolean) => void,
 ) {
-  const tUserItems = useTranslations("sidebar.items.user");
-  const tCaptainItems = useTranslations("sidebar.items.captain");
-  const tReviewerItems = useTranslations("sidebar.items.reviewer");
-  const tManagerItems = useTranslations("sidebar.items.tournamentManager");
-  const tAdminItems = useTranslations("sidebar.items.admin");
-  const tViewerItems = useTranslations("sidebar.items.viewer");
+  const t = useTranslations("sidebar.items");
 
   const sidebar: SidebarItem[] = useMemo(
     () => [
       // ===== VIEWER SECTION (Conditional: Has 'viewer' role OR public access) =====
       {
-        title: tViewerItems("group"),
+        title: t("viewer.group"),
         publicAccess: true, // Visible even without login
         items: [
           {
-            title: tViewerItems("publicLeaderboards"),
+            title: t("viewer.publicLeaderboards"),
             href: "/public/leaderboards",
             icon: Trophy,
             publicAccess: true,
           },
           {
-            title: tViewerItems("live"),
+            title: t("viewer.live"),
             href: "/public/live",
             icon: Tv,
             publicAccess: true,
           },
           // Authenticated viewer-only items
           {
-            title: tViewerItems("dashboard"),
+            title: t("viewer.dashboard"),
             href: "/viewer",
             icon: Eye,
             roles: ["viewer"],
           },
           {
-            title: tViewerItems("favorites"),
+            title: t("viewer.favorites"),
             href: "/viewer/favorites",
             icon: Star,
             roles: ["viewer"],
@@ -113,30 +109,30 @@ function useSidebarItems(
 
       // ===== USER SECTION (Always Visible) =====
       {
-        title: tUserItems("group"),
+        title: t("user.group"),
         items: [
           {
-            title: tUserItems("dashboard"),
+            title: t("user.dashboard"),
             href: "/dashboard",
             icon: LayoutDashboard,
           },
           {
-            title: tUserItems("tournaments"),
+            title: t("user.tournaments"),
             href: "/tournaments",
             icon: Trophy,
           },
           {
-            title: tUserItems("teams"),
+            title: t("user.teams"),
             href: "/teams",
             icon: Users,
           },
           {
-            title: tUserItems("submissions"),
+            title: t("user.submissions"),
             href: "/submissions",
             icon: ClipboardList,
           },
           {
-            title: tUserItems("newSubmission"),
+            title: t("user.newSubmission"),
             onClick: () => setSubmissionFormOpen(true),
             icon: PlusCircle,
           },
@@ -145,44 +141,44 @@ function useSidebarItems(
 
       // ===== ADMIN SECTION (Conditional: Has 'admin' role) =====
       {
-        title: tAdminItems("group"),
+        title: t("admin.group"),
         roles: ["admin"],
         items: [
           {
-            title: tAdminItems("dashboard"),
+            title: t("admin.dashboard"),
             href: "/admin",
             icon: Shield,
           },
           {
-            title: tAdminItems("tournaments"),
+            title: t("admin.tournaments"),
             href: "/admin/tournaments",
             icon: Trophy,
           },
           {
-            title: tAdminItems("users"),
+            title: t("admin.users"),
             href: "/users",
             icon: UserCog,
           },
           {
-            title: tAdminItems("submissions"),
+            title: t("admin.submissions"),
             href: "/admin/submissions",
             icon: FileText,
             badge: {
-              query: "admin.getAllPendingCount",
+              query: api.admin.getAllPendingCount,
               color: "secondary",
             },
           },
           {
-            title: tAdminItems("submissionGroups"),
+            title: t("admin.submissionGroups"),
             href: "/admin/submission-groups",
             icon: Layers,
             badge: {
-              query: "submissionGroups.getPendingCount",
+              query: api.submissionGroups.getPendingCount,
               color: "secondary",
             },
           },
           {
-            title: tAdminItems("system"),
+            title: t("admin.system"),
             href: "/admin/system",
             icon: Activity,
           },
@@ -191,39 +187,39 @@ function useSidebarItems(
 
       // ===== TOURNAMENT MANAGER SECTION (Conditional: Has 'tournament_manager' role) =====
       {
-        title: tManagerItems("group"),
+        title: t("tournamentManager.group"),
         roles: ["tournament_manager", "admin"], // Admins also have manager access
         items: [
           {
-            title: tManagerItems("dashboard"),
+            title: t("tournamentManager.dashboard"),
             href: "/tournament-manager",
             icon: Briefcase,
             badge: {
-              query: "tournamentManager.getPendingCount",
+              query: api.tournamentManager.getPendingCount,
               color: "secondary",
             },
           },
           {
-            title: tManagerItems("tournaments"),
+            title: t("tournamentManager.tournaments"),
             href: "/tournament-manager/tournaments",
             icon: Calendar,
           },
           {
-            title: tManagerItems("approvals"),
+            title: t("tournamentManager.approvals"),
             href: "/tournament-manager/approvals",
             icon: CheckSquare,
             badge: {
-              query: "tournamentManager.getPendingCount",
+              query: api.tournamentManager.getPendingCount,
               color: "secondary",
             },
           },
           {
-            title: tManagerItems("analytics"),
+            title: t("tournamentManager.analytics"),
             href: "/tournament-manager/analytics",
             icon: LineChart,
           },
           {
-            title: tManagerItems("createTournament"),
+            title: t("tournamentManager.createTournament"),
             onClick: () => setCreateTournamentDialogOpen(true),
             icon: PlusCircle,
           },
@@ -232,29 +228,29 @@ function useSidebarItems(
 
       // ===== REVIEWER SECTION (Conditional: Has 'reviewer' role) =====
       {
-        title: tReviewerItems("group"),
+        title: t("reviewer.group"),
         roles: ["reviewer", "admin"], // Admins also have review access
         items: [
           {
-            title: tReviewerItems("queue"),
+            title: t("reviewer.queue"),
             href: "/reviewer",
             icon: FileCheck,
             badge: {
-              query: "reviewer.getPendingCount",
+              query: api.reviewer.getPendingCount,
               color: "secondary",
             },
           },
           {
-            title: tReviewerItems("statistics"),
+            title: t("reviewer.statistics"),
             href: "/reviewer/statistics",
             icon: TrendingUp,
           },
           {
-            title: tReviewerItems("flagged"),
+            title: t("reviewer.flagged"),
             href: "/reviewer/flagged",
             icon: Flag,
             badge: {
-              query: "reviewer.getFlaggedCount",
+              query: api.reviewer.getFlaggedCount,
               color: "destructive",
             },
           },
@@ -263,25 +259,25 @@ function useSidebarItems(
 
       // ===== CAPTAIN SECTION (Conditional: User Captains Teams) =====
       {
-        title: tCaptainItems("group"),
-        requiredCondition: (count) => count > 0,
+        title: t("captain.group"),
+        condition: ({ captainedTeamsCount }) => captainedTeamsCount > 0,
         items: [
           {
-            title: tCaptainItems("myTeams"),
+            title: t("captain.myTeams"),
             href: "/captain",
             icon: Shield,
             badge: {
-              query: "captain.getPendingActionsCount",
+              query: api.captain.getPendingActionsCount,
               color: "default",
             },
           },
           {
-            title: tCaptainItems("comparison"),
+            title: t("captain.comparison"),
             href: "/captain/comparison",
             icon: BarChart3,
           },
           {
-            title: tCaptainItems("inviteMember"),
+            title: t("captain.inviteMember"),
             onClick: () => setInviteMemberDialogOpen(true),
             icon: UserPlus,
           },
@@ -289,12 +285,7 @@ function useSidebarItems(
       },
     ],
     [
-      tUserItems,
-      tCaptainItems,
-      tReviewerItems,
-      tManagerItems,
-      tAdminItems,
-      tViewerItems,
+      t,
       setSubmissionFormOpen,
       setInviteMemberDialogOpen,
       setCreateTournamentDialogOpen,
@@ -313,7 +304,7 @@ export function AppSidebar() {
     useState(false);
 
   // Get captain teams count for conditional rendering
-  const captainedTeamsCount = useQuery(api.users.getCaptainedTeamsCount) ?? 0;
+  const captainedTeamsCount = useQuery(api.captain.getCaptainedTeamsCount) ?? 0;
 
   const { items: sidebarItems } = useSidebarItems(
     setSubmissionFormOpen,
@@ -321,12 +312,14 @@ export function AppSidebar() {
     setCreateTournamentDialogOpen,
   );
 
+  const context = { captainedTeamsCount };
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="h-10" />
       <SidebarContent>
         {sidebarItems.map((item) =>
-          renderItem(item, user, user?.roleNames || [], captainedTeamsCount),
+          renderItem(item, user, user?.roleNames || [], context),
         )}
         <UpsertSubmissionFormDialog
           open={submissionFormOpen}
@@ -353,7 +346,7 @@ function renderItem(
   item: SidebarItem,
   user: { roleNames: string[] } | null | undefined,
   userRoles: string[],
-  captainedTeamsCount: number,
+  context: { captainedTeamsCount: number },
 ) {
   // Check role-based visibility
   if (item.roles && !userRoles.some((role) => item.roles?.includes(role))) {
@@ -361,7 +354,7 @@ function renderItem(
   }
 
   // Check custom condition (e.g., user must captain teams)
-  if (item.requiredCondition && !item.requiredCondition(captainedTeamsCount)) {
+  if (item.condition && !item.condition(context)) {
     return null;
   }
 
@@ -373,9 +366,7 @@ function renderItem(
   // Render group
   if ("items" in item) {
     const visibleItems = item.items
-      .map((subItem) =>
-        renderItem(subItem, user, userRoles, captainedTeamsCount),
-      )
+      .map((subItem) => renderItem(subItem, user, userRoles, context))
       .filter(Boolean);
 
     // Don't render empty groups

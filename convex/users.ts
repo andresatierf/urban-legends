@@ -159,9 +159,24 @@ export const deleteFromClerk = internalMutation({
   },
 });
 
-export async function getCurrentUserOrThrow(ctx: QueryCtx) {
+export async function getCurrentUserOrThrow(
+  ctx: QueryCtx,
+  args?: { throw?: true },
+): Promise<UserWithRoles>;
+export async function getCurrentUserOrThrow(
+  ctx: QueryCtx,
+  args?: { throw: false },
+): Promise<UserWithRoles | null>;
+export async function getCurrentUserOrThrow(
+  ctx: QueryCtx,
+  args?: { throw?: boolean },
+): Promise<UserWithRoles | null> {
   const userRecord = await getCurrentUser(ctx);
-  if (!userRecord) throw new Error("Can't get current user");
+  if (!userRecord) {
+    if (!args || args.throw !== false)
+      throw new Error("Can't get current user");
+    return null;
+  }
   const roles = await getRolesForUser(ctx, userRecord._id);
   return {
     ...userRecord,
@@ -230,30 +245,8 @@ export async function getRolesForUser(ctx: QueryCtx, userId: Id<"users">) {
   );
 }
 
-export function validateIsAdmin(
-  user: Awaited<ReturnType<typeof getCurrentUserOrThrow>>,
-  message?: string,
-) {
+export function validateIsAdmin(user: UserWithRoles, message?: string) {
   if (!user.roleNames.includes("admin")) {
     throw new Error(message ?? "Admin access required");
   }
 }
-
-/**
- * Get the count of teams the current user captains.
- * Used for sidebar conditional rendering.
- */
-export const getCaptainedTeamsCount = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    const captainedTeams = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("role"), "captain"))
-      .collect();
-
-    return captainedTeams.length;
-  },
-});
