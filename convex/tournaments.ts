@@ -297,6 +297,10 @@ export const getAvailableUsersForTeam = query({
       new Set(teamMembers.flat().map((m) => m.userId)),
     );
 
+    if (userIdsInTeams.length === 0) {
+      return await ctx.db.query("users").collect();
+    }
+
     const availableUsers = await ctx.db
       .query("users")
       .filter((q) =>
