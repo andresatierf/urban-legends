@@ -7,7 +7,7 @@ export default function FlaggedSubmissions() {
     <div className="container mx-auto py-8">
       <div className="mb-8 flex items-center gap-3">
         <Flag className="h-8 w-8" />
-        <h1 className="text-3xl font-bold">Flagged Submissions</h1>
+        <h1 className="font-bold text-3xl">Flagged Submissions</h1>
       </div>
       <div className="rounded-lg border border-dashed p-12 text-center">
         <p className="text-muted-foreground">

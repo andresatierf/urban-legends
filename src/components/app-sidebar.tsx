@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "convex/react";
 import {
   Activity,
   BarChart3,
@@ -28,7 +29,6 @@ import {
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { useQuery } from "convex/react";
 import {
   Sidebar,
   SidebarContent,
@@ -44,9 +44,9 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarBadge } from "@/components/ui/sidebar-badge";
 import { useUser } from "@/hooks/useUser";
+import { api } from "../../convex/_generated/api";
 import { UpsertSubmissionFormDialog } from "./form/upsert-submission-form";
 import { LoggedUserCard } from "./logged-user-card";
-import { api } from "../../convex/_generated/api";
 
 type SidebarItem = {
   title: string;
@@ -306,8 +306,8 @@ export function AppSidebar() {
   const { user } = useUser();
 
   const [submissionFormOpen, setSubmissionFormOpen] = useState(false);
-  const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
-  const [createTournamentDialogOpen, setCreateTournamentDialogOpen] =
+  const [_inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
+  const [_createTournamentDialogOpen, setCreateTournamentDialogOpen] =
     useState(false);
 
   // Get captain teams count for conditional rendering
@@ -324,12 +324,7 @@ export function AppSidebar() {
       <SidebarHeader className="h-10" />
       <SidebarContent>
         {sidebarItems.map((item) =>
-          renderItem(
-            item,
-            user,
-            user?.roleNames || [],
-            captainedTeamsCount,
-          ),
+          renderItem(item, user, user?.roleNames || [], captainedTeamsCount),
         )}
         <UpsertSubmissionFormDialog
           open={submissionFormOpen}
