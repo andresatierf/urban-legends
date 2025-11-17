@@ -5,11 +5,7 @@ import { mutation, type QueryCtx, query } from "./_generated/server";
 import { upsertSubmissionGroup } from "./submissionGroups";
 import { recalculateSubmissionPoints } from "./submissions";
 import { validateUserNotInTournamentTeam } from "./tournaments";
-import {
-  getCurrentUserOrThrow,
-  getRolesForUser,
-  validateIsAdmin,
-} from "./users";
+import { getCurrentUserOrThrow, getUser, validateIsAdmin } from "./users";
 
 /**
  * Internal helper to recalculate and update a team's total points
@@ -201,15 +197,14 @@ export const getDetails = query({
     // Fetch user details for each member with their roles
     const membersWithRoles = await Promise.all(
       teamMembers.map(async (member) => {
-        const memberUser = await ctx.db.get(member.userId);
+        const memberUser = await getUser(ctx, {
+          userId: member.userId,
+          throw: false,
+        });
         if (!memberUser) return null;
-
-        const roles = await getRolesForUser(ctx, member.userId);
         return {
           ...memberUser,
-          roleNames: roles.map((r) => r.name),
-          role: member.role,
-          membershipId: member._id,
+          memberRole: member.role,
         };
       }),
     );
@@ -218,7 +213,7 @@ export const getDetails = query({
     const members = membersWithRoles.filter((m) => m !== null);
 
     // Find captain
-    const captain = members.find((m) => m.role === "captain") || null;
+    const captain = members.find((m) => m.memberRole === "captain") || null;
 
     // Find current user's membership
     const userMembership = teamMembers.find((m) => m.userId === user._id);

@@ -71,10 +71,7 @@ export default defineSchema({
     tournamentId: v.id("tournaments"),
     date: v.string(),
     description: v.optional(v.string()),
-    teammates: v.optional(v.array(v.id("users"))), // Optional during migration
-    submissionType: v.optional(
-      v.union(v.literal("individual"), v.literal("team")),
-    ), // NEW - optional during migration
+    submissionType: v.union(v.literal("individual"), v.literal("team")),
     state: v.union(
       v.literal("pending"),
       v.literal("approved"),

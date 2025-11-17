@@ -141,7 +141,7 @@ export function SubmissionDetailsCard({
         key: "Teammates",
         value:
           data.teammates.length > 0
-            ? data.teammates.map((t) => t.name).join(", ")
+            ? data.teammates.map((t: { name: string }) => t.name).join(", ")
             : "None",
       },
       ...(data.submission.state !== "pending" && data.managedByUser

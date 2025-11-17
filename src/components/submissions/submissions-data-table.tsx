@@ -54,7 +54,7 @@ export function SubmissionsDataTable<T, V>({
       { accessorKey: "description", header: "Description" },
       {
         accessorKey: "submissionType",
-        header: "Type",
+        header: "Submission Type",
         cell: ({ cell }) => capitalize(cell.getValue() as string),
       },
     ];

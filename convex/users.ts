@@ -1,6 +1,6 @@
 import type { UserJSON } from "@clerk/backend";
 import { type Validator, v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, type QueryCtx, query } from "./_generated/server";
 
 export const list = query({
@@ -37,22 +37,10 @@ export const list = query({
 
 export const getById = query({
   args: { id: v.id("users") },
-  handler: async (ctx, { id }) => {
+  handler: async (ctx, args) => {
     await getCurrentUserOrThrow(ctx);
 
-    const user = await ctx.db.get(id);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    const roles = await getRolesForUser(ctx, user._id);
-
-    return {
-      ...user,
-      roles,
-      roleNames: roles.map(({ name }) => name),
-    };
+    return await getUser(ctx, { userId: args.id });
   },
 });
 
@@ -69,14 +57,10 @@ export const getDetails = query({
     const currentUser = await getCurrentUserOrThrow(ctx);
 
     // Fetch user
-    const user = await ctx.db.get(args.userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await getUser(ctx, { userId: args.userId });
 
     // Fetch roles for the target user
-    const [roles, teamMemberships, allSubmissions] = await Promise.all([
-      getRolesForUser(ctx, user._id),
+    const [teamMemberships, allSubmissions] = await Promise.all([
       ctx.db
         .query("teamMembers")
         .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -121,11 +105,7 @@ export const getDetails = query({
     const isViewingSelf = currentUser._id === args.userId;
 
     return {
-      user: {
-        ...user,
-        roles,
-        roleNames: roles.map((r) => r.name),
-      },
+      user,
       statistics: {
         teamCount: teams.length,
         submissionCount: allSubmissions.length,
@@ -185,6 +165,36 @@ export async function getCurrentUserOrThrow(ctx: QueryCtx) {
   const roles = await getRolesForUser(ctx, userRecord._id);
   return {
     ...userRecord,
+    roles,
+    roleNames: roles.map(({ name }) => name),
+  };
+}
+
+export type UserWithRoles = Doc<"users"> & {
+  roles: Array<Doc<"roles">>;
+  roleNames: string[];
+};
+
+export async function getUser(
+  ctx: QueryCtx,
+  args: { userId: Id<"users">; throw?: true },
+): Promise<UserWithRoles>;
+export async function getUser(
+  ctx: QueryCtx,
+  args: { userId: Id<"users">; throw: false },
+): Promise<UserWithRoles | null>;
+export async function getUser(
+  ctx: QueryCtx,
+  args: { userId: Id<"users">; throw?: boolean },
+): Promise<UserWithRoles | null> {
+  const user = await ctx.db.get(args.userId);
+  if (!user) {
+    if (args.throw !== false) throw new Error("User not found");
+    return null;
+  }
+  const roles = await getRolesForUser(ctx, user._id);
+  return {
+    ...user,
     roles,
     roleNames: roles.map(({ name }) => name),
   };

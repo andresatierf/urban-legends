@@ -163,7 +163,8 @@ export function UpsertSubmissionFormDialog({
                   options={[
                     {
                       value: "individual",
-                      label: "Individual (you completed this on your own)",
+                      label:
+                        "Individual Activity (you completed this on your own)",
                     },
                     {
                       value: "team",
