@@ -143,32 +143,7 @@ These features enhance the platform but are not essential for MVP launch:
 - Notification preferences
 - Mark as read functionality
 
-### 6. Code Cleanup ([spec](specs/09-code-cleanup.md))
-
-**Status:** ❌ Not Started
-**Priority:** MEDIUM
-**Effort:** 2-3 days
-
-**Problem:** Potential unused exports and dead code in codebase.
-
-**Impact:** Increased maintenance burden, confusion for developers, potentially larger bundle size.
-
-**Note:** Needs investigation. Original spec claimed 26 unused exports, but many have since been implemented (e.g., `admin.addUserRole` is now complete, not a stub).
-
-**Required:**
-
-- Audit frontend components for unused exports
-- Audit backend functions for unused exports
-- Remove demo/legacy components if they exist
-- Consolidate duplicate functions
-- Document admin utility functions
-- Fix or remove unimplemented functions
-
-## Low Priority (Future Enhancements)
-
-These features would be valuable for growth but can be deferred until after MVP launch:
-
-### 7. Viewer & Public Dashboard ([spec](specs/14-viewer-public-dashboard.md))
+### 6. Viewer & Public Dashboard ([spec](specs/14-viewer-public-dashboard.md))
 
 **Status:** ❌ Not Implemented
 **Priority:** LOW-MEDIUM
@@ -261,7 +236,6 @@ Minor issues that should be addressed when time permits:
   - ❌ Team Captain Dashboard
   - ❌ Admin Dashboard
   - ❌ Notifications
-  - ❌ Code Cleanup
 - **Low Priority Features:** 0/1 complete
   - ❌ Viewer & Public Dashboard
 
@@ -298,14 +272,17 @@ Minor issues that should be addressed when time permits:
 #### Phase 2: Role-Based Dashboards (9-13 days) - IN PROGRESS
 
 1. **Tournament Manager Dashboard** (3-4 days) - Enables delegation
+
    - Critical for scaling tournament operations
    - Allows tournament management without full admin access
 
 2. **Reviewer Dashboard** (2-3 days) - Improves moderation
+
    - Dedicated content moderation workflow
    - Separates review role from admin role
 
 3. **Team Captain Dashboard** (2 days) - Captain efficiency
+
    - Multi-team management
    - Consolidated pending actions
 
@@ -318,8 +295,7 @@ Minor issues that should be addressed when time permits:
 #### Phase 3: Optional Enhancements (5-10 days)
 
 5. **Notifications System** (3-4 days) - User engagement
-6. **Code Cleanup** (2-3 days) - Technical debt
-7. **Viewer/Public Dashboard** (2-3 days) - External visibility
+6. **Viewer/Public Dashboard** (2-3 days) - External visibility
 
 ---
 
