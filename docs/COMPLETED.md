@@ -4,7 +4,7 @@ This document tracks all completed features for the Urban Legends tournament tra
 
 ## Overview
 
-The platform has successfully implemented **10 major features** representing approximately **19-23 days of development effort**. These features provide core functionality for tournament management, team collaboration, scoring, submission tracking, detailed submission views, comprehensive data fetching, polished loading states, and administration.
+The platform has successfully implemented **11 major features** representing approximately **24-30 days of development effort**. These features provide core functionality for tournament management, team collaboration, scoring, submission tracking with individual accountability, detailed submission views, comprehensive data fetching, polished loading states, and administration.
 
 ---
 
@@ -991,6 +991,240 @@ Skeleton components are lightweight:
 
 ---
 
+## ✅ 11. Individual Submission Tracking & Automatic Grouping
+
+**Spec:** [specs/done/15-individual-submission-tracking.md](specs/done/15-individual-submission-tracking.md)
+**PR:** #13
+**Completed:** 2025-11-17
+**Effort:** 5-7 days
+
+### Summary
+
+Complete redesign of the submission system from team-based submissions (with optional teammates array) to individual member submissions with automatic grouping. This ensures accountability, prevents double-counting of points, and maintains accurate participation tracking.
+
+### Implemented Features
+
+- ✅ Individual submission requirement - each member must submit their own activity
+- ✅ Submission type selection ("individual" or "team activity")
+- ✅ Automatic submission grouping for team activities (one group per team per day)
+- ✅ Daily submission limits per user (configurable per tournament)
+- ✅ Multiple individual activities allowed per day (up to limit)
+- ✅ Group-based approval workflow for team activities
+- ✅ Atomic group approval/rejection (all submissions updated together)
+- ✅ Points calculated once per group (no double-counting)
+- ✅ Participation rate tracking for team exercise threshold
+- ✅ Submission type switching (individual ↔ team, if pending)
+- ✅ Group recalculation on submission deletion or state changes
+
+### Backend Implementation
+
+**Schema Changes:**
+
+- `tournaments.maxSubmissionsPerDay` - Optional daily submission limit per user
+- `submissions.submissionType` - "individual" or "team" (required)
+- `submissions.submissionGroupId` - Reference to submission group (team submissions only)
+- `submissions.teammates` - Removed (replaced by individual submissions + grouping)
+- `submissionGroups` table - Aggregates team activity submissions by (team, date)
+  - Tracks participation rate, team exercise status, and group-level points
+  - One group per team per day for team activities
+  - Individual submissions are NOT grouped
+
+**New Mutations:**
+
+- `submissionGroups.approve` - Approve entire team activity group atomically
+  - Updates all submissions in group to approved
+  - Calculates points once at group level
+  - Awards team exercise or individual points based on participation rate
+- `submissionGroups.reject` - Reject entire group atomically
+  - Updates all submissions in group to rejected
+  - Removes points from team if previously approved
+
+**Updated Mutations:**
+
+- `submissions.upsert` - Updated to support submission type, daily limits, and grouping
+  - Validates daily submission limit (counts individual + team submissions)
+  - Prevents duplicate team activity submissions per user per day
+  - Auto-creates/joins submission groups for team activities
+  - Handles type changes (individual ↔ team) with proper group updates
+- `submissions.remove` - Updated to recalculate groups when team submission deleted
+  - Adjusts team points based on new participation rate
+  - Handles both individual and team submission deletions
+
+**New Queries:**
+
+- `submissionGroups.list` - Query groups with filters (team, tournament, state, date range)
+- `submissionGroups.getWithSubmissions` - Get group with all participant details
+
+**Internal Functions:**
+
+- `upsertSubmissionGroup` - Internal function to create/update groups automatically
+- `calculateGroupMetrics` - Single source of truth for group calculations
+- `recalculateSubmissionPoints` - Recalculates points for submissions when group state changes
+
+### Frontend Implementation
+
+**Tournament Form Updates:**
+
+- Added `maxSubmissionsPerDay` field (optional number input)
+- Clear label explaining daily submission limits
+- Field appears after team size configuration
+
+**Submission Form Updates:**
+
+- Removed teammates multi-select field (replaced by submission type)
+- Added `submissionType` select with two options:
+  - Individual (you completed this on your own)
+  - Team Activity (multiple members worked together)
+- Added daily limit indicator (shows when tournament has `maxSubmissionsPerDay` set)
+- Clear visual warning for team activities
+- Simplified submission flow - users just select individual or team
+
+**Submissions Page Updates:**
+
+- Updated to display submission type
+- Shows grouping information for team activities
+- Individual and team submissions clearly distinguished
+
+### Key Features
+
+**Individual Accountability:**
+
+- Every participating team member must create their own submission
+- Users explicitly indicate if activity was done alone or with teammates
+- Cannot submit on behalf of another member
+- Clear audit trail of who submitted when
+
+**Daily Submission Limits:**
+
+- Tournament organizers define `maxSubmissionsPerDay` (optional)
+- Limit applies to total submissions per user per day (individual + team combined)
+- Default: Unlimited (backwards compatible)
+- Validation enforced at submission creation time
+- Editing existing submissions doesn't count toward limit
+
+**Automatic Grouping:**
+
+- Only submissions marked as "team activity" are grouped together
+- Individual submissions remain standalone (no grouping)
+- **Constraint:** Only ONE team activity group allowed per team per day
+- **Flexibility:** Multiple individual activities can occur on same day (up to limit)
+- Group status derived from individual submission states
+- One approval action affects entire team activity group
+- Points calculated based on group participation rate
+
+**Participation Tracking:**
+
+- Tracks which members submitted for each team activity date
+- Calculates participation rate: `submitted_members / total_team_members` (team activities only)
+- Individual activities: participation rate is always 1 (just the submitter)
+- Distinguishes between individual exercise and team exercise based on participation rate threshold
+
+**Approval Workflow:**
+
+- **Team Activities:** Admin reviews grouped submissions together
+  - Single approval/rejection applies to all submissions in group
+  - All individual submissions in group transition to same state
+  - Points awarded ONCE per group, not per submission
+- **Individual Activities:** Admin reviews and approves each submission independently
+  - Each individual submission earns individual exercise points
+  - No grouping or coordination required
+
+**No Double-Counting:**
+
+- Points awarded at group level, stored on each individual submission
+- Recalculation uses group-based logic
+- Deleting one submission recalculates group participation and points
+- Team exercise threshold properly enforced
+
+### Edge Cases Handled
+
+**Mixed Activities Same Day:**
+
+- Users can have both individual and team submissions on same day
+- Alice does individual workout in morning (submission type: "individual")
+- Later, Alice, Bob, Charlie do team workout (each creates "team activity")
+- Result: Alice has TWO submissions for the day (one individual, one team)
+- Both submissions can be approved independently
+
+**Type Switching:**
+
+- Users can change submission type between individual/team (if pending)
+- Individual → Team: joins/creates group, recalculates participation
+- Team → Individual: removes from group, becomes standalone
+- Cannot switch type if submission already approved
+
+**Daily Limit Enforcement:**
+
+- Counts both individual and team submissions toward limit
+- Editing existing submissions does NOT count toward limit
+- Deleted submissions do NOT count toward limit
+- Limit resets each calendar day
+
+**Group Recalculation:**
+
+- Deleting team submission recalculates group participation rate
+- May change from team exercise to individual exercise if participation drops
+- Points automatically adjusted based on new participation rate
+- Group deleted when all submissions removed
+
+**Late Submission After Approval:**
+
+- System prevents joining team activity group after approval
+- Maintains data integrity and prevents point manipulation
+
+**Mixed Tiers in Group:**
+
+- If team members submit different tiers (base vs advanced)
+- Group uses highest tier (rewards ambition)
+- All submissions in group receive same points
+
+### Migration
+
+**Migration Strategy:**
+
+- Created `migrations.migrateSubmissionsToGroups` (later removed as empty)
+- Sets `submissionType` based on teammates array:
+  - Has teammates = "team"
+  - Otherwise = "individual"
+- Creates groups for existing team submissions
+- Links submissions to groups and normalizes points
+- Backwards compatible with existing data
+
+### Implementation Notes
+
+**Data Model Redesign:**
+
+The old model relied on a single submission with a `teammates` array:
+- One user created submission listing other participants
+- No verification from listed teammates
+- Risk of double-counting if multiple members submitted
+- Ambiguous participation tracking
+
+The new model requires individual submissions with automatic grouping:
+- Each member creates their own submission
+- System automatically groups team activities by (team, date)
+- Single source of truth for points (group level)
+- Clear participation tracking and accountability
+
+**Benefits:**
+
+- **Accountability:** Every participant must personally confirm participation
+- **Prevents Gaming:** One member can't submit on behalf of others
+- **Accurate Tracking:** Participation rate based on actual submissions
+- **No Double-Counting:** Points awarded once per group
+- **Simplified UX:** Users just select "individual" or "team activity"
+- **Better Admin Workflow:** Review groups instead of scattered individual submissions
+- **Data Integrity:** Automatic grouping prevents inconsistencies
+
+**Performance:**
+
+- Group queries execute efficiently with proper indexes
+- Approval mutation updates all grouped submissions atomically
+- Real-time UI updates via Convex reactivity
+- Supports teams with up to 20 members efficiently
+
+---
+
 ## Infrastructure & Foundation
 
 The following foundational systems were already in place before feature development:
@@ -1029,16 +1263,16 @@ The following foundational systems were already in place before feature developm
 
 ### Development Effort
 
-- **Total Completed:** 19-23 days of development
-- **Features Completed:** 10 major features
-- **PRs Merged:** 11 pull requests
-- **Files Modified:** 150+ files across backend and frontend
+- **Total Completed:** 24-30 days of development
+- **Features Completed:** 11 major features
+- **PRs Merged:** 13 pull requests
+- **Files Modified:** 170+ files across backend and frontend
 
 ### Code Metrics
 
-- **Backend Functions:** 60+ Convex mutations and queries
-- **Frontend Components:** 52+ React components (including 7 new skeleton components)
-- **Database Tables:** 15+ Convex tables
+- **Backend Functions:** 70+ Convex mutations and queries
+- **Frontend Components:** 52+ React components (including 7 skeleton components)
+- **Database Tables:** 16 Convex tables (added submissionGroups)
 - **Type Safety:** 0 TypeScript errors, 0 linting errors
 
 ### Feature Coverage
@@ -1050,6 +1284,7 @@ The following foundational systems were already in place before feature developm
 - ✅ User Self-Service (teams, invitations, requests)
 - ✅ Submission Calendar (visual progress tracking, statistics)
 - ✅ Submission Detail Pages (comprehensive submission view, approval workflow)
+- ✅ Individual Submission Tracking (accountability, automatic grouping, daily limits)
 - ✅ Code Quality (type safety, validation, linting)
 - ✅ Data Fetching Optimization (getDetails pattern, 30-75% performance improvement)
 - ✅ Loading States (comprehensive skeleton screens across all pages)
@@ -1068,6 +1303,8 @@ The following foundational systems were already in place before feature developm
 
 ## Recent Merges
 
+- **PR #13:** Individual Submission Tracking & Automatic Grouping (11/17/2025)
+- **PR #12:** Comprehensive Code Cleanup (11/16/2025)
 - **PR #11:** Loading States / Skeleton Screens (11/14/2025)
 - **PR #10:** Detail Cards Data Fetching Refactor (11/14/2025)
 - **PR #9:** Submission Detail Page (11/14/2025)

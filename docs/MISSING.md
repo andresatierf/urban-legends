@@ -4,7 +4,7 @@ This document outlines the features that are missing or incomplete for a Minimum
 
 ## Current State
 
-The codebase is approximately **98%+ complete** for core MVP, **95%+ complete** for enhanced MVP!
+The codebase is approximately **99%+ complete** for core MVP, **96%+ complete** for enhanced MVP!
 
 ### ✅ Core Infrastructure (Complete)
 
@@ -19,11 +19,12 @@ The codebase is approximately **98%+ complete** for core MVP, **95%+ complete** 
 - ✅ **Team member management UI** (invite, remove, transfer captaincy) - PR #1
 - ✅ **Leaderboard and scoring system** - PR #5
 - ✅ **Admin role management UI** - PR #6
-- ✅ **Code quality and type safety** - PR #4
+- ✅ **Code quality and type safety** - PR #4, #12
 - ✅ **Submission progress calendar** - PR #8
 - ✅ **Submission detail page** - PR #9
 - ✅ **Detail cards data fetching refactor** - PR #10
 - ✅ **Loading states / skeleton screens** - PR #11
+- ✅ **Individual submission tracking & automatic grouping** - PR #13
 
 ### ⚠️ High Priority Features (Still Needed)
 
@@ -217,17 +218,18 @@ Minor issues that should be addressed when time permits:
 
 ## Estimated Effort Summary
 
-### ✅ Completed (19-23 days)
+### ✅ Completed (24-30 days)
 
 - Team Joining/Self-Service (3-5 days)
 - Leaderboard & Scoring (2-3 days)
 - Team Edit & Delete (0.5 days)
 - Admin Role Management (1 day)
-- Code Quality Fixes (1 day)
+- Code Quality Fixes (1 day) + Code Cleanup (1 day)
 - Submission Calendar (1-2 days)
 - Submission Detail Page (2-3 days)
 - Detail Cards Data Fetching Refactor (2-3 days)
 - Loading States / Skeleton Screens (1-2 days)
+- Individual Submission Tracking & Automatic Grouping (5-7 days)
 
 ### ⚠️ Remaining for Full Enhanced MVP
 
@@ -240,17 +242,18 @@ Minor issues that should be addressed when time permits:
 
 ## Progress Summary
 
-- **Overall Completion:** 95%+ of enhanced MVP functionality (98%+ of core MVP)
+- **Overall Completion:** 96%+ of enhanced MVP functionality (99%+ of core MVP)
 - **Critical Features:** ✅ **ALL COMPLETE!**
   - ✅ Team Management (create, edit, delete, join, leave)
   - ✅ Team Member Management UI (invite, remove, transfer captaincy)
   - ✅ Leaderboard & Scoring System
   - ✅ Admin Role Management
-  - ✅ Code Quality & Type Safety
+  - ✅ Code Quality & Type Safety + Code Cleanup
   - ✅ Submission Calendar
   - ✅ Submission Detail Page
   - ✅ Detail Cards Data Fetching Refactor
   - ✅ Loading States / Skeleton Screens
+  - ✅ Individual Submission Tracking & Automatic Grouping
 - **High Priority Features:** 0/2 complete
   - ❌ Tournament Manager Dashboard
   - ❌ Reviewer Dashboard
@@ -264,6 +267,8 @@ Minor issues that should be addressed when time permits:
 
 ### Recent Merges
 
+- **PR #13:** Individual Submission Tracking & Automatic Grouping (11/17/2025)
+- **PR #12:** Comprehensive Code Cleanup (11/16/2025)
 - **PR #11:** Loading States / Skeleton Screens (11/14/2025)
 - **PR #10:** Detail Cards Data Fetching Refactor (11/14/2025)
 - **PR #9:** Submission Detail Page (11/14/2025)
