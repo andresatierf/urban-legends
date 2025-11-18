@@ -1,6 +1,8 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeScript } from "@/components/theme-script";
+import { ThemeProvider } from "@/hooks/use-theme";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 
 import "./globals.css";
@@ -25,13 +27,18 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ClerkProvider>
           <ConvexClientProvider>
-            <NextIntlClientProvider>{children}</NextIntlClientProvider>
+            <ThemeProvider>
+              <NextIntlClientProvider>{children}</NextIntlClientProvider>
+            </ThemeProvider>
           </ConvexClientProvider>
         </ClerkProvider>
       </body>

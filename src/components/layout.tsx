@@ -13,7 +13,7 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
           className="z-10 size-6 bg-muted transition-colors focus-visible:outline-hidden [&_svg]:size-4"
         />
       </div>
-      <div className="flex min-h-screen w-full flex-col items-center bg-gray-50">
+      <div className="flex min-h-screen w-full flex-col items-center bg-muted/30">
         <main className="mt-8 flex w-full max-w-5xl flex-1 flex-col gap-4 p-4">
           {children}
         </main>

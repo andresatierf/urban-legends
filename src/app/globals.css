@@ -112,6 +112,17 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
+
+  /* Card variant overrides for dark mode */
+  --color-card-admin-from: oklch(0.25 0.05 285);
+  --color-card-admin-to: oklch(0.25 0.05 260);
+  --color-card-admin-border: oklch(0.4 0.08 285);
+
+  --color-card-info-bg: oklch(0.2 0.03 240);
+  --color-card-info-border: oklch(0.3 0.06 240);
+
+  --color-card-dashed-bg: oklch(0.18 0.005 285);
+  --color-card-dashed-border: oklch(0.35 0.006 285);
 }
 
 @layer base {
