@@ -139,25 +139,28 @@ function useSidebarItems(
         ],
       },
 
-      // ===== ADMIN SECTION (Conditional: Has 'admin' role) =====
+      // ===== ADMIN SECTION (Conditional: Has 'admin' or 'tournament_manager' role) =====
       {
         title: t("admin.group"),
-        roles: ["admin"],
+        roles: ["admin", "tournament_manager"], // Show group for both roles
         items: [
           {
             title: t("admin.dashboard"),
             href: "/admin",
             icon: Shield,
+            roles: ["admin"], // Admin-only
           },
           {
             title: t("admin.tournaments"),
             href: "/admin/tournaments",
             icon: Trophy,
+            roles: ["admin", "tournament_manager"], // Allow tournament_manager
           },
           {
             title: t("admin.users"),
             href: "/users",
             icon: UserCog,
+            roles: ["admin"], // Admin-only
           },
           {
             title: t("admin.submissions"),
@@ -167,6 +170,7 @@ function useSidebarItems(
               query: api.admin.getAllPendingCount,
               color: "secondary",
             },
+            roles: ["admin", "tournament_manager"], // Allow tournament_manager
           },
           {
             title: t("admin.submissionGroups"),
@@ -176,11 +180,13 @@ function useSidebarItems(
               query: api.submissionGroups.getPendingCount,
               color: "secondary",
             },
+            roles: ["admin", "tournament_manager"], // Allow tournament_manager
           },
           {
             title: t("admin.system"),
             href: "/admin/system",
             icon: Activity,
+            roles: ["admin"], // Admin-only
           },
         ],
       },
