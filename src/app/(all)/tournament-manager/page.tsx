@@ -2,7 +2,6 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
-import { redirect } from "next/navigation";
 import { ManagedTournamentsList } from "@/components/tournament-manager/managed-tournaments-list";
 import { TournamentManagerActivityFeed } from "@/components/tournament-manager/tournament-manager-activity-feed";
 import { TournamentManagerQuickActions } from "@/components/tournament-manager/tournament-manager-quick-actions";
@@ -27,15 +26,15 @@ export default function TournamentManagerDashboard() {
   });
 
   // Redirect if not tournament manager or admin
-  const isAuthorized =
+  const _isAuthorized =
     user?.publicMetadata?.roleNames &&
     Array.isArray(user.publicMetadata.roleNames) &&
     (user.publicMetadata.roleNames.includes("tournament_manager") ||
       user.publicMetadata.roleNames.includes("admin"));
 
-  if (user && !isAuthorized) {
-    redirect("/dashboard");
-  }
+  // if (user && !isAuthorized) {
+  //   redirect("/dashboard");
+  // }
 
   const roleNames = user?.publicMetadata?.roleNames as string[] | undefined;
   const isAdmin = roleNames?.includes("admin");
