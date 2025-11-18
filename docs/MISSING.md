@@ -47,6 +47,7 @@ These features significantly improve user experience and should be implemented s
 **Effort:** 2-3 days (reduced from 3-4 days due to navigation foundation)
 
 **Foundation Completed (PR #14):**
+
 - ✅ Sidebar navigation section with badge
 - ✅ Placeholder pages created (`/tournament-manager`, `/tournament-manager/tournaments`, `/tournament-manager/approvals`, `/tournament-manager/analytics`)
 - ✅ Badge count query (`tournamentManager.getPendingCount`)
@@ -70,6 +71,7 @@ These features significantly improve user experience and should be implemented s
 **Effort:** 1-2 days (reduced from 2-3 days due to navigation foundation)
 
 **Foundation Completed (PR #14):**
+
 - ✅ Sidebar navigation section with badges
 - ✅ Placeholder pages created (`/reviewer`, `/reviewer/statistics`, `/reviewer/flagged`)
 - ✅ Badge count queries (`reviewer.getPendingCount`, `reviewer.getFlaggedCount`)
@@ -97,6 +99,7 @@ These features enhance the platform but are not essential for MVP launch:
 **Effort:** 1-1.5 days (reduced from 2 days due to navigation foundation)
 
 **Foundation Completed (PR #14):**
+
 - ✅ Sidebar navigation section with conditional rendering (only visible if user captains teams)
 - ✅ Placeholder pages created (`/captain`, `/captain/comparison`)
 - ✅ Badge count query (`captain.getPendingActionsCount` - join requests + invitations)
@@ -121,6 +124,7 @@ These features enhance the platform but are not essential for MVP launch:
 **Effort:** 1.5 days (reduced from 2 days due to navigation foundation)
 
 **Foundation Completed (PR #14):**
+
 - ✅ Sidebar navigation section for admin
 - ✅ Placeholder pages created (`/admin`, `/admin/system`)
 - ✅ Badge count query (`admin.getAllPendingCount`)
@@ -135,9 +139,9 @@ These features enhance the platform but are not essential for MVP launch:
 - System health indicators
 - Dashboard implementation with comprehensive metrics
 
-### 5. Notifications System
+### 5. Notifications System ([spec](specs/18-notifications-system.md))
 
-**Status:** ❌ Not Implemented
+**Status:** ⚠️ Spec Complete - Implementation Pending
 **Priority:** MEDIUM
 **Effort:** 3-4 days
 
@@ -145,14 +149,28 @@ These features enhance the platform but are not essential for MVP launch:
 
 **Impact:** Users must manually check for updates (submission approvals, team invites, tournament events).
 
-**Required:**
+**Spec Completed:**
 
-- In-app notification system
-- Notification bell icon with count
-- Notification list/panel
-- Email notifications (optional)
-- Notification preferences
-- Mark as read functionality
+- ✅ Comprehensive 23 notification event types defined
+- ✅ Real-time notification system design (Convex subscriptions)
+- ✅ Database schema (notifications, notificationPreferences tables)
+- ✅ Backend implementation (queries, mutations, helpers, cron jobs)
+- ✅ Frontend components (NotificationBell, NotificationPanel, NotificationItem)
+- ✅ Full notification history page and settings page
+- ✅ Integration points with existing mutations identified
+- ✅ Email notification architecture (optional Phase 2)
+
+**Required for Implementation:**
+
+- In-app notification system with real-time updates
+- Notification bell icon with unread count badge
+- Notification dropdown panel (last 50 notifications)
+- Full notification history page (/notifications)
+- Notification preferences page (/settings/notifications)
+- Mark as read functionality (single/bulk)
+- 90-day retention with automatic cleanup (cron job)
+- Integration with all existing event triggers (teams, submissions, tournaments, roles)
+- Email notifications (optional Phase 2 enhancement)
 
 ### 6. Viewer & Public Dashboard ([spec](specs/14-viewer-public-dashboard.md))
 
@@ -161,6 +179,7 @@ These features enhance the platform but are not essential for MVP launch:
 **Effort:** 1.5-2 days (reduced from 2-3 days due to navigation foundation)
 
 **Foundation Completed (PR #14):**
+
 - ✅ Sidebar navigation section for viewer/discover
 - ✅ Placeholder pages created (`/viewer`, `/viewer/favorites`, `/public/leaderboards`, `/public/live`)
 - ✅ Public access flags in sidebar configuration
