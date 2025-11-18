@@ -18,7 +18,7 @@ export function SectionHeader({
       <div>
         <Comp
           className={cn("font-semibold text-gray-800", {
-            "text-2xl": Comp === "h1",
+            "font-bold text-3xl": Comp === "h1",
             "text-lg": Comp === "h2",
           })}
         >

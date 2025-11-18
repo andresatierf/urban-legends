@@ -5,7 +5,7 @@ import { mutation, type QueryCtx, query } from "./_generated/server";
 import { upsertSubmissionGroup } from "./submissionGroups";
 import { recalculateSubmissionPoints } from "./submissions";
 import { validateUserNotInTournamentTeam } from "./tournaments";
-import { getCurrentUserOrThrow, getUser, validateIsAdmin } from "./users";
+import { getCurrentUserOrThrow, getUser } from "./users";
 
 /**
  * Internal helper to recalculate and update a team's total points
@@ -271,11 +271,17 @@ export const removeUserTeam = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    await validateIsTeamMember(ctx, {
-      teamId: args.teamId,
-      userId: user._id,
-      captain: true,
-    });
+    // Allow admin/tournament_manager to remove any team, or team captain to remove their own team
+    const isAdmin = user.roleNames.includes("admin");
+    const isTournamentManager = user.roleNames.includes("tournament_manager");
+
+    if (!isAdmin && !isTournamentManager) {
+      await validateIsTeamMember(ctx, {
+        teamId: args.teamId,
+        userId: user._id,
+        captain: true,
+      });
+    }
 
     const submissions = await ctx.db
       .query("submissions")
@@ -725,10 +731,16 @@ export const recalculatePoints = mutation({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateIsAdmin(
-      user,
-      "You do not have permission to recalculate team points",
-    );
+
+    // Allow both admin and tournament_manager
+    if (
+      !user.roleNames.includes("admin") &&
+      !user.roleNames.includes("tournament_manager")
+    ) {
+      throw new Error(
+        "Admin or Tournament Manager access required to recalculate team points",
+      );
+    }
 
     const team = await ctx.db.get(args.teamId);
     if (!team) {

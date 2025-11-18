@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, type QueryCtx, query } from "./_generated/server";
 import { getTeams, validateIsTeamMember } from "./teams";
-import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
+import { getCurrentUserOrThrow } from "./users";
 
 export const list = query({
   args: {
@@ -162,8 +162,9 @@ export const getDetails = query({
 
     // Determine permissions
     const isAdmin = user.roleNames.includes("admin");
-    const canEdit = isAdmin;
-    const canDelete = isAdmin;
+    const isTournamentManager = user.roleNames.includes("tournament_manager");
+    const canEdit = isAdmin || isTournamentManager;
+    const canDelete = isAdmin; // Only admins can delete tournaments
     const canViewLeaderboard = true; // Anyone can view leaderboard
 
     // Calculate statistics
@@ -224,7 +225,13 @@ export const upsert = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateIsAdmin(user);
+    // Allow both admin and tournament_manager
+    if (
+      !user.roleNames.includes("admin") &&
+      !user.roleNames.includes("tournament_manager")
+    ) {
+      throw new Error("Admin or Tournament Manager access required");
+    }
 
     // Default scoring config if not provided
     const defaultScoringConfig = {
@@ -491,7 +498,13 @@ export const determineWinner = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateIsAdmin(user);
+    // Allow both admin and tournament_manager
+    if (
+      !user.roleNames.includes("admin") &&
+      !user.roleNames.includes("tournament_manager")
+    ) {
+      throw new Error("Admin or Tournament Manager access required");
+    }
 
     const tournament = await ctx.db.get(args.tournamentId);
     if (!tournament) {

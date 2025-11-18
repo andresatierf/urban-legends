@@ -119,6 +119,7 @@ export function UpsertTournamentFormDialog({
           e.preventDefault();
           form.handleSubmit();
         }}
+        className="flex"
       >
         {children ? (
           <DialogTrigger asChild>{children}</DialogTrigger>

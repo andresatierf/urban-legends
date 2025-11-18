@@ -13,10 +13,8 @@ export const getPendingCount = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Validate user has tournament_manager or admin role
     if (
-      !user.roleNames.includes("tournament_manager") &&
-      !user.roleNames.includes("admin")
+      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
     ) {
       return 0;
     }

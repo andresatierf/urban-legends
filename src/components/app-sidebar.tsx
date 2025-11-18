@@ -110,6 +110,7 @@ function useSidebarItems(
       // ===== USER SECTION (Always Visible) =====
       {
         title: t("user.group"),
+        roles: ["player"],
         items: [
           {
             title: t("user.dashboard"),
@@ -139,7 +140,7 @@ function useSidebarItems(
         ],
       },
 
-      // ===== ADMIN SECTION (Conditional: Has 'admin' role) =====
+      // ===== ADMIN SECTION (Conditional: Has 'admin' or 'tournament_manager' role) =====
       {
         title: t("admin.group"),
         roles: ["admin"],
@@ -148,16 +149,19 @@ function useSidebarItems(
             title: t("admin.dashboard"),
             href: "/admin",
             icon: Shield,
+            roles: ["admin"], // Admin-only
           },
           {
             title: t("admin.tournaments"),
             href: "/admin/tournaments",
             icon: Trophy,
+            roles: ["admin", "tournament_manager"], // Allow tournament_manager
           },
           {
             title: t("admin.users"),
             href: "/users",
             icon: UserCog,
+            roles: ["admin"], // Admin-only
           },
           {
             title: t("admin.submissions"),
@@ -167,6 +171,7 @@ function useSidebarItems(
               query: api.admin.getAllPendingCount,
               color: "secondary",
             },
+            roles: ["admin", "tournament_manager"], // Allow tournament_manager
           },
           {
             title: t("admin.submissionGroups"),
@@ -176,11 +181,13 @@ function useSidebarItems(
               query: api.submissionGroups.getPendingCount,
               color: "secondary",
             },
+            roles: ["admin", "tournament_manager"], // Allow tournament_manager
           },
           {
             title: t("admin.system"),
             href: "/admin/system",
             icon: Activity,
+            roles: ["admin"], // Admin-only
           },
         ],
       },
@@ -203,6 +210,12 @@ function useSidebarItems(
             title: t("tournamentManager.tournaments"),
             href: "/tournament-manager/tournaments",
             icon: Calendar,
+            condition: () => false,
+          },
+          {
+            title: t("tournamentManager.submissions"),
+            href: "/tournament-manager/submissions",
+            icon: Calendar,
           },
           {
             title: t("tournamentManager.approvals"),
@@ -212,16 +225,19 @@ function useSidebarItems(
               query: api.tournamentManager.getPendingCount,
               color: "secondary",
             },
+            condition: () => false,
           },
           {
             title: t("tournamentManager.analytics"),
             href: "/tournament-manager/analytics",
             icon: LineChart,
+            condition: () => false,
           },
           {
             title: t("tournamentManager.createTournament"),
             onClick: () => setCreateTournamentDialogOpen(true),
             icon: PlusCircle,
+            condition: () => false,
           },
         ],
       },

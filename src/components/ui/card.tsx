@@ -10,6 +10,8 @@ const cardVariants = cva(
         default: "",
         admin:
           "border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 shadow-md",
+        tournament_manager:
+          "border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-yellow-50 shadow-md",
         info: "border-blue-200 bg-blue-50",
         dashed: "border-2 border-gray-300 border-dashed bg-gray-50 shadow-none",
       },

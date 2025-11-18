@@ -8,5 +8,7 @@ export function useUser() {
     user,
     isDev: user?.roleNames?.includes("dev") ?? false,
     isAdmin: user?.roleNames?.includes("admin") ?? false,
+    isTournamentManager:
+      user?.roleNames?.includes("tournament_manager") ?? false,
   };
 }

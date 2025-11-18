@@ -7,6 +7,7 @@ import { useMemo } from "react";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../convex/_generated/api";
 import { TeamInvitationsList } from "./invitations/team-invitations-list";
+import { SectionHeader } from "./section-header";
 import { StatCard } from "./stat-card";
 import { SvgIcon } from "./svg-icon";
 import { Badge } from "./ui/badge";
@@ -128,14 +129,11 @@ export function UserDashboard(_props: UserDashboardProps) {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div>
-        <h1 className="font-bold text-3xl text-gray-900">
-          Welcome back, {user.name || "User"}!
-        </h1>
-        <p className="text-gray-600">
-          Here's an overview of your tournament activity
-        </p>
-      </div>
+      <SectionHeader
+        as="h1"
+        title={`Welcome back, ${user.name ?? "Player"}`}
+        description="Here's an overview of your tournament activity"
+      />
 
       {/* Admin Section */}
       {isAdmin && adminStats && (

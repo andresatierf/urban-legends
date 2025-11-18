@@ -16,7 +16,7 @@ import { api } from "../../../../convex/_generated/api";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
 export default function SubmissionsPage() {
-  const { user, isAdmin } = useUser();
+  const { user, isAdmin, isTournamentManager } = useUser();
   const router = useRouter();
 
   const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams">>();
@@ -232,7 +232,7 @@ export default function SubmissionsPage() {
               submissions={augmentSubmissions(submissions)}
               showActions
             />
-            {isAdmin && (
+            {(isAdmin || isTournamentManager) && (
               <>
                 <SubmissionsDataTable
                   title="Pending Submissions"

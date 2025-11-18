@@ -25,6 +25,7 @@
         "group": "Tournament Manager",
         "dashboard": "Manager Dashboard",
         "tournaments": "My Tournaments",
+        "submissions": "Submissions",
         "approvals": "Pending Approvals",
         "analytics": "Analytics",
         "createTournament": "Create Tournament"
