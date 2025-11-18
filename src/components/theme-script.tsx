@@ -1,9 +1,11 @@
+import { THEME_STORAGE_KEY } from "@/hooks/use-theme";
+
 export function ThemeScript() {
   // This script runs before React hydration
   const themeInitScript = `
     (function() {
       try {
-        const stored = localStorage.getItem('theme-preference');
+        const stored = localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});
         const theme = stored === 'light' || stored === 'dark' || stored === 'system'
           ? stored
           : 'system';

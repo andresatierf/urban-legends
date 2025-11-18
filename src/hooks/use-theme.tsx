@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark" | "system";
+export type Theme = "light" | "dark" | "system";
 type ResolvedTheme = "light" | "dark";
 
 interface ThemeContextValue {
@@ -13,7 +13,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-const THEME_STORAGE_KEY = "theme-preference";
+export const THEME_STORAGE_KEY = "theme-preference";
 
 function getSystemTheme(): ResolvedTheme {
   if (typeof window === "undefined") return "light";

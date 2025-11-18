@@ -1,6 +1,6 @@
 "use client";
 
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,29 +9,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/use-theme";
-
-const THEME_CONFIG = {
-  light: {
-    icon: Sun,
-    label: "Light",
-    description: "Use light theme",
-  },
-  dark: {
-    icon: Moon,
-    label: "Dark",
-    description: "Use dark theme",
-  },
-  system: {
-    icon: Monitor,
-    label: "System",
-    description: "Follow system preference",
-  },
-} as const;
+import { THEME_OPTIONS } from "@/lib/theme-config";
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
 
-  const CurrentIcon = THEME_CONFIG[theme].icon;
+  const CurrentIcon = THEME_OPTIONS[theme].icon;
 
   return (
     <DropdownMenu>
@@ -42,9 +25,9 @@ export function ThemeSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {(
-          Object.entries(THEME_CONFIG) as [
-            keyof typeof THEME_CONFIG,
-            (typeof THEME_CONFIG)[keyof typeof THEME_CONFIG],
+          Object.entries(THEME_OPTIONS) as [
+            keyof typeof THEME_OPTIONS,
+            (typeof THEME_OPTIONS)[keyof typeof THEME_OPTIONS],
           ][]
         ).map(([key, config]) => {
           const Icon = config.icon;
@@ -61,7 +44,10 @@ export function ThemeSwitcher() {
                   {config.description}
                 </span>
               </div>
-              {theme === key && <span className="ml-auto text-primary">✓</span>}
+
+              {theme === key && (
+                <Check className="ml-auto h-4 w-4 text-primary" />
+              )}
             </DropdownMenuItem>
           );
         })}
