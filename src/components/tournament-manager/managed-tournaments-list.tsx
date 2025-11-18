@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Doc } from "../../../convex/_generated/dataModel";
+import { Label } from "../ui/label";
 
 interface ManagedTournamentsListProps {
   tournaments: Array<Doc<"tournaments">>;
@@ -92,36 +93,44 @@ export function ManagedTournamentsList({
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
-        <Select
-          value={statusFilter}
-          onValueChange={(value) => setStatusFilter(value as TournamentStatus)}
-        >
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Tournaments</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="upcoming">Upcoming</SelectItem>
-            <SelectItem value="ended">Ended</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-2">
+          <Label>Filter</Label>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) =>
+              setStatusFilter(value as TournamentStatus)
+            }
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tournaments</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="upcoming">Upcoming</SelectItem>
+              <SelectItem value="ended">Ended</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select
-          value={sortBy}
-          onValueChange={(value) =>
-            setSortBy(value as "name" | "startDate" | "status")
-          }
-        >
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="startDate">Start Date</SelectItem>
-            <SelectItem value="name">Name</SelectItem>
-            <SelectItem value="status">Status</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-2">
+          <Label>Sort</Label>
+          <Select
+            value={sortBy}
+            onValueChange={(value) =>
+              setSortBy(value as "name" | "startDate" | "status")
+            }
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="startDate">Start Date</SelectItem>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Empty State for Filtered Results */}

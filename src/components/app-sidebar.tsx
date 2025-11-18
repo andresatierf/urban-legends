@@ -110,6 +110,7 @@ function useSidebarItems(
       // ===== USER SECTION (Always Visible) =====
       {
         title: t("user.group"),
+        roles: ["player"],
         items: [
           {
             title: t("user.dashboard"),
@@ -142,7 +143,7 @@ function useSidebarItems(
       // ===== ADMIN SECTION (Conditional: Has 'admin' or 'tournament_manager' role) =====
       {
         title: t("admin.group"),
-        roles: ["admin", "tournament_manager"], // Show group for both roles
+        roles: ["admin"],
         items: [
           {
             title: t("admin.dashboard"),
@@ -209,6 +210,12 @@ function useSidebarItems(
             title: t("tournamentManager.tournaments"),
             href: "/tournament-manager/tournaments",
             icon: Calendar,
+            condition: () => false,
+          },
+          {
+            title: t("tournamentManager.submissions"),
+            href: "/tournament-manager/submissions",
+            icon: Calendar,
           },
           {
             title: t("tournamentManager.approvals"),
@@ -218,16 +225,19 @@ function useSidebarItems(
               query: api.tournamentManager.getPendingCount,
               color: "secondary",
             },
+            condition: () => false,
           },
           {
             title: t("tournamentManager.analytics"),
             href: "/tournament-manager/analytics",
             icon: LineChart,
+            condition: () => false,
           },
           {
             title: t("tournamentManager.createTournament"),
             onClick: () => setCreateTournamentDialogOpen(true),
             icon: PlusCircle,
+            condition: () => false,
           },
         ],
       },

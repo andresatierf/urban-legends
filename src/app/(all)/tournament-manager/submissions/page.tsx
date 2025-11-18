@@ -1,9 +1,9 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { redirect } from "next/navigation";
 import { useState } from "react";
+import { SectionHeader } from "@/components/section-header";
 import { SubmissionsDataTable } from "@/components/submissions/submissions-data-table";
 import {
   Card,
@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -19,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -39,34 +41,24 @@ export default function TournamentManagerSubmissions() {
 
   const tournaments = useQuery(api.tournaments.list, {});
 
-  // Redirect if not tournament manager or admin
-  const isAuthorized =
-    user?.publicMetadata?.roleNames &&
-    Array.isArray(user.publicMetadata.roleNames) &&
-    (user.publicMetadata.roleNames.includes("tournament_manager") ||
-      user.publicMetadata.roleNames.includes("admin"));
-
-  if (user && !isAuthorized) {
+  if (
+    user &&
+    !["admin", "tournament_manager"].some((r) => user.roleNames?.includes(r))
+  ) {
     redirect("/dashboard");
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="font-bold text-3xl">Submission Management</h1>
-        <p className="text-muted-foreground">
-          Review and approve submissions from all tournaments
-        </p>
-      </div>
+    <>
+      <SectionHeader
+        as="h1"
+        title="Submission Management"
+        description="Review and approve submissions from all tournaments"
+      />
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="flex gap-4">
-          {/* Tournament filter */}
+      <div className="flex gap-4">
+        <div className="flex flex-col gap-2">
+          <Label>Filter</Label>
           <Select
             value={tournamentFilter}
             onValueChange={(value) =>
@@ -85,8 +77,10 @@ export default function TournamentManagerSubmissions() {
               ))}
             </SelectContent>
           </Select>
+        </div>
 
-          {/* Status filter */}
+        <div className="flex flex-col gap-2">
+          <Label>Sort</Label>
           <Select
             value={statusFilter}
             onValueChange={(value) =>
@@ -103,10 +97,9 @@ export default function TournamentManagerSubmissions() {
               <SelectItem value="rejected">Rejected</SelectItem>
             </SelectContent>
           </Select>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Submissions Table */}
       <Card>
         <CardHeader>
           <CardTitle>Submissions</CardTitle>
@@ -122,6 +115,6 @@ export default function TournamentManagerSubmissions() {
           />
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }

@@ -52,7 +52,7 @@ export function TournamentManagerStatsCards({
         </CardHeader>
         <CardContent>
           <div className="font-bold text-2xl">{stats.teams.total}</div>
-          <p className="mt-2 text-muted-foreground text-xs">
+          <p className="mt-4 text-muted-foreground text-xs">
             Across all tournaments
           </p>
         </CardContent>
@@ -66,9 +66,9 @@ export function TournamentManagerStatsCards({
         </CardHeader>
         <CardContent>
           <div className="font-bold text-2xl">{stats.submissions.total}</div>
-          <div className="mt-2">
+          <div className="mt-4">
             {stats.submissions.pending > 0 ? (
-              <Badge variant="destructive" className="text-sm">
+              <Badge variant="pending" className="text-sm">
                 {stats.submissions.pending} Pending Review
               </Badge>
             ) : (
