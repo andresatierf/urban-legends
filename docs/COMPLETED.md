@@ -4,7 +4,7 @@ This document tracks all completed features for the Urban Legends tournament tra
 
 ## Overview
 
-The platform has successfully implemented **11 major features** representing approximately **24-30 days of development effort**. These features provide core functionality for tournament management, team collaboration, scoring, submission tracking with individual accountability, detailed submission views, comprehensive data fetching, polished loading states, and administration.
+The platform has successfully implemented **12 major features** representing approximately **25-32 days of development effort**. These features provide core functionality for tournament management, team collaboration, scoring, submission tracking with individual accountability, detailed submission views, comprehensive data fetching, polished loading states, role-based navigation, and administration.
 
 ---
 
@@ -1225,6 +1225,202 @@ The new model requires individual submissions with automatic grouping:
 
 ---
 
+## ✅ 12. Enhanced Role-Based Sidebar Navigation
+
+**Spec:** [specs/done/18-sidebar-navigation-enhancements.md](specs/done/18-sidebar-navigation-enhancements.md)
+**PR:** #14
+**Completed:** 2025-11-17
+**Effort:** 1-2 days
+
+### Summary
+
+Complete restructuring of the sidebar navigation to support role-based dashboards with organized sections, notification badges, and placeholder pages for all upcoming role-specific features.
+
+### Implemented Features
+
+- ✅ Role-based sidebar sections (User, Captain, Reviewer, Tournament Manager, Admin, Viewer)
+- ✅ Notification badges with real-time counts from Convex queries
+- ✅ Conditional section visibility based on user roles
+- ✅ Captain section conditional on captaining at least one team
+- ✅ 24+ new Lucide icons for role-specific navigation
+- ✅ Placeholder pages for all role-based dashboards (25+ pages)
+- ✅ Badge count queries for pending actions
+- ✅ Internationalization support for all new sidebar items
+- ✅ Mobile-responsive design maintained
+
+### Backend Implementation
+
+**New Query Files:**
+
+- `convex/captain.ts` - Captain-specific badge queries
+  - `getPendingActionsCount` - Join requests + invitations for captain's teams
+  - `getCaptainedTeamsCount` - Count teams user captains (for conditional rendering)
+- `convex/reviewer.ts` - Reviewer badge queries
+  - `getPendingCount` - Pending submissions for review
+  - `getFlaggedCount` - Flagged submissions requiring attention
+- `convex/tournamentManager.ts` - Tournament manager queries
+  - `getPendingCount` - Pending approvals for assigned tournaments
+
+**Extended Existing Files:**
+
+- `convex/admin.ts` - Added `getAllPendingCount` for system-wide pending submissions
+- `convex/submissionGroups.ts` - Added `getPendingCount` for grouped submissions
+- `convex/users.ts` - Extended with captain teams count query
+
+**Query Features:**
+
+- All queries include proper role-based access control
+- Counts include both individual submissions and submission groups
+- Captain badges aggregate across all captain's teams
+- Real-time updates via Convex reactive queries
+- Returns 0 for unauthorized users (no errors thrown)
+
+### Frontend Implementation
+
+**Enhanced Sidebar (`src/components/app-sidebar.tsx`):**
+
+- Completely restructured with 6 role-based sections
+- Extended `SidebarItem` type with:
+  - `roles`: array for role-based visibility
+  - `requiredCondition`: function for custom conditions (e.g., captain check)
+  - `publicAccess`: boolean for unauthenticated access
+  - `badge`: object with Convex query for notification counts
+- Smart visibility filtering based on roles and conditions
+- Empty sections automatically hidden
+- Supports both authenticated and public access patterns
+
+**New Component:**
+
+- `src/components/ui/sidebar-badge.tsx` - Dynamic badge component
+  - Supports dynamic Convex query strings
+  - Shows 99+ for counts over 99
+  - Auto-hides when count is 0
+  - Validates query format and API availability
+
+**Navigation Sections:**
+
+1. **User Section** (always visible)
+   - Dashboard, Tournaments, Teams, Submissions, Submit Activity
+
+2. **Captain Section** (conditional on captaining teams)
+   - My Teams, Team Comparison, Invite Member
+   - Badge: Pending join requests + invitations
+
+3. **Reviewer Section** (role: reviewer)
+   - Review Queue, Review Stats, Flagged Submissions
+   - Badges: Pending submissions, Flagged items
+
+4. **Tournament Manager Section** (role: tournament_manager)
+   - Manager Dashboard, My Tournaments, Pending Approvals, Analytics
+   - Badge: Pending approvals for assigned tournaments
+
+5. **Admin Section** (role: admin)
+   - Admin Dashboard, Tournaments, Users, All Submissions, Submission Groups, System Health
+   - Badge: System-wide pending counts
+
+6. **Discover/Viewer Section** (public + role: viewer)
+   - Public Leaderboards, Live Tournaments, Viewer Dashboard, Favorites
+
+### Placeholder Pages Created
+
+**Captain Routes:**
+
+- `/captain` - Team Captain Dashboard
+- `/captain/comparison` - Team Comparison View
+
+**Reviewer Routes:**
+
+- `/reviewer` - Review Queue Dashboard
+- `/reviewer/statistics` - Review Statistics
+- `/reviewer/flagged` - Flagged Submissions
+
+**Tournament Manager Routes:**
+
+- `/tournament-manager` - Manager Dashboard
+- `/tournament-manager/tournaments` - Assigned Tournaments
+- `/tournament-manager/approvals` - Pending Approvals
+- `/tournament-manager/analytics` - Tournament Analytics
+
+**Admin Routes:**
+
+- `/admin` - Admin Dashboard (placeholder)
+- `/admin/system` - System Health Monitoring
+
+**Viewer Routes:**
+
+- `/viewer` - Viewer Dashboard
+- `/viewer/favorites` - Favorite Tournaments
+- `/public/leaderboards` - Public Leaderboards
+- `/public/live` - Live Tournaments Feed
+
+All placeholder pages use consistent pattern with icon, title, and spec reference.
+
+### Internationalization
+
+**Updates to `messages/en.json`:**
+
+- Added translation keys for all new sidebar sections
+- Complete coverage for captain, reviewer, manager, admin, and viewer sections
+- Maintains i18n best practices
+
+### Implementation Notes
+
+**Foundation for Future Dashboards:**
+
+This implementation establishes the complete navigation structure needed for:
+- Spec 07: Admin Dashboard
+- Spec 11: Tournament Manager Dashboard
+- Spec 12: Reviewer Dashboard
+- Spec 13: Team Captain Dashboard
+- Spec 14: Viewer/Public Dashboard
+
+By implementing the sidebar first with placeholders, future dashboard implementations can focus purely on functionality without navigation concerns.
+
+**Conditional Rendering Logic:**
+
+- Role-based sections check user roles array
+- Captain section uses custom condition checking `captainedTeamsCount > 0`
+- Public access items show for unauthenticated users
+- Empty sections (no visible items) are automatically filtered out
+
+**Badge Integration:**
+
+- Badges use dynamic query strings (e.g., "captain.getPendingActionsCount")
+- Parsed and validated at runtime
+- Real-time updates via Convex subscriptions
+- Graceful degradation if query fails
+
+**Type Safety:**
+
+- All new types properly defined
+- TypeScript errors resolved
+- Biome linting passes with zero errors
+
+### Benefits
+
+**For Users:**
+
+- Clear organization of features by role
+- At-a-glance view of pending actions via badges
+- Intuitive navigation to role-specific dashboards
+- Reduced clutter (only see relevant sections)
+
+**For Development:**
+
+- Parallel development of dashboards without navigation conflicts
+- Placeholder pages enable immediate routing
+- Consistent navigation pattern for all future features
+- Easy to add new items or sections
+
+**For Platform:**
+
+- Scalable navigation architecture
+- Supports unlimited roles and permissions
+- Real-time notification system foundation
+- Professional, organized user experience
+
+---
+
 ## Infrastructure & Foundation
 
 The following foundational systems were already in place before feature development:
@@ -1263,16 +1459,16 @@ The following foundational systems were already in place before feature developm
 
 ### Development Effort
 
-- **Total Completed:** 24-30 days of development
-- **Features Completed:** 11 major features
-- **PRs Merged:** 13 pull requests
-- **Files Modified:** 170+ files across backend and frontend
+- **Total Completed:** 25-32 days of development
+- **Features Completed:** 12 major features
+- **PRs Merged:** 14 pull requests
+- **Files Modified:** 200+ files across backend and frontend
 
 ### Code Metrics
 
-- **Backend Functions:** 70+ Convex mutations and queries
-- **Frontend Components:** 52+ React components (including 7 skeleton components)
-- **Database Tables:** 16 Convex tables (added submissionGroups)
+- **Backend Functions:** 80+ Convex mutations and queries (including role-specific badge queries)
+- **Frontend Components:** 60+ React components (including 7 skeleton components, sidebar badge, 25+ placeholder pages)
+- **Database Tables:** 16 Convex tables (including submissionGroups)
 - **Type Safety:** 0 TypeScript errors, 0 linting errors
 
 ### Feature Coverage
@@ -1285,6 +1481,7 @@ The following foundational systems were already in place before feature developm
 - ✅ Submission Calendar (visual progress tracking, statistics)
 - ✅ Submission Detail Pages (comprehensive submission view, approval workflow)
 - ✅ Individual Submission Tracking (accountability, automatic grouping, daily limits)
+- ✅ Role-Based Navigation (sidebar sections, badges, conditional rendering)
 - ✅ Code Quality (type safety, validation, linting)
 - ✅ Data Fetching Optimization (getDetails pattern, 30-75% performance improvement)
 - ✅ Loading States (comprehensive skeleton screens across all pages)
@@ -1303,6 +1500,7 @@ The following foundational systems were already in place before feature developm
 
 ## Recent Merges
 
+- **PR #14:** Enhanced Role-Based Sidebar Navigation (11/17/2025)
 - **PR #13:** Individual Submission Tracking & Automatic Grouping (11/17/2025)
 - **PR #12:** Comprehensive Code Cleanup (11/16/2025)
 - **PR #11:** Loading States / Skeleton Screens (11/14/2025)

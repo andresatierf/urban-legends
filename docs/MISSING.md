@@ -4,7 +4,7 @@ This document outlines the features that are missing or incomplete for a Minimum
 
 ## Current State
 
-The codebase is approximately **99%+ complete** for core MVP, **96%+ complete** for enhanced MVP!
+The codebase is approximately **99%+ complete** for core MVP, **97%+ complete** for enhanced MVP!
 
 ### ✅ Core Infrastructure (Complete)
 
@@ -25,6 +25,7 @@ The codebase is approximately **99%+ complete** for core MVP, **96%+ complete** 
 - ✅ **Detail cards data fetching refactor** - PR #10
 - ✅ **Loading states / skeleton screens** - PR #11
 - ✅ **Individual submission tracking & automatic grouping** - PR #13
+- ✅ **Role-based sidebar navigation with badges** - PR #14
 
 ### ⚠️ High Priority Features (Still Needed)
 
@@ -41,43 +42,47 @@ These features significantly improve user experience and should be implemented s
 
 ### 1. Tournament Manager Dashboard ([spec](specs/11-tournament-manager-dashboard.md))
 
-**Status:** ❌ Not Implemented
+**Status:** ⚠️ Navigation & Placeholders Complete (PR #14) - Dashboard Implementation Pending
 **Priority:** HIGH
-**Effort:** 3-4 days
+**Effort:** 2-3 days (reduced from 3-4 days due to navigation foundation)
 
-**Problem:** The `tournament_manager` role exists but has no dedicated interface. Tournament managers cannot execute their role-specific functions without full admin access.
+**Foundation Completed (PR #14):**
+- ✅ Sidebar navigation section with badge
+- ✅ Placeholder pages created (`/tournament-manager`, `/tournament-manager/tournaments`, `/tournament-manager/approvals`, `/tournament-manager/analytics`)
+- ✅ Badge count query (`tournamentManager.getPendingCount`)
+- ✅ Routing structure established
 
-**Impact:** Cannot delegate tournament management responsibilities. Tournament managers have no way to manage their assigned tournaments, approve submissions, or access tournament analytics.
-
-**Required:**
+**Still Required:**
 
 - Tournament assignment system (admins assign managers to specific tournaments)
 - Tournament manager dashboard showing assigned tournaments
 - Scoped submission approval queue (only for managed tournaments)
 - Tournament analytics and statistics
 - Team oversight for managed tournaments
-- Permission checks allowing tournament_manager role
+- Permission checks allowing tournament_manager role for mutations
 
 **Benefits:** Enables delegation of tournament management without giving full admin access, scales tournament operations.
 
 ### 2. Reviewer Dashboard ([spec](specs/12-reviewer-dashboard.md))
 
-**Status:** ❌ Not Implemented
+**Status:** ⚠️ Navigation & Placeholders Complete (PR #14) - Dashboard Implementation Pending
 **Priority:** HIGH
-**Effort:** 2-3 days
+**Effort:** 1-2 days (reduced from 2-3 days due to navigation foundation)
 
-**Problem:** The `reviewer` role exists but has no dedicated interface. Reviewers cannot focus on content moderation without full admin powers.
+**Foundation Completed (PR #14):**
+- ✅ Sidebar navigation section with badges
+- ✅ Placeholder pages created (`/reviewer`, `/reviewer/statistics`, `/reviewer/flagged`)
+- ✅ Badge count queries (`reviewer.getPendingCount`, `reviewer.getFlaggedCount`)
+- ✅ Routing structure established
 
-**Impact:** Forces organizations to give full admin access to users who should only review submissions. No efficient review workflow.
-
-**Required:**
+**Still Required:**
 
 - Review queue dashboard with all pending submissions
 - Inline approve/reject actions with keyboard shortcuts
 - Bulk review operations
 - Review statistics and performance tracking
 - Dispute resolution workflow
-- Permission checks allowing reviewer role
+- Permission checks allowing reviewer role for mutations
 
 **Benefits:** Enables dedicated content moderation role, improves submission review efficiency, separates concerns from admin role.
 
@@ -87,15 +92,18 @@ These features enhance the platform but are not essential for MVP launch:
 
 ### 3. Team Captain Dashboard ([spec](specs/13-team-captain-dashboard.md))
 
-**Status:** ⚠️ Partial - Individual team management exists
+**Status:** ⚠️ Navigation & Placeholders Complete (PR #14) - Dashboard Implementation Pending
 **Priority:** MEDIUM
-**Effort:** 2 days
+**Effort:** 1-1.5 days (reduced from 2 days due to navigation foundation)
 
-**Problem:** Team captains who manage multiple teams must navigate to each team page individually. No centralized captain dashboard.
+**Foundation Completed (PR #14):**
+- ✅ Sidebar navigation section with conditional rendering (only visible if user captains teams)
+- ✅ Placeholder pages created (`/captain`, `/captain/comparison`)
+- ✅ Badge count query (`captain.getPendingActionsCount` - join requests + invitations)
+- ✅ Captain teams count query (`captain.getCaptainedTeamsCount`)
+- ✅ Routing structure established
 
-**Impact:** Inefficient management of multiple teams. Potential oversight of pending join requests or invitations across teams.
-
-**Required:**
+**Still Required:**
 
 - Centralized dashboard showing all teams user captains
 - Consolidated pending actions (join requests, invitations) across all teams
@@ -108,21 +116,24 @@ These features enhance the platform but are not essential for MVP launch:
 
 ### 4. Complete Admin Dashboard ([spec](specs/07-admin-dashboard.md))
 
-**Status:** ❌ Not Implemented
+**Status:** ⚠️ Navigation & Placeholders Complete (PR #14) - Dashboard Implementation Pending
 **Priority:** MEDIUM
-**Effort:** 2 days
+**Effort:** 1.5 days (reduced from 2 days due to navigation foundation)
 
-**Problem:** No dedicated admin dashboard page (`/admin` route doesn't exist).
+**Foundation Completed (PR #14):**
+- ✅ Sidebar navigation section for admin
+- ✅ Placeholder pages created (`/admin`, `/admin/system`)
+- ✅ Badge count query (`admin.getAllPendingCount`)
+- ✅ Routing structure established
+- ✅ All admin links properly organized in sidebar
 
-**Impact:** Admins must navigate to individual sections. No centralized view of system health.
+**Still Required:**
 
-**Required:**
-
-- Create `/admin` route and page
 - Centralized stats dashboard (tournaments, teams, users, submissions)
 - Quick actions for common admin tasks
 - Recent activity feed
 - System health indicators
+- Dashboard implementation with comprehensive metrics
 
 ### 5. Notifications System
 
@@ -145,15 +156,17 @@ These features enhance the platform but are not essential for MVP launch:
 
 ### 6. Viewer & Public Dashboard ([spec](specs/14-viewer-public-dashboard.md))
 
-**Status:** ❌ Not Implemented
+**Status:** ⚠️ Navigation & Placeholders Complete (PR #14) - Dashboard Implementation Pending
 **Priority:** LOW-MEDIUM
-**Effort:** 2-3 days
+**Effort:** 1.5-2 days (reduced from 2-3 days due to navigation foundation)
 
-**Problem:** The `viewer` role exists but has no interface. No public-facing leaderboards for non-participants to view.
+**Foundation Completed (PR #14):**
+- ✅ Sidebar navigation section for viewer/discover
+- ✅ Placeholder pages created (`/viewer`, `/viewer/favorites`, `/public/leaderboards`, `/public/live`)
+- ✅ Public access flags in sidebar configuration
+- ✅ Routing structure established
 
-**Impact:** Limits platform visibility and community engagement. Potential participants cannot explore tournaments before signing up. No way to share tournament results publicly.
-
-**Required:**
+**Still Required:**
 
 - Public tournament discovery page (unauthenticated access)
 - Public leaderboard views with real-time updates
@@ -162,6 +175,7 @@ These features enhance the platform but are not essential for MVP launch:
 - Social sharing features (Open Graph tags, embeddable widgets)
 - Favorite tournaments for viewers
 - SEO optimization for public pages
+- Middleware changes to allow public routes
 
 **Benefits:** Increases platform visibility, enables spectators and potential participants to explore, supports marketing and recruitment, builds community engagement.
 
@@ -193,7 +207,7 @@ Minor issues that should be addressed when time permits:
 
 ## Estimated Effort Summary
 
-### ✅ Completed (24-30 days)
+### ✅ Completed (25-32 days)
 
 - Team Joining/Self-Service (3-5 days)
 - Leaderboard & Scoring (2-3 days)
@@ -205,19 +219,22 @@ Minor issues that should be addressed when time permits:
 - Detail Cards Data Fetching Refactor (2-3 days)
 - Loading States / Skeleton Screens (1-2 days)
 - Individual Submission Tracking & Automatic Grouping (5-7 days)
+- Enhanced Role-Based Sidebar Navigation (1-2 days)
 
 ### ⚠️ Remaining for Full Enhanced MVP
 
-- **High Priority:** 5-7 days (Tournament Manager + Reviewer)
-- **Medium Priority:** 9-13 days (Team Captain + Admin Dashboard + Notifications + Code Cleanup)
-- **Low Priority:** 2-3 days (Viewer/Public Dashboard)
-- **Total Remaining:** 16-23 days
+- **High Priority:** 3-5 days (Tournament Manager + Reviewer dashboards)
+- **Medium Priority:** 6-8.5 days (Team Captain + Admin Dashboard + Notifications)
+- **Low Priority:** 1.5-2 days (Viewer/Public Dashboard)
+- **Total Remaining:** 10.5-15.5 days
+
+**Note:** Effort estimates reduced by ~30% due to PR #14 completing navigation foundation, badge queries, and placeholder pages for all role-based dashboards.
 
 ---
 
 ## Progress Summary
 
-- **Overall Completion:** 96%+ of enhanced MVP functionality (99%+ of core MVP)
+- **Overall Completion:** 97%+ of enhanced MVP functionality (99%+ of core MVP)
 - **Critical Features:** ✅ **ALL COMPLETE!**
   - ✅ Team Management (create, edit, delete, join, leave)
   - ✅ Team Member Management UI (invite, remove, transfer captaincy)
@@ -229,18 +246,20 @@ Minor issues that should be addressed when time permits:
   - ✅ Detail Cards Data Fetching Refactor
   - ✅ Loading States / Skeleton Screens
   - ✅ Individual Submission Tracking & Automatic Grouping
-- **High Priority Features:** 0/2 complete
-  - ❌ Tournament Manager Dashboard
-  - ❌ Reviewer Dashboard
-- **Medium Priority Features:** 0/4 complete
-  - ❌ Team Captain Dashboard
-  - ❌ Admin Dashboard
+  - ✅ Enhanced Role-Based Sidebar Navigation
+- **High Priority Features:** 0/2 complete (navigation foundation done)
+  - ⚠️ Tournament Manager Dashboard (placeholders + queries done)
+  - ⚠️ Reviewer Dashboard (placeholders + queries done)
+- **Medium Priority Features:** 0/3 complete (navigation foundation done)
+  - ⚠️ Team Captain Dashboard (placeholders + queries done)
+  - ⚠️ Admin Dashboard (placeholders + queries done)
   - ❌ Notifications
-- **Low Priority Features:** 0/1 complete
-  - ❌ Viewer & Public Dashboard
+- **Low Priority Features:** 0/1 complete (navigation foundation done)
+  - ⚠️ Viewer & Public Dashboard (placeholders done)
 
 ### Recent Merges
 
+- **PR #14:** Enhanced Role-Based Sidebar Navigation (11/17/2025) ⭐ **NEW**
 - **PR #13:** Individual Submission Tracking & Automatic Grouping (11/17/2025)
 - **PR #12:** Comprehensive Code Cleanup (11/16/2025)
 - **PR #11:** Loading States / Skeleton Screens (11/14/2025)
