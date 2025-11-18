@@ -7,12 +7,7 @@ import {
   upsertSubmissionGroup,
 } from "./submissionGroups";
 import { recalculateTeamPoints } from "./teams";
-import {
-  getCurrentUserOrThrow,
-  getUser,
-  type UserWithRoles,
-  validateIsAdmin,
-} from "./users";
+import { getCurrentUserOrThrow, getUser, type UserWithRoles } from "./users";
 
 /**
  * Gets the count of active participants in a submission group.
@@ -501,6 +496,8 @@ export const getDetails = query({
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
     const isAdmin = currentUser.roleNames.includes("admin");
+    const isTournamentManager =
+      currentUser.roleNames.includes("tournament_manager");
 
     // Fetch submission
     const submission = await ctx.db.get(args.submissionId);
@@ -519,7 +516,7 @@ export const getDetails = query({
     // Permission check: must be owner, team member, or admin
     const isOwner = submission.userId === currentUser._id;
     const isTeamMember = !!membership;
-    if (!isOwner && !isTeamMember && !isAdmin) {
+    if (!isOwner && !isTeamMember && !isAdmin && !isTournamentManager) {
       throw new Error("You do not have permission to view this submission");
     }
 
@@ -590,10 +587,12 @@ export const getDetails = query({
 
     // Calculate permissions
     const canEdit = isOwner && submission.state !== "approved";
-    const canApprove = isAdmin && submission.state === "pending";
-    const canReject = isAdmin && submission.state === "pending";
+    const canApprove =
+      (isAdmin || isTournamentManager) && submission.state === "pending";
+    const canReject =
+      (isAdmin || isTournamentManager) && submission.state === "pending";
     const canDelete =
-      (isAdmin || isOwner) &&
+      (isAdmin || isOwner || isTournamentManager) &&
       submission.state !== "deleted" &&
       submission.state !== "rejected";
 
@@ -1106,10 +1105,14 @@ export const recalculatePoints = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateIsAdmin(
-      user,
-      "You do not have permission to recalculate submission points",
-    );
+    const isAdmin = user.roleNames.includes("admin");
+    const isTournamentManager = user.roleNames.includes("tournament_manager");
+
+    if (!isAdmin && !isTournamentManager) {
+      throw new Error(
+        "Admin or Tournament Manager access required to recalculate submission points",
+      );
+    }
 
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) {
