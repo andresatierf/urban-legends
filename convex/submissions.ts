@@ -618,13 +618,14 @@ export const remove = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
     const isAdmin = user.roleNames.includes("admin");
+    const isTournamentManager = user.roleNames.includes("tournament_manager");
 
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) {
       throw new Error("Submission not found");
     }
 
-    if (!isAdmin && submission.userId !== user._id) {
+    if (!isAdmin && !isTournamentManager && submission.userId !== user._id) {
       throw new Error("You do not have permission to remove this submission");
     }
 
@@ -667,11 +668,15 @@ export const approve = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // FIX: should be reviewer and up
-    validateIsAdmin(
-      user,
-      "You do not have permission to approve this submission",
-    );
+    // Allow both admin and tournament_manager
+    if (
+      !user.roleNames.includes("admin") &&
+      !user.roleNames.includes("tournament_manager")
+    ) {
+      throw new Error(
+        "Admin or Tournament Manager access required to approve submissions",
+      );
+    }
 
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) {
@@ -734,10 +739,15 @@ export const reject = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateIsAdmin(
-      user,
-      "You do not have permission to reject this submission",
-    );
+    // Allow both admin and tournament_manager
+    if (
+      !user.roleNames.includes("admin") &&
+      !user.roleNames.includes("tournament_manager")
+    ) {
+      throw new Error(
+        "Admin or Tournament Manager access required to reject submissions",
+      );
+    }
 
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) {
