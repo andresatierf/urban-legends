@@ -76,6 +76,18 @@
   --color-button-orange-border: var(--button-orange-border);
   --color-button-orange-border-hover: var(--button-orange-border-hover);
   --color-button-orange-bg-light: var(--button-orange-bg-light);
+  --color-badge-approved-bg: var(--badge-approved-bg);
+  --color-badge-approved-text: var(--badge-approved-text);
+  --color-badge-pending-bg: var(--badge-pending-bg);
+  --color-badge-pending-text: var(--badge-pending-text);
+  --color-badge-rejected-bg: var(--badge-rejected-bg);
+  --color-badge-rejected-text: var(--badge-rejected-text);
+  --color-podium-gold: var(--podium-gold);
+  --color-podium-silver: var(--podium-silver);
+  --color-podium-bronze: var(--podium-bronze);
+  --color-podium-gold-bg: var(--podium-gold-bg);
+  --color-podium-silver-bg: var(--podium-silver-bg);
+  --color-podium-bronze-bg: var(--podium-bronze-bg);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -166,6 +178,24 @@
   --button-orange-border: oklch(0.6 0.15 50 / 0.8);
   --button-orange-border-hover: oklch(0.6 0.15 50);
   --button-orange-bg-light: oklch(0.96 0.03 50);
+
+  /* Badge color variants for light mode */
+  --badge-approved-bg: oklch(0.95 0.04 150);
+  --badge-approved-text: oklch(0.35 0.12 150);
+
+  --badge-pending-bg: oklch(0.95 0.06 90);
+  --badge-pending-text: oklch(0.4 0.14 90);
+
+  --badge-rejected-bg: oklch(0.95 0.05 25);
+  --badge-rejected-text: oklch(0.45 0.18 25);
+
+  /* Podium colors for light mode */
+  --podium-gold: oklch(0.65 0.15 85);
+  --podium-silver: oklch(0.65 0.01 270);
+  --podium-bronze: oklch(0.55 0.12 45);
+  --podium-gold-bg: oklch(0.96 0.04 85);
+  --podium-silver-bg: oklch(0.97 0.005 270);
+  --podium-bronze-bg: oklch(0.96 0.04 45);
 }
 
 .dark {
@@ -249,6 +279,24 @@
   --button-orange-border: oklch(0.6 0.15 50 / 0.8);
   --button-orange-border-hover: oklch(0.65 0.17 50);
   --button-orange-bg-light: oklch(0.15 0.08 50);
+
+  /* Badge color variants for dark mode */
+  --badge-approved-bg: oklch(0.25 0.08 150);
+  --badge-approved-text: oklch(0.75 0.14 150);
+
+  --badge-pending-bg: oklch(0.3 0.1 90);
+  --badge-pending-text: oklch(0.85 0.16 90);
+
+  --badge-rejected-bg: oklch(0.28 0.1 25);
+  --badge-rejected-text: oklch(0.8 0.16 25);
+
+  /* Podium colors for dark mode */
+  --podium-gold: oklch(0.8 0.18 85);
+  --podium-silver: oklch(0.92 0.01 270);
+  --podium-bronze: oklch(0.72 0.15 45);
+  --podium-gold-bg: oklch(0.35 0.05 85);
+  --podium-silver-bg: oklch(0.35 0.01 270);
+  --podium-bronze-bg: oklch(0.35 0.05 45);
 }
 
 @layer base {
