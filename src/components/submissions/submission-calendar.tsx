@@ -7,7 +7,7 @@ import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
 import { CalendarDateCell, cellStyles } from "./calendar-date-cell";
 import { CalendarHeader } from "./calendar-header";
 
@@ -207,64 +207,66 @@ export function SubmissionCalendar({
   }
 
   return (
-    <div className="rounded-lg border bg-white p-6 shadow-sm">
-      <CalendarHeader
-        currentDate={currentDate}
-        onPrevMonth={handlePrevMonth}
-        onNextMonth={handleNextMonth}
-        onToday={handleToday}
-        canGoPrev={canNavigate.prev}
-        canGoNext={canNavigate.next}
-      />
-
-      {/* Weekday headers */}
-      <div className="mb-2 grid grid-cols-7 gap-2">
-        {weekdayLabels.map((day) => (
-          <div
-            key={day}
-            className="text-center font-semibold text-gray-700 text-sm"
-          >
-            {day}
-          </div>
-        ))}
-      </div>
-
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-2">
-        {calendarDays.map((date) => {
-          if (!date) return null;
-
-          const dateStr = [
-            date.getFullYear(),
-            String(date.getMonth() + 1).padStart(2, "0"),
-            String(date.getDate()).padStart(2, "0"),
-          ].join("-");
-          const submission = submissions?.[dateStr];
-          const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-
-          return (
-            <div key={dateStr} className={isCurrentMonth ? "" : "opacity-40"}>
-              <CalendarDateCell
-                date={date}
-                submission={submission}
-                isToday={isToday(date)}
-                isDisabled={isDateDisabled(date)}
-                isOutsideTournament={isDateOutsideTournament(date)}
-                onClick={handleDateClick}
-              />
+    <Card>
+      <CardHeader className="flex xs:flex-row flex-col items-center justify-between gap-4 text-center">
+        <CalendarHeader
+          currentDate={currentDate}
+          onPrevMonth={handlePrevMonth}
+          onNextMonth={handleNextMonth}
+          onToday={handleToday}
+          canGoPrev={canNavigate.prev}
+          canGoNext={canNavigate.next}
+        />
+      </CardHeader>
+      <CardContent>
+        <div className="mb-2 grid grid-cols-7 gap-2">
+          {weekdayLabels.map((day) => (
+            <div
+              key={day}
+              className="text-center font-semibold text-gray-700 text-sm"
+            >
+              {day}
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
 
-      <CalendarLegend />
-    </div>
+        <div className="grid grid-cols-7 gap-2">
+          {calendarDays.map((date) => {
+            if (!date) return null;
+
+            const dateStr = [
+              date.getFullYear(),
+              String(date.getMonth() + 1).padStart(2, "0"),
+              String(date.getDate()).padStart(2, "0"),
+            ].join("-");
+            const submission = submissions?.[dateStr];
+            const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+
+            return (
+              <div key={dateStr} className={isCurrentMonth ? "" : "opacity-40"}>
+                <CalendarDateCell
+                  date={date}
+                  submission={submission}
+                  isToday={isToday(date)}
+                  isDisabled={isDateDisabled(date)}
+                  isOutsideTournament={isDateOutsideTournament(date)}
+                  onClick={handleDateClick}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+      <CardFooter>
+        <CalendarLegend />
+      </CardFooter>
+    </Card>
   );
 }
 
 function CalendarLegend() {
   return (
-    <div className="mt-6 flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-between gap-4 border-t pt-4 text-xs">
+    <div className="mt-6 flex flex-1 xs:flex-row flex-col flex-wrap items-start xs:items-center justify-between gap-4 border-t pt-4 text-xs">
       <div className="flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-center gap-4">
         {(
           [undefined, "pending", "approved", "rejected"] as (
