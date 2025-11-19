@@ -9,6 +9,7 @@ import {
   Calendar,
   CheckSquare,
   ClipboardList,
+  Code2,
   Eye,
   FileCheck,
   FileText,
@@ -296,6 +297,24 @@ function useSidebarItems(
             title: t("captain.inviteMember"),
             onClick: () => setInviteMemberDialogOpen(true),
             icon: UserPlus,
+          },
+        ],
+      },
+
+      // ===== DEV SECTION (Conditional: Has 'dev' role) =====
+      {
+        title: t("dev.group"),
+        roles: ["dev"],
+        items: [
+          {
+            title: t("dev.buttonDemo"),
+            href: "/dev/button-demo",
+            icon: Code2,
+          },
+          {
+            title: t("dev.cardDemo"),
+            href: "/dev/card-demo",
+            icon: Layers,
           },
         ],
       },

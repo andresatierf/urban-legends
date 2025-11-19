@@ -9,12 +9,12 @@ const cardVariants = cva(
       variant: {
         default: "",
         admin:
-          "border-2 shadow-md [background-image:linear-gradient(to_right,var(--color-card-admin-from),var(--color-card-admin-to))] [border-color:var(--color-card-admin-border)]",
+          "border-2 border-card-admin-border bg-gradient-to-r from-card-admin-from to-card-admin-to shadow-md",
         tournament_manager:
-          "border-2 shadow-md [background-image:linear-gradient(to_right,var(--color-card-tournament-manager-from),var(--color-card-tournament-manager-to))] [border-color:var(--color-card-tournament-manager-border)]",
-        info: "[background-color:var(--color-card-info-bg)] [border-color:var(--color-card-info-border)]",
+          "border-2 border-card-tournament-manager-border bg-gradient-to-r from-card-tournament-manager-from to-card-tournament-manager-to shadow-md",
+        info: "border-2 border-card-info-border bg-gradient-to-r from-card-info-from to-card-info-to shadow-md",
         dashed:
-          "border-2 border-dashed shadow-none [background-color:var(--color-card-dashed-bg)] [border-color:var(--color-card-dashed-border)]",
+          "border-2 border-card-dashed-border border-dashed bg-card-dashed-bg shadow-none",
       },
     },
     defaultVariants: {

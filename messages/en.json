@@ -45,6 +45,11 @@
         "publicLeaderboards": "Public Leaderboards",
         "live": "Live Tournaments",
         "favorites": "Favorites"
+      },
+      "dev": {
+        "group": "Developer",
+        "buttonDemo": "Button Demo",
+        "cardDemo": "Card Demo"
       }
     }
   }
