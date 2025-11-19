@@ -88,6 +88,30 @@
   --color-podium-gold-bg: var(--podium-gold-bg);
   --color-podium-silver-bg: var(--podium-silver-bg);
   --color-podium-bronze-bg: var(--podium-bronze-bg);
+  --color-calendar-pending-border: var(--calendar-pending-border);
+  --color-calendar-pending-bg: var(--calendar-pending-bg);
+  --color-calendar-pending-text: var(--calendar-pending-text);
+  --color-calendar-pending-bg-hover: var(--calendar-pending-bg-hover);
+  --color-calendar-approved-border: var(--calendar-approved-border);
+  --color-calendar-approved-bg: var(--calendar-approved-bg);
+  --color-calendar-approved-text: var(--calendar-approved-text);
+  --color-calendar-approved-bg-hover: var(--calendar-approved-bg-hover);
+  --color-calendar-rejected-border: var(--calendar-rejected-border);
+  --color-calendar-rejected-bg: var(--calendar-rejected-bg);
+  --color-calendar-rejected-text: var(--calendar-rejected-text);
+  --color-calendar-rejected-bg-hover: var(--calendar-rejected-bg-hover);
+  --color-calendar-deleted-border: var(--calendar-deleted-border);
+  --color-calendar-deleted-bg: var(--calendar-deleted-bg);
+  --color-calendar-deleted-text: var(--calendar-deleted-text);
+  --color-calendar-deleted-bg-hover: var(--calendar-deleted-bg-hover);
+  --color-calendar-undefined-border: var(--calendar-undefined-border);
+  --color-calendar-undefined-bg: var(--calendar-undefined-bg);
+  --color-calendar-undefined-text: var(--calendar-undefined-text);
+  --color-calendar-undefined-bg-hover: var(--calendar-undefined-bg-hover);
+  --color-calendar-disabled-border: var(--calendar-disabled-border);
+  --color-calendar-disabled-bg: var(--calendar-disabled-bg);
+  --color-calendar-disabled-text: var(--calendar-disabled-text);
+  --color-calendar-today-ring: var(--calendar-today-ring);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -196,6 +220,38 @@
   --podium-gold-bg: oklch(0.96 0.04 85);
   --podium-silver-bg: oklch(0.97 0.005 270);
   --podium-bronze-bg: oklch(0.96 0.04 45);
+
+  /* Calendar cell state colors for light mode */
+  --calendar-pending-border: oklch(0.7 0.14 90);
+  --calendar-pending-bg: oklch(0.96 0.06 90);
+  --calendar-pending-text: oklch(0.4 0.14 90);
+  --calendar-pending-bg-hover: oklch(0.94 0.07 90);
+
+  --calendar-approved-border: oklch(0.6 0.12 150);
+  --calendar-approved-bg: oklch(0.95 0.04 150);
+  --calendar-approved-text: oklch(0.35 0.12 150);
+  --calendar-approved-bg-hover: oklch(0.93 0.05 150);
+
+  --calendar-rejected-border: oklch(0.6 0.18 25);
+  --calendar-rejected-bg: oklch(0.95 0.05 25);
+  --calendar-rejected-text: oklch(0.45 0.18 25);
+  --calendar-rejected-bg-hover: oklch(0.93 0.06 25);
+
+  --calendar-deleted-border: oklch(0.65 0.01 270);
+  --calendar-deleted-bg: oklch(0.95 0.005 270);
+  --calendar-deleted-text: oklch(0.5 0.01 270);
+  --calendar-deleted-bg-hover: oklch(0.93 0.01 270);
+
+  --calendar-undefined-border: oklch(0.75 0.01 270);
+  --calendar-undefined-bg: oklch(0.99 0 0);
+  --calendar-undefined-text: oklch(0.45 0.015 270);
+  --calendar-undefined-bg-hover: oklch(0.97 0.005 270);
+
+  --calendar-disabled-border: oklch(0.85 0.005 270);
+  --calendar-disabled-bg: oklch(0.97 0.005 270);
+  --calendar-disabled-text: oklch(0.6 0.01 270);
+
+  --calendar-today-ring: oklch(0.55 0.15 250);
 }
 
 .dark {
@@ -297,6 +353,38 @@
   --podium-gold-bg: oklch(0.35 0.05 85);
   --podium-silver-bg: oklch(0.35 0.01 270);
   --podium-bronze-bg: oklch(0.35 0.05 45);
+
+  /* Calendar cell state colors for dark mode */
+  --calendar-pending-border: oklch(0.7 0.16 90);
+  --calendar-pending-bg: oklch(0.3 0.1 90);
+  --calendar-pending-text: oklch(0.85 0.16 90);
+  --calendar-pending-bg-hover: oklch(0.35 0.12 90);
+
+  --calendar-approved-border: oklch(0.6 0.14 150);
+  --calendar-approved-bg: oklch(0.25 0.08 150);
+  --calendar-approved-text: oklch(0.75 0.14 150);
+  --calendar-approved-bg-hover: oklch(0.3 0.1 150);
+
+  --calendar-rejected-border: oklch(0.65 0.18 25);
+  --calendar-rejected-bg: oklch(0.28 0.1 25);
+  --calendar-rejected-text: oklch(0.8 0.16 25);
+  --calendar-rejected-bg-hover: oklch(0.33 0.12 25);
+
+  --calendar-deleted-border: oklch(0.5 0.01 270);
+  --calendar-deleted-bg: oklch(0.25 0.01 270);
+  --calendar-deleted-text: oklch(0.6 0.02 270);
+  --calendar-deleted-bg-hover: oklch(0.28 0.015 270);
+
+  --calendar-undefined-border: oklch(0.4 0.015 270);
+  --calendar-undefined-bg: oklch(0.24 0.008 285);
+  --calendar-undefined-text: oklch(0.7 0.015 270);
+  --calendar-undefined-bg-hover: oklch(0.27 0.01 285);
+
+  --calendar-disabled-border: oklch(0.3 0.01 270);
+  --calendar-disabled-bg: oklch(0.18 0.005 285);
+  --calendar-disabled-text: oklch(0.5 0.01 270);
+
+  --calendar-today-ring: oklch(0.7 0.15 250);
 }
 
 @layer base {

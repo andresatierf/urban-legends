@@ -200,7 +200,7 @@ export function SubmissionCalendar({
     return (
       <Card variant="dashed">
         <CardContent className="flex h-64 items-center justify-center">
-          <p className="text-gray-500">Loading calendar...</p>
+          <p className="text-muted-foreground">Loading calendar...</p>
         </CardContent>
       </Card>
     );
@@ -223,7 +223,7 @@ export function SubmissionCalendar({
           {weekdayLabels.map((day) => (
             <div
               key={day}
-              className="text-center font-semibold text-gray-700 text-sm"
+              className="text-center font-semibold text-foreground text-sm"
             >
               {day}
             </div>
@@ -278,7 +278,7 @@ function CalendarLegend() {
             <div
               className={cn("h-4 w-4 rounded border-2", cellStyles({ state }))}
             />
-            <span className="text-gray-600">
+            <span className="text-muted-foreground">
               {state ? capitalize(state) : "No submission"}
             </span>
           </div>
@@ -294,7 +294,7 @@ function CalendarLegend() {
               )}
             />
             {/* Remove 'is' */}
-            <span className="text-gray-600">
+            <span className="text-muted-foreground">
               {startCase(options).split(" ").slice(1).join(" ")}
             </span>
           </div>
