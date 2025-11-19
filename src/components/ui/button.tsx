@@ -83,7 +83,7 @@ export const buttonVariants = cva(
         variant: "solid",
         color: "purple",
         className:
-          "bg-purple-600/80 text-white hover:bg-purple-700 focus-visible:ring-purple-600/20 dark:focus-visible:ring-purple-600/40",
+          "text-white focus-visible:ring-purple-600/20 dark:focus-visible:ring-purple-600/40 bg-button-purple hover:bg-button-purple-hover",
       },
       // Outline + Default
       {
@@ -110,7 +110,7 @@ export const buttonVariants = cva(
         variant: "outline",
         color: "purple",
         className:
-          "bg-white text-purple-700/80 border-purple-600/80 shadow-sm hover:shadow-md hover:text-purple-700 hover:border-purple-600 transition-shadow focus-visible:ring-purple-600/20",
+          "bg-button-purple-bg-light text-button-purple-text border-button-purple-border shadow-sm transition-shadow focus-visible:ring-purple-600/20 hover:text-button-purple-text-hover hover:border-button-purple-border-hover hover:shadow-md",
       },
       // Ghost + Default
       {
@@ -137,7 +137,7 @@ export const buttonVariants = cva(
         variant: "ghost",
         color: "purple",
         className:
-          "text-purple-700/80 hover:text-purple-700 hover:bg-purple-100 dark:hover:bg-purple-950",
+          "text-button-purple-text hover:text-button-purple-text-hover hover:bg-button-purple-bg-light",
       },
       // Link + Default
       {
@@ -161,88 +161,90 @@ export const buttonVariants = cva(
       {
         variant: "link",
         color: "purple",
-        className: "text-purple-700/80 hover:text-purple-700",
+        className:
+          "text-button-purple-text hover:text-button-purple-text-hover",
       },
       // Solid + Blue
       {
         variant: "solid",
         color: "blue",
         className:
-          "bg-blue-600/80 text-white hover:bg-blue-700 focus-visible:ring-blue-600/20 dark:focus-visible:ring-blue-600/40",
+          "bg-button-blue text-white hover:bg-button-blue-hover focus-visible:ring-blue-600/20 dark:focus-visible:ring-blue-600/40",
       },
       // Outline + Blue
       {
         variant: "outline",
         color: "blue",
         className:
-          "border-blue-600/80 text-blue-700/80 hover:text-blue-700 hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950",
+          "border-button-blue-border text-button-blue-text hover:text-button-blue-text-hover hover:border-button-blue-border-hover hover:bg-button-blue-bg-light",
       },
       // Ghost + Blue
       {
         variant: "ghost",
         color: "blue",
         className:
-          "text-blue-700/80 hover:text-blue-700 hover:bg-blue-100 dark:hover:bg-blue-950",
+          "text-button-blue-text hover:text-button-blue-text-hover hover:bg-button-blue-bg-light",
       },
       // Link + Blue
       {
         variant: "link",
         color: "blue",
-        className: "text-blue-700/80 hover:text-blue-700",
+        className: "text-button-blue-text hover:text-button-blue-text-hover",
       },
       // Solid + Green
       {
         variant: "solid",
         color: "green",
         className:
-          "bg-green-600/80 text-white hover:bg-green-700 focus-visible:ring-green-600/20 dark:focus-visible:ring-green-600/40",
+          "bg-button-green text-white hover:bg-button-green-hover focus-visible:ring-green-600/20 dark:focus-visible:ring-green-600/40",
       },
       // Outline + Green
       {
         variant: "outline",
         color: "green",
         className:
-          "border-green-600/80 text-green-700/80 hover:text-green-700 hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-950",
+          "border-button-green-border text-button-green-text hover:text-button-green-text-hover hover:border-button-green-border-hover hover:bg-button-green-bg-light",
       },
       // Ghost + Green
       {
         variant: "ghost",
         color: "green",
         className:
-          "text-green-700/80 hover:text-green-700 hover:bg-green-100 dark:hover:bg-green-950",
+          "text-button-green-text hover:text-button-green-text-hover hover:bg-button-green-bg-light",
       },
       // Link + Green
       {
         variant: "link",
         color: "green",
-        className: "text-green-700/80 hover:text-green-700",
+        className: "text-button-green-text hover:text-button-green-text-hover",
       },
       // Solid + Orange
       {
         variant: "solid",
         color: "orange",
         className:
-          "bg-orange-600/80 text-white hover:bg-orange-700 focus-visible:ring-orange-600/20 dark:focus-visible:ring-orange-600/40",
+          "bg-button-orange text-white hover:bg-button-orange-hover focus-visible:ring-orange-600/20 dark:focus-visible:ring-orange-600/40",
       },
       // Outline + Orange
       {
         variant: "outline",
         color: "orange",
         className:
-          "border-orange-600/80 text-orange-700/80 hover:text-orange-700 hover:border-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950",
+          "border-button-orange-border text-button-orange-text hover:text-button-orange-text-hover hover:border-button-orange-border-hover hover:bg-button-orange-bg-light",
       },
       // Ghost + Orange
       {
         variant: "ghost",
         color: "orange",
         className:
-          "text-orange-700/80 hover:text-orange-700 hover:bg-orange-100 dark:hover:bg-orange-950",
+          "text-button-orange-text hover:text-button-orange-text-hover hover:bg-button-orange-bg-light",
       },
       // Link + Orange
       {
         variant: "link",
         color: "orange",
-        className: "text-orange-700/80 hover:text-orange-700",
+        className:
+          "text-button-orange-text hover:text-button-orange-text-hover",
       },
     ],
   },

@@ -11,7 +11,7 @@ const cardVariants = cva(
         admin:
           "border-2 shadow-md [background-image:linear-gradient(to_right,var(--color-card-admin-from),var(--color-card-admin-to))] [border-color:var(--color-card-admin-border)]",
         tournament_manager:
-          "border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-yellow-50 shadow-md",
+          "border-2 shadow-md [background-image:linear-gradient(to_right,var(--color-card-tournament-manager-from),var(--color-card-tournament-manager-to))] [border-color:var(--color-card-tournament-manager-border)]",
         info: "[background-color:var(--color-card-info-bg)] [border-color:var(--color-card-info-border)]",
         dashed:
           "border-2 border-dashed shadow-none [background-color:var(--color-card-dashed-bg)] [border-color:var(--color-card-dashed-border)]",
