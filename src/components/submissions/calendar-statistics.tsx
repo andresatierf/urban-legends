@@ -2,9 +2,10 @@
 
 import { useQuery } from "convex/react";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 
 interface CalendarStatisticsProps {
@@ -79,80 +80,94 @@ export function CalendarStatistics({
     },
   ];
 
-  return (
-    <div className="rounded-lg border bg-white p-6 shadow-sm">
-      <h3 className="mb-4 font-semibold text-lg">Progress Statistics</h3>
+  const motivationalMessages = [
+    {
+      condition: statistics.completionRate === 100,
+      message: "🎉 Perfect completion! Keep up the amazing work!",
+      bgColor: "bg-green-50 dark:bg-green-700/20",
+      textColor: "text-green-800 dark:text-green-400",
+    },
+    {
+      condition: statistics.currentStreak >= 7 && statistics.currentStreak < 30,
+      message: `🔥 You're on fire! ${statistics.currentStreak} day streak!`,
+      bgColor: "bg-orange-50 dark:bg-orange-700/20",
+      textColor: "text-orange-800 dark:text-orange-400",
+    },
+    {
+      condition: statistics.currentStreak >= 30,
+      message: `👑 Legendary! ${statistics.currentStreak} day streak! You're unstoppable!`,
+      bgColor: "bg-purple-50 dark:bg-purple-700/20",
+      textColor: "text-purple-800 dark:text-purple-400",
+    },
+  ];
 
-      {/* Progress bar */}
-      <div className="mb-6">
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Progress Statistics</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
         <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="text-gray-600">Completion Progress</span>
-          <span className="font-semibold text-gray-900">
+          <span className="text-muted-foreground">Completion Progress</span>
+          <span className="font-semibold text-muted-foreground">
             {statistics.daysWithSubmissions} / {statistics.totalDays} days
           </span>
         </div>
         <Progress value={statistics.completionRate} className="h-3" />
-      </div>
 
-      {/* Key metrics */}
-      <div className="mb-6 grid grid-cols-1 xs:grid-cols-2 gap-4 md:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-lg border bg-gray-50 p-4 text-center"
-          >
-            <div className={`mb-1 font-bold text-2xl ${stat.color}`}>
-              {stat.value}
-            </div>
-            <div className="text-gray-600 text-xs">{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Submission breakdown */}
-      <div>
-        <h4 className="mb-3 font-medium text-gray-700 text-sm">
-          Submission Status
-        </h4>
-        <div className="flex gap-6">
-          {submissionStats.map((stat) => (
-            <div key={stat.label} className="flex items-center gap-2">
-              <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 font-semibold text-sm ${stat.color}`}
-              >
-                {stat.value}
-              </div>
-              <span className="text-gray-600 text-sm">{stat.label}</span>
-            </div>
+        <div className="grid grid-cols-1 xs:grid-cols-2 gap-4 md:grid-cols-4">
+          {stats.map((stat) => (
+            <Card key={stat.label} className="bg-background/20 text-center">
+              <CardContent>
+                <div className={cn("mb-1 font-bold text-2xl", stat.color)}>
+                  {stat.value}
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  {stat.label}
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
-      </div>
 
-      {/* Motivational message */}
-      {statistics.completionRate === 100 && (
-        <div className="mt-4 rounded-md bg-green-50 p-3 text-center">
-          <p className="font-semibold text-green-800 text-sm">
-            🎉 Perfect completion! Keep up the amazing work!
-          </p>
+        {/* Submission breakdown */}
+        <div className="space-y-3">
+          <h4 className="mb-3 font-medium text-muted-foreground text-sm">
+            Submission Status
+          </h4>
+          <div className="flex gap-6">
+            {submissionStats.map((stat) => (
+              <>
+                <div key={stat.label} className="flex items-center gap-2">
+                  <div
+                    className={cn(
+                      "flex h-8 w-8 items-center justify-center rounded-full font-semibold text-sm",
+                      "bg-gray-100 dark:bg-background/20",
+                      stat.color,
+                    )}
+                  >
+                    {stat.value}
+                  </div>
+                  <span className="text-muted-foreground/80 text-sm">
+                    {stat.label}
+                  </span>
+                </div>{" "}
+              </>
+            ))}
+          </div>
         </div>
-      )}
 
-      {statistics.currentStreak >= 7 && statistics.currentStreak < 30 && (
-        <div className="mt-4 rounded-md bg-orange-50 p-3 text-center">
-          <p className="font-semibold text-orange-800 text-sm">
-            🔥 You're on fire! {statistics.currentStreak} day streak!
-          </p>
-        </div>
-      )}
-
-      {statistics.currentStreak >= 30 && (
-        <div className="mt-4 rounded-md bg-purple-50 p-3 text-center">
-          <p className="font-semibold text-purple-800 text-sm">
-            👑 Legendary! {statistics.currentStreak} day streak! You're
-            unstoppable!
-          </p>
-        </div>
-      )}
-    </div>
+        {motivationalMessages.map(
+          (m) =>
+            m.condition && (
+              <div className={cn("rounded-md p-3 text-center", m.bgColor)}>
+                <p className={cn("font-semibold text-sm", m.textColor)}>
+                  {m.message}
+                </p>
+              </div>
+            ),
+        )}
+      </CardContent>
+    </Card>
   );
 }

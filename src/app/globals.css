@@ -40,9 +40,13 @@
   --color-card-admin-from: var(--color-card-admin-from);
   --color-card-admin-to: var(--color-card-admin-to);
   --color-card-admin-border: var(--color-card-admin-border);
-  --color-card-tournament-manager-from: var(--color-card-tournament-manager-from);
+  --color-card-tournament-manager-from: var(
+    --color-card-tournament-manager-from
+  );
   --color-card-tournament-manager-to: var(--color-card-tournament-manager-to);
-  --color-card-tournament-manager-border: var(--color-card-tournament-manager-border);
+  --color-card-tournament-manager-border: var(
+    --color-card-tournament-manager-border
+  );
   --color-card-info-from: var(--color-card-info-from);
   --color-card-info-to: var(--color-card-info-to);
   --color-card-info-border: var(--color-card-info-border);
