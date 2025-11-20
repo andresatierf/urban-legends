@@ -45,18 +45,27 @@ function applyTheme(resolved: ResolvedTheme) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
+  const [theme, setThemeState] = useState<Theme>(() => {
+    // Initialize from storage immediately on client
+    if (typeof window !== "undefined") {
+      return getStoredTheme();
+    }
+    return "system";
+  });
 
-  // Initialize theme from localStorage
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
+    // Initialize from storage immediately on client
+    if (typeof window !== "undefined") {
+      const stored = getStoredTheme();
+      return stored === "system" ? getSystemTheme() : stored;
+    }
+    return "light";
+  });
+
+  // Apply theme on mount to ensure it's in sync
   useEffect(() => {
-    const stored = getStoredTheme();
-    setThemeState(stored);
-
-    const resolved = stored === "system" ? getSystemTheme() : stored;
-    setResolvedTheme(resolved);
-    applyTheme(resolved);
-  }, []);
+    applyTheme(resolvedTheme);
+  }, [resolvedTheme]);
 
   // Listen for system theme changes
   useEffect(() => {
