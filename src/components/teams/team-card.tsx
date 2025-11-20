@@ -6,6 +6,7 @@ import { getStatusBadge } from "../tournaments/utils";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "../ui/card";
+import { Skeleton } from "../ui/skeleton";
 
 type Props = {
   team: Doc<"teams">;
@@ -22,11 +23,13 @@ export function TeamCard({
   isUserMember,
   isUserInTeam,
 }: Props) {
+  if (!team) return <TeamCardSkeleton />;
+
   const isFull = team.maxMembers && memberCount >= team.maxMembers;
 
   return (
     <Card key={team._id}>
-      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4 xs:gap-16">
+      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
         <div className="flex flex-1 flex-col justify-between self-start">
           <div className="flex items-center gap-2">
             <CardTitle>
@@ -77,6 +80,34 @@ export function TeamCard({
           <Button variant="outline" asChild>
             <Link href={`/teams/${team._id}`}>View</Link>
           </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function TeamCardSkeleton() {
+  return (
+    <Card>
+      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
+        <div className="flex flex-1 flex-col justify-between self-start">
+          <div className="flex items-center gap-2">
+            <CardTitle>
+              <Skeleton className="h-6 w-40" />
+            </CardTitle>
+          </div>
+          <CardDescription className="mt-2 flex flex-col gap-1">
+            <div className="flex items-center gap-1">
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <div className="flex items-center gap-1">
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </CardDescription>
+        </div>
+        <div className="flex xs:flex-col flex-wrap gap-2">
+          <Skeleton className="h-9 w-36" />
+          <Skeleton className="h-9 w-36" />
         </div>
       </CardContent>
     </Card>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "../ui/card";
+import { Skeleton } from "../ui/skeleton";
 import { getStatusBadge } from "./utils";
 
 type Props = {
@@ -11,9 +12,11 @@ type Props = {
 };
 
 export function TournamentCard({ tournament, teamCount }: Props) {
+  if (!tournament) return <TournamentCardSkeleton />;
+
   return (
     <Card>
-      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4 xs:gap-16">
+      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
         <div className="flex-1 xs:self-auto self-start">
           <div className="flex items-center gap-2">
             <CardTitle>
@@ -47,6 +50,33 @@ export function TournamentCard({ tournament, teamCount }: Props) {
               <ChevronRight />
             </Link>
           </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function TournamentCardSkeleton() {
+  return (
+    <Card>
+      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
+        <div className="flex-1 xs:self-auto self-start">
+          <div className="flex items-center gap-2">
+            <CardTitle>
+              <Skeleton className="h-6 w-64" />
+            </CardTitle>
+          </div>
+          <CardDescription className="mt-2 flex flex-col gap-1">
+            <div className="flex items-center gap-1">
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <div className="flex items-center gap-1">
+              <Skeleton className="h-4 w-40" />
+            </div>
+          </CardDescription>
+        </div>
+        <div className="flex gap-2 xs:self-auto self-end">
+          <Skeleton className="h-9 w-36" />
         </div>
       </CardContent>
     </Card>

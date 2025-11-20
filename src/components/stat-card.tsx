@@ -2,7 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardTitle } from "./ui/card";
 
-const headerVariants = cva("font-normal text-gray-600 pb-0", {
+const headerVariants = cva("pb-0 font-normal text-gray-600", {
   variants: {
     size: {
       xs: "text-xs",

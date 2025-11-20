@@ -2,18 +2,14 @@
 
 import { useQuery } from "convex/react";
 import { useMemo } from "react";
-import { UpsertTeamFormDialog } from "@/components/form/upsert-team-form";
 import { UpsertTournamentFormDialog } from "@/components/form/upsert-tournament-form";
 import { SectionHeader } from "@/components/section-header";
-import { TournamentCard } from "@/components/tournaments/tournament-card";
-import { Card, CardContent } from "@/components/ui/card";
-import { CardGridSkeleton } from "@/components/ui/card-grid-skeleton";
+import { JoinTournamentCard } from "@/components/tournaments/join-tournament-card";
 import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-} from "@/components/ui/empty";
+  TournamentCard,
+  TournamentCardSkeleton,
+} from "@/components/tournaments/tournament-card";
+import { CardGrid } from "@/components/ui/card-grid";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
@@ -44,10 +40,9 @@ export default function TournamentsPage() {
         <SectionHeader as="h1" title="Tournaments">
           {isAdmin && <UpsertTournamentFormDialog />}
         </SectionHeader>
-        <CardGridSkeleton
-          count={6}
-          className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2"
-        />
+        <CardGrid data={Array.from({ length: 6 })}>
+          {() => <TournamentCardSkeleton />}
+        </CardGrid>
       </>
     );
   }
@@ -61,60 +56,28 @@ export default function TournamentsPage() {
       {allTournaments && allTournaments.length !== 0 && (
         <>
           <SectionHeader title="Your Tournaments" />
-          <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
-            {userTournaments && userTournaments.length !== 0 ? (
-              userTournaments.map((tournament) => (
-                <TournamentCard
-                  key={tournament._id}
-                  tournament={tournament}
-                  teamCount={teamCount.get(tournament._id) ?? 0}
-                />
-              ))
-            ) : (
-              <Card>
-                <CardContent>
-                  <Empty className="gap-3 py-2!">
-                    <EmptyHeader>No tournaments yet</EmptyHeader>
-                    <EmptyDescription>
-                      Join a team to start playing in tournaments or create your
-                      own.
-                    </EmptyDescription>
-                    <EmptyContent>
-                      <UpsertTeamFormDialog />
-                    </EmptyContent>
-                  </Empty>
-                </CardContent>
-              </Card>
+          <CardGrid data={userTournaments} empty={<JoinTournamentCard />}>
+            {(tournament) => (
+              <TournamentCard
+                key={tournament._id}
+                tournament={tournament}
+                teamCount={teamCount.get(tournament?._id) ?? 0}
+              />
             )}
-          </div>
+          </CardGrid>
         </>
       )}
 
       <SectionHeader title="All Tournaments" />
-      <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
-        {allTournaments && allTournaments.length !== 0 ? (
-          allTournaments.map((tournament) => (
-            <TournamentCard
-              key={tournament._id}
-              tournament={tournament}
-              teamCount={teamCount.get(tournament._id) ?? 0}
-            />
-          ))
-        ) : (
-          <Card>
-            <CardContent>
-              <Empty className="gap-3 py-2!">
-                <EmptyHeader>No tournaments yet</EmptyHeader>
-                <EmptyDescription>
-                  Please contact your tournament organizer to create a
-                  tournament
-                </EmptyDescription>
-                <EmptyContent></EmptyContent>
-              </Empty>
-            </CardContent>
-          </Card>
+      <CardGrid data={userTournaments} empty=<JoinTournamentCard first />>
+        {(tournament) => (
+          <TournamentCard
+            key={tournament._id}
+            tournament={tournament}
+            teamCount={teamCount.get(tournament._id) ?? 0}
+          />
         )}
-      </div>
+      </CardGrid>
     </>
   );
 }

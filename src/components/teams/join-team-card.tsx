@@ -1,3 +1,4 @@
+import type { Id } from "../../../convex/_generated/dataModel";
 import { UpsertTeamFormDialog } from "../form/upsert-team-form";
 import { Card, CardContent } from "../ui/card";
 import {
@@ -7,21 +8,28 @@ import {
   EmptyHeader,
 } from "../ui/empty";
 
-type Props = { first?: boolean };
+type Props = {
+  tournamentId?: Id<"tournaments">;
+  first?: boolean;
+};
 
-export function JoinTeamCard({ first }: Props) {
+export function JoinTeamCard({ tournamentId, first }: Props) {
   return (
-    <Card variant="info">
+    <Card>
       <CardContent>
         <Empty className="gap-3 py-2!">
-          <EmptyHeader>Join a Team</EmptyHeader>
+          <EmptyHeader>
+            {tournamentId || first ? "No teams yet" : "Join a Team"}
+          </EmptyHeader>
           <EmptyDescription>
-            {first
-              ? "Create a team to play in a tournament"
-              : "You can join a team by selecting from the list below or you can create your own."}
+            {tournamentId
+              ? "Be the first to create a team for this tournament!"
+              : first
+                ? "Create a team to play in a tournament"
+                : "You can join a team by selecting from the list below or you can create your own."}
           </EmptyDescription>
           <EmptyContent>
-            <UpsertTeamFormDialog />
+            <UpsertTeamFormDialog tournamentId={tournamentId} />
           </EmptyContent>
         </Empty>
       </CardContent>
