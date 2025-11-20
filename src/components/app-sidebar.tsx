@@ -45,6 +45,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { SidebarBadge } from "@/components/ui/sidebar-badge";
+import { useActiveRoute } from "@/hooks/useActiveRoute";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../convex/_generated/api";
 import { InviteMemberFormDialog } from "./form/invite-member-form";
@@ -57,6 +58,7 @@ type SidebarItem = {
   roles?: string[];
   condition?: (context: { captainedTeamsCount: number }) => boolean;
   publicAccess?: boolean;
+  exact?: boolean; // For route matching (exact vs partial)
   badge?: {
     query: FunctionReference<"query">;
     color?: "default" | "destructive" | "secondary" | "outline";
@@ -98,6 +100,7 @@ function useSidebarItems(
             href: "/viewer",
             icon: Eye,
             roles: ["viewer"],
+            exact: true,
           },
           {
             title: t("viewer.favorites"),
@@ -117,6 +120,7 @@ function useSidebarItems(
             title: t("user.dashboard"),
             href: "/dashboard",
             icon: LayoutDashboard,
+            exact: true,
           },
           {
             title: t("user.tournaments"),
@@ -151,6 +155,7 @@ function useSidebarItems(
             href: "/admin",
             icon: Shield,
             roles: ["admin"], // Admin-only
+            exact: true,
           },
           {
             title: t("admin.tournaments"),
@@ -206,6 +211,7 @@ function useSidebarItems(
               query: api.tournamentManager.getPendingCount,
               color: "secondary",
             },
+            exact: true,
           },
           {
             title: t("tournamentManager.tournaments"),
@@ -256,6 +262,7 @@ function useSidebarItems(
               query: api.reviewer.getPendingCount,
               color: "secondary",
             },
+            exact: true,
           },
           {
             title: t("reviewer.statistics"),
@@ -287,6 +294,7 @@ function useSidebarItems(
               query: api.captain.getPendingActionsCount,
               color: "default",
             },
+            exact: true,
           },
           {
             title: t("captain.comparison"),
@@ -332,6 +340,7 @@ function useSidebarItems(
 
 export function AppSidebar() {
   const { user } = useUser();
+  const { isActive } = useActiveRoute();
 
   const [submissionFormOpen, setSubmissionFormOpen] = useState(false);
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
@@ -354,7 +363,7 @@ export function AppSidebar() {
       <SidebarHeader className="h-10" />
       <SidebarContent>
         {sidebarItems.map((item) =>
-          renderItem(item, user, user?.roleNames || [], context),
+          renderItem(item, user, user?.roleNames || [], context, isActive),
         )}
         <UpsertSubmissionFormDialog
           open={submissionFormOpen}
@@ -382,6 +391,7 @@ function renderItem(
   user: { roleNames: string[] } | null | undefined,
   userRoles: string[],
   context: { captainedTeamsCount: number },
+  isActive: (href: string, exact?: boolean) => boolean,
 ) {
   // Check role-based visibility
   if (item.roles && !userRoles.some((role) => item.roles?.includes(role))) {
@@ -401,7 +411,7 @@ function renderItem(
   // Render group
   if ("items" in item) {
     const visibleItems = item.items
-      .map((subItem) => renderItem(subItem, user, userRoles, context))
+      .map((subItem) => renderItem(subItem, user, userRoles, context, isActive))
       .filter(Boolean);
 
     // Don't render empty groups
@@ -432,11 +442,13 @@ function renderItem(
     );
   }
 
-  // Render link item
+  // Render link item with active state
+  const active = isActive(item.href, item.exact);
+
   return (
     <SidebarMenuItem key={item.title}>
-      <SidebarMenuButton asChild>
-        <Link href={item.href}>
+      <SidebarMenuButton asChild isActive={active}>
+        <Link href={item.href} aria-current={active ? "page" : undefined}>
           <item.icon />
           <span>{item.title}</span>
           {item.badge && (
