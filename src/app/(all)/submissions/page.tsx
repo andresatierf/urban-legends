@@ -265,9 +265,7 @@ export default function SubmissionsPage() {
                     setSelectedSubmission(submission);
                     setUpsertSubmissionOpen(true);
                   }}
-                  onDelete={(id) =>
-                    remove({ submissionId: id as Id<"submissions"> })
-                  }
+                  onDelete={(id) => remove({ submissionId: id })}
                 />
               </div>
 
@@ -281,15 +279,9 @@ export default function SubmissionsPage() {
                     <SubmissionCardList
                       submissions={augmentSubmissions(pendingSubmissions)}
                       currentUser={user}
-                      onApprove={(id) =>
-                        approve({ submissionId: id as Id<"submissions"> })
-                      }
-                      onReject={(id) =>
-                        reject({ submissionId: id as Id<"submissions"> })
-                      }
-                      onDelete={(id) =>
-                        remove({ submissionId: id as Id<"submissions"> })
-                      }
+                      onApprove={(id) => approve({ submissionId: id })}
+                      onReject={(id) => reject({ submissionId: id })}
+                      onDelete={(id) => remove({ submissionId: id })}
                     />
                   </div>
 
@@ -298,15 +290,9 @@ export default function SubmissionsPage() {
                     <SubmissionCardList
                       submissions={augmentSubmissions(allSubmissions)}
                       currentUser={user}
-                      onApprove={(id) =>
-                        approve({ submissionId: id as Id<"submissions"> })
-                      }
-                      onReject={(id) =>
-                        reject({ submissionId: id as Id<"submissions"> })
-                      }
-                      onDelete={(id) =>
-                        remove({ submissionId: id as Id<"submissions"> })
-                      }
+                      onApprove={(id) => approve({ submissionId: id })}
+                      onReject={(id) => reject({ submissionId: id })}
+                      onDelete={(id) => remove({ submissionId: id })}
                     />
                   </div>
                 </>

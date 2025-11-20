@@ -31,19 +31,27 @@ export function SubmissionCardDetails({
       "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
   };
 
+  // Safely get state color with fallback
+  const stateColor =
+    submission.state in stateColors
+      ? stateColors[submission.state as keyof typeof stateColors]
+      : stateColors.pending;
+
+  // Safely get tier color with fallback
+  const tierColor =
+    submission.tier && submission.tier in tierColors
+      ? tierColors[submission.tier as keyof typeof tierColors]
+      : tierColors.base;
+
   return (
     <div className="flex-1 space-y-3">
       {/* Header: Badges */}
       <div className="flex flex-wrap gap-2">
-        <Badge
-          className={stateColors[submission.state as keyof typeof stateColors]}
-        >
+        <Badge className={stateColor}>
           {submission.state.charAt(0).toUpperCase() + submission.state.slice(1)}
         </Badge>
         {submission.tier && (
-          <Badge
-            className={tierColors[submission.tier as keyof typeof tierColors]}
-          >
+          <Badge className={tierColor}>
             {submission.tier === "base" ? "Base Tier" : "Advanced Tier"}
           </Badge>
         )}

@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { Doc } from "@/../convex/_generated/dataModel";
+import type { Doc, Id } from "@/../convex/_generated/dataModel";
 import type { UserWithRoles } from "@/../convex/users";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,10 +22,10 @@ interface SubmissionCardListProps {
     }
   >;
   currentUser: UserWithRoles;
-  onApprove?: (submissionId: string) => void;
-  onReject?: (submissionId: string) => void;
-  onEdit?: (submissionId: string) => void;
-  onDelete?: (submissionId: string) => void;
+  onApprove?: (submissionId: Id<"submissions">) => void;
+  onReject?: (submissionId: Id<"submissions">) => void;
+  onEdit?: (submissionId: Id<"submissions">) => void;
+  onDelete?: (submissionId: Id<"submissions">) => void;
 }
 
 export function SubmissionCardList({
