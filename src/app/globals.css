@@ -296,9 +296,9 @@
   --color-card-admin-to: oklch(0.25 0.05 260);
   --color-card-admin-border: oklch(0.4 0.08 285);
 
-  --color-card-tournament-manager-from: oklch(0.25 0.06 50);
-  --color-card-tournament-manager-to: oklch(0.25 0.07 85);
-  --color-card-tournament-manager-border: oklch(0.4 0.1 40);
+  --color-card-tournament-manager-from: oklch(0.55 0.08 60);
+  --color-card-tournament-manager-to: oklch(0.55 0.08 75);
+  --color-card-tournament-manager-border: oklch(0.7 0.12 65);
 
   --color-card-info-from: oklch(0.25 0.08 250);
   --color-card-info-to: oklch(0.25 0.08 200);

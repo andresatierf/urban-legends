@@ -21,7 +21,7 @@ export const buttonVariants = cva(
       variant: {
         solid: "shadow-xs",
         outline:
-          "border bg-background shadow-xs hover:bg-accent dark:bg-input/30 dark:border-input",
+          "border bg-background shadow-xs hover:bg-background/80 dark:border-input",
         ghost: "",
         link: "underline-offset-4 hover:underline",
       } satisfies Record<ButtonVariantValues, string>,
@@ -103,7 +103,7 @@ export const buttonVariants = cva(
       {
         variant: "outline",
         color: "secondary",
-        className: "text-secondary-foreground hover:bg-secondary/20",
+        className: "text-secondary-foreground hover:bg-background/80",
       },
       // Outline + Purple
       {

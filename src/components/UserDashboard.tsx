@@ -378,7 +378,7 @@ export function UserDashboard(_props: UserDashboardProps) {
       <TeamInvitationsList />
 
       {/* Quick Actions */}
-      <div className="rounded-lg bg-blue-50 p-6">
+      <div className="rounded-lg bg-blue-50 p-6 dark:bg-gray-700">
         <h3 className="mb-4 font-medium text-gray-900">Quick Actions</h3>
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" asChild>
