@@ -28,9 +28,16 @@ export function useActiveRoute() {
     if (exact) {
       return pathname === href;
     }
-    // Match if current path starts with the href
-    // This handles nested routes like /tournaments/123 matching /tournaments
-    return pathname.startsWith(href);
+
+    // Special case for root path
+    if (href === "/") {
+      return pathname === "/";
+    }
+
+    // Match if current path is exactly the href or is a subpath
+    // This prevents false positives like /dashboard matching /dashboard-admin
+    // or /team matching /teams
+    return pathname === href || pathname.startsWith(`${href}/`);
   };
 
   return {
