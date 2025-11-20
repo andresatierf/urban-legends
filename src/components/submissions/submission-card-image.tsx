@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -28,48 +29,73 @@ export function SubmissionCardImage({ images }: SubmissionCardImageProps) {
     );
   }
 
-  const primaryImage = images[0];
-  const hasMultiple = images.length > 1;
+  const _hasMultiple = images.length > 1;
+  const showTwoLarge = images.length >= 2;
 
   return (
     <>
-      {/* Primary Image Display */}
+      {/* Image Display */}
       <div className="relative">
-        <button
-          type="button"
-          onClick={() => {
-            setCurrentIndex(0);
-            setLightboxOpen(true);
-          }}
-          className="group relative block w-full overflow-hidden rounded-lg"
-        >
-          <img
-            src={primaryImage.url}
-            alt={primaryImage.filename}
-            className="aspect-square w-full object-cover transition-transform group-hover:scale-105"
-            loading="lazy"
-          />
-          {hasMultiple && (
-            <div className="absolute right-2 bottom-2 rounded-md bg-black/70 px-2 py-1 text-white text-xs">
-              +{images.length - 1} more
-            </div>
-          )}
-        </button>
-
-        {/* Thumbnail Strip (if multiple images) */}
-        {hasMultiple && (
-          <div className="mt-2 flex gap-2">
-            {images.slice(1, 3).map((img, idx) => (
+        {showTwoLarge ? (
+          /* Two Large Images Side-by-Side */
+          <div className="grid grid-cols-2 gap-2">
+            {images.slice(0, 2).map((img, idx) => (
               <button
                 key={img._id}
                 type="button"
                 onClick={() => {
-                  setCurrentIndex(idx + 1);
+                  setCurrentIndex(idx);
+                  setLightboxOpen(true);
+                }}
+                className="group relative block overflow-hidden rounded-lg"
+              >
+                <Image
+                  src={img.url}
+                  alt={img.filename}
+                  className="aspect-square w-full object-cover transition-transform group-hover:scale-105"
+                  loading="lazy"
+                />
+              </button>
+            ))}
+            {images.length > 2 && (
+              <div className="absolute right-2 bottom-2 rounded-md bg-black/70 px-2 py-1 text-white text-xs">
+                +{images.length - 2} more
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Single Large Image */
+          <button
+            type="button"
+            onClick={() => {
+              setCurrentIndex(0);
+              setLightboxOpen(true);
+            }}
+            className="group relative block w-full overflow-hidden rounded-lg"
+          >
+            <Image
+              src={images[0].url}
+              alt={images[0].filename}
+              className="aspect-square w-full object-cover transition-transform group-hover:scale-105"
+              loading="lazy"
+            />
+          </button>
+        )}
+
+        {/* Thumbnail Strip (if more than 2 images) */}
+        {images.length > 2 && (
+          <div className="mt-2 flex gap-2">
+            {images.slice(2, 4).map((img, idx) => (
+              <button
+                key={img._id}
+                type="button"
+                onClick={() => {
+                  setCurrentIndex(idx + 2);
                   setLightboxOpen(true);
                 }}
                 className="relative h-16 w-16 overflow-hidden rounded border hover:ring-2 hover:ring-primary"
               >
-                <img
+                <Image
                   src={img.url}
                   alt={img.filename}
                   className="h-full w-full object-cover"
@@ -77,9 +103,9 @@ export function SubmissionCardImage({ images }: SubmissionCardImageProps) {
                 />
               </button>
             ))}
-            {images.length > 3 && (
+            {images.length > 4 && (
               <div className="flex h-16 w-16 items-center justify-center rounded border bg-muted font-medium text-xs">
-                +{images.length - 3}
+                +{images.length - 4}
               </div>
             )}
           </div>
@@ -90,7 +116,7 @@ export function SubmissionCardImage({ images }: SubmissionCardImageProps) {
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-4xl">
           <div className="relative">
-            <img
+            <Image
               src={images[currentIndex]?.url}
               alt={images[currentIndex]?.filename}
               className="h-auto max-h-[70vh] w-full object-contain"
