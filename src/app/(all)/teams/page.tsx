@@ -5,8 +5,9 @@ import { Trophy } from "lucide-react";
 import Link from "next/link";
 import { SectionHeader } from "@/components/section-header";
 import { JoinTeamCard } from "@/components/teams/join-team-card";
-import { TeamCard } from "@/components/teams/team-card";
+import { TeamCard, TeamCardSkeleton } from "@/components/teams/team-card";
 import { Button } from "@/components/ui/button";
+import { CardGrid } from "@/components/ui/card-grid";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
@@ -46,11 +47,22 @@ export default function TeamsPage() {
       )
     : {};
 
-  const userTeamIds = new Set(userTeams.map((team) => team._id));
+  if (userTeams === undefined) {
+    return (
+      <>
+        <SectionHeader as="h1" title="Teams">
+          {/* {isAdmin && <UpsertTournamentFormDialog />} */}
+        </SectionHeader>
+        <CardGrid data={Array.from({ length: 6 })}>
+          {() => <TeamCardSkeleton />}
+        </CardGrid>
+      </>
+    );
+  }
 
   return (
     <>
-      <SectionHeader as="h1" title="My Teams">
+      <SectionHeader as="h1" title="Teams">
         <Button asChild variant="outline">
           <Link href="/tournaments">
             <Trophy />
@@ -62,42 +74,34 @@ export default function TeamsPage() {
       {allTeams && allTeams.length !== 0 && (
         <>
           <SectionHeader title="Your teams" />
-          <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
-            {userTeams.length > 0 ? (
-              userTeams.map((team) => (
-                <TeamCard
-                  key={team._id}
-                  team={team}
-                  tournament={tournamentMap?.[team.tournamentId]}
-                  memberCount={teamMemberCounts?.[team._id]?.length || 0}
-                  isUserMember={true}
-                  isUserInTeam={true}
-                />
-              ))
-            ) : (
-              <JoinTeamCard />
+          <CardGrid data={userTeams} empty={<JoinTeamCard />}>
+            {(team) => (
+              <TeamCard
+                key={team._id}
+                team={team}
+                tournament={tournamentMap?.[team.tournamentId]}
+                memberCount={teamMemberCounts?.[team._id]?.length || 0}
+                isUserMember={true}
+                isUserInTeam={true}
+              />
             )}
-          </div>
+          </CardGrid>
         </>
       )}
 
       <SectionHeader title="All teams"></SectionHeader>
-      <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
-        {allTeams.length > 0 ? (
-          allTeams.map((team) => (
-            <TeamCard
-              key={team._id}
-              team={team}
-              tournament={tournamentMap?.[team.tournamentId]}
-              memberCount={teamMemberCounts?.[team._id]?.length || 0}
-              isUserMember={userTeamIds.has(team._id)}
-              isUserInTeam={!!userTeams.length}
-            />
-          ))
-        ) : (
-          <JoinTeamCard first />
+      <CardGrid data={allTeams} empty={<JoinTeamCard first />}>
+        {(team) => (
+          <TeamCard
+            key={team._id}
+            team={team}
+            tournament={tournamentMap?.[team.tournamentId]}
+            memberCount={teamMemberCounts?.[team._id]?.length || 0}
+            isUserMember={true}
+            isUserInTeam={true}
+          />
         )}
-      </div>
+      </CardGrid>
     </>
   );
 }

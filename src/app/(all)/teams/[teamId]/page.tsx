@@ -11,6 +11,7 @@ import { InviteMemberCard } from "@/components/teams/invite-member-card";
 import { TeamDetailsCard } from "@/components/teams/team-details-card";
 import { TeamMemberCard } from "@/components/teams/team-member-card";
 import { Button } from "@/components/ui/button";
+import { CardGrid } from "@/components/ui/card-grid";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../../convex/_generated/api";
@@ -59,36 +60,28 @@ export default function TeamDetailsPage({ params }: Props) {
       {(data.captain || regularMembers.length !== 0) && (
         <>
           <SectionHeader title="Team" />
-          {data.captain ? (
-            <TeamMemberCard
-              member={data.captain}
-              memberRole="captain"
-              canRemove={false}
-            />
-          ) : (
-            <p className="text-muted-foreground">No captain yet.</p>
-          )}
-
-          {regularMembers.length !== 0 ? (
-            <div className="space-y-3">
-              {regularMembers.map((member) => (
-                <TeamMemberCard
-                  key={member._id}
-                  member={member}
-                  memberRole="member"
-                  canRemove={isCaptain && member._id !== user?._id}
-                  onRemove={() =>
-                    removeMember({
-                      teamId: teamId,
-                      userId: member._id,
-                    })
-                  }
-                />
-              ))}
-            </div>
-          ) : (
-            <InviteMemberCard team={data.team} isCaptain={isCaptain} />
-          )}
+          <CardGrid
+            data={[data.captain]
+              .concat(regularMembers)
+              .filter((u): u is NonNullable<typeof u> => !!u)}
+            empty={<InviteMemberCard team={data.team} isCaptain={isCaptain} />}
+            className="grid-cols-1!"
+          >
+            {(member) => (
+              <TeamMemberCard
+                key={member._id}
+                member={member}
+                memberRole={member.memberRole}
+                canRemove={isCaptain && member._id !== user?._id}
+                onRemove={() =>
+                  removeMember({
+                    teamId: teamId,
+                    userId: member._id,
+                  })
+                }
+              />
+            )}
+          </CardGrid>
         </>
       )}
 

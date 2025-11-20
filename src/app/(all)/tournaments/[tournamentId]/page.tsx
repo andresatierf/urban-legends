@@ -18,13 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-} from "@/components/ui/empty";
-import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { CardGrid } from "@/components/ui/card-grid";
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -40,14 +34,12 @@ export default function TournamentDetailsPage({ params }: Props) {
     tournamentId ? { tournamentId } : "skip",
   );
 
-  if (!data) {
-    return <PageSkeleton headerTitle="Tournament Details" sections={2} />;
-  }
-
   return (
     <>
       <SectionHeader as="h1" title="Tournament Details">
-        {!data.userTeam && <UpsertTeamFormDialog tournamentId={tournamentId} />}
+        {!data?.userTeam && (
+          <UpsertTeamFormDialog tournamentId={tournamentId} />
+        )}
         <Button variant="outline" asChild>
           <Link href="/tournaments">
             <ArrowLeft />
@@ -60,7 +52,8 @@ export default function TournamentDetailsPage({ params }: Props) {
 
       <SectionHeader title="Teams" />
 
-      {data.teams.length !== 0 &&
+      {data &&
+        data.teams.length !== 0 &&
         (data.userTeam ? (
           <Card variant="info">
             <CardHeader>
@@ -89,9 +82,12 @@ export default function TournamentDetailsPage({ params }: Props) {
           <JoinTeamCard />
         ))}
 
-      <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
-        {data.teams.length !== 0 ? (
-          data.teams.map((team) => (
+      {data && (
+        <CardGrid
+          data={data.teams}
+          empty={<JoinTeamCard tournamentId={tournamentId} />}
+        >
+          {(team) => (
             <TeamCard
               key={team._id}
               team={team}
@@ -99,23 +95,9 @@ export default function TournamentDetailsPage({ params }: Props) {
               isUserMember={data.userTeam?._id === team._id}
               isUserInTeam={!!data.userTeam}
             />
-          ))
-        ) : (
-          <Card>
-            <CardContent className="py-6">
-              <Empty className="gap-3 py-2!">
-                <EmptyHeader>No teams yet</EmptyHeader>
-                <EmptyDescription>
-                  Be the first to create a team for this tournament!
-                </EmptyDescription>
-                <EmptyContent>
-                  <UpsertTeamFormDialog tournamentId={tournamentId} />
-                </EmptyContent>
-              </Empty>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+          )}
+        </CardGrid>
+      )}
     </>
   );
 }
