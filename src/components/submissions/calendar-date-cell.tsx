@@ -9,10 +9,10 @@ export const cellStyles = cva(
   {
     variants: {
       isOutsideTournament: {
-        true: "cursor-not-allowed border-2 border-dashed border-calendar-disabled-border bg-calendar-disabled-bg text-calendar-disabled-text",
+        true: "cursor-not-allowed border-2 border-calendar-disabled-border border-dashed bg-calendar-disabled-bg text-calendar-disabled-text",
       },
       isDisabled: {
-        true: "cursor-not-allowed border-2 border-dashed border-calendar-disabled-border bg-calendar-disabled-bg text-calendar-disabled-text opacity-50",
+        true: "cursor-not-allowed border-2 border-calendar-disabled-border border-dashed bg-calendar-disabled-bg text-calendar-disabled-text opacity-50",
       },
       state: {
         pending:
@@ -24,7 +24,7 @@ export const cellStyles = cva(
         deleted:
           "border-calendar-deleted-border bg-calendar-deleted-bg text-calendar-deleted-text line-through hover:bg-calendar-deleted-bg-hover",
         undefined:
-          "border-dashed border-calendar-undefined-border bg-calendar-undefined-bg text-calendar-undefined-text hover:bg-calendar-undefined-bg-hover",
+          "border-calendar-undefined-border border-dashed bg-calendar-undefined-bg text-calendar-undefined-text hover:bg-calendar-undefined-bg-hover",
       },
       isToday: {
         true: "ring-2 ring-calendar-today-ring ring-offset-2 ring-offset-card",
@@ -34,13 +34,13 @@ export const cellStyles = cva(
       {
         isOutsideTournament: true,
         className:
-          "cursor-not-allowed border-2 border-dashed border-calendar-disabled-border bg-calendar-disabled-bg text-calendar-disabled-text",
+          "cursor-not-allowed border-2 border-calendar-disabled-border border-dashed bg-calendar-disabled-bg text-calendar-disabled-text",
       },
       {
         isOutsideTournament: false,
         isDisabled: true,
         className:
-          "cursor-not-allowed border-2 border-dashed border-calendar-disabled-border bg-calendar-disabled-bg text-calendar-disabled-text opacity-50",
+          "cursor-not-allowed border-2 border-calendar-disabled-border border-dashed bg-calendar-disabled-bg text-calendar-disabled-text opacity-50",
       },
     ],
   },

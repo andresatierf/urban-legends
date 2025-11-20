@@ -26,7 +26,7 @@ export function TeamCard({
 
   return (
     <Card key={team._id}>
-      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4 xs:gap-16">
+      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
         <div className="flex flex-1 flex-col justify-between self-start">
           <div className="flex items-center gap-2">
             <CardTitle>

@@ -62,7 +62,7 @@ export default function TeamsPage() {
       {allTeams && allTeams.length !== 0 && (
         <>
           <SectionHeader title="Your teams" />
-          <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
             {userTeams.length > 0 ? (
               userTeams.map((team) => (
                 <TeamCard
@@ -82,7 +82,7 @@ export default function TeamsPage() {
       )}
 
       <SectionHeader title="All teams"></SectionHeader>
-      <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
         {allTeams.length > 0 ? (
           allTeams.map((team) => (
             <TeamCard

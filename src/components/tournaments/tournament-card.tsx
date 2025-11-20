@@ -13,7 +13,7 @@ type Props = {
 export function TournamentCard({ tournament, teamCount }: Props) {
   return (
     <Card>
-      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4 xs:gap-16">
+      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
         <div className="flex-1 xs:self-auto self-start">
           <div className="flex items-center gap-2">
             <CardTitle>

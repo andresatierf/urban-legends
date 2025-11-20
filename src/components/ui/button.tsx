@@ -69,7 +69,7 @@ export const buttonVariants = cva(
         variant: "solid",
         color: "destructive",
         className:
-          "bg-destructive/80 text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-destructive/80 text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
       },
       // Solid + Secondary
       {
@@ -83,7 +83,7 @@ export const buttonVariants = cva(
         variant: "solid",
         color: "purple",
         className:
-          "text-white focus-visible:ring-purple-600/20 dark:focus-visible:ring-purple-600/40 bg-button-purple hover:bg-button-purple-hover",
+          "bg-button-purple text-white hover:bg-button-purple-hover focus-visible:ring-purple-600/20 dark:focus-visible:ring-purple-600/40",
       },
       // Outline + Default
       {
@@ -110,7 +110,7 @@ export const buttonVariants = cva(
         variant: "outline",
         color: "purple",
         className:
-          "bg-button-purple-bg-light text-button-purple-text border-button-purple-border shadow-sm transition-shadow focus-visible:ring-purple-600/20 hover:text-button-purple-text-hover hover:border-button-purple-border-hover hover:shadow-md",
+          "border-button-purple-border bg-button-purple-bg-light text-button-purple-text shadow-sm transition-shadow hover:border-button-purple-border-hover hover:text-button-purple-text-hover hover:shadow-md focus-visible:ring-purple-600/20",
       },
       // Ghost + Default
       {
@@ -137,7 +137,7 @@ export const buttonVariants = cva(
         variant: "ghost",
         color: "purple",
         className:
-          "text-button-purple-text hover:text-button-purple-text-hover hover:bg-button-purple-bg-light",
+          "text-button-purple-text hover:bg-button-purple-bg-light hover:text-button-purple-text-hover",
       },
       // Link + Default
       {
@@ -176,14 +176,14 @@ export const buttonVariants = cva(
         variant: "outline",
         color: "blue",
         className:
-          "border-button-blue-border text-button-blue-text hover:text-button-blue-text-hover hover:border-button-blue-border-hover hover:bg-button-blue-bg-light",
+          "border-button-blue-border text-button-blue-text hover:border-button-blue-border-hover hover:bg-button-blue-bg-light hover:text-button-blue-text-hover",
       },
       // Ghost + Blue
       {
         variant: "ghost",
         color: "blue",
         className:
-          "text-button-blue-text hover:text-button-blue-text-hover hover:bg-button-blue-bg-light",
+          "text-button-blue-text hover:bg-button-blue-bg-light hover:text-button-blue-text-hover",
       },
       // Link + Blue
       {
@@ -203,14 +203,14 @@ export const buttonVariants = cva(
         variant: "outline",
         color: "green",
         className:
-          "border-button-green-border text-button-green-text hover:text-button-green-text-hover hover:border-button-green-border-hover hover:bg-button-green-bg-light",
+          "border-button-green-border text-button-green-text hover:border-button-green-border-hover hover:bg-button-green-bg-light hover:text-button-green-text-hover",
       },
       // Ghost + Green
       {
         variant: "ghost",
         color: "green",
         className:
-          "text-button-green-text hover:text-button-green-text-hover hover:bg-button-green-bg-light",
+          "text-button-green-text hover:bg-button-green-bg-light hover:text-button-green-text-hover",
       },
       // Link + Green
       {
@@ -230,14 +230,14 @@ export const buttonVariants = cva(
         variant: "outline",
         color: "orange",
         className:
-          "border-button-orange-border text-button-orange-text hover:text-button-orange-text-hover hover:border-button-orange-border-hover hover:bg-button-orange-bg-light",
+          "border-button-orange-border text-button-orange-text hover:border-button-orange-border-hover hover:bg-button-orange-bg-light hover:text-button-orange-text-hover",
       },
       // Ghost + Orange
       {
         variant: "ghost",
         color: "orange",
         className:
-          "text-button-orange-text hover:text-button-orange-text-hover hover:bg-button-orange-bg-light",
+          "text-button-orange-text hover:bg-button-orange-bg-light hover:text-button-orange-text-hover",
       },
       // Link + Orange
       {

@@ -6,7 +6,7 @@ const containerVariants = cva("h-min rounded-full p-3", {
     variant: {
       blue: "bg-blue-100",
       green: "bg-green-100",
-      yellow: "bg-yellow-100 ",
+      yellow: "bg-yellow-100",
       purple: "",
     },
   },

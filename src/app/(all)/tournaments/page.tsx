@@ -61,7 +61,7 @@ export default function TournamentsPage() {
       {allTournaments && allTournaments.length !== 0 && (
         <>
           <SectionHeader title="Your Tournaments" />
-          <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
             {userTournaments && userTournaments.length !== 0 ? (
               userTournaments.map((tournament) => (
                 <TournamentCard
@@ -91,7 +91,7 @@ export default function TournamentsPage() {
       )}
 
       <SectionHeader title="All Tournaments" />
-      <div className="grid min-w-max grid-cols-1 gap-2 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
         {allTournaments && allTournaments.length !== 0 ? (
           allTournaments.map((tournament) => (
             <TournamentCard
