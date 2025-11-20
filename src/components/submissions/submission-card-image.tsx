@@ -52,6 +52,8 @@ export function SubmissionCardImage({ images }: SubmissionCardImageProps) {
                 <Image
                   src={img.url}
                   alt={img.filename}
+                  width={400}
+                  height={400}
                   className="aspect-square w-full object-cover transition-transform group-hover:scale-105"
                   loading="lazy"
                 />
@@ -76,6 +78,8 @@ export function SubmissionCardImage({ images }: SubmissionCardImageProps) {
             <Image
               src={images[0].url}
               alt={images[0].filename}
+              width={800}
+              height={800}
               className="aspect-square w-full object-cover transition-transform group-hover:scale-105"
               loading="lazy"
             />
@@ -98,6 +102,8 @@ export function SubmissionCardImage({ images }: SubmissionCardImageProps) {
                 <Image
                   src={img.url}
                   alt={img.filename}
+                  width={64}
+                  height={64}
                   className="h-full w-full object-cover"
                   loading="lazy"
                 />
@@ -119,6 +125,8 @@ export function SubmissionCardImage({ images }: SubmissionCardImageProps) {
             <Image
               src={images[currentIndex]?.url}
               alt={images[currentIndex]?.filename}
+              width={1200}
+              height={1200}
               className="h-auto max-h-[70vh] w-full object-contain"
             />
 
