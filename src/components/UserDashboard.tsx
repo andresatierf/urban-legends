@@ -241,7 +241,7 @@ export function UserDashboard(_props: UserDashboardProps) {
       {/* My Teams Section */}
       <div className="rounded-lg bg-white p-6 shadow">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold text-gray-900 text-xl">My Teams</h2>
+          <h2 className="font-semibold text-foreground text-xl">My Teams</h2>
           <Button variant="link" color="blue" asChild>
             <Link href="/teams">
               View all
@@ -319,7 +319,7 @@ export function UserDashboard(_props: UserDashboardProps) {
       {/* Recent Submissions Section */}
       <div className="rounded-lg bg-white p-6 shadow">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold text-gray-900 text-xl">
+          <h2 className="font-semibold text-foreground text-xl">
             Recent Submissions
           </h2>
           <Button variant="link" color="blue" asChild>
@@ -379,7 +379,7 @@ export function UserDashboard(_props: UserDashboardProps) {
 
       {/* Quick Actions */}
       <div className="rounded-lg bg-blue-50 p-6 dark:bg-gray-700">
-        <h3 className="mb-4 font-medium text-gray-900">Quick Actions</h3>
+        <h3 className="mb-4 font-medium text-foreground">Quick Actions</h3>
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" asChild>
             <Link href="/tournaments">Browse Tournaments</Link>

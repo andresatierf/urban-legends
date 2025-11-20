@@ -206,7 +206,7 @@ export default function SubmissionsPage() {
               <CardContent>
                 <Empty className="gap-3 py-4!">
                   <EmptyMedia>
-                    <Calendar className="size-12 text-gray-400" />
+                    <Calendar className="size-12 text-muted-foreground" />
                   </EmptyMedia>
                   <EmptyHeader>No Teams Yet</EmptyHeader>
                   <EmptyDescription>

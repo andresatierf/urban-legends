@@ -137,22 +137,20 @@ export function CalendarStatistics({
           </h4>
           <div className="flex gap-6">
             {submissionStats.map((stat) => (
-              <>
-                <div key={stat.label} className="flex items-center gap-2">
-                  <div
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-full font-semibold text-sm",
-                      "bg-gray-100 dark:bg-background/20",
-                      stat.color,
-                    )}
-                  >
-                    {stat.value}
-                  </div>
-                  <span className="text-muted-foreground/80 text-sm">
-                    {stat.label}
-                  </span>
-                </div>{" "}
-              </>
+              <div key={stat.label} className="flex items-center gap-2">
+                <div
+                  className={cn(
+                    "flex h-8 w-8 items-center justify-center rounded-full font-semibold text-sm",
+                    "bg-gray-100 dark:bg-background/20",
+                    stat.color,
+                  )}
+                >
+                  {stat.value}
+                </div>
+                <span className="text-muted-foreground/80 text-sm">
+                  {stat.label}
+                </span>
+              </div>
             ))}
           </div>
         </div>
@@ -160,7 +158,10 @@ export function CalendarStatistics({
         {motivationalMessages.map(
           (m) =>
             m.condition && (
-              <div className={cn("rounded-md p-3 text-center", m.bgColor)}>
+              <div
+                key={m.message}
+                className={cn("rounded-md p-3 text-center", m.bgColor)}
+              >
                 <p className={cn("font-semibold text-sm", m.textColor)}>
                   {m.message}
                 </p>
