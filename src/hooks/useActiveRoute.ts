@@ -25,19 +25,27 @@ export function useActiveRoute() {
    * @returns true if the route is active
    */
   const isActive = (href: string, exact = false): boolean => {
+    // Normalize paths by removing trailing slashes (except for root "/")
+    const normalizedPathname =
+      pathname === "/" ? "/" : pathname.replace(/\/$/, "");
+    const normalizedHref = href === "/" ? "/" : href.replace(/\/$/, "");
+
     if (exact) {
-      return pathname === href;
+      return normalizedPathname === normalizedHref;
     }
 
     // Special case for root path
-    if (href === "/") {
-      return pathname === "/";
+    if (normalizedHref === "/") {
+      return normalizedPathname === "/";
     }
 
     // Match if current path is exactly the href or is a subpath
     // This prevents false positives like /dashboard matching /dashboard-admin
     // or /team matching /teams
-    return pathname === href || pathname.startsWith(`${href}/`);
+    return (
+      normalizedPathname === normalizedHref ||
+      normalizedPathname.startsWith(`${normalizedHref}/`)
+    );
   };
 
   return {
