@@ -11,7 +11,7 @@ export default function AuthenticatedLayout({
   return (
     <>
       <Authenticated>
-        <div className="flex min-h-screen w-full flex-col bg-gray-50">
+        <div className="flex min-h-screen w-full flex-col bg-muted/30">
           <main className="flex-1">
             <Layout>{children}</Layout>
           </main>

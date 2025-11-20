@@ -10,26 +10,26 @@ import { PodiumSkeleton } from "../ui/podium-skeleton";
 
 const getPodiumIcon = (rank: number) => {
   if (rank === 1) {
-    return <Trophy className="h-12 w-12 text-yellow-500" />;
+    return <Trophy className="h-12 w-12 text-podium-gold" />;
   }
   if (rank === 2) {
-    return <Medal className="h-10 w-10 text-gray-400" />;
+    return <Medal className="h-10 w-10 text-podium-silver" />;
   }
   if (rank === 3) {
-    return <Medal className="h-10 w-10 text-orange-600" />;
+    return <Medal className="h-10 w-10 text-podium-bronze" />;
   }
   return null;
 };
 
 const getPodiumColor = (rank: number) => {
   if (rank === 1) {
-    return "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20";
+    return "border-podium-gold bg-podium-gold-bg";
   }
   if (rank === 2) {
-    return "border-gray-400 bg-gray-50 dark:bg-gray-950/20";
+    return "border-podium-silver bg-podium-silver-bg";
   }
   if (rank === 3) {
-    return "border-orange-600 bg-orange-50 dark:bg-orange-950/20";
+    return "border-podium-bronze bg-podium-bronze-bg";
   }
   return "";
 };

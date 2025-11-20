@@ -1,17 +1,27 @@
 "use client";
 
-import { BarChart3, FileCheck, Plus, Users } from "lucide-react";
+import { BarChart3, FileCheck, Plus, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UpsertTournamentFormDialog } from "../form/upsert-tournament-form";
 
 export function TournamentManagerQuickActions() {
   return (
     <Card variant="tournament_manager">
+      <CardHeader className="flex flex-row gap-2">
+        <Trophy className="h-6 w-6 text-podium-bronze" />
+        <CardTitle className="font-semibold text-foreground text-xl">
+          Tournament Manager Quick Actions
+        </CardTitle>
+      </CardHeader>
       <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <UpsertTournamentFormDialog>
-          <Button variant="outline" className="h-auto max-w-full flex-1">
+          <Button
+            variant="outline"
+            color="secondary"
+            className="h-auto max-w-full flex-1"
+          >
             <Plus className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">Create Tournament</div>

@@ -129,22 +129,28 @@ export function TeamDetailsCard({ data, className }: TeamDetailsCardProps) {
 
   return (
     <div>
-      <InviteMemberFormDialog
-        open={inviteDialogOpen}
-        onOpenChange={setInviteDialogOpen}
-        teamId={data.team._id}
-      />
-      <UpsertTeamFormDialog
-        open={editTeamDialogOpen}
-        onOpenChange={setEditTeamDialogOpen}
-        tournamentId={data.team.tournamentId}
-        team={data.team}
-      />
-      <TransferCaptaincyFormDialog
-        open={transferCaptaincyDialogOpen}
-        onOpenChange={setTransferCaptaincyDialogOpen}
-        teamId={data.team._id}
-      />
+      {data.canInvite && (
+        <InviteMemberFormDialog
+          open={inviteDialogOpen}
+          onOpenChange={setInviteDialogOpen}
+          teamId={data.team._id}
+        />
+      )}
+      {data.canEdit && (
+        <UpsertTeamFormDialog
+          open={editTeamDialogOpen}
+          onOpenChange={setEditTeamDialogOpen}
+          tournamentId={data.team.tournamentId}
+          team={data.team}
+        />
+      )}
+      {data.canTransferCaptaincy && (
+        <TransferCaptaincyFormDialog
+          open={transferCaptaincyDialogOpen}
+          onOpenChange={setTransferCaptaincyDialogOpen}
+          teamId={data.team._id}
+        />
+      )}
       <DetailsCard
         title={data.team.name}
         details={details}

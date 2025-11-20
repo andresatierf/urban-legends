@@ -9,37 +9,38 @@ export const cellStyles = cva(
   {
     variants: {
       isOutsideTournament: {
-        true: "cursor-not-allowed border-2 border-dashed border-gray-200 bg-gray-50 text-gray-300",
+        true: "cursor-not-allowed border-2 border-dashed border-calendar-disabled-border bg-calendar-disabled-bg text-calendar-disabled-text",
       },
       isDisabled: {
-        true: "cursor-not-allowed border-2 border-dashed border-gray-200 bg-gray-50 text-gray-400 opacity-50",
+        true: "cursor-not-allowed border-2 border-dashed border-calendar-disabled-border bg-calendar-disabled-bg text-calendar-disabled-text opacity-50",
       },
       state: {
         pending:
-          "border-yellow-500 bg-yellow-50 text-yellow-800 hover:bg-yellow-100",
+          "border-calendar-pending-border bg-calendar-pending-bg text-calendar-pending-text hover:bg-calendar-pending-bg-hover",
         approved:
-          "border-green-500 bg-green-50 text-green-800 hover:bg-green-100",
-        rejected: "border-red-500 bg-red-50 text-red-800 hover:bg-red-100",
+          "border-calendar-approved-border bg-calendar-approved-bg text-calendar-approved-text hover:bg-calendar-approved-bg-hover",
+        rejected:
+          "border-calendar-rejected-border bg-calendar-rejected-bg text-calendar-rejected-text hover:bg-calendar-rejected-bg-hover",
         deleted:
-          "border-gray-400 bg-gray-100 text-gray-500 line-through hover:bg-gray-200",
+          "border-calendar-deleted-border bg-calendar-deleted-bg text-calendar-deleted-text line-through hover:bg-calendar-deleted-bg-hover",
         undefined:
-          "border-dashed border-gray-300 bg-white text-gray-600 hover:bg-gray-50",
+          "border-dashed border-calendar-undefined-border bg-calendar-undefined-bg text-calendar-undefined-text hover:bg-calendar-undefined-bg-hover",
       },
       isToday: {
-        true: "ring-2 ring-blue-500 ring-offset-2",
+        true: "ring-2 ring-calendar-today-ring ring-offset-2 ring-offset-card",
       },
     },
     compoundVariants: [
       {
         isOutsideTournament: true,
         className:
-          "cursor-not-allowed border-2 border-dashed border-gray-200 bg-gray-50 text-gray-300",
+          "cursor-not-allowed border-2 border-dashed border-calendar-disabled-border bg-calendar-disabled-bg text-calendar-disabled-text",
       },
       {
         isOutsideTournament: false,
         isDisabled: true,
         className:
-          "cursor-not-allowed border-2 border-dashed border-gray-200 bg-gray-50 text-gray-400 opacity-50",
+          "cursor-not-allowed border-2 border-dashed border-calendar-disabled-border bg-calendar-disabled-bg text-calendar-disabled-text opacity-50",
       },
     ],
   },
@@ -86,25 +87,31 @@ export function CalendarDateCell({
     switch (submission.state) {
       case "approved":
         return (
-          <span className="text-green-600 text-xs" title="Approved">
+          <span
+            className="text-calendar-approved-text text-xs"
+            title="Approved"
+          >
             ✓
           </span>
         );
       case "pending":
         return (
-          <span className="text-xs text-yellow-600" title="Pending">
+          <span className="text-calendar-pending-text text-xs" title="Pending">
             ⏳
           </span>
         );
       case "rejected":
         return (
-          <span className="text-red-600 text-xs" title="Rejected">
+          <span
+            className="text-calendar-rejected-text text-xs"
+            title="Rejected"
+          >
             ✗
           </span>
         );
       case "deleted":
         return (
-          <span className="text-gray-500 text-xs" title="Deleted">
+          <span className="text-calendar-deleted-text text-xs" title="Deleted">
             🗑
           </span>
         );

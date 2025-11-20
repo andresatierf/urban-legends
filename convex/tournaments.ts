@@ -273,11 +273,15 @@ export const getAvailableUsersForTeam = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    await validateIsTeamMember(ctx, {
-      teamId: args.teamId,
-      userId: user._id,
-      captain: true,
-    });
+    if (
+      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
+    ) {
+      await validateIsTeamMember(ctx, {
+        teamId: args.teamId,
+        userId: user._id,
+        captain: true,
+      });
+    }
 
     const team = await ctx.db.get(args.teamId);
     if (!team) throw new Error("Team not found");

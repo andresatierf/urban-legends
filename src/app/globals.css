@@ -37,6 +37,85 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-card-admin-from: var(--color-card-admin-from);
+  --color-card-admin-to: var(--color-card-admin-to);
+  --color-card-admin-border: var(--color-card-admin-border);
+  --color-card-tournament-manager-from: var(
+    --color-card-tournament-manager-from
+  );
+  --color-card-tournament-manager-to: var(--color-card-tournament-manager-to);
+  --color-card-tournament-manager-border: var(
+    --color-card-tournament-manager-border
+  );
+  --color-card-info-from: var(--color-card-info-from);
+  --color-card-info-to: var(--color-card-info-to);
+  --color-card-info-border: var(--color-card-info-border);
+  --color-card-dashed-bg: var(--color-card-dashed-bg);
+  --color-card-dashed-border: var(--color-card-dashed-border);
+  --color-button-purple: var(--button-purple);
+  --color-button-purple-hover: var(--button-purple-hover);
+  --color-button-purple-text: var(--button-purple-text);
+  --color-button-purple-text-hover: var(--button-purple-text-hover);
+  --color-button-purple-border: var(--button-purple-border);
+  --color-button-purple-border-hover: var(--button-purple-border-hover);
+  --color-button-purple-bg-light: var(--button-purple-bg-light);
+  --color-button-blue: var(--button-blue);
+  --color-button-blue-hover: var(--button-blue-hover);
+  --color-button-blue-text: var(--button-blue-text);
+  --color-button-blue-text-hover: var(--button-blue-text-hover);
+  --color-button-blue-border: var(--button-blue-border);
+  --color-button-blue-border-hover: var(--button-blue-border-hover);
+  --color-button-blue-bg-light: var(--button-blue-bg-light);
+  --color-button-green: var(--button-green);
+  --color-button-green-hover: var(--button-green-hover);
+  --color-button-green-text: var(--button-green-text);
+  --color-button-green-text-hover: var(--button-green-text-hover);
+  --color-button-green-border: var(--button-green-border);
+  --color-button-green-border-hover: var(--button-green-border-hover);
+  --color-button-green-bg-light: var(--button-green-bg-light);
+  --color-button-orange: var(--button-orange);
+  --color-button-orange-hover: var(--button-orange-hover);
+  --color-button-orange-text: var(--button-orange-text);
+  --color-button-orange-text-hover: var(--button-orange-text-hover);
+  --color-button-orange-border: var(--button-orange-border);
+  --color-button-orange-border-hover: var(--button-orange-border-hover);
+  --color-button-orange-bg-light: var(--button-orange-bg-light);
+  --color-badge-approved-bg: var(--badge-approved-bg);
+  --color-badge-approved-text: var(--badge-approved-text);
+  --color-badge-pending-bg: var(--badge-pending-bg);
+  --color-badge-pending-text: var(--badge-pending-text);
+  --color-badge-rejected-bg: var(--badge-rejected-bg);
+  --color-badge-rejected-text: var(--badge-rejected-text);
+  --color-podium-gold: var(--podium-gold);
+  --color-podium-silver: var(--podium-silver);
+  --color-podium-bronze: var(--podium-bronze);
+  --color-podium-gold-bg: var(--podium-gold-bg);
+  --color-podium-silver-bg: var(--podium-silver-bg);
+  --color-podium-bronze-bg: var(--podium-bronze-bg);
+  --color-calendar-pending-border: var(--calendar-pending-border);
+  --color-calendar-pending-bg: var(--calendar-pending-bg);
+  --color-calendar-pending-text: var(--calendar-pending-text);
+  --color-calendar-pending-bg-hover: var(--calendar-pending-bg-hover);
+  --color-calendar-approved-border: var(--calendar-approved-border);
+  --color-calendar-approved-bg: var(--calendar-approved-bg);
+  --color-calendar-approved-text: var(--calendar-approved-text);
+  --color-calendar-approved-bg-hover: var(--calendar-approved-bg-hover);
+  --color-calendar-rejected-border: var(--calendar-rejected-border);
+  --color-calendar-rejected-bg: var(--calendar-rejected-bg);
+  --color-calendar-rejected-text: var(--calendar-rejected-text);
+  --color-calendar-rejected-bg-hover: var(--calendar-rejected-bg-hover);
+  --color-calendar-deleted-border: var(--calendar-deleted-border);
+  --color-calendar-deleted-bg: var(--calendar-deleted-bg);
+  --color-calendar-deleted-text: var(--calendar-deleted-text);
+  --color-calendar-deleted-bg-hover: var(--calendar-deleted-bg-hover);
+  --color-calendar-undefined-border: var(--calendar-undefined-border);
+  --color-calendar-undefined-bg: var(--calendar-undefined-bg);
+  --color-calendar-undefined-text: var(--calendar-undefined-text);
+  --color-calendar-undefined-bg-hover: var(--calendar-undefined-bg-hover);
+  --color-calendar-disabled-border: var(--calendar-disabled-border);
+  --color-calendar-disabled-bg: var(--calendar-disabled-bg);
+  --color-calendar-disabled-text: var(--calendar-disabled-text);
+  --color-calendar-today-ring: var(--calendar-today-ring);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -78,12 +157,111 @@
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
+
+  /* Card variant overrides for light mode */
+  --color-card-admin-from: oklch(0.98 0.02 285);
+  --color-card-admin-to: oklch(0.98 0.02 260);
+  --color-card-admin-border: oklch(0.88 0.04 285);
+
+  --color-card-tournament-manager-from: oklch(0.98 0.03 50);
+  --color-card-tournament-manager-to: oklch(0.98 0.04 85);
+  --color-card-tournament-manager-border: oklch(0.87 0.06 40);
+
+  --color-card-info-from: oklch(0.95 0.05 250);
+  --color-card-info-to: oklch(0.95 0.05 200);
+  --color-card-info-border: oklch(0.82 0.08 225);
+
+  --color-card-dashed-bg: oklch(0.97 0.005 285);
+  --color-card-dashed-border: oklch(0.75 0.01 285);
+
+  /* Button color variants for light mode */
+  --button-purple: oklch(0.5 0.2 300 / 0.8);
+  --button-purple-hover: oklch(0.45 0.22 300);
+  --button-purple-text: oklch(0.45 0.22 300 / 0.8);
+  --button-purple-text-hover: oklch(0.45 0.22 300);
+  --button-purple-border: oklch(0.5 0.2 300 / 0.8);
+  --button-purple-border-hover: oklch(0.5 0.2 300);
+  --button-purple-bg-light: oklch(0.98 0 0);
+
+  --button-blue: oklch(0.55 0.15 250 / 0.8);
+  --button-blue-hover: oklch(0.5 0.17 250);
+  --button-blue-text: oklch(0.5 0.17 250 / 0.8);
+  --button-blue-text-hover: oklch(0.5 0.17 250);
+  --button-blue-border: oklch(0.55 0.15 250 / 0.8);
+  --button-blue-border-hover: oklch(0.55 0.15 250);
+  --button-blue-bg-light: oklch(0.96 0.03 250);
+
+  --button-green: oklch(0.55 0.15 150 / 0.8);
+  --button-green-hover: oklch(0.5 0.17 150);
+  --button-green-text: oklch(0.5 0.17 150 / 0.8);
+  --button-green-text-hover: oklch(0.5 0.17 150);
+  --button-green-border: oklch(0.55 0.15 150 / 0.8);
+  --button-green-border-hover: oklch(0.55 0.15 150);
+  --button-green-bg-light: oklch(0.96 0.03 150);
+
+  --button-orange: oklch(0.6 0.15 50 / 0.8);
+  --button-orange-hover: oklch(0.55 0.17 50);
+  --button-orange-text: oklch(0.55 0.17 50 / 0.8);
+  --button-orange-text-hover: oklch(0.55 0.17 50);
+  --button-orange-border: oklch(0.6 0.15 50 / 0.8);
+  --button-orange-border-hover: oklch(0.6 0.15 50);
+  --button-orange-bg-light: oklch(0.96 0.03 50);
+
+  /* Badge color variants for light mode */
+  --badge-approved-bg: oklch(0.95 0.04 150);
+  --badge-approved-text: oklch(0.35 0.12 150);
+
+  --badge-pending-bg: oklch(0.95 0.06 90);
+  --badge-pending-text: oklch(0.4 0.14 90);
+
+  --badge-rejected-bg: oklch(0.95 0.05 25);
+  --badge-rejected-text: oklch(0.45 0.18 25);
+
+  /* Podium colors for light mode */
+  --podium-gold: oklch(0.65 0.15 85);
+  --podium-silver: oklch(0.65 0.01 270);
+  --podium-bronze: oklch(0.55 0.12 45);
+  --podium-gold-bg: oklch(0.96 0.04 85);
+  --podium-silver-bg: oklch(0.97 0.005 270);
+  --podium-bronze-bg: oklch(0.96 0.04 45);
+
+  /* Calendar cell state colors for light mode */
+  --calendar-pending-border: oklch(0.7 0.14 90);
+  --calendar-pending-bg: oklch(0.96 0.06 90);
+  --calendar-pending-text: oklch(0.4 0.14 90);
+  --calendar-pending-bg-hover: oklch(0.94 0.07 90);
+
+  --calendar-approved-border: oklch(0.6 0.12 150);
+  --calendar-approved-bg: oklch(0.95 0.04 150);
+  --calendar-approved-text: oklch(0.35 0.12 150);
+  --calendar-approved-bg-hover: oklch(0.93 0.05 150);
+
+  --calendar-rejected-border: oklch(0.6 0.18 25);
+  --calendar-rejected-bg: oklch(0.95 0.05 25);
+  --calendar-rejected-text: oklch(0.45 0.18 25);
+  --calendar-rejected-bg-hover: oklch(0.93 0.06 25);
+
+  --calendar-deleted-border: oklch(0.65 0.01 270);
+  --calendar-deleted-bg: oklch(0.95 0.005 270);
+  --calendar-deleted-text: oklch(0.5 0.01 270);
+  --calendar-deleted-bg-hover: oklch(0.93 0.01 270);
+
+  --calendar-undefined-border: oklch(0.75 0.01 270);
+  --calendar-undefined-bg: oklch(0.99 0 0);
+  --calendar-undefined-text: oklch(0.45 0.015 270);
+  --calendar-undefined-bg-hover: oklch(0.97 0.005 270);
+
+  --calendar-disabled-border: oklch(0.85 0.005 270);
+  --calendar-disabled-bg: oklch(0.97 0.005 270);
+  --calendar-disabled-text: oklch(0.6 0.01 270);
+
+  --calendar-today-ring: oklch(0.55 0.15 250);
 }
 
 .dark {
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
+  --card: oklch(0.24 0.008 285.885);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.21 0.006 285.885);
   --popover-foreground: oklch(0.985 0 0);
@@ -112,6 +290,105 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
+
+  /* Card variant overrides for dark mode */
+  --color-card-admin-from: oklch(0.25 0.05 285);
+  --color-card-admin-to: oklch(0.25 0.05 260);
+  --color-card-admin-border: oklch(0.4 0.08 285);
+
+  --color-card-tournament-manager-from: oklch(0.55 0.08 60);
+  --color-card-tournament-manager-to: oklch(0.55 0.08 75);
+  --color-card-tournament-manager-border: oklch(0.7 0.12 65);
+
+  --color-card-info-from: oklch(0.25 0.08 250);
+  --color-card-info-to: oklch(0.25 0.08 200);
+  --color-card-info-border: oklch(0.4 0.12 225);
+
+  --color-card-dashed-bg: oklch(0.18 0.005 285);
+  --color-card-dashed-border: oklch(0.35 0.006 285);
+
+  /* Button color variants for dark mode */
+  --button-purple: oklch(0.55 0.2 300 / 0.8);
+  --button-purple-hover: oklch(0.6 0.22 300);
+  --button-purple-text: oklch(0.7 0.18 300 / 0.8);
+  --button-purple-text-hover: oklch(0.75 0.2 300);
+  --button-purple-border: oklch(0.55 0.2 300 / 0.8);
+  --button-purple-border-hover: oklch(0.6 0.22 300);
+  --button-purple-bg-light: oklch(0.15 0.08 300);
+
+  --button-blue: oklch(0.55 0.15 250 / 0.8);
+  --button-blue-hover: oklch(0.6 0.17 250);
+  --button-blue-text: oklch(0.7 0.13 250 / 0.8);
+  --button-blue-text-hover: oklch(0.75 0.15 250);
+  --button-blue-border: oklch(0.55 0.15 250 / 0.8);
+  --button-blue-border-hover: oklch(0.6 0.17 250);
+  --button-blue-bg-light: oklch(0.15 0.08 250);
+
+  --button-green: oklch(0.55 0.15 150 / 0.8);
+  --button-green-hover: oklch(0.6 0.17 150);
+  --button-green-text: oklch(0.7 0.13 150 / 0.8);
+  --button-green-text-hover: oklch(0.75 0.15 150);
+  --button-green-border: oklch(0.55 0.15 150 / 0.8);
+  --button-green-border-hover: oklch(0.6 0.17 150);
+  --button-green-bg-light: oklch(0.15 0.08 150);
+
+  --button-orange: oklch(0.6 0.15 50 / 0.8);
+  --button-orange-hover: oklch(0.65 0.17 50);
+  --button-orange-text: oklch(0.75 0.13 50 / 0.8);
+  --button-orange-text-hover: oklch(0.8 0.15 50);
+  --button-orange-border: oklch(0.6 0.15 50 / 0.8);
+  --button-orange-border-hover: oklch(0.65 0.17 50);
+  --button-orange-bg-light: oklch(0.15 0.08 50);
+
+  /* Badge color variants for dark mode */
+  --badge-approved-bg: oklch(0.25 0.08 150);
+  --badge-approved-text: oklch(0.75 0.14 150);
+
+  --badge-pending-bg: oklch(0.3 0.1 90);
+  --badge-pending-text: oklch(0.85 0.16 90);
+
+  --badge-rejected-bg: oklch(0.28 0.1 25);
+  --badge-rejected-text: oklch(0.8 0.16 25);
+
+  /* Podium colors for dark mode */
+  --podium-gold: oklch(0.8 0.18 85);
+  --podium-silver: oklch(0.92 0.01 270);
+  --podium-bronze: oklch(0.72 0.15 45);
+  --podium-gold-bg: oklch(0.35 0.05 85);
+  --podium-silver-bg: oklch(0.35 0.01 270);
+  --podium-bronze-bg: oklch(0.35 0.05 45);
+
+  /* Calendar cell state colors for dark mode */
+  --calendar-pending-border: oklch(0.7 0.16 90);
+  --calendar-pending-bg: oklch(0.3 0.1 90);
+  --calendar-pending-text: oklch(0.85 0.16 90);
+  --calendar-pending-bg-hover: oklch(0.35 0.12 90);
+
+  --calendar-approved-border: oklch(0.6 0.14 150);
+  --calendar-approved-bg: oklch(0.25 0.08 150);
+  --calendar-approved-text: oklch(0.75 0.14 150);
+  --calendar-approved-bg-hover: oklch(0.3 0.1 150);
+
+  --calendar-rejected-border: oklch(0.65 0.18 25);
+  --calendar-rejected-bg: oklch(0.28 0.1 25);
+  --calendar-rejected-text: oklch(0.8 0.16 25);
+  --calendar-rejected-bg-hover: oklch(0.33 0.12 25);
+
+  --calendar-deleted-border: oklch(0.5 0.01 270);
+  --calendar-deleted-bg: oklch(0.25 0.01 270);
+  --calendar-deleted-text: oklch(0.6 0.02 270);
+  --calendar-deleted-bg-hover: oklch(0.28 0.015 270);
+
+  --calendar-undefined-border: oklch(0.4 0.015 270);
+  --calendar-undefined-bg: oklch(0.24 0.008 285);
+  --calendar-undefined-text: oklch(0.7 0.015 270);
+  --calendar-undefined-bg-hover: oklch(0.27 0.01 285);
+
+  --calendar-disabled-border: oklch(0.3 0.01 270);
+  --calendar-disabled-bg: oklch(0.18 0.005 285);
+  --calendar-disabled-text: oklch(0.5 0.01 270);
+
+  --calendar-today-ring: oklch(0.7 0.15 250);
 }
 
 @layer base {

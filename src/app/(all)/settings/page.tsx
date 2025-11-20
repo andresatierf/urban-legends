@@ -1,9 +1,11 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { Calendar, Moon } from "lucide-react";
+import { Calendar, Palette } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { SectionHeader } from "@/components/section-header";
+import { ThemeSwitcher } from "@/components/theme-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -13,11 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 const WEEKDAY_LABELS_FULL = [
   "Sunday",
@@ -58,26 +55,51 @@ export default function SettingsPage() {
   return (
     <>
       <SectionHeader as="h1" title="Settings">
-        <Tooltip delayDuration={400}>
-          <TooltipTrigger asChild>
-            <Button variant="outline" size="icon">
-              {/* <Sun /> */}
-              <Moon />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Theme</TooltipContent>
-        </Tooltip>
+        <ThemeSwitcher />
         <Button variant="outline" onClick={() => signOut()}>
           Sign out
         </Button>
       </SectionHeader>
 
       <div className="space-y-8">
+        {/* Theme Preferences Section */}
         <section>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-semibold text-gray-900 text-lg">
-                <Calendar className="h-5 w-5 text-gray-600" />
+              <CardTitle className="flex items-center gap-2 font-semibold text-lg">
+                <Palette className="h-5 w-5 text-muted-foreground" />
+                Theme Preferences
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
+                  <div className="block font-medium text-sm">Color scheme</div>
+                  <p className="mt-1 text-muted-foreground text-sm">
+                    Choose how the site looks to you
+                  </p>
+                </div>
+                <ThemeToggle />
+              </div>
+              <Card variant="info" className="rounded-md">
+                <CardContent>
+                  <p className="text-sm">
+                    <strong>Note:</strong> Your theme preference is saved
+                    locally and will persist across sessions. System mode
+                    automatically adjusts based on your device settings.
+                  </p>
+                </CardContent>
+              </Card>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Calendar Preferences Section */}
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-semibold text-lg">
+                <Calendar className="h-5 w-5 text-muted-foreground" />
                 Calendar Preferences
               </CardTitle>
             </CardHeader>
@@ -86,11 +108,11 @@ export default function SettingsPage() {
                 <div className="flex-1">
                   <label
                     htmlFor={weekStartSelectId}
-                    className="block font-medium text-gray-700 text-sm"
+                    className="block font-medium text-sm"
                   >
                     Week starts on
                   </label>
-                  <p className="mt-1 text-gray-500 text-sm">
+                  <p className="mt-1 text-muted-foreground text-sm">
                     Choose which day your calendar week begins
                   </p>
                 </div>
@@ -115,7 +137,7 @@ export default function SettingsPage() {
               </div>
               <Card variant="info" className="rounded-md">
                 <CardContent>
-                  <p className="text-blue-800 text-sm">
+                  <p className="text-sm">
                     <strong>Note:</strong> This setting affects how dates are
                     displayed in the submission calendar. Your preference is
                     saved locally and will persist across sessions.

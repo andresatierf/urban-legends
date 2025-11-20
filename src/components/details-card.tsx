@@ -116,18 +116,14 @@ export function DetailsCard({
             )}
           </ButtonGroup>
         </CardTitle>
-        {description && (
-          <CardDescription>
-            {description || "No description available."}
-          </CardDescription>
-        )}
+        {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-2">
           {details.map((detail) => (
             <div key={detail.key} className="flex flex-col">
               <strong>{startCase(detail.key)}:</strong>
-              <span className={cn("text-gray-700", detail.className)}>
+              <span className={cn("text-muted-foreground", detail.className)}>
                 {detail.value}
               </span>
             </div>

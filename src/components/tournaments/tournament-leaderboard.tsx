@@ -18,7 +18,7 @@ import { TableSkeleton } from "../ui/table-skeleton";
 const getRankBadge = (rank: number, _isWinner: boolean) => {
   if (rank === 1) {
     return (
-      <div className="flex items-center justify-center gap-1 font-bold text-yellow-600">
+      <div className="flex items-center justify-center gap-1 font-bold text-podium-gold">
         <Trophy className="h-4 w-4" />
         {rank}
       </div>
@@ -26,7 +26,7 @@ const getRankBadge = (rank: number, _isWinner: boolean) => {
   }
   if (rank === 2) {
     return (
-      <div className="flex items-center justify-center gap-1 font-bold text-gray-400">
+      <div className="flex items-center justify-center gap-1 font-bold text-podium-silver">
         <Trophy className="h-4 w-4" />
         {rank}
       </div>
@@ -34,7 +34,7 @@ const getRankBadge = (rank: number, _isWinner: boolean) => {
   }
   if (rank === 3) {
     return (
-      <div className="flex items-center justify-center gap-1 font-bold text-orange-600">
+      <div className="flex items-center justify-center gap-1 font-bold text-podium-bronze">
         <Trophy className="h-4 w-4" />
         {rank}
       </div>
@@ -47,13 +47,13 @@ const getRankBadge = (rank: number, _isWinner: boolean) => {
 
 const getRowClassName = (rank: number, _isWinner: boolean) => {
   if (rank === 1) {
-    return "bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-950/20 dark:hover:bg-yellow-950/30";
+    return "bg-podium-gold-bg hover:bg-podium-gold-bg/80";
   }
   if (rank === 2) {
-    return "bg-gray-50 hover:bg-gray-100 dark:bg-gray-950/20 dark:hover:bg-gray-950/30";
+    return "bg-podium-silver-bg hover:bg-podium-silver-bg/80";
   }
   if (rank === 3) {
-    return "bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/20 dark:hover:bg-orange-950/30";
+    return "bg-podium-bronze-bg hover:bg-podium-bronze-bg/80";
   }
   return "hover:bg-muted/50";
 };
@@ -118,7 +118,7 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
                 >
                   {team.teamName}
                   {team.isWinner && (
-                    <span className="ml-2 text-xs text-yellow-600">
+                    <span className="ml-2 text-podium-gold text-xs">
                       <Trophy className="h-3 w-3" />
                       Winner
                     </span>

@@ -10,6 +10,13 @@ import { CalendarStatistics } from "@/components/submissions/calendar-statistics
 import { SubmissionCalendar } from "@/components/submissions/submission-calendar";
 import { SubmissionsDataTable } from "@/components/submissions/submissions-data-table";
 import { TeamSelector } from "@/components/submissions/team-selector";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../convex/_generated/api";
@@ -195,16 +202,20 @@ export default function SubmissionsPage() {
         </div>
         <TabsContent value="calendar">
           {teamsWithTournaments.length === 0 ? (
-            <div className="rounded-lg border border-gray-300 border-dashed bg-white p-12 text-center shadow-sm">
-              <Calendar className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-              <h3 className="mb-2 font-semibold text-gray-900 text-lg">
-                No Teams Yet
-              </h3>
-              <p className="text-gray-500 text-sm">
-                You're not part of any teams. Join or create a team to start
-                tracking your submissions.
-              </p>
-            </div>
+            <Card variant="dashed">
+              <CardContent>
+                <Empty className="gap-3 py-4!">
+                  <EmptyMedia>
+                    <Calendar className="size-12 text-muted-foreground" />
+                  </EmptyMedia>
+                  <EmptyHeader>No Teams Yet</EmptyHeader>
+                  <EmptyDescription>
+                    You're not part of any teams. Join or create a team to start
+                    tracking your submissions.
+                  </EmptyDescription>
+                </Empty>
+              </CardContent>
+            </Card>
           ) : (
             <div className="space-y-6">
               {/* Calendar */}
@@ -215,7 +226,6 @@ export default function SubmissionsPage() {
                     tournamentId={selectedTeam.tournamentId}
                     onDateClick={handleDateClick}
                   />
-
                   <CalendarStatistics
                     teamId={selectedTeamId}
                     tournamentId={selectedTeam.tournamentId}
