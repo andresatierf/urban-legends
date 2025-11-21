@@ -38,9 +38,9 @@ export function SubmissionCard({
   const isOwner = submission.userId === currentUser._id;
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-shadow hover:shadow-md lg:flex-row">
+    <div className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-shadow hover:shadow-md md:flex-row">
       {/* Left: Image Display */}
-      <div className="w-full shrink-0 lg:w-64">
+      <div className="w-full shrink-0 md:w-64">
         <SubmissionCardImage images={images} />
       </div>
 

@@ -20,7 +20,7 @@ export function SubmissionCardImage({ images }: SubmissionCardImageProps) {
 
   if (images.length === 0) {
     return (
-      <div className="flex aspect-square w-full items-center justify-center rounded-lg border-2 border-dashed bg-muted">
+      <div className="flex aspect-square w-full max-w-[400] items-center justify-center rounded-lg border-2 border-dashed bg-muted">
         <div className="text-center">
           <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground" />
           <p className="mt-2 text-muted-foreground text-xs">No images</p>
@@ -35,7 +35,7 @@ export function SubmissionCardImage({ images }: SubmissionCardImageProps) {
   return (
     <>
       {/* Image Display */}
-      <div className="relative">
+      <div className="relative max-w-[400]">
         {showTwoLarge ? (
           /* Two Large Images Side-by-Side */
           <div className="grid grid-cols-2 gap-2">
