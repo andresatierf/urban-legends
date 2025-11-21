@@ -27,7 +27,8 @@ export function SubmissionCardActions({
   const canApprove = isAdmin && isPending && onApprove;
   const canReject = isAdmin && isPending && onReject;
   const canEdit = isOwner && submission.state !== "approved" && onEdit;
-  const canDelete = (isAdmin || isOwner) && onDelete;
+  const canDelete =
+    (isAdmin || isOwner) && submission.state !== "deleted" && onDelete;
 
   // Don't render if no actions available
   if (!canApprove && !canReject && !canEdit && !canDelete) {

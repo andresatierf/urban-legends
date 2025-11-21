@@ -3,7 +3,7 @@
 **Status**: Draft
 **Created**: 2025-11-20
 **Owner**: Andre
-**Related**: Spec 22 (Card View Presentation)
+**Related**: Spec 24 (Card View Presentation)
 
 ## Overview
 
@@ -62,12 +62,14 @@ submissionImages: defineTable({
 ```
 
 **Rationale**:
+
 - Separate table allows multiple images per submission (1-to-many)
 - Tracks who uploaded each image (important for team submissions)
 - Order field controls display sequence
 - Indexes optimize common queries
 
 **Migration Strategy**:
+
 - Table is additive (no changes to existing schema)
 - Existing submissions without images continue to work
 - No backfilling required
@@ -118,7 +120,7 @@ export const saveImage = mutation({
         const membership = await ctx.db
           .query("teamMembers")
           .withIndex("by_team_and_user", (q) =>
-            q.eq("teamId", submission.teamId).eq("userId", user._id)
+            q.eq("teamId", submission.teamId).eq("userId", user._id),
           )
           .first();
 
@@ -142,11 +144,16 @@ export const saveImage = mutation({
     }
 
     // 5. Validate content type
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/heic"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+    ];
     if (!allowedTypes.includes(fileMetadata.contentType || "")) {
       await ctx.storage.delete(args.storageId);
       throw new Error(
-        `Invalid file type: ${fileMetadata.contentType}. Only JPEG, PNG, WebP, and HEIC allowed.`
+        `Invalid file type: ${fileMetadata.contentType}. Only JPEG, PNG, WebP, and HEIC allowed.`,
       );
     }
 
@@ -155,14 +162,16 @@ export const saveImage = mutation({
     if (fileMetadata.size > MAX_SIZE) {
       await ctx.storage.delete(args.storageId);
       throw new Error(
-        `Image exceeds 10MB limit (${(fileMetadata.size / 1024 / 1024).toFixed(2)}MB)`
+        `Image exceeds 10MB limit (${(fileMetadata.size / 1024 / 1024).toFixed(2)}MB)`,
       );
     }
 
     // 7. Check max image count (3)
     const existingImages = await ctx.db
       .query("submissionImages")
-      .withIndex("by_submission", (q) => q.eq("submissionId", args.submissionId))
+      .withIndex("by_submission", (q) =>
+        q.eq("submissionId", args.submissionId),
+      )
       .collect();
 
     if (existingImages.length >= 3) {
@@ -188,6 +197,7 @@ export const saveImage = mutation({
 ```
 
 **Key Validations**:
+
 - File type checked via MIME type (not extension)
 - Size limit enforced (10MB per image)
 - Max count enforced (3 images)
@@ -267,7 +277,7 @@ export const getSubmissionImages = query({
       const membership = await ctx.db
         .query("teamMembers")
         .withIndex("by_team_and_user", (q) =>
-          q.eq("teamId", submission.teamId).eq("userId", user._id)
+          q.eq("teamId", submission.teamId).eq("userId", user._id),
         )
         .first();
       isTeamMember = !!membership;
@@ -280,7 +290,9 @@ export const getSubmissionImages = query({
     // Get images
     const images = await ctx.db
       .query("submissionImages")
-      .withIndex("by_submission", (q) => q.eq("submissionId", args.submissionId))
+      .withIndex("by_submission", (q) =>
+        q.eq("submissionId", args.submissionId),
+      )
       .collect();
 
     // Generate URLs and include uploader info
@@ -300,7 +312,7 @@ export const getSubmissionImages = query({
           uploaderEmail: uploader?.email || "",
           order: img.order,
         };
-      })
+      }),
     );
 
     // Sort by order
@@ -322,7 +334,7 @@ export const getSubmissionImages = query({
  */
 async function deleteSubmissionImages(
   ctx: MutationCtx,
-  submissionId: Id<"submissions">
+  submissionId: Id<"submissions">,
 ): Promise<void> {
   const images = await ctx.db
     .query("submissionImages")
@@ -333,7 +345,7 @@ async function deleteSubmissionImages(
     images.map(async (img) => {
       await ctx.storage.delete(img.storageId);
       await ctx.db.delete(img._id);
-    })
+    }),
   );
 }
 
@@ -380,7 +392,7 @@ export const upsert = mutation({
 
         if (images.length < 1) {
           throw new Error(
-            "Please upload at least 1 image as proof of activity before submitting"
+            "Please upload at least 1 image as proof of activity before submitting",
           );
         }
       }
@@ -440,6 +452,7 @@ const images = useQuery(api.submissions.getSubmissionImages, {
 ### File Type Validation
 
 **Allowed MIME Types**:
+
 - `image/jpeg`
 - `image/png`
 - `image/webp`
@@ -451,6 +464,7 @@ const images = useQuery(api.submissions.getSubmissionImages, {
 ### File Size Validation
 
 **Limits**:
+
 - Per-image: 10MB max
 - Total submission: 25MB max (3 images × 10MB, allowing overhead)
 
@@ -460,6 +474,7 @@ const images = useQuery(api.submissions.getSubmissionImages, {
 ### Count Validation
 
 **Limits**:
+
 - Minimum: 1 image (enforced when finalizing submission)
 - Maximum: 3 images (enforced when uploading)
 
@@ -468,33 +483,43 @@ const images = useQuery(api.submissions.getSubmissionImages, {
 ## Error Handling
 
 ### Invalid File Type
+
 ```
 Error: Invalid file type: application/pdf. Only JPEG, PNG, WebP, and HEIC allowed.
 ```
+
 **Action**: Delete file from storage, return error to client
 
 ### File Too Large
+
 ```
 Error: Image exceeds 10MB limit (12.34MB)
 ```
+
 **Action**: Delete file from storage, return error to client
 
 ### Maximum Count Exceeded
+
 ```
 Error: Maximum 3 images per submission
 ```
+
 **Action**: Delete file from storage, return error to client
 
 ### Permission Denied
+
 ```
 Error: Permission denied
 ```
+
 **Action**: Don't reveal whether submission exists (security)
 
 ### Missing Images on Submit
+
 ```
 Error: Please upload at least 1 image as proof of activity before submitting
 ```
+
 **Action**: Prevent submission state change, prompt user to upload
 
 ## Security Considerations
@@ -517,44 +542,53 @@ Error: Please upload at least 1 image as proof of activity before submitting
 ## Edge Cases
 
 ### Concurrent Uploads
+
 - **Scenario**: User uploads 3 images simultaneously
 - **Handling**: Each upload has own URL, count validated per-upload
 
 ### Submission Deleted During Upload
+
 - **Scenario**: Submission deleted while image uploading
 - **Handling**: `saveImage` fails with "Submission not found", file cleaned up
 
 ### Network Failure During Upload
+
 - **Scenario**: Upload to storage succeeds, but `saveImage` fails
 - **Handling**: File remains in storage but no metadata - orphaned
 - **Mitigation**: Future cleanup job to remove orphaned files (Phase 2)
 
 ### Team Member Uploads to Individual Submission
+
 - **Scenario**: Team member tries to upload to individual submission
 - **Handling**: `saveImage` checks `submissionType === "team"`, denies access
 
 ### Admin Deletes Image from Approved Submission
+
 - **Scenario**: Admin removes image from approved submission
 - **Handling**: Allowed (admins have override permissions)
 
 ## Migration Plan
 
 ### Phase 1: Schema Deployment
+
 - Deploy `submissionImages` table
 - Deploy mutations and queries
 - Test in development environment
 
 ### Phase 2: Backend Validation
+
 - Update `submissions.upsert` with image count validation
 - Update `submissions.remove` with cascade delete
 - Deploy to production
 
 ### Phase 3: Frontend Integration
+
 - Build upload components (see Spec 22)
 - Update submission forms
 - Deploy to production
 
 ### Phase 4: Enforcement
+
 - Enable minimum image requirement
 - Grandfather existing submissions (no backfill)
 
@@ -569,12 +603,15 @@ Error: Please upload at least 1 image as proof of activity before submitting
 ## Open Questions
 
 1. **Image Compression**: Should we compress images before storage?
+
    - **Recommendation**: Phase 2 feature (client-side compression)
 
 2. **HEIC Browser Support**: Safari uses HEIC, but display support varies
+
    - **Recommendation**: Accept uploads, consider server-side conversion in Phase 2
 
 3. **Orphaned File Cleanup**: How to handle files uploaded but never saved?
+
    - **Recommendation**: Background job to clean up files older than 24 hours with no metadata
 
 4. **Mobile Camera Quality**: Modern phones capture 12-20MB images
@@ -583,6 +620,7 @@ Error: Please upload at least 1 image as proof of activity before submitting
 ## Dependencies
 
 **Convex APIs**:
+
 - `ctx.storage.generateUploadUrl()`
 - `ctx.storage.getUrl(storageId)`
 - `ctx.storage.delete(storageId)`

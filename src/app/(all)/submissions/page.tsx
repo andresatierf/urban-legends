@@ -290,9 +290,6 @@ export default function SubmissionsPage() {
                     <SubmissionCardList
                       submissions={augmentSubmissions(allSubmissions)}
                       currentUser={user}
-                      onApprove={(id) => approve({ submissionId: id })}
-                      onReject={(id) => reject({ submissionId: id })}
-                      onDelete={(id) => remove({ submissionId: id })}
                     />
                   </div>
                 </>

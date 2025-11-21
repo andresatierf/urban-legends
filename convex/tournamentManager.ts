@@ -67,24 +67,48 @@ export const getDashboardStats = query({
     const upcomingTournaments = tournaments.filter((t) => t.startDate > now);
     const endedTournaments = tournaments.filter((t) => t.endDate < now);
 
+    const tournamentIds = tournaments.map((t) => t._id);
+    const teams = await ctx.db
+      .query("teams")
+      .filter((q) =>
+        q.or(...tournamentIds.map((id) => q.eq(q.field("tournamentId"), id))),
+      )
+      .collect();
+
+    const teamsByTournamentId = teams.reduce<
+      Map<Id<"tournaments">, Doc<"teams">[]>
+    >((acc, team) => {
+      acc.set(team.tournamentId, [...(acc.get(team.tournamentId) || []), team]);
+      return acc;
+    }, new Map());
+
+    const teamIds = teams.map((t) => t._id);
+    const submissions = await ctx.db
+      .query("submissions")
+      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
+      .collect();
+
+    const submissionsByTeamId = submissions.reduce<
+      Map<Id<"teams">, Doc<"submissions">[]>
+    >((acc, submission) => {
+      acc.set(submission.teamId, [
+        ...(acc.get(submission.teamId) || []),
+        submission,
+      ]);
+      return acc;
+    }, new Map());
+
     // Count teams and submissions across all tournaments
     let totalTeams = 0;
     let totalSubmissions = 0;
     let pendingSubmissions = 0;
 
     for (const tournament of tournaments) {
-      const teams = await ctx.db
-        .query("teams")
-        .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
-        .collect();
-
+      const teams = teamsByTournamentId.get(tournament._id) || [];
       totalTeams += teams.length;
 
       for (const team of teams) {
-        const submissions = await ctx.db
-          .query("submissions")
-          .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect();
+        const submissions = submissionsByTeamId.get(team._id) || [];
 
         totalSubmissions += submissions.length;
         pendingSubmissions += submissions.filter(

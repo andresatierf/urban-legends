@@ -43,10 +43,10 @@ export function SubmissionCardList({
           submission={submission}
           images={[]}
           currentUser={currentUser}
-          onApprove={() => onApprove?.(submission._id)}
-          onReject={() => onReject?.(submission._id)}
-          onEdit={() => onEdit?.(submission._id)}
-          onDelete={() => onDelete?.(submission._id)}
+          onApprove={onApprove ? () => onApprove(submission._id) : undefined}
+          onReject={onReject ? () => onReject(submission._id) : undefined}
+          onEdit={onEdit ? () => onEdit(submission._id) : undefined}
+          onDelete={onDelete ? () => onDelete(submission._id) : undefined}
         />
       )}
     </CardGrid>

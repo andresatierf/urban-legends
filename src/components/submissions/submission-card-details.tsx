@@ -58,7 +58,11 @@ export function SubmissionCardDetails({
       <div className="grid gap-2 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>{format(new Date(submission.date), "MMM d, yyyy")}</span>
+          <span>
+            {submission.date
+              ? format(new Date(submission.date), "MMM d, yyyy")
+              : "No Date"}
+          </span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Users className="h-4 w-4" />

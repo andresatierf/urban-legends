@@ -29,7 +29,6 @@ export function SubmissionCardImage({ images }: SubmissionCardImageProps) {
     );
   }
 
-  const _hasMultiple = images.length > 1;
   const showTwoLarge = images.length >= 2;
 
   return (
