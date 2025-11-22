@@ -75,6 +75,7 @@ function useSidebarItems(
   setCreateTournamentDialogOpen: (state: boolean) => void,
 ) {
   const t = useTranslations("sidebar.items");
+  const tTooltip = useTranslations("sidebar.tooltip");
 
   const sidebar: SidebarItem[] = useMemo(
     () => [
@@ -223,7 +224,7 @@ function useSidebarItems(
             badge: {
               query: api.tournamentManager.getPendingCount,
               color: "secondary",
-              tooltip: "Pending Submissions",
+              tooltip: tTooltip("pendingSubmissions"),
             },
           },
           {
@@ -233,7 +234,7 @@ function useSidebarItems(
             badge: {
               query: api.tournamentManager.getPendingCount,
               color: "secondary",
-              tooltip: "Pending Submissions",
+              tooltip: tTooltip("pendingSubmissions"),
             },
             condition: () => false,
           },
@@ -296,7 +297,7 @@ function useSidebarItems(
             badge: {
               query: api.captain.getPendingActionsCount,
               color: "default",
-              tooltip: "Pending Requests & Invitations",
+              tooltip: tTooltip("pendingRequestsAndInvitations"),
             },
             exact: true,
           },
@@ -333,6 +334,7 @@ function useSidebarItems(
     ],
     [
       t,
+      tTooltip,
       setSubmissionFormOpen,
       setInviteMemberDialogOpen,
       setCreateTournamentDialogOpen,

@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { Calendar, CheckCircle, Clock, Search } from "lucide-react";
 import { redirect } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { SubmissionCardList } from "@/components/submissions/submission-card-list";
 import { Input } from "@/components/ui/input";
@@ -17,12 +17,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../../convex/_generated/api";
+import type { Id } from "../../../../../convex/_generated/dataModel";
 
 export default function TournamentManagerSubmissions() {
   const { user } = useUser();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [stateFilter, _setStateFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("date-desc");
 
   const approve = useMutation(api.submissions.approve);
@@ -48,11 +48,6 @@ export default function TournamentManagerSubmissions() {
       );
     }
 
-    // State filter
-    if (stateFilter !== "all") {
-      filtered = filtered.filter((s) => s.state === stateFilter);
-    }
-
     // Sort
     filtered = [...filtered].sort((a, b) => {
       switch (sortBy) {
@@ -70,27 +65,60 @@ export default function TournamentManagerSubmissions() {
     });
 
     return filtered;
-  }, [submissions, searchQuery, stateFilter, sortBy]);
+  }, [submissions, searchQuery, sortBy]);
 
-  const pendingSubmissions = useMemo(() => {
-    if (!submissions) return [];
-    return submissions.filter((s) => s.state === "pending");
-  }, [submissions]);
+  const {
+    all,
+    pending,
+    resolved,
+    filtered,
+    filteredPending,
+    filteredResolved,
+  } = useMemo(() => {
+    if (!submissions)
+      return {
+        all: [],
+        pending: [],
+        resolved: [],
+        filtered: [],
+        filteredPending: [],
+        filteredResolved: [],
+      };
 
-  const resolvedSubmissions = useMemo(() => {
-    if (!submissions) return [];
-    return submissions.filter((s) => s.state !== "pending");
-  }, [submissions]);
+    const pending = submissions.filter((s) => s.state === "pending");
+    const resolved = submissions.filter((s) => s.state !== "pending");
 
-  const filteredPendingSubmissions = useMemo(() => {
-    if (!submissions) return [];
-    return filteredSubmissions.filter((s) => s.state === "pending");
+    const filteredPending = filteredSubmissions.filter(
+      (s) => s.state === "pending",
+    );
+    const filteredResolved = filteredSubmissions.filter(
+      (s) => s.state !== "pending",
+    );
+
+    return {
+      all: submissions,
+      pending,
+      resolved,
+      filtered: filteredSubmissions,
+      filteredPending,
+      filteredResolved,
+    };
   }, [submissions, filteredSubmissions]);
 
-  const filteredResolvedSubmissions = useMemo(() => {
-    if (!submissions) return [];
-    return filteredSubmissions.filter((s) => s.state !== "pending");
-  }, [submissions, filteredSubmissions]);
+  const onApprove = useCallback(
+    (submissionId: Id<"submissions">) => approve({ submissionId }),
+    [approve],
+  );
+
+  const onReject = useCallback(
+    (submissionId: Id<"submissions">) => reject({ submissionId }),
+    [reject],
+  );
+
+  const onDelete = useCallback(
+    (submissionId: Id<"submissions">) => remove({ submissionId }),
+    [remove],
+  );
 
   if (
     user &&
@@ -113,15 +141,15 @@ export default function TournamentManagerSubmissions() {
         <TabsList className="self-end">
           <TabsTrigger value="all">
             <Calendar className="mr-2 h-4 w-4" />
-            All ({submissions.length})
+            All ({all.length})
           </TabsTrigger>
           <TabsTrigger value="pending">
             <Clock className="mr-2 h-4 w-4" />
-            Pending ({pendingSubmissions.length})
+            Pending ({pending.length})
           </TabsTrigger>
-          <TabsTrigger value="approved">
+          <TabsTrigger value="done">
             <CheckCircle className="mr-2 h-4 w-4" />
-            Approved ({resolvedSubmissions.length})
+            Done ({resolved.length})
           </TabsTrigger>
         </TabsList>
 
@@ -153,51 +181,48 @@ export default function TournamentManagerSubmissions() {
 
         <TabsContent value="all" className="space-y-4">
           <div className="text-muted-foreground text-sm">
-            Showing {filteredSubmissions.length} of {submissions.length}{" "}
-            submissions
+            Showing {filtered.length} of {all.length} submissions
           </div>
 
           {user && (
             <SubmissionCardList
-              submissions={filteredSubmissions}
+              submissions={filtered}
               currentUser={user}
-              onApprove={(id) => approve({ submissionId: id })}
-              onReject={(id) => reject({ submissionId: id })}
-              onDelete={(id) => remove({ submissionId: id })}
+              onApprove={onApprove}
+              onReject={onReject}
+              onDelete={onDelete}
             />
           )}
         </TabsContent>
 
         <TabsContent value="pending" className="space-y-4">
           <div className="text-muted-foreground text-sm">
-            Showing {filteredPendingSubmissions.length} of{" "}
-            {pendingSubmissions.length} submissions
+            Showing {filteredPending.length} of {pending.length} submissions
           </div>
 
           {user && (
             <SubmissionCardList
-              submissions={filteredPendingSubmissions}
+              submissions={filteredPending}
               currentUser={user}
-              onApprove={(id) => approve({ submissionId: id })}
-              onReject={(id) => reject({ submissionId: id })}
-              onDelete={(id) => remove({ submissionId: id })}
+              onApprove={onApprove}
+              onReject={onReject}
+              onDelete={onDelete}
             />
           )}
         </TabsContent>
 
-        <TabsContent value="approved" className="space-y-4">
+        <TabsContent value="done" className="space-y-4">
           <div className="text-muted-foreground text-sm">
-            Showing {filteredResolvedSubmissions.length} of{" "}
-            {resolvedSubmissions.length} submissions
+            Showing {filteredResolved.length} of {resolved.length} submissions
           </div>
 
           {user && (
             <SubmissionCardList
-              submissions={filteredResolvedSubmissions}
+              submissions={filteredResolved}
               currentUser={user}
-              onApprove={(id) => approve({ submissionId: id })}
-              onReject={(id) => reject({ submissionId: id })}
-              onDelete={(id) => remove({ submissionId: id })}
+              onApprove={onApprove}
+              onReject={onReject}
+              onDelete={onDelete}
             />
           )}
         </TabsContent>
