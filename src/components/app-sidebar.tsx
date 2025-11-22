@@ -62,6 +62,7 @@ type SidebarItem = {
   badge?: {
     query: FunctionReference<"query">;
     color?: "default" | "destructive" | "secondary" | "outline";
+    tooltip?: string;
   };
 } & (
   | { items: SidebarItem[] }
@@ -207,10 +208,6 @@ function useSidebarItems(
             title: t("tournamentManager.dashboard"),
             href: "/tournament-manager",
             icon: Briefcase,
-            badge: {
-              query: api.tournamentManager.getPendingCount,
-              color: "secondary",
-            },
             exact: true,
           },
           {
@@ -223,6 +220,11 @@ function useSidebarItems(
             title: t("tournamentManager.submissions"),
             href: "/tournament-manager/submissions",
             icon: Calendar,
+            badge: {
+              query: api.tournamentManager.getPendingCount,
+              color: "secondary",
+              tooltip: "Pending Submissions",
+            },
           },
           {
             title: t("tournamentManager.approvals"),
@@ -231,6 +233,7 @@ function useSidebarItems(
             badge: {
               query: api.tournamentManager.getPendingCount,
               color: "secondary",
+              tooltip: "Pending Submissions",
             },
             condition: () => false,
           },
@@ -293,6 +296,7 @@ function useSidebarItems(
             badge: {
               query: api.captain.getPendingActionsCount,
               color: "default",
+              tooltip: "Pending Requests & Invitations",
             },
             exact: true,
           },
@@ -435,7 +439,11 @@ function renderItem(
           <item.icon />
           {item.title}
           {item.badge && (
-            <SidebarBadge query={item.badge.query} color={item.badge.color} />
+            <SidebarBadge
+              query={item.badge.query}
+              color={item.badge.color}
+              tooltip={item.badge.tooltip}
+            />
           )}
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -452,7 +460,11 @@ function renderItem(
           <item.icon />
           <span>{item.title}</span>
           {item.badge && (
-            <SidebarBadge query={item.badge.query} color={item.badge.color} />
+            <SidebarBadge
+              query={item.badge.query}
+              color={item.badge.color}
+              tooltip={item.badge.tooltip}
+            />
           )}
         </Link>
       </SidebarMenuButton>

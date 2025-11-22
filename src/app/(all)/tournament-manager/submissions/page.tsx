@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { CheckCircle, Clock, Search } from "lucide-react";
+import { Calendar, CheckCircle, Clock, Search } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useMemo, useState } from "react";
 import { SectionHeader } from "@/components/section-header";
@@ -22,7 +22,7 @@ export default function TournamentManagerSubmissions() {
   const { user } = useUser();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [stateFilter, setStateFilter] = useState<string>("all");
+  const [stateFilter, _setStateFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("date-desc");
 
   const approve = useMutation(api.submissions.approve);
@@ -111,6 +111,10 @@ export default function TournamentManagerSubmissions() {
 
       <Tabs defaultValue="pending" className="flex flex-col gap-4">
         <TabsList className="self-end">
+          <TabsTrigger value="all">
+            <Calendar className="mr-2 h-4 w-4" />
+            All ({submissions.length})
+          </TabsTrigger>
           <TabsTrigger value="pending">
             <Clock className="mr-2 h-4 w-4" />
             Pending ({pendingSubmissions.length})
@@ -133,18 +137,6 @@ export default function TournamentManagerSubmissions() {
           </div>
 
           <div className="flex gap-2">
-            <Select value={stateFilter} onValueChange={setStateFilter}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Sort by" />
@@ -158,6 +150,23 @@ export default function TournamentManagerSubmissions() {
             </Select>
           </div>
         </div>
+
+        <TabsContent value="all" className="space-y-4">
+          <div className="text-muted-foreground text-sm">
+            Showing {filteredSubmissions.length} of {submissions.length}{" "}
+            submissions
+          </div>
+
+          {user && (
+            <SubmissionCardList
+              submissions={filteredSubmissions}
+              currentUser={user}
+              onApprove={(id) => approve({ submissionId: id })}
+              onReject={(id) => reject({ submissionId: id })}
+              onDelete={(id) => remove({ submissionId: id })}
+            />
+          )}
+        </TabsContent>
 
         <TabsContent value="pending" className="space-y-4">
           <div className="text-muted-foreground text-sm">
