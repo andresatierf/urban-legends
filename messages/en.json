@@ -51,6 +51,10 @@
         "buttonDemo": "Button Demo",
         "cardDemo": "Card Demo"
       }
+    },
+    "tooltip": {
+      "pendingSubmissions": "Pending Submissions",
+      "pendingRequestsAndInvitations": "Pending Requests & Invitations"
     }
   }
 }
