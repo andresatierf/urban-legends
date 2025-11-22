@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { Calendar, List } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -8,7 +8,7 @@ import { UpsertSubmissionFormDialog } from "@/components/form/upsert-submission-
 import { SectionHeader } from "@/components/section-header";
 import { CalendarStatistics } from "@/components/submissions/calendar-statistics";
 import { SubmissionCalendar } from "@/components/submissions/submission-calendar";
-import { SubmissionsDataTable } from "@/components/submissions/submissions-data-table";
+import { SubmissionCardList } from "@/components/submissions/submission-card-list";
 import { TeamSelector } from "@/components/submissions/team-selector";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -25,6 +25,11 @@ import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 export default function SubmissionsPage() {
   const { user, isAdmin, isTournamentManager } = useUser();
   const router = useRouter();
+
+  // Mutations for submission actions
+  const approve = useMutation(api.submissions.approve);
+  const reject = useMutation(api.submissions.reject);
+  const remove = useMutation(api.submissions.remove);
 
   const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams">>();
   const [selectedSubmission, setSelectedSubmission] =
@@ -236,28 +241,61 @@ export default function SubmissionsPage() {
           )}
         </TabsContent>
         <TabsContent value="list">
-          <div className="space-y-6">
-            <SubmissionsDataTable
-              title="Your Submissions"
-              submissions={augmentSubmissions(submissions)}
-              showActions
-            />
-            {(isAdmin || isTournamentManager) && (
-              <>
-                <SubmissionsDataTable
-                  title="Pending Submissions"
-                  submissions={augmentSubmissions(pendingSubmissions)}
-                  showActions
+          {!user ? (
+            <Card variant="dashed">
+              <CardContent>
+                <Empty className="gap-3 py-4!">
+                  <EmptyMedia>
+                    <List className="size-12 text-muted-foreground" />
+                  </EmptyMedia>
+                  <EmptyHeader>Loading...</EmptyHeader>
+                </Empty>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-8">
+              {/* Your Submissions */}
+              <div className="space-y-4">
+                <h2 className="font-semibold text-2xl">Your Submissions</h2>
+                <SubmissionCardList
+                  submissions={augmentSubmissions(submissions)}
+                  currentUser={user}
+                  onEdit={(id) => {
+                    const submission = submissions.find((s) => s._id === id);
+                    setSelectedSubmission(submission);
+                    setUpsertSubmissionOpen(true);
+                  }}
+                  onDelete={(id) => remove({ submissionId: id })}
                 />
-                <SubmissionsDataTable
-                  title="All Submissions"
-                  submissions={augmentSubmissions(allSubmissions)}
-                  showActions
-                  enableSearch
-                />
-              </>
-            )}
-          </div>
+              </div>
+
+              {/* Admin/Manager Sections */}
+              {(isAdmin || isTournamentManager) && (
+                <>
+                  <div className="space-y-4">
+                    <h2 className="font-semibold text-2xl">
+                      Pending Submissions
+                    </h2>
+                    <SubmissionCardList
+                      submissions={augmentSubmissions(pendingSubmissions)}
+                      currentUser={user}
+                      onApprove={(id) => approve({ submissionId: id })}
+                      onReject={(id) => reject({ submissionId: id })}
+                      onDelete={(id) => remove({ submissionId: id })}
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <h2 className="font-semibold text-2xl">All Submissions</h2>
+                    <SubmissionCardList
+                      submissions={augmentSubmissions(allSubmissions)}
+                      currentUser={user}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </>

@@ -3,25 +3,40 @@
 import { useQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { Badge } from "./badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
 interface SidebarBadgeProps {
   query: FunctionReference<"query">;
   color?: "default" | "destructive" | "secondary" | "outline";
+  tooltip?: string;
 }
 
-export function SidebarBadge({ query, color = "default" }: SidebarBadgeProps) {
+export function SidebarBadge({
+  query,
+  color = "default",
+  tooltip,
+}: SidebarBadgeProps) {
   // query is already a valid FunctionReference<"query">
   const count = useQuery(query);
 
   // Early returns after all hooks have been called
   if (!count || count === 0) return null;
 
-  return (
+  const InnerBadge = (
     <Badge
       variant={color}
       className="ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full p-0 text-xs"
     >
       {count > 99 ? "99+" : count}
     </Badge>
+  );
+
+  if (!tooltip) return InnerBadge;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{InnerBadge}</TooltipTrigger>
+      <TooltipContent>{tooltip}</TooltipContent>
+    </Tooltip>
   );
 }

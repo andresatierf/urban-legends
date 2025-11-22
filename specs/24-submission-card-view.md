@@ -1,4 +1,4 @@
-# Spec 22: Submission Card View Presentation
+# Spec 24: Submission Card View Presentation
 
 **Status**: Draft
 **Created**: 2025-11-20
@@ -139,6 +139,7 @@ export function SubmissionCard({
 ```
 
 **Key Features**:
+
 - Horizontal layout on desktop (image left, details right)
 - Vertical stack on mobile (image top, details bottom)
 - Hover effect with shadow transition
@@ -294,6 +295,7 @@ export function SubmissionCardImage({ images }: SubmissionCardImageProps) {
 ```
 
 **Key Features**:
+
 - Large primary image with aspect ratio preservation
 - "+N more" badge for multiple images
 - Thumbnail strip showing up to 2 additional images
@@ -393,6 +395,7 @@ export function SubmissionCardDetails({
 ```
 
 **Key Features**:
+
 - Color-coded state badges (pending/approved/rejected)
 - Tier indicator (base/advanced)
 - Team exercise badge
@@ -493,6 +496,7 @@ export function SubmissionCardActions({
 ```
 
 **Key Features**:
+
 - Conditional rendering based on permissions
 - Admin actions: Approve (green), Reject (red)
 - Owner actions: Edit, Delete
@@ -653,6 +657,7 @@ export function SubmissionCardList({
 ```
 
 **Key Features**:
+
 - Search across team name, user name, and description
 - Filter by status (all/pending/approved/rejected)
 - Sort by date or points (ascending/descending)
@@ -665,11 +670,13 @@ export function SubmissionCardList({
 **Pages to Update**:
 
 1. **`/submissions` (All Submissions Page)**
+
    - Replace `SubmissionsDataTable` with `SubmissionCardList`
    - Keep existing query logic
    - Maintain admin filtering
 
 2. **`/teams/[id]` (Team Submissions)**
+
    - Replace table with `SubmissionCardList`
    - Filter to team's submissions only
 
@@ -731,6 +738,7 @@ export default function SubmissionsPage() {
 ### Responsive Design
 
 **Desktop (lg and above)**:
+
 ```
 ┌─────────────────────────────────────────────────┐
 │ [Image]    │ [Badges]                           │
@@ -742,6 +750,7 @@ export default function SubmissionsPage() {
 ```
 
 **Mobile (< lg)**:
+
 ```
 ┌───────────────────┐
 │     [Image]       │
@@ -765,16 +774,19 @@ export default function SubmissionsPage() {
 ## Migration Strategy
 
 ### Phase 1: Parallel Implementation
+
 - Build new card components alongside existing table
 - Add feature flag or route parameter to toggle views
 - Test with subset of users
 
 ### Phase 2: Gradual Rollout
+
 - Default to card view for new users
 - Allow existing users to toggle (user preference)
 - Monitor performance and user feedback
 
 ### Phase 3: Full Replacement
+
 - Remove table implementation
 - Remove toggle controls
 - Update documentation
@@ -790,12 +802,15 @@ export default function SubmissionsPage() {
 ## Open Questions
 
 1. **Virtual Scrolling**: Should we implement virtual scrolling for large lists (100+ submissions)?
+
    - **Recommendation**: Start without, add if performance issues arise
 
 2. **Card Density**: Should we offer compact/comfortable/spacious view options?
+
    - **Recommendation**: Start with one density, add variants if requested
 
 3. **Bulk Actions**: How do users approve/reject multiple submissions at once?
+
    - **Recommendation**: Phase 2 feature - add checkboxes and bulk action toolbar
 
 4. **Animation**: Should cards animate in on load?
@@ -812,6 +827,7 @@ export default function SubmissionsPage() {
 ## Dependencies
 
 **Existing Components** (no new packages needed):
+
 - `@/components/ui/badge`
 - `@/components/ui/button`
 - `@/components/ui/dialog`
@@ -820,4 +836,5 @@ export default function SubmissionsPage() {
 - `lucide-react` icons
 
 **Related Specs**:
+
 - Spec 23: Submission Image Upload Backend (provides image data)

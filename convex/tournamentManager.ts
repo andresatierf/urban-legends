@@ -1,3 +1,5 @@
+import { v } from "convex/values";
+import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -36,5 +38,230 @@ export const getPendingCount = query({
       .collect();
 
     return pendingIndividual.length + pendingGroups.length;
+  },
+});
+
+/**
+ * Get dashboard statistics for tournament managers.
+ * Provides overview of tournaments, teams, and submissions.
+ */
+export const getDashboardStats = query({
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    if (
+      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
+    ) {
+      throw new Error("Tournament Manager or Admin access required");
+    }
+
+    // Get all tournaments (tournament managers can access all)
+    const tournaments = await ctx.db.query("tournaments").collect();
+
+    const now = new Date().toISOString().split("T")[0];
+
+    // Categorize tournaments
+    const activeTournaments = tournaments.filter(
+      (t) => t.startDate <= now && t.endDate >= now,
+    );
+    const upcomingTournaments = tournaments.filter((t) => t.startDate > now);
+    const endedTournaments = tournaments.filter((t) => t.endDate < now);
+
+    const tournamentIds = tournaments.map((t) => t._id);
+    const teams = await ctx.db
+      .query("teams")
+      .filter((q) =>
+        q.or(...tournamentIds.map((id) => q.eq(q.field("tournamentId"), id))),
+      )
+      .collect();
+
+    const teamsByTournamentId = teams.reduce<
+      Map<Id<"tournaments">, Doc<"teams">[]>
+    >((acc, team) => {
+      acc.set(team.tournamentId, [...(acc.get(team.tournamentId) || []), team]);
+      return acc;
+    }, new Map());
+
+    const teamIds = teams.map((t) => t._id);
+    const submissions = await ctx.db
+      .query("submissions")
+      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
+      .collect();
+
+    const submissionsByTeamId = submissions.reduce<
+      Map<Id<"teams">, Doc<"submissions">[]>
+    >((acc, submission) => {
+      acc.set(submission.teamId, [
+        ...(acc.get(submission.teamId) || []),
+        submission,
+      ]);
+      return acc;
+    }, new Map());
+
+    // Count teams and submissions across all tournaments
+    let totalTeams = 0;
+    let totalSubmissions = 0;
+    let pendingSubmissions = 0;
+
+    for (const tournament of tournaments) {
+      const teams = teamsByTournamentId.get(tournament._id) || [];
+      totalTeams += teams.length;
+
+      for (const team of teams) {
+        const submissions = submissionsByTeamId.get(team._id) || [];
+
+        totalSubmissions += submissions.length;
+        pendingSubmissions += submissions.filter(
+          (s) => s.state === "pending",
+        ).length;
+      }
+    }
+
+    return {
+      tournaments: {
+        total: tournaments.length,
+        active: activeTournaments.length,
+        upcoming: upcomingTournaments.length,
+        ended: endedTournaments.length,
+      },
+      teams: {
+        total: totalTeams,
+      },
+      submissions: {
+        total: totalSubmissions,
+        pending: pendingSubmissions,
+      },
+    };
+  },
+});
+
+/**
+ * Get recent activity across all tournaments.
+ * Returns timeline of events like team creation, submissions, approvals.
+ */
+export const getRecentActivity = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    const limit = args.limit || 30;
+
+    if (
+      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
+    ) {
+      throw new Error("Tournament Manager or Admin access required");
+    }
+
+    // Get all tournaments
+    const tournaments = await ctx.db.query("tournaments").collect();
+
+    const activities: Array<{
+      type: string;
+      description: string;
+      timestamp: number;
+      tournamentName?: string;
+    }> = [];
+
+    // Get recent teams and submissions for each tournament
+    for (const tournament of tournaments) {
+      const teams = await ctx.db
+        .query("teams")
+        .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
+        .order("desc")
+        .take(10);
+
+      for (const team of teams) {
+        const creator = await ctx.db.get(team.createdBy);
+        activities.push({
+          type: "team_created",
+          description: `${creator?.name || "User"} created team "${team.name}"`,
+          timestamp: team._creationTime,
+          tournamentName: tournament.name,
+        });
+      }
+
+      // Get recent submissions
+      for (const team of teams) {
+        const submissions = await ctx.db
+          .query("submissions")
+          .withIndex("by_team", (q) => q.eq("teamId", team._id))
+          .order("desc")
+          .take(5);
+
+        for (const sub of submissions) {
+          if (sub.state === "approved" || sub.state === "rejected") {
+            const submitter = await ctx.db.get(sub.userId);
+            activities.push({
+              type: `submission_${sub.state}`,
+              description: `Submission by ${submitter?.name || "User"} for ${team.name} was ${sub.state}`,
+              timestamp: sub._creationTime,
+              tournamentName: tournament.name,
+            });
+          }
+        }
+      }
+    }
+
+    // Sort by timestamp and limit
+    activities.sort((a, b) => b.timestamp - a.timestamp);
+    return activities.slice(0, limit);
+  },
+});
+
+export const getSubmissions = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    if (
+      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
+    ) {
+      throw new Error("Tournament Manager or Admin access required");
+    }
+
+    const submissions = await ctx.db.query("submissions").collect();
+    if (submissions.length === 0) return [];
+
+    const userIds = Array.from(new Set(submissions.map((s) => s.userId)));
+    const teamIds = Array.from(new Set(submissions.map((s) => s.teamId)));
+
+    const [users, teams] = await Promise.all([
+      ctx.db
+        .query("users")
+        .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("_id"), id))))
+        .collect(),
+      ctx.db
+        .query("teams")
+        .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))))
+        .collect(),
+    ]);
+
+    const userIdMap = users.reduce<Map<Id<"users">, Doc<"users">>>(
+      (acc, user) => {
+        acc.set(user._id, user);
+        return acc;
+      },
+      new Map(),
+    );
+
+    const teamIdMap = teams.reduce<Map<Id<"teams">, Doc<"teams">>>(
+      (acc, team) => {
+        acc.set(team._id, team);
+        return acc;
+      },
+      new Map(),
+    );
+
+    const submissionsWithUserAndTeam = submissions.map((s) => ({
+      ...s,
+      user: userIdMap.get(s.userId) as Doc<"users">,
+      team: teamIdMap.get(s.teamId) as Doc<"teams">,
+    }));
+
+    return submissionsWithUserAndTeam.toSorted((a, b) => {
+      if (a.date === b.date) return 0;
+      return a.date.localeCompare(b.date);
+    });
   },
 });
