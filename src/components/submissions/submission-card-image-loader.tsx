@@ -28,21 +28,35 @@ export function SubmissionCardImageLoader({
 
   // Fetch image URLs when component mounts
   useEffect(() => {
+    let isMounted = true;
+
     const fetchImages = async () => {
       try {
         setLoading(true);
         const imageUrls = await getImageUrls({ submissionId });
-        setImages(imageUrls);
-        setError(null);
+        if (isMounted) {
+          setImages(imageUrls);
+          setError(null);
+        }
       } catch (err) {
         console.error("Failed to fetch images:", err);
-        setError(err instanceof Error ? err.message : "Failed to load images");
+        if (isMounted) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load images",
+          );
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchImages();
+
+    return () => {
+      isMounted = false;
+    };
   }, [submissionId, getImageUrls]);
 
   if (loading) {

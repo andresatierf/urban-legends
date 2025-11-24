@@ -20,8 +20,8 @@ export const generateUploadUrl = action({
     size: v.number(),
   },
   handler: async (ctx, args) => {
-    // 1. Authenticate user
-    const _user = await getCurrentUserOrThrow(ctx);
+    // 1. Authenticate user via current user query
+    const _user = await ctx.runQuery(api.users.current);
 
     // 2. Validate submission exists and user has permission
     const submission = await ctx.runQuery(api.submissions.get, {
@@ -94,7 +94,7 @@ export const deleteImage = action({
     imageId: v.id("submissionImages"),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
+    const user = await ctx.runQuery(api.users.current);
 
     // 1. Get image metadata (includes permission check)
     const image = await ctx.runQuery(api.submissionImages.getById, {
@@ -151,7 +151,7 @@ export const getImageUrls = action({
     submissionId: v.id("submissions"),
   },
   handler: async (ctx, args) => {
-    const _user = await getCurrentUserOrThrow(ctx);
+    const _user = await ctx.runQuery(api.users.current);
 
     // 1. Get images metadata (includes permission check)
     const images = await ctx.runQuery(api.submissionImages.list, {
@@ -161,7 +161,15 @@ export const getImageUrls = action({
     // 2. Generate signed URLs for all images
     const storage = await createStorageProvider();
 
-    const imagesWithUrls = await Promise.all(
+    const imagesWithUrls: Array<{
+      _id: string;
+      url: string;
+      filename: string;
+      contentType: string;
+      size: number;
+      uploadedAt: string;
+      order: number;
+    }> = await Promise.all(
       images.map(async (img) => {
         const url = await storage.getPublicUrl(img.storageKey, 3600); // 1 hour
 

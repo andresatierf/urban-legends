@@ -36,21 +36,30 @@ export class S3StorageProvider implements StorageProvider {
   }
 
   async validateConfig(): Promise<void> {
-    // Attempt a simple operation to verify credentials
+    // Perform a real API call to verify credentials and bucket access
     try {
-      // This will throw if credentials are invalid
+      // Attempt to get a non-existent object - this validates:
+      // 1. Credentials are valid
+      // 2. Bucket exists
+      // 3. We have read permissions
       const command = new GetObjectCommand({
         Bucket: this.bucket,
         Key: "__health_check__", // This doesn't need to exist
       });
 
-      // We expect this to fail (file doesn't exist), but it validates auth
-      await getSignedUrl(this.client, command, { expiresIn: 60 });
+      await this.client.send(command);
     } catch (error) {
-      // If error is NOT "NoSuchKey", it means auth/config is wrong
-      if (error instanceof Error && !error.message.includes("NoSuchKey")) {
-        throw new Error(`S3 configuration validation failed: ${error.message}`);
+      // NoSuchKey = credentials valid, bucket accessible (expected)
+      // AccessDenied, InvalidAccessKeyId, NoSuchBucket = configuration issue
+      if (error instanceof Error) {
+        const message = error.message;
+        if (message.includes("NoSuchKey")) {
+          // This is expected - credentials are valid
+          return;
+        }
+        throw new Error(`S3 configuration validation failed: ${message}`);
       }
+      throw error;
     }
   }
 

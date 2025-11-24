@@ -41,6 +41,13 @@ export async function createStorageProvider(
 
     case "r2": {
       // Cloudflare R2 is S3-compatible, use S3StorageProvider with custom endpoint
+      const accountId = process.env.R2_ACCOUNT_ID;
+      if (!accountId && !config?.endpoint && !process.env.R2_ENDPOINT) {
+        throw new Error(
+          "Missing required R2 configuration. Ensure R2_ACCOUNT_ID is set (or provide R2_ENDPOINT).",
+        );
+      }
+
       const r2Config = {
         region: "auto", // R2 uses "auto" region
         bucket: config?.bucket || process.env.R2_BUCKET || "",
@@ -50,7 +57,7 @@ export async function createStorageProvider(
         endpoint:
           config?.endpoint ||
           process.env.R2_ENDPOINT ||
-          `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+          `https://${accountId}.r2.cloudflarestorage.com`,
       };
 
       if (
