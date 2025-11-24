@@ -1,6 +1,6 @@
 "use client";
 
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { format } from "date-fns";
 import { Check, Pencil, Trash2, Trophy, Users, X } from "lucide-react";
@@ -13,10 +13,16 @@ import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import { UpsertSubmissionFormDialog } from "../form/upsert-submission-form";
 import { Button } from "../ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 import { ImageUploader } from "./image-uploader";
 import { SubmissionCardImageLoader } from "./submission-card-image-loader";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
 interface SubmissionDetailsCardProps {
   data?: FunctionReturnType<typeof api.submissions.getDetails>;
@@ -250,7 +256,9 @@ export function SubmissionDetailsCard({
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Image Display */}
-          {submissionId && <SubmissionCardImageLoader submissionId={submissionId} />}
+          {submissionId && (
+            <SubmissionCardImageLoader submissionId={submissionId} />
+          )}
 
           {/* Image Upload */}
           {canUploadImages && submissionId && (
