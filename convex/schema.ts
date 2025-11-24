@@ -175,4 +175,20 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_team_and_user", ["teamId", "userId"])
     .index("by_team_and_user_and_status", ["teamId", "userId", "status"]),
+
+  submissionImages: defineTable({
+    submissionId: v.id("submissions"),
+    storageKey: v.string(), // S3 key (path in bucket)
+    storageProvider: v.string(), // "s3" | "r2" | "vercel-blob"
+    uploadedBy: v.id("users"),
+    uploadedAt: v.string(), // ISO timestamp
+    filename: v.string(), // Original filename
+    contentType: v.string(), // MIME type (image/jpeg, etc.)
+    size: v.number(), // Bytes
+    order: v.number(), // Display order (0, 1, 2)
+  })
+    .index("by_submission", ["submissionId"])
+    .index("by_submission_and_order", ["submissionId", "order"])
+    .index("by_user", ["uploadedBy"])
+    .index("by_storage_key", ["storageKey"]), // For cleanup operations
 });

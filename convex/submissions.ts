@@ -638,6 +638,11 @@ export const remove = mutation({
 
     const previousState = submission.state;
 
+    // Delete all associated images metadata
+    // Note: This only deletes metadata. Actual S3 files are left orphaned intentionally.
+    // A cleanup job can be implemented later to delete orphaned S3 files.
+    await deleteSubmissionImages(ctx, args.submissionId);
+
     // Mark submission as deleted
     await ctx.db.patch(args.submissionId, {
       state: "deleted",
@@ -661,6 +666,28 @@ export const remove = mutation({
     });
   },
 });
+
+/**
+ * Helper function to cascade delete images when submission is deleted
+ * Called when submission is deleted
+ */
+async function deleteSubmissionImages(
+  ctx: MutationCtx,
+  submissionId: Id<"submissions">,
+): Promise<void> {
+  const images = await ctx.db
+    .query("submissionImages")
+    .withIndex("by_submission", (q) => q.eq("submissionId", submissionId))
+    .collect();
+
+  // Note: This only deletes metadata
+  // Actual S3 deletion should be done via scheduled job or action
+  // For now, we'll leave orphaned S3 files (can be cleaned up later)
+  await Promise.all(images.map((img) => ctx.db.delete(img._id)));
+
+  // TODO (Phase 2): Schedule action to delete S3 files
+  // This requires Convex scheduled functions (not available in mutations)
+}
 
 export const approve = mutation({
   args: { submissionId: v.id("submissions") },
