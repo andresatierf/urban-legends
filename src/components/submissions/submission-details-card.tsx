@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { format } from "date-fns";
 import { Check, Pencil, Trash2, Trophy, Users, X } from "lucide-react";
@@ -14,6 +14,9 @@ import { api } from "../../../convex/_generated/api";
 import { UpsertSubmissionFormDialog } from "../form/upsert-submission-form";
 import { Button } from "../ui/button";
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
+import { ImageUploader } from "./image-uploader";
+import { SubmissionCardImageLoader } from "./submission-card-image-loader";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
 interface SubmissionDetailsCardProps {
   data?: FunctionReturnType<typeof api.submissions.getDetails>;
@@ -209,6 +212,15 @@ export function SubmissionDetailsCard({
     ];
   }, [data, handleApprove, handleReject, handleDelete]);
 
+  const images = useQuery(
+    api.submissionImages.list,
+    submissionId ? { submissionId } : "skip",
+  );
+
+  const imageCount = images?.length || 0;
+  const canUploadImages =
+    data?.canEdit && data.submission.state !== "approved" && imageCount < 3;
+
   if (!data) {
     return <DetailsCardSkeleton detailsCount={9} className={className} />;
   }
@@ -227,6 +239,37 @@ export function SubmissionDetailsCard({
         actions={actions}
         className={className}
       />
+
+      {/* Image Section */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Activity Photos</CardTitle>
+          <CardDescription>
+            Visual proof of activity completion (1-3 images required)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Image Display */}
+          {submissionId && <SubmissionCardImageLoader submissionId={submissionId} />}
+
+          {/* Image Upload */}
+          {canUploadImages && submissionId && (
+            <ImageUploader
+              submissionId={submissionId}
+              currentImageCount={imageCount}
+              onUploadComplete={() => {
+                // Images will automatically refresh via reactive query
+              }}
+            />
+          )}
+
+          {!canUploadImages && data.submission.state === "approved" && (
+            <p className="text-muted-foreground text-sm">
+              Images cannot be modified after submission is approved.
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </>
   );
 }
