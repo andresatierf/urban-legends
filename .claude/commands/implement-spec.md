@@ -24,56 +24,43 @@ Read the spec file to understand:
 
 Provide a brief summary of what will be implemented.
 
-## Step 3: Create Git Worktree
+## Step 3: Create Git Worktree and Setup Environment
 
-Create a new git worktree in a separate directory so the user can continue working on their main code:
-
-- Extract feature name from spec filename
-- Use branch format: `andre/feat/[feature-name]`
-- Create worktree in parent directory: `../urban-legends-[feature-name]`
-- Example: `../urban-legends-team-joining` with branch `andre/feat/team-joining`
-
-Commands:
+Run the setup script to create the worktree and Zellij environment in one step:
 
 ```bash
-# Create worktree with new branch
-git worktree add ../urban-legends-[feature-name] -b andre/feat/[feature-name]
-
-# Copy .env file to worktree
-cp .env ../urban-legends-[feature-name]/.env
-
-# Install dependencies
-cd ../urban-legends-[feature-name] && bun install
-
-# Verify setup
-pwd
-git status
-git branch --show-current
+bash -c '.claude/scripts/create-worktree-and-setup.sh [feature-name]'
 ```
 
-**Important:** All subsequent work will be done in the worktree directory, not the main repository.
+This script will:
 
-## Step 3.5: Set Up Zellij Environment
+1. **Create Git Worktree:**
+   - Branch format: `andre/feat/[feature-name]`
+   - Worktree directory: `../urban-legends-[feature-name]`
+   - Copy `.env` file to worktree
+   - Install dependencies with `bun install`
 
-After creating the worktree, use the `/zellij-spec` command to set up the development environment:
+2. **Setup Zellij Environment:**
+   - Calculate unique ports based on feature name (to avoid conflicts)
+   - Create a Zellij tab with three panes
+   - Start both development servers with custom ports
+   - Open nvim in the editor pane
 
-```
-/zellij-spec [feature-name]
-```
+**Port Assignment:**
+- Ports are calculated from the feature name hash (0-99 offset)
+- Next.js: 3000 + offset
+- Convex: 3210 + offset
+- Example: `team-joining` → Next.js: 3084, Convex: 3294
 
-This will:
-
-- Create a Zellij tab with three panes
-- Calculate unique ports based on feature name (to avoid conflicts with other features)
-- Start both development servers with custom ports
-
-The three panes will be:
-
-- **Left pane**: Code editor workspace (where Claude will work)
+**Zellij Layout:**
+- **Left pane**: Code editor workspace (nvim, where Claude will work)
 - **Upper-right pane**: Next.js dev server on custom port
 - **Lower-right pane**: Convex backend on custom port
 
-**Note:** Each feature gets unique ports so you can work on multiple features simultaneously without port conflicts.
+**Important:**
+- All subsequent work will be done in the worktree directory, not the main repository
+- Each feature gets unique ports so you can work on multiple features simultaneously
+- The script will detect if the worktree already exists and prompt to continue
 
 ## Step 4: Create Implementation Plan
 
@@ -553,22 +540,24 @@ User runs: `/implement-spec team-joining`
 You would:
 
 1. Read `specs/team-joining.md` from main repository
-2. Create worktree at `../urban-legends-team-joining` with branch `andre/feat/team-joining`
-3. Run `/zellij-spec team-joining` to set up environment
+2. Run the setup script: `bash -c '.claude/scripts/create-worktree-and-setup.sh team-joining'`
+   - Creates worktree at `../urban-legends-team-joining` with branch `andre/feat/team-joining`
+   - Copies `.env` and installs dependencies
    - Calculates ports: Next.js → 3084, Convex → 3294
-   - Creates 3-pane Zellij tab
-   - Starts both servers on unique ports
-4. Change directory to worktree: `cd ../urban-legends-team-joining`
-5. Create task list with ~15-20 tasks
-6. Implement schema changes (teamInvitations, joinRequests tables)
-7. Commit: "feat(schema): add team invitation and join request tables"
-8. Implement backend mutations (requestToJoin, approveJoinRequest, etc.)
-9. Commit: "feat(backend): implement team joining mutations"
-10. Create UI components (JoinTeamButton, JoinRequestsList, etc.)
-11. Commit: "feat(ui): add team joining components"
-12. Update pages to integrate new features
-13. Commit: "feat(pages): integrate team joining UI"
-14. Run validation checks:
+   - Creates 3-pane Zellij tab named "team-joining"
+   - Starts both servers on unique ports in the right panes
+   - Opens nvim in the left pane
+3. Change directory to worktree: `cd ../urban-legends-team-joining`
+4. Create task list with ~15-20 tasks
+5. Implement schema changes (teamInvitations, joinRequests tables)
+6. Commit: "feat(schema): add team invitation and join request tables"
+7. Implement backend mutations (requestToJoin, approveJoinRequest, etc.)
+8. Commit: "feat(backend): implement team joining mutations"
+9. Create UI components (JoinTeamButton, JoinRequestsList, etc.)
+10. Commit: "feat(ui): add team joining components"
+11. Update pages to integrate new features
+12. Commit: "feat(pages): integrate team joining UI"
+13. Run validation checks:
     - Run `bun --bun run ci` and fix any issues
     - Run `bun --bun run typecheck` and fix type errors
     - Run `coderabbit --prompt-only` (iteration 1)
@@ -577,9 +566,9 @@ You would:
     - Run `coderabbit --prompt-only` (iteration 2)
     - Continue iterating until no significant issues remain
     - Commit final fixes if needed: "fix: final code quality improvements"
-15. Push branch to remote: `git push -u origin andre/feat/team-joining`
-16. Create draft PR with `gh pr create --draft --assignee "@me"`
-17. Provide summary with:
+14. Push branch to remote: `git push -u origin andre/feat/team-joining`
+15. Create draft PR with `gh pr create --draft --assignee "@me"`
+16. Provide summary with:
     - PR URL (draft, assigned to user)
     - Worktree location and ports
     - Testing instructions
