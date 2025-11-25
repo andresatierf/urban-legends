@@ -89,6 +89,14 @@ export const getAdminDashboardData = query({
       return null; // Not an admin, return null
     }
 
+    // TODO: Optimize for scale - Replace .collect() with aggregations/counts
+    // For large datasets, this loads all records into memory. Consider:
+    // - Using filtered queries with limits
+    // - Implementing counters updated on writes
+    // - Caching results in a separate table
+    // - Using Convex aggregations when available
+    // This is acceptable for MVP with small datasets (<10k records)
+
     // Fetch all data in parallel
     const [users, tournaments, teams, submissions] = await Promise.all([
       ctx.db.query("users").collect(),

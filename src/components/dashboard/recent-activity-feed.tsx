@@ -49,8 +49,13 @@ export function RecentActivityFeed({ activities }: RecentActivityFeedProps) {
             {activities.map((activity, index) => {
               const Icon = iconMap[activity.icon as keyof typeof iconMap];
               const activityKey = `${activity.type}-${index}`;
-              const content = (
-                <div key={activityKey} className="flex gap-3">
+
+              return activity.link ? (
+                <Link
+                  key={activityKey}
+                  href={activity.link}
+                  className="flex gap-3 rounded-md p-2 transition-colors hover:bg-muted"
+                >
                   {Icon && (
                     <div className="mt-0.5">
                       <Icon className="h-4 w-4 text-muted-foreground" />
@@ -64,20 +69,22 @@ export function RecentActivityFeed({ activities }: RecentActivityFeedProps) {
                       })}
                     </p>
                   </div>
-                </div>
-              );
-
-              return activity.link ? (
-                <Link
-                  key={activityKey}
-                  href={activity.link}
-                  className="block rounded-md p-2 transition-colors hover:bg-muted"
-                >
-                  {content}
                 </Link>
               ) : (
-                <div key={activityKey} className="rounded-md p-2">
-                  {content}
+                <div key={activityKey} className="flex gap-3 rounded-md p-2">
+                  {Icon && (
+                    <div className="mt-0.5">
+                      <Icon className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm">{activity.description}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {formatDistanceToNow(activity.timestamp, {
+                        addSuffix: true,
+                      })}
+                    </p>
+                  </div>
                 </div>
               );
             })}

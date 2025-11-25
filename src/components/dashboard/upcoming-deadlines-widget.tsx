@@ -21,6 +21,9 @@ interface UpcomingDeadlinesWidgetProps {
 export function UpcomingDeadlinesWidget({
   deadlines,
 }: UpcomingDeadlinesWidgetProps) {
+  // Filter out null tournaments
+  const validDeadlines = deadlines.filter((d) => d.tournament !== null);
+
   return (
     <Card>
       <CardHeader>
@@ -28,7 +31,7 @@ export function UpcomingDeadlinesWidget({
         <CardDescription>Tournaments ending soon</CardDescription>
       </CardHeader>
       <CardContent>
-        {deadlines.length === 0 ? (
+        {validDeadlines.length === 0 ? (
           <Empty>
             <EmptyTitle>No upcoming deadlines</EmptyTitle>
             <EmptyDescription>
@@ -37,7 +40,8 @@ export function UpcomingDeadlinesWidget({
           </Empty>
         ) : (
           <div className="space-y-3">
-            {deadlines.map(({ tournament, daysUntilEnd }) => {
+            {validDeadlines.map(({ tournament, daysUntilEnd }) => {
+              // TypeScript knows tournament is not null here due to filter
               if (!tournament) return null;
               return (
                 <Link

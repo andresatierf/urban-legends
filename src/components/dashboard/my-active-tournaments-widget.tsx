@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,8 +66,9 @@ export function MyActiveTournamentsWidget({
                     )}
                   </div>
                   <p className="text-muted-foreground text-sm">
-                    Team: {team.name} · {tournament.startDate} to{" "}
-                    {tournament.endDate}
+                    Team: {team.name} ·{" "}
+                    {format(new Date(tournament.startDate), "MMM d, yyyy")} to{" "}
+                    {format(new Date(tournament.endDate), "MMM d, yyyy")}
                   </p>
                 </div>
                 <div className="flex gap-2">
