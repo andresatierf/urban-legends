@@ -123,59 +123,73 @@ export const getPendingSubmissions = query({
     const submissionGroups = await groupQuery.collect();
 
     // Enrich individual submissions with context
-    const enrichedIndividual = await Promise.all(
-      individualSubmissions.map(async (submission) => {
-        const [team, tournament, submitter] = await Promise.all([
-          ctx.db.get(submission.teamId),
-          ctx.db.get(submission.tournamentId),
-          ctx.db.get(submission.userId),
-        ]);
+    const enrichedIndividual = (
+      await Promise.all(
+        individualSubmissions.map(async (submission) => {
+          const [team, tournament, submitter] = await Promise.all([
+            ctx.db.get(submission.teamId),
+            ctx.db.get(submission.tournamentId),
+            ctx.db.get(submission.userId),
+          ]);
 
-        return {
-          type: "individual" as const,
-          id: submission._id,
-          submission,
-          team,
-          tournament,
-          submitter,
-          date: submission.date,
-          createdAt: submission.date, // Use date for sorting
-        };
-      }),
-    );
+          // Skip submissions with missing data (data integrity issue)
+          if (!team || !tournament || !submitter) {
+            return null;
+          }
+
+          return {
+            type: "individual" as const,
+            id: submission._id,
+            submission,
+            team,
+            tournament,
+            submitter,
+            date: submission.date,
+            createdAt: submission.date, // Use date for sorting
+          };
+        }),
+      )
+    ).filter((item) => item !== null);
 
     // Enrich submission groups with context
-    const enrichedGroups = await Promise.all(
-      submissionGroups.map(async (group) => {
-        const [team, tournament] = await Promise.all([
-          ctx.db.get(group.teamId),
-          ctx.db.get(group.tournamentId),
-        ]);
+    const enrichedGroups = (
+      await Promise.all(
+        submissionGroups.map(async (group) => {
+          const [team, tournament] = await Promise.all([
+            ctx.db.get(group.teamId),
+            ctx.db.get(group.tournamentId),
+          ]);
 
-        // Get all submissions in this group
-        const groupSubmissions = await ctx.db
-          .query("submissions")
-          .withIndex("by_group", (q) => q.eq("submissionGroupId", group._id))
-          .collect();
+          // Skip groups with missing data (data integrity issue)
+          if (!team || !tournament) {
+            return null;
+          }
 
-        // Get submitters
-        const submitters = await Promise.all(
-          groupSubmissions.map((s) => ctx.db.get(s.userId)),
-        );
+          // Get all submissions in this group
+          const groupSubmissions = await ctx.db
+            .query("submissions")
+            .withIndex("by_group", (q) => q.eq("submissionGroupId", group._id))
+            .collect();
 
-        return {
-          type: "group" as const,
-          id: group._id,
-          group,
-          team,
-          tournament,
-          submissions: groupSubmissions,
-          submitters: submitters.filter((s) => s !== null),
-          date: group.date,
-          createdAt: group.createdAt,
-        };
-      }),
-    );
+          // Get submitters
+          const submitters = await Promise.all(
+            groupSubmissions.map((s) => ctx.db.get(s.userId)),
+          );
+
+          return {
+            type: "group" as const,
+            id: group._id,
+            group,
+            team,
+            tournament,
+            submissions: groupSubmissions,
+            submitters: submitters.filter((s) => s !== null),
+            date: group.date,
+            createdAt: group.createdAt,
+          };
+        }),
+      )
+    ).filter((item) => item !== null);
 
     // Combine and sort by date (most recent first)
     const combined = [...enrichedIndividual, ...enrichedGroups].sort((a, b) =>

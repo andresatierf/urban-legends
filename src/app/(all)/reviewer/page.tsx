@@ -2,8 +2,8 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { CheckCircle2, FileCheck, Loader2, XCircle } from "lucide-react";
-import { redirect } from "next/navigation";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
@@ -19,18 +19,21 @@ import { useUser } from "@/hooks/useUser";
 
 export default function ReviewerDashboard() {
   const { user } = useUser();
+  const router = useRouter();
   const [selectedTournament, setSelectedTournament] = useState<
     Id<"tournaments"> | "all"
   >("all");
 
-  // Permission check
-  if (
-    user &&
-    !user.roleNames.includes("reviewer") &&
-    !user.roleNames.includes("admin")
-  ) {
-    redirect("/dashboard");
-  }
+  // Permission check (client-side navigation)
+  useEffect(() => {
+    if (
+      user &&
+      !user.roleNames.includes("reviewer") &&
+      !user.roleNames.includes("admin")
+    ) {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
 
   // Queries
   const pendingData = useQuery(api.reviewer.getPendingSubmissions, {

@@ -2,7 +2,8 @@
 
 import { useQuery } from "convex/react";
 import { CheckCircle, Loader2, TrendingUp, XCircle } from "lucide-react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { api } from "@/../convex/_generated/api";
 import {
   Card,
@@ -15,15 +16,18 @@ import { useUser } from "@/hooks/useUser";
 
 export default function ReviewStatistics() {
   const { user } = useUser();
+  const router = useRouter();
 
-  // Permission check
-  if (
-    user &&
-    !user.roleNames.includes("reviewer") &&
-    !user.roleNames.includes("admin")
-  ) {
-    redirect("/dashboard");
-  }
+  // Permission check (client-side navigation)
+  useEffect(() => {
+    if (
+      user &&
+      !user.roleNames.includes("reviewer") &&
+      !user.roleNames.includes("admin")
+    ) {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
 
   // Query
   const statistics = useQuery(api.reviewer.getStatistics);
