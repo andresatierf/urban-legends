@@ -21,19 +21,21 @@ You need to:
 
 ## Step 1: Check Current Git State
 
-Run the helper script to gather all necessary information:
+Run the helper script to gather **ALL** necessary information:
 
 ```bash
 .claude/scripts/get-commit-info.sh
 ```
 
-This script provides:
+This script provides **EVERYTHING** you need:
 - Git status and staged files
 - Full diff of staged changes with statistics
 - Recent commit messages for style reference
 - Branch information
 - File count summary
 - Security check for sensitive files
+
+**IMPORTANT:** This single command provides all the information needed. Do NOT run additional git commands (git status, git diff, git log) separately - they are already included in the script output.
 
 ## Step 2: Analyze the Changes
 
@@ -102,16 +104,11 @@ git commit -F - <<'EOF'
 EOF
 ```
 
-## Step 6: Verify Commit
+## Step 6: Task Complete
 
-After committing, run:
+After the commit is created, the task is complete. **DO NOT** run additional verification commands like `git log` or `git status` - the pre-commit hooks already provide confirmation that the commit succeeded.
 
-```bash
-# Show the commit that was just created (disable pager to avoid bat formatting)
-git --no-pager log -1 --pretty=format:"%h - %s%n%b" --stat
-```
-
-Display this to the user so they can verify the commit was created correctly.
+If the commit command completes without errors, inform the user that the commit was created successfully and show the commit message you used.
 
 ## Important Guidelines
 
