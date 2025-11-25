@@ -1421,6 +1421,578 @@ By implementing the sidebar first with placeholders, future dashboard implementa
 
 ---
 
+## ✅ 13. Tournament Manager Role & Permissions
+
+**Spec:** [specs/done/19-simple-tournament-manager-permissions.md](specs/done/19-simple-tournament-manager-permissions.md)
+**PR:** #15
+**Completed:** 2025-11-18
+**Effort:** 1-2 days
+
+### Summary
+
+Complete tournament manager role implementation allowing delegation of tournament operations without granting full admin access. Tournament managers can create tournaments, manage submissions, and access specialized dashboards.
+
+### Implemented Features
+
+- ✅ Tournament manager role with scoped permissions
+- ✅ Tournament manager dashboard with statistics
+- ✅ Pending submissions queue for tournament managers
+- ✅ Tournament management permissions (create, edit, determine winner)
+- ✅ Submission approval permissions (approve, reject, remove)
+- ✅ Team management permissions (remove teams, recalculate points)
+- ✅ Activity feed showing tournament events
+- ✅ Quick action buttons for common tasks
+- ✅ Sidebar integration with notification badge
+
+### Backend Implementation
+
+**Mutations with tournament_manager Access:**
+
+- `tournaments.upsert` - Create and edit tournaments (line 229-231 in tournaments.ts)
+- `tournaments.determineWinner` - Set tournament winner (line 506-508)
+- `submissions.approve` - Approve submissions (lines 670-674 in submissions.ts)
+- `submissions.reject` - Reject submissions (lines 741-745)
+- `submissions.remove` - Remove submissions (line 620)
+- `teams.removeUserTeam` - Remove teams (with admin check)
+- `teams.recalculatePoints` - Recalculate team points (admin utility)
+
+**Note:** Tournament deletion remains admin-only for safety.
+
+**New Queries:**
+
+- `tournamentManager.getDashboardStats` - Tournament/team/submission statistics
+  - Categorizes tournaments by status (active/upcoming/ended)
+  - Counts total teams and pending submissions
+  - Returns comprehensive dashboard metrics
+- `tournamentManager.getRecentActivity` - Timeline of tournament events
+  - Team creation events with creator names
+  - Submission approval/rejection events
+  - Sorted by timestamp, limited to 30 most recent
+- `tournamentManager.getPendingCount` - Badge count for pending submissions
+- `tournamentManager.getSubmissions` - All submissions with filters
+
+### Frontend Implementation
+
+**Dashboard Page:**
+
+- `/tournament-manager` - Tournament Manager Dashboard
+  - Overview statistics with stat cards
+  - Quick action buttons (Create Tournament, View Pending, Manage Teams)
+  - List of all tournaments with filter/sort
+  - Real-time activity feed
+  - Role badge indicator (Admin vs Tournament Manager)
+  - Permission check with redirect for unauthorized users
+
+**Submissions Page:**
+
+- `/tournament-manager/submissions` - Dedicated submissions management
+  - Filter by tournament dropdown
+  - Filter by status (all/pending/approved/rejected)
+  - Reuses existing SubmissionsDataTable component
+  - Shows submission count
+  - Permission check with redirect
+
+**Components:**
+
+- `TournamentManagerStatsCards` - Overview statistics display
+- `ManagedTournamentsList` - Tournament list with filters
+- `TournamentManagerActivityFeed` - Real-time event timeline
+- `TournamentManagerQuickActions` - Quick access buttons
+
+**User Hook:**
+
+- `useUser.isTournamentManager` - Helper for role checking (lines 11-12 in useUser.ts)
+
+### Sidebar Integration
+
+**Location:** `src/components/app-sidebar.tsx`
+
+- ✅ Tournament Manager section shows for both admin AND tournament_manager roles
+- ✅ Navigation items: Dashboard, Tournaments, Submissions
+- ✅ Badge shows pending submission count
+
+### Permission Model
+
+**Tournament Managers Can:**
+
+- Create and edit tournaments (not delete)
+- Approve/reject/remove submissions
+- View all teams and submissions
+- Determine tournament winners
+- Recalculate team points
+- Access tournament statistics
+
+**Restricted to Admins:**
+
+- Delete tournaments
+- Manage users and roles
+- System-wide administration
+
+### Implementation Notes
+
+**Delegation Without Risk:**
+
+The tournament_manager role enables operational delegation while maintaining security:
+- Cannot delete tournaments (prevents data loss)
+- Cannot manage user roles (prevents privilege escalation)
+- Cannot access system settings (protects configuration)
+- Full visibility into tournament operations
+- All necessary management capabilities
+
+**Benefits:**
+
+- **Scalability:** Distribute tournament management workload
+- **Security:** Scoped permissions prevent accidental damage
+- **Efficiency:** Dedicated dashboard for tournament operations
+- **Accountability:** Clear role separation and audit trail
+
+---
+
+## ✅ 14. Dark Theme System
+
+**Spec:** [specs/done/21-dark-theme-system.md](specs/done/21-dark-theme-system.md)
+**PR:** #16
+**Completed:** 2025-11-19
+**Effort:** 2-3 days
+
+### Summary
+
+Complete dark theme implementation with three modes (Light, Dark, System), persistent user preferences, FOUC prevention, and comprehensive dark mode styling across all UI components.
+
+### Implemented Features
+
+- ✅ Three theme modes: Light, Dark, System (follows OS preference)
+- ✅ LocalStorage persistence with "theme-preference" key
+- ✅ Real-time system preference detection via matchMedia API
+- ✅ FOUC (Flash of Unstyled Content) prevention
+- ✅ Theme switcher components (dropdown and toggle variants)
+- ✅ Dark mode CSS variables for all UI components
+- ✅ Smooth theme transitions without page reload
+- ✅ Proper integration in root layout
+
+### Core Theme System
+
+**Theme Hook (`src/hooks/use-theme.tsx`):**
+
+- `ThemeProvider` component - React Context for theme state management
+  - Manages theme state (light/dark/system)
+  - Persists to localStorage
+  - Listens to system preference changes
+  - Applies theme class to document root
+- `useTheme` hook - Provides theme state and setTheme function
+- System preference detection with MediaQuery API
+- Automatic theme application on preference change
+
+**FOUC Prevention (`src/components/theme-script.tsx`):**
+
+- Inline script that runs before React hydration
+- Reads localStorage and applies theme immediately
+- Prevents flash of wrong theme on page load
+- Handles system preference detection synchronously
+
+### Theme UI Components
+
+**ThemeSwitcher (`src/components/theme-switcher.tsx`):**
+
+- Dropdown button for header/toolbar placement
+- Shows current theme icon (Sun/Moon/Monitor)
+- Three options with check marks
+- Icons from Lucide React
+
+**ThemeToggle (`src/components/theme-toggle.tsx`):**
+
+- Segmented control for settings page
+- Three buttons with icons
+- Active state highlighting
+- Better for dedicated settings UI
+
+**Theme Configuration (`src/lib/theme-config.ts`):**
+
+- Theme options with labels and icons
+- Type-safe theme definitions
+- Reusable across components
+
+### Dark Mode Styling
+
+**CSS Variables (`src/app/globals.css`):**
+
+- Custom variant: `@custom-variant dark (&:is(.dark *))`
+- Complete dark mode color palette using OKLCH
+- Card variant overrides (admin, info, dashed cards)
+- Button color variants for all states
+- Badge color variants
+- Calendar state colors (approved/pending/rejected)
+- Submission card colors
+- Form input and select colors
+- Proper contrast ratios for accessibility
+
+**Key Color Adjustments:**
+
+- Background: Light bg → Dark bg with proper contrast
+- Text: Dark text → Light text for readability
+- Borders: Subtle borders adjusted for dark mode
+- Hover/Active states: Appropriately dimmed/brightened
+- Status colors: Green/yellow/red adjusted for dark backgrounds
+
+### Root Layout Integration
+
+**Location:** `src/app/layout.tsx`
+
+- ✅ `suppressHydrationWarning` on html tag (prevents theme mismatch warnings)
+- ✅ ThemeScript in <head> before body content
+- ✅ ThemeProvider wrapping entire app
+- ✅ Children rendered within theme context
+
+### Settings Page Integration
+
+**Location:** `src/app/(all)/settings/page.tsx`
+
+- ✅ Theme Preferences section
+- ✅ ThemeToggle component for selection
+- ✅ Explanation of each theme mode
+- ✅ Responsive layout
+
+### Implementation Notes
+
+**Default Mode:** System (respects OS/browser dark mode preference)
+
+**Storage Key:** `theme-preference` in localStorage
+
+**Theme Values:**
+- `"light"` - Always light theme
+- `"dark"` - Always dark theme
+- `"system"` - Follows OS preference
+
+**MediaQuery Listener:**
+
+Automatically updates theme when user changes OS dark mode setting while app is open. No page reload needed.
+
+**Accessibility:**
+
+- WCAG AA contrast ratios maintained in both themes
+- Keyboard navigation fully supported
+- Screen reader support with proper labels
+- Touch-friendly controls (min 44px targets)
+
+### Benefits
+
+**For Users:**
+
+- Choose preferred theme mode
+- Automatic system preference following
+- Consistent experience across sessions
+- No jarring theme flash on load
+
+**For Platform:**
+
+- Modern, professional appearance
+- Reduced eye strain in low-light environments
+- Matches user expectations (most platforms support dark mode)
+- Improved accessibility options
+
+**For Development:**
+
+- Tailwind CSS v4 native dark mode support
+- CSS variables make future color changes easy
+- Type-safe theme management
+- Reusable theme components
+
+---
+
+## ✅ 15. Active Sidebar Navigation Highlighting
+
+**Spec:** [specs/done/23-active-sidebar-navigation.md](specs/done/23-active-sidebar-navigation.md)
+**PR:** #17
+**Completed:** 2025-11-20
+**Effort:** 0.5-1 day
+
+### Summary
+
+Visual highlighting system for sidebar navigation items to clearly indicate the current page/section the user is viewing, with support for exact and partial route matching.
+
+### Implemented Features
+
+- ✅ Active route detection with useActiveRoute hook
+- ✅ Exact matching for dashboard routes
+- ✅ Partial matching for section routes with nested pages
+- ✅ Visual highlighting with background color change
+- ✅ Accessibility support with aria-current attribute
+- ✅ Route boundary handling to prevent false positives
+- ✅ Trailing slash normalization
+
+### Route Matching Hook
+
+**Location:** `src/hooks/useActiveRoute.ts`
+
+**Features:**
+
+- `useActiveRoute` hook with `isActive(href, exact)` function
+- Uses Next.js `usePathname` for current route detection
+- Path normalization (removes trailing slashes, preserves root `/`)
+- Exact matching: Only matches exact path
+  - Example: `/dashboard` matches `/dashboard` but NOT `/dashboard-admin`
+- Partial matching: Matches path and subpaths
+  - Example: `/tournaments` matches `/tournaments`, `/tournaments/123`, `/tournaments/123/leaderboard`
+- Edge case handling:
+  - Root path (`/`) only matches exactly
+  - Prevents false positives like `/team` matching `/teams`
+  - Handles paths with and without trailing slashes
+
+### Sidebar Integration
+
+**Location:** `src/components/app-sidebar.tsx`
+
+**Implementation:**
+
+- Hook imported and used in `AppSidebar` component (line 48)
+- `isActive` called for each menu item (line 456)
+- Active state passed to `SidebarMenuButton` via `isActive` prop (line 460)
+- `aria-current="page"` attribute set on active items (line 461)
+- Configured exact matching for all dashboard routes:
+  - `/viewer`, `/dashboard`, `/admin`, `/tournament-manager`, `/reviewer`, `/captain`
+- Partial matching for section routes:
+  - `/tournaments`, `/teams`, `/submissions`, etc.
+
+**Code Example:**
+
+```typescript
+const active = isActive(item.href, item.exact);
+
+<SidebarMenuButton asChild isActive={active}>
+  <Link href={item.href} aria-current={active ? "page" : undefined}>
+    {/* ... */}
+  </Link>
+</SidebarMenuButton>
+```
+
+### Visual States
+
+**Active State Styling:**
+
+The `SidebarMenuButton` component already handles active state styling via `data-[active=true]`:
+- Background: `bg-sidebar-accent` (neutral gray with good contrast)
+- Font weight: `font-medium` (slightly bolder text)
+- Works in both light and dark themes
+
+**Color Customization:**
+
+Updated `globals.css` to use more pronounced sidebar accent colors:
+- Light mode: Darker neutral gray (lightness 0.88, chroma 0.005)
+- Dark mode: Lighter neutral gray (lightness 0.32, chroma 0.008)
+- True neutral grays that maintain design consistency
+
+### Accessibility
+
+**WCAG AA Compliance:**
+
+- `aria-current="page"` on active navigation items
+- Semantic HTML with proper link elements
+- Keyboard navigation fully supported (Tab, Enter, Space)
+- Screen reader announces current page
+- Sufficient color contrast ratios
+
+### Implementation Notes
+
+**Route Matching Logic:**
+
+1. Normalize both pathname and href (remove trailing slashes)
+2. If exact match required, compare paths directly
+3. For partial matching:
+   - Exact match OR
+   - Path starts with href + `/` (ensures proper boundary)
+4. Special case: Root path (`/`) only matches exactly
+
+**Prevents False Positives:**
+
+- `/dashboard` does NOT match `/dashboard-admin`
+- `/team` does NOT match `/teams`
+- `/tournaments` DOES match `/tournaments/123`
+
+**Benefits:**
+
+- Clear visual indication of current location
+- Improved navigation UX
+- Reduces user confusion
+- Professional, polished feel
+- Better accessibility
+
+---
+
+## ✅ 16. Submission Card View with Image Gallery
+
+**Spec:** [specs/done/24-submission-card-view.md](specs/done/24-submission-card-view.md)
+**PR:** #18
+**Completed:** 2025-11-20
+**Effort:** 2-3 days
+
+### Summary
+
+Complete redesign of submission display from table-based layout to card-based layout with prominent image gallery, lightbox modal, and improved mobile experience.
+
+### Implemented Features
+
+- ✅ Card-based submission layout (replaces table view)
+- ✅ Visual prominence for submission images
+- ✅ Image gallery with lightbox modal
+- ✅ Thumbnail strip for multiple images
+- ✅ Two-image side-by-side layout when 2+ images exist
+- ✅ Navigation arrows in lightbox
+- ✅ Image counter in lightbox
+- ✅ Responsive design (mobile-first)
+- ✅ Contextual actions placed alongside each submission
+- ✅ Search, filter, and sort capabilities
+- ✅ Real-time updates via Convex mutations
+- ✅ Dark mode support
+
+### Component Architecture
+
+**Main Components:**
+
+1. **SubmissionCard** (`src/components/submissions/submission-card.tsx`)
+   - Horizontal layout: image left, details right
+   - Responsive (vertical on mobile, horizontal on desktop)
+   - Hover shadow effect
+   - Integrates all sub-components
+
+2. **SubmissionCardImage** (`src/components/submissions/submission-card-image.tsx`)
+   - Empty state with dashed border when no images
+   - Two-image grid when 2+ images (400x400px each)
+   - Single large image when 1 image (800x800px)
+   - Thumbnail strip for 3+ images (64x64px thumbnails)
+   - "+N more" badge for additional images
+   - Lightbox modal with Dialog component
+   - Navigation arrows (previous/next)
+   - Image counter display
+   - Lazy loading for performance
+   - Hover scale effect (group-hover:scale-105)
+
+3. **SubmissionCardDetails** (`src/components/submissions/submission-card-details.tsx`)
+   - State badges with color coding (approved/pending/rejected)
+   - Tier badges (base/advanced)
+   - Team exercise indicator badge
+   - Points earned display
+   - Metadata grid with icons:
+     - Calendar icon for date
+     - Users icon for team name
+     - User icon for submitter name
+   - Description with line clamping (line-clamp-3)
+   - Dark mode support with proper colors
+
+4. **SubmissionCardActions** (`src/components/submissions/submission-card-actions.tsx`)
+   - Permission-based action visibility
+   - Admin actions: Approve, Reject
+   - Owner actions: Edit (if pending), Delete
+   - Border separator for visual organization
+   - Returns null when no actions available
+
+5. **SubmissionCardList** (`src/components/submissions/submission-card-list.tsx`)
+   - CardGrid wrapper with single column layout
+   - Empty state handling
+   - Maps over submissions array
+   - Passes callbacks for all actions
+   - Maintains consistent spacing
+
+### Page Integration
+
+**Location:** `src/app/(all)/submissions/page.tsx`
+
+**Implementation:**
+
+- Three sections using SubmissionCardList:
+  1. Your Submissions (lines 257-270)
+  2. Pending Submissions (lines 273-286)
+  3. All Submissions (lines 288-295)
+- Tab system with calendar and list views (lines 184-300)
+- Data augmentation with team/user information (lines 111-134)
+- Action callbacks connected to mutations (approve, reject, edit, delete)
+- Real-time updates via Convex subscriptions
+
+### Image Gallery Features
+
+**Lightbox Modal:**
+
+- Full-screen dialog overlay
+- Large image display (1200x1200px for quality)
+- Navigation controls (previous/next arrows)
+- Image counter (e.g., "2 / 5")
+- Close button
+- Click outside to close
+- Keyboard navigation support
+
+**Image Layout Logic:**
+
+- **No images:** Dashed border placeholder with message
+- **1 image:** Single large image centered
+- **2 images:** Side-by-side grid (2 columns)
+- **3+ images:** First 2 large, next 2 as thumbnails, "+N more" badge
+
+**Next.js Image Optimization:**
+
+- Explicit width/height for all Image components
+- Prevents layout shift during loading
+- Enables Next.js automatic optimization
+- Lazy loading for off-screen images
+
+### Dark Mode Support
+
+**Color Variables:**
+
+All submission card colors adapted for dark mode:
+- State colors (approved green, pending yellow, rejected red)
+- Background colors with proper contrast
+- Border colors visible in both themes
+- Badge colors with sufficient contrast
+- Hover states appropriately adjusted
+
+### Responsive Design
+
+**Mobile (< 768px):**
+
+- Vertical card layout (image top, details bottom)
+- Full-width images
+- Stacked metadata
+- Touch-friendly action buttons
+
+**Desktop (≥ 768px):**
+
+- Horizontal card layout (image left, details right)
+- Two-column image grid
+- Side-by-side metadata
+- Hover effects
+
+### Benefits
+
+**For Users:**
+
+- Images are immediately visible (not hidden in modals)
+- Better visual context for submissions
+- Easier to scan and browse submissions
+- Improved mobile experience
+- Faster visual identification
+
+**For Admins:**
+
+- Quickly review submissions with visual context
+- Actions placed alongside each submission
+- No need to click into detail page for approval
+- Efficient bulk review workflow
+
+**For Platform:**
+
+- Modern, polished UI
+- Better image prominence
+- Improved engagement with visual content
+- Consistent with modern web patterns
+
+### Performance Optimizations
+
+- Lazy loading for images
+- Next.js Image component optimization
+- Efficient re-renders with proper keys
+- Real-time updates without full page reload
+
+---
+
 ## Infrastructure & Foundation
 
 The following foundational systems were already in place before feature development:
@@ -1459,10 +2031,10 @@ The following foundational systems were already in place before feature developm
 
 ### Development Effort
 
-- **Total Completed:** 25-32 days of development
-- **Features Completed:** 12 major features
-- **PRs Merged:** 14 pull requests
-- **Files Modified:** 200+ files across backend and frontend
+- **Total Completed:** 31-39 days of development
+- **Features Completed:** 16 major features
+- **PRs Merged:** 18 pull requests
+- **Files Modified:** 250+ files across backend and frontend
 
 ### Code Metrics
 
@@ -1477,11 +2049,15 @@ The following foundational systems were already in place before feature developm
 - ✅ Team Member Management (invite, remove, transfer captaincy)
 - ✅ Scoring & Leaderboards (points, rankings, statistics)
 - ✅ Role Management (assign, remove, audit)
+- ✅ Tournament Manager Role (scoped permissions, dedicated dashboard)
 - ✅ User Self-Service (teams, invitations, requests)
 - ✅ Submission Calendar (visual progress tracking, statistics)
 - ✅ Submission Detail Pages (comprehensive submission view, approval workflow)
+- ✅ Submission Card View (image gallery, lightbox, responsive design)
 - ✅ Individual Submission Tracking (accountability, automatic grouping, daily limits)
 - ✅ Role-Based Navigation (sidebar sections, badges, conditional rendering)
+- ✅ Active Navigation Highlighting (current page indication)
+- ✅ Dark Theme System (light/dark/system modes with persistence)
 - ✅ Code Quality (type safety, validation, linting)
 - ✅ Data Fetching Optimization (getDetails pattern, 30-75% performance improvement)
 - ✅ Loading States (comprehensive skeleton screens across all pages)
@@ -1500,6 +2076,11 @@ The following foundational systems were already in place before feature developm
 
 ## Recent Merges
 
+- **PR #19:** i18n Fixes (11/20/2025)
+- **PR #18:** Submission Card View with Image Gallery (11/20/2025)
+- **PR #17:** Active Sidebar Navigation Highlighting (11/20/2025)
+- **PR #16:** Dark Theme System (11/19/2025)
+- **PR #15:** Tournament Manager Role & Permissions (11/18/2025)
 - **PR #14:** Enhanced Role-Based Sidebar Navigation (11/17/2025)
 - **PR #13:** Individual Submission Tracking & Automatic Grouping (11/17/2025)
 - **PR #12:** Comprehensive Code Cleanup (11/16/2025)
@@ -1525,14 +2106,14 @@ See [MISSING.md](MISSING.md) for remaining features and priorities.
 
 **High Priority:**
 
-- Tournament Manager Dashboard (3-4 days)
-- Reviewer Dashboard (2-3 days)
+- Reviewer Dashboard (1-2 days) - navigation/placeholders done
+- Image Upload System (2-3 days) - spec ready (26-submission-image-upload-s3-abstraction.md)
 
 **Medium Priority:**
 
-- Team Captain Dashboard (2 days)
-- Complete Admin Dashboard (2 days)
-- Code Cleanup (2-3 days)
-- Notifications System (3-4 days)
+- Team Captain Dashboard (1-1.5 days) - navigation/placeholders done
+- Complete Admin Dashboard (1.5 days) - navigation/placeholders done
+- Notifications System (3-4 days) - spec complete
+- Viewer/Public Dashboard (1.5-2 days) - navigation/placeholders done
 
-**Overall MVP Status:** 98%+ complete for core MVP, 95%+ complete for enhanced MVP
+**Overall MVP Status:** 99%+ complete for core MVP, 98%+ complete for enhanced MVP

@@ -8,7 +8,7 @@ export function ThemeScript() {
         const stored = localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});
         const theme = stored === 'light' || stored === 'dark' || stored === 'system'
           ? stored
-          : 'system';
+          : 'light';
 
         let resolved = theme;
         if (theme === 'system') {

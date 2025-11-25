@@ -31,7 +31,7 @@ function getStoredTheme(): Theme {
     return stored;
   }
 
-  return "system";
+  return "light";
 }
 
 function applyTheme(resolved: ResolvedTheme) {
@@ -50,7 +50,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       return getStoredTheme();
     }
-    return "system";
+    return "light";
   });
 
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {

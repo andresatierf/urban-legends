@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useUser } from "@/hooks/useUser";
@@ -10,7 +9,6 @@ import { TeamInvitationsList } from "./invitations/team-invitations-list";
 import { SectionHeader } from "./section-header";
 import { StatCard } from "./stat-card";
 import { SvgIcon } from "./svg-icon";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -41,14 +39,6 @@ export function UserDashboard(_props: UserDashboardProps) {
 
   // Fetch user's submissions
   const userSubmissions = useQuery(api.submissions.listUserSubmissions, {});
-
-  // Fetch team members for all user's teams
-  const teamMembers = useQuery(
-    api.teams.listMembers,
-    userTeams && userTeams.length > 0
-      ? { teamIds: userTeams.map((t) => t._id) }
-      : "skip",
-  );
 
   // Admin-only: Fetch all users
   const allUsers = useQuery(api.users.list, isAdmin ? {} : "skip");
@@ -101,23 +91,6 @@ export function UserDashboard(_props: UserDashboardProps) {
     };
   }, [isAdmin, tournaments, allTeams, allUsers, allSubmissions]);
 
-  // Map tournaments by ID for easy lookup
-  const tournamentMap = useMemo(() => {
-    const map = new Map();
-    if (tournaments) {
-      for (const t of tournaments) {
-        map.set(t._id, t);
-      }
-    }
-    return map;
-  }, [tournaments]);
-
-  // Get recent submissions (last 5)
-  const recentSubmissions = useMemo(() => {
-    if (!userSubmissions) return [];
-    return userSubmissions.slice(0, 5);
-  }, [userSubmissions]);
-
   if (!user) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -128,14 +101,12 @@ export function UserDashboard(_props: UserDashboardProps) {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Header */}
       <SectionHeader
         as="h1"
         title={`Welcome back, ${user.name ?? "Player"}`}
         description="Here's an overview of your tournament activity"
       />
 
-      {/* Admin Section */}
       {isAdmin && adminStats && (
         <Card variant="admin">
           <CardHeader className="flex flex-row gap-2 p-6 pb-0">
@@ -204,7 +175,6 @@ export function UserDashboard(_props: UserDashboardProps) {
         </Card>
       )}
 
-      {/* Stats Overview */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <StatCard title="My Teams" value={stats.teamsCount}>
           <SvgIcon variant="blue">
@@ -238,160 +208,7 @@ export function UserDashboard(_props: UserDashboardProps) {
         </StatCard>
       </div>
 
-      {/* My Teams Section */}
-      <div className="rounded-lg bg-white p-6 shadow">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold text-foreground text-xl">My Teams</h2>
-          <Button variant="link" color="blue" asChild>
-            <Link href="/teams">
-              View all
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-
-        {!userTeams || userTeams.length === 0 ? (
-          <div className="py-8 text-center">
-            <p className="mb-4 text-gray-500">
-              You're not part of any teams yet
-            </p>
-            <Button variant="solid" color="blue" asChild>
-              <Link href="/teams">Browse Teams</Link>
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {userTeams.map((team) => {
-              const tournament = tournamentMap.get(team.tournamentId);
-              const members = teamMembers?.filter((m) => m.teamId === team._id);
-              const today = new Date().toISOString().split("T")[0];
-              const isActive =
-                tournament &&
-                tournament.startDate <= today &&
-                tournament.endDate >= today;
-
-              return (
-                <div
-                  key={team._id}
-                  className="rounded-lg border border-gray-200 p-4 transition-shadow hover:shadow-md"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 text-lg">
-                        {team.name}
-                      </h3>
-                      {tournament && (
-                        <p className="mt-1 text-gray-600 text-sm">
-                          {tournament.name}
-                        </p>
-                      )}
-                      <div className="mt-2 flex items-center gap-4 text-sm">
-                        <span className="text-gray-500">
-                          {members?.length || 0} members
-                        </span>
-                        {tournament && (
-                          <span
-                            className={`rounded-full px-2 py-1 text-xs ${
-                              isActive
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {isActive ? "Active" : "Inactive"}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <Button variant="link" color="blue" asChild>
-                      <Link href={`/teams/${team._id}`}>
-                        View
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Recent Submissions Section */}
-      <div className="rounded-lg bg-white p-6 shadow">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold text-foreground text-xl">
-            Recent Submissions
-          </h2>
-          <Button variant="link" color="blue" asChild>
-            <Link href="/submissions">
-              View all
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-
-        {!recentSubmissions || recentSubmissions.length === 0 ? (
-          <div className="py-8 text-center">
-            <p className="mb-4 text-gray-500">No submissions yet</p>
-            <Button variant="solid" color="blue" asChild>
-              <Link href="/submissions">Create Submission</Link>
-            </Button>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 text-xs uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 text-xs uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500 text-xs uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {recentSubmissions.map((submission) => (
-                  <tr key={submission._id}>
-                    <td className="whitespace-nowrap px-4 py-3 text-gray-900 text-sm">
-                      {submission.date}
-                    </td>
-                    <td className="px-4 py-3 text-gray-900 text-sm">
-                      {submission.description || "-"}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      <Badge variant={submission.state}>
-                        {submission.state}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
       <TeamInvitationsList />
-
-      {/* Quick Actions */}
-      <div className="rounded-lg bg-blue-50 p-6 dark:bg-gray-700">
-        <h3 className="mb-4 font-medium text-foreground">Quick Actions</h3>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="outline" asChild>
-            <Link href="/tournaments">Browse Tournaments</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/teams">Manage Teams</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link href="/submissions">My Submissions</Link>
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }

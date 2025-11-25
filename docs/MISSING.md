@@ -4,7 +4,7 @@ This document outlines the features that are missing or incomplete for a Minimum
 
 ## Current State
 
-The codebase is approximately **99%+ complete** for core MVP, **97%+ complete** for enhanced MVP!
+The codebase is approximately **99%+ complete** for core MVP, **98%+ complete** for enhanced MVP!
 
 ### ✅ Core Infrastructure (Complete)
 
@@ -19,7 +19,11 @@ The codebase is approximately **99%+ complete** for core MVP, **97%+ complete** 
 - ✅ **Team member management UI** (invite, remove, transfer captaincy) - PR #1
 - ✅ **Leaderboard and scoring system** - PR #5
 - ✅ **Admin role management UI** - PR #6
-- ✅ **Code quality and type safety** - PR #4, #12
+- ✅ **Tournament manager role & permissions** - PR #15
+- ✅ **Dark theme system** - PR #16
+- ✅ **Active sidebar navigation** - PR #17
+- ✅ **Submission card view with image gallery** - PR #18
+- ✅ **Code quality and type safety** - PR #4, #12, #19
 - ✅ **Submission progress calendar** - PR #8
 - ✅ **Submission detail page** - PR #9
 - ✅ **Detail cards data fetching refactor** - PR #10
@@ -29,8 +33,8 @@ The codebase is approximately **99%+ complete** for core MVP, **97%+ complete** 
 
 ### ⚠️ High Priority Features (Still Needed)
 
-- ❌ Tournament Manager Dashboard
-- ❌ Reviewer Dashboard
+- ❌ Reviewer Dashboard (navigation/placeholders complete)
+- ❌ Image Upload System (spec ready: 26-submission-image-upload-s3-abstraction.md)
 
 **Note:** For details on completed features, see [COMPLETED.md](COMPLETED.md)
 
@@ -40,29 +44,35 @@ The codebase is approximately **99%+ complete** for core MVP, **97%+ complete** 
 
 These features significantly improve user experience and should be implemented soon:
 
-### 1. Tournament Manager Dashboard ([spec](specs/11-tournament-manager-dashboard.md))
+### 1. Image Upload System ([spec](specs/26-submission-image-upload-s3-abstraction.md))
 
-**Status:** ⚠️ Navigation & Placeholders Complete (PR #14) - Dashboard Implementation Pending
+**Status:** ⚠️ Spec Complete - Implementation Pending
 **Priority:** HIGH
-**Effort:** 2-3 days (reduced from 3-4 days due to navigation foundation)
+**Effort:** 2-3 days
 
-**Foundation Completed (PR #14):**
+**Problem:** Current placeholder image URLs need actual image upload functionality.
 
-- ✅ Sidebar navigation section with badge
-- ✅ Placeholder pages created (`/tournament-manager`, `/tournament-manager/tournaments`, `/tournament-manager/approvals`, `/tournament-manager/analytics`)
-- ✅ Badge count query (`tournamentManager.getPendingCount`)
-- ✅ Routing structure established
+**Spec Completed:**
 
-**Still Required:**
+- ✅ S3-compatible storage abstraction layer
+- ✅ Multi-provider support (AWS S3, Cloudflare R2, Supabase Storage)
+- ✅ Image optimization pipeline (resize, WebP conversion, thumbnails)
+- ✅ Secure upload flow with presigned URLs
+- ✅ Database schema updates for image metadata
+- ✅ Frontend upload UI with progress indicators
+- ✅ Migration strategy from placeholder URLs
 
-- Tournament assignment system (admins assign managers to specific tournaments)
-- Tournament manager dashboard showing assigned tournaments
-- Scoped submission approval queue (only for managed tournaments)
-- Tournament analytics and statistics
-- Team oversight for managed tournaments
-- Permission checks allowing tournament_manager role for mutations
+**Required for Implementation:**
 
-**Benefits:** Enables delegation of tournament management without giving full admin access, scales tournament operations.
+- Backend: Storage abstraction layer (`convex/storage/`)
+- Backend: Image optimization service
+- Backend: Presigned URL generation mutations
+- Frontend: Image upload component with drag-and-drop
+- Frontend: Progress indicators and error handling
+- Database: Image metadata tracking
+- Configuration: Storage provider setup (env vars)
+
+**Benefits:** Real image upload functionality, optimized delivery, CDN integration, improved performance.
 
 ### 2. Reviewer Dashboard ([spec](specs/12-reviewer-dashboard.md))
 
@@ -226,13 +236,17 @@ Minor issues that should be addressed when time permits:
 
 ## Estimated Effort Summary
 
-### ✅ Completed (25-32 days)
+### ✅ Completed (31-39 days)
 
 - Team Joining/Self-Service (3-5 days)
 - Leaderboard & Scoring (2-3 days)
 - Team Edit & Delete (0.5 days)
 - Admin Role Management (1 day)
-- Code Quality Fixes (1 day) + Code Cleanup (1 day)
+- Tournament Manager Role & Permissions (1-2 days)
+- Dark Theme System (2-3 days)
+- Active Sidebar Navigation (0.5-1 day)
+- Submission Card View with Image Gallery (2-3 days)
+- Code Quality Fixes (1 day) + Code Cleanup (1 day) + i18n Fixes (0.5 day)
 - Submission Calendar (1-2 days)
 - Submission Detail Page (2-3 days)
 - Detail Cards Data Fetching Refactor (2-3 days)
@@ -242,23 +256,26 @@ Minor issues that should be addressed when time permits:
 
 ### ⚠️ Remaining for Full Enhanced MVP
 
-- **High Priority:** 3-5 days (Tournament Manager + Reviewer dashboards)
-- **Medium Priority:** 6-8.5 days (Team Captain + Admin Dashboard + Notifications)
-- **Low Priority:** 1.5-2 days (Viewer/Public Dashboard)
-- **Total Remaining:** 10.5-15.5 days
+- **High Priority:** 3-4 days (Image Upload + Reviewer dashboard)
+- **Medium Priority:** 6-8 days (Team Captain + Admin Dashboard + Notifications + Viewer Dashboard)
+- **Total Remaining:** 9-12 days
 
-**Note:** Effort estimates reduced by ~30% due to PR #14 completing navigation foundation, badge queries, and placeholder pages for all role-based dashboards.
+**Note:** Effort estimates reduced by ~30% due to PR #14 and #15 completing navigation foundation, badge queries, placeholder pages, and tournament manager implementation.
 
 ---
 
 ## Progress Summary
 
-- **Overall Completion:** 97%+ of enhanced MVP functionality (99%+ of core MVP)
+- **Overall Completion:** 98%+ of enhanced MVP functionality (99%+ of core MVP)
 - **Critical Features:** ✅ **ALL COMPLETE!**
   - ✅ Team Management (create, edit, delete, join, leave)
   - ✅ Team Member Management UI (invite, remove, transfer captaincy)
   - ✅ Leaderboard & Scoring System
   - ✅ Admin Role Management
+  - ✅ Tournament Manager Role & Permissions
+  - ✅ Dark Theme System
+  - ✅ Active Sidebar Navigation
+  - ✅ Submission Card View with Image Gallery
   - ✅ Code Quality & Type Safety + Code Cleanup
   - ✅ Submission Calendar
   - ✅ Submission Detail Page
@@ -266,19 +283,23 @@ Minor issues that should be addressed when time permits:
   - ✅ Loading States / Skeleton Screens
   - ✅ Individual Submission Tracking & Automatic Grouping
   - ✅ Enhanced Role-Based Sidebar Navigation
-- **High Priority Features:** 0/2 complete (navigation foundation done)
-  - ⚠️ Tournament Manager Dashboard (placeholders + queries done)
-  - ⚠️ Reviewer Dashboard (placeholders + queries done)
-- **Medium Priority Features:** 0/3 complete (navigation foundation done)
+- **High Priority Features:** 0/2 complete
+  - ❌ Image Upload System (spec ready)
+  - ⚠️ Reviewer Dashboard (navigation/placeholders done)
+- **Medium Priority Features:** 0/4 complete (navigation foundation done)
   - ⚠️ Team Captain Dashboard (placeholders + queries done)
   - ⚠️ Admin Dashboard (placeholders + queries done)
-  - ❌ Notifications
-- **Low Priority Features:** 0/1 complete (navigation foundation done)
+  - ❌ Notifications (spec complete)
   - ⚠️ Viewer & Public Dashboard (placeholders done)
 
 ### Recent Merges
 
-- **PR #14:** Enhanced Role-Based Sidebar Navigation (11/17/2025) ⭐ **NEW**
+- **PR #19:** i18n Fixes (11/20/2025) ⭐ **NEW**
+- **PR #18:** Submission Card View with Image Gallery (11/20/2025) ⭐ **NEW**
+- **PR #17:** Active Sidebar Navigation Highlighting (11/20/2025) ⭐ **NEW**
+- **PR #16:** Dark Theme System (11/19/2025) ⭐ **NEW**
+- **PR #15:** Tournament Manager Role & Permissions (11/18/2025) ⭐ **NEW**
+- **PR #14:** Enhanced Role-Based Sidebar Navigation (11/17/2025)
 - **PR #13:** Individual Submission Tracking & Automatic Grouping (11/17/2025)
 - **PR #12:** Comprehensive Code Cleanup (11/16/2025)
 - **PR #11:** Loading States / Skeleton Screens (11/14/2025)

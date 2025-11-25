@@ -35,6 +35,7 @@ bash -c '.claude/scripts/create-worktree-and-setup.sh [feature-name]'
 This script will:
 
 1. **Create Git Worktree:**
+
    - Branch format: `andre/feat/[feature-name]`
    - Worktree directory: `../urban-legends-[feature-name]`
    - Copy `.env` file to worktree
@@ -47,17 +48,20 @@ This script will:
    - Open nvim in the editor pane
 
 **Port Assignment:**
+
 - Ports are calculated from the feature name hash (0-99 offset)
 - Next.js: 3000 + offset
 - Convex: 3210 + offset
 - Example: `team-joining` → Next.js: 3084, Convex: 3294
 
 **Zellij Layout:**
+
 - **Left pane**: Code editor workspace (nvim, where Claude will work)
 - **Upper-right pane**: Next.js dev server on custom port
 - **Lower-right pane**: Convex backend on custom port
 
 **Important:**
+
 - All subsequent work will be done in the worktree directory, not the main repository
 - Each feature gets unique ports so you can work on multiple features simultaneously
 - The script will detect if the worktree already exists and prompt to continue
@@ -146,7 +150,7 @@ Before finishing, validate the implementation with comprehensive checks:
 Run the full CI suite to catch any issues:
 
 ```bash
-bun --bun run ci
+bun --bun run check --write --unsafe
 ```
 
 This runs all CI checks including linting, formatting, and type checking.
@@ -194,17 +198,20 @@ coderabbit --prompt-only
 This is an iterative process. You must repeat these steps until CodeRabbit reports no significant issues:
 
 1. **Run CodeRabbit Review**
+
    - Execute `coderabbit --prompt-only`
    - Wait for completion (never interrupt)
    - Capture all suggestions and issues
 
 2. **Analyze Feedback**
+
    - Read ALL suggestions carefully
    - Categorize issues by severity (critical, important, minor)
    - Create todos for each significant issue using TodoWrite
    - If no significant issues found, proceed to next validation step
 
 3. **Fix Issues Systematically**
+
    - Address each issue one by one
    - Make atomic commits for each fix or group of related fixes
    - Use descriptive commit messages: `fix: [description of what was fixed]`
@@ -214,6 +221,7 @@ This is an iterative process. You must repeat these steps until CodeRabbit repor
      - `fix: remove unused imports and variables`
 
 4. **Re-run CodeRabbit**
+
    - After fixing all issues, run `coderabbit --prompt-only` again
    - This verifies that fixes are correct and no new issues were introduced
    - Wait for completion
