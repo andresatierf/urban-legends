@@ -1,0 +1,305 @@
+import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
+import { query } from "./_generated/server";
+import { getCurrentUserOrThrow } from "./users";
+
+/**
+ * Dashboard Queries
+ *
+ * This file contains queries for the unified dashboard landing page.
+ * These queries aggregate data from multiple tables to provide a comprehensive
+ * view of user activity, teams, tournaments, and notifications.
+ */
+
+export const getUserDashboardData = query({
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    // Fetch user's teams with tournament info
+    const teamMemberships = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    const teams = await Promise.all(
+      teamMemberships.map(async (membership) => {
+        const team = await ctx.db.get(membership.teamId);
+        if (!team) return null;
+
+        const tournament = await ctx.db.get(team.tournamentId);
+        if (!tournament) return null;
+
+        const memberCount = await ctx.db
+          .query("teamMembers")
+          .withIndex("by_team", (q) => q.eq("teamId", team._id))
+          .collect()
+          .then((members) => members.length);
+
+        return {
+          team,
+          tournament,
+          memberCount,
+          userRole: membership.role,
+        };
+      }),
+    );
+
+    const validTeams = teams.filter(
+      (t): t is NonNullable<typeof t> => t !== null,
+    );
+
+    // Calculate active tournaments
+    const now = new Date().toISOString();
+    const activeTournaments = validTeams.filter(
+      (t) => t.tournament.startDate <= now && t.tournament.endDate >= now,
+    );
+
+    // Fetch user's submissions
+    const userSubmissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    const pendingSubmissions = userSubmissions.filter(
+      (s) => s.state === "pending",
+    );
+
+    // Fetch team invitations
+    const invitations = await ctx.db
+      .query("teamInvitations")
+      .withIndex("by_user_and_status", (q) =>
+        q.eq("invitedUserId", user._id).eq("status", "pending"),
+      )
+      .collect();
+
+    return {
+      teams: validTeams,
+      activeTournamentsCount: activeTournaments.length,
+      pendingSubmissionsCount: pendingSubmissions.length,
+      invitationsCount: invitations.length,
+    };
+  },
+});
+
+export const getAdminDashboardData = query({
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    if (!user.roleNames.includes("admin")) {
+      return null; // Not an admin, return null
+    }
+
+    // TODO: Optimize for scale - Replace .collect() with aggregations/counts
+    // For large datasets, this loads all records into memory. Consider:
+    // - Using filtered queries with limits
+    // - Implementing counters updated on writes
+    // - Caching results in a separate table
+    // - Using Convex aggregations when available
+    // This is acceptable for MVP with small datasets (<10k records)
+
+    // Fetch all data in parallel
+    const [users, tournaments, teams, submissions] = await Promise.all([
+      ctx.db.query("users").collect(),
+      ctx.db.query("tournaments").collect(),
+      ctx.db.query("teams").collect(),
+      ctx.db.query("submissions").collect(),
+    ]);
+
+    // Calculate new users this week
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const newUsersThisWeek = users.filter(
+      (u) => u._creationTime > oneWeekAgo,
+    ).length;
+
+    // Categorize tournaments
+    const now = new Date().toISOString();
+    const activeTournaments = tournaments.filter(
+      (t) => t.startDate <= now && t.endDate >= now,
+    );
+    const upcomingTournaments = tournaments.filter((t) => t.startDate > now);
+    const endedTournaments = tournaments.filter((t) => t.endDate < now);
+
+    // Categorize submissions
+    const pendingSubmissions = submissions.filter((s) => s.state === "pending");
+    const approvedSubmissions = submissions.filter(
+      (s) => s.state === "approved",
+    );
+    const rejectedSubmissions = submissions.filter(
+      (s) => s.state === "rejected",
+    );
+
+    return {
+      users: {
+        total: users.length,
+        newThisWeek: newUsersThisWeek,
+      },
+      tournaments: {
+        total: tournaments.length,
+        active: activeTournaments.length,
+        upcoming: upcomingTournaments.length,
+        ended: endedTournaments.length,
+      },
+      teams: {
+        total: teams.length,
+      },
+      submissions: {
+        total: submissions.length,
+        pending: pendingSubmissions.length,
+        approved: approvedSubmissions.length,
+        rejected: rejectedSubmissions.length,
+      },
+    };
+  },
+});
+
+export const getRecentActivity = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    const limit = args.limit ?? 15;
+
+    const activities: Array<{
+      type: string;
+      description: string;
+      timestamp: number;
+      icon: string; // Icon identifier
+      link?: string; // Optional navigation link
+    }> = [];
+
+    // Get user's recent submissions (last 20)
+    const userSubmissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .take(20);
+
+    for (const sub of userSubmissions) {
+      if (sub.state === "approved" || sub.state === "rejected") {
+        const team = await ctx.db.get(sub.teamId);
+        activities.push({
+          type: `submission_${sub.state}`,
+          description: `Your submission for ${team?.name ?? "team"} was ${sub.state}`,
+          timestamp: sub._creationTime,
+          icon: sub.state === "approved" ? "check-circle" : "x-circle",
+          link: `/submissions/${sub._id}`,
+        });
+      }
+    }
+
+    // Get teams user is captain of
+    const captainTeams = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("role"), "captain"))
+      .collect();
+
+    // For each captain team, get recent join requests and new members
+    for (const membership of captainTeams) {
+      const team = await ctx.db.get(membership.teamId);
+      if (!team) continue;
+
+      // Recent join requests
+      const joinRequests = await ctx.db
+        .query("joinRequests")
+        .withIndex("by_team", (q) => q.eq("teamId", team._id))
+        .filter((q) =>
+          q.or(
+            q.eq(q.field("status"), "approved"),
+            q.eq(q.field("status"), "rejected"),
+          ),
+        )
+        .order("desc")
+        .take(5);
+
+      for (const req of joinRequests) {
+        if (req.respondedAt) {
+          const requestUser = await ctx.db.get(req.userId);
+          activities.push({
+            type: `join_request_${req.status}`,
+            description: `${requestUser?.name ?? "A user"}'s join request for ${team.name} was ${req.status}`,
+            timestamp: new Date(req.respondedAt).getTime(),
+            icon: "users",
+            link: `/teams/${team._id}`,
+          });
+        }
+      }
+
+      // Recent team members
+      const recentMembers = await ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) => q.eq("teamId", team._id))
+        .order("desc")
+        .take(5);
+
+      for (const member of recentMembers) {
+        if (member.userId !== user._id) {
+          const memberUser = await ctx.db.get(member.userId);
+          activities.push({
+            type: "team_member_joined",
+            description: `${memberUser?.name ?? "A user"} joined ${team.name}`,
+            timestamp: member._creationTime,
+            icon: "user-plus",
+            link: `/teams/${team._id}`,
+          });
+        }
+      }
+    }
+
+    // Sort by timestamp descending and limit
+    activities.sort((a, b) => b.timestamp - a.timestamp);
+    return activities.slice(0, limit);
+  },
+});
+
+export const getUpcomingDeadlines = query({
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    // Get user's teams
+    const teamMemberships = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    const tournamentIds = new Set<string>();
+    for (const membership of teamMemberships) {
+      const team = await ctx.db.get(membership.teamId);
+      if (team) {
+        tournamentIds.add(team.tournamentId);
+      }
+    }
+
+    // Get tournaments ending within 7 days
+    const now = new Date();
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+
+    const tournamentPromises = Array.from(tournamentIds).map((id) =>
+      ctx.db.get(id as Id<"tournaments">),
+    );
+    const tournaments = await Promise.all(tournamentPromises);
+
+    const upcomingDeadlines = tournaments
+      .filter((t): t is NonNullable<typeof t> => {
+        if (!t) return false;
+        const endDate = new Date(t.endDate);
+        return endDate >= now && endDate <= sevenDaysFromNow;
+      })
+      .map((t) => {
+        // TypeScript knows t is not null here due to filter above
+        const endDate = new Date(t.endDate);
+        const daysUntilEnd = Math.ceil(
+          (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        return {
+          tournament: t,
+          daysUntilEnd,
+        };
+      })
+      .sort((a, b) => a.daysUntilEnd - b.daysUntilEnd);
+
+    return upcomingDeadlines;
+  },
+});

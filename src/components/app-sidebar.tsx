@@ -116,7 +116,7 @@ function useSidebarItems(
       // ===== USER SECTION (Always Visible) =====
       {
         title: t("user.group"),
-        roles: ["player"],
+        publicAccess: true,
         items: [
           {
             title: t("user.dashboard"),
@@ -127,20 +127,24 @@ function useSidebarItems(
           {
             title: t("user.tournaments"),
             href: "/tournaments",
+            roles: ["player"],
             icon: Trophy,
           },
           {
             title: t("user.teams"),
             href: "/teams",
+            roles: ["player"],
             icon: Users,
           },
           {
             title: t("user.submissions"),
             href: "/submissions",
+            roles: ["player"],
             icon: ClipboardList,
           },
           {
             title: t("user.newSubmission"),
+            roles: ["player"],
             onClick: () => setSubmissionFormOpen(true),
             icon: PlusCircle,
           },

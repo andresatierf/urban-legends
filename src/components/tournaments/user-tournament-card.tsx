@@ -1,7 +1,8 @@
 import { format } from "date-fns";
-import { Calendar, ChevronRight, Users } from "lucide-react";
+import { Calendar, Users } from "lucide-react";
 import Link from "next/link";
 import type { Doc } from "../../../convex/_generated/dataModel";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
@@ -9,34 +10,35 @@ import { getStatusBadge } from "./utils";
 
 type Props = {
   tournament: Doc<"tournaments">;
-  teamCount: number;
+  team: Doc<"teams">;
+  userRole: "captain" | "member";
 };
 
-export function TournamentCard({ tournament, teamCount }: Props) {
-  if (!tournament) return <TournamentCardSkeleton />;
+export function UserTournamentCard({ tournament, team, userRole }: Props) {
+  if (!tournament) return <UserTournamentCardSkeleton />;
 
   return (
     <Card>
-      <CardContent className="flex h-full xs:flex-row flex-col items-center justify-between gap-4">
-        <div className="flex h-full flex-1 flex-col justify-between xs:self-auto self-start">
-          <div className="flex flex-wrap items-center gap-2">
+      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
+        <div className="flex-1 xs:self-auto self-start">
+          <div className="flex items-center gap-2">
             <CardTitle>
-              <Button
-                variant="link"
-                className="h-min cursor-pointer p-0 font-semibold text-base leading-none tracking-tight"
-                asChild
+              <Link
+                href={`/tournaments/${tournament._id}`}
+                className="hover:underline"
               >
-                <Link href={`/tournaments/${tournament._id}`}>
-                  <span className="text-wrap">{tournament.name}</span>
-                </Link>
-              </Button>
+                {tournament.name}
+              </Link>
             </CardTitle>
             {getStatusBadge(tournament)}
+            {userRole === "captain" && <Badge variant="outline">Captain</Badge>}
           </div>
           <CardDescription className="mt-2">
             <div className="flex items-center gap-1">
               <Users className="h-4 w-4" />
-              {teamCount} team{teamCount === 1 ? "" : "s"}
+              <Link href={`/teams/${team._id}`} className="hover:underline">
+                {team.name}
+              </Link>
             </div>
             <div className="flex items-center gap-1 text-balance">
               <Calendar className="h-4 w-4" />
@@ -45,12 +47,12 @@ export function TournamentCard({ tournament, teamCount }: Props) {
             </div>
           </CardDescription>
         </div>
-        <div className="flex gap-2 xs:self-auto self-end">
-          <Button asChild>
-            <Link href={`/tournaments/${tournament._id}`}>
-              <span className="text-wrap">Browse Teams</span>
-              <ChevronRight />
-            </Link>
+        <div className="flex flex-wrap xs:justify-end justify-center gap-2 xs:self-auto self-end">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/tournaments/${tournament._id}`}>View Tournament</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/teams/${team._id}`}>View Team</Link>
           </Button>
         </div>
       </CardContent>
@@ -58,7 +60,7 @@ export function TournamentCard({ tournament, teamCount }: Props) {
   );
 }
 
-export function TournamentCardSkeleton() {
+export function UserTournamentCardSkeleton() {
   return (
     <Card>
       <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
