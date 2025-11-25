@@ -282,14 +282,13 @@ export const getUpcomingDeadlines = query({
     const tournaments = await Promise.all(tournamentPromises);
 
     const upcomingDeadlines = tournaments
-      .filter((t) => {
+      .filter((t): t is NonNullable<typeof t> => {
         if (!t) return false;
         const endDate = new Date(t.endDate);
         return endDate >= now && endDate <= sevenDaysFromNow;
       })
       .map((t) => {
         // TypeScript knows t is not null here due to filter above
-        if (!t) throw new Error("Unexpected null tournament");
         const endDate = new Date(t.endDate);
         const daysUntilEnd = Math.ceil(
           (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),

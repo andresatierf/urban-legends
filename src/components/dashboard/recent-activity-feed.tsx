@@ -46,9 +46,9 @@ export function RecentActivityFeed({ activities }: RecentActivityFeedProps) {
           </Empty>
         ) : (
           <div className="space-y-4">
-            {activities.map((activity, index) => {
+            {activities.map((activity) => {
               const Icon = iconMap[activity.icon as keyof typeof iconMap];
-              const activityKey = `${activity.type}-${index}`;
+              const activityKey = `${activity.type}-${activity.timestamp}`;
 
               return activity.link ? (
                 <Link

@@ -35,20 +35,21 @@ export function TeamInvitationCard({
             <p className="font-medium">{invitation.team?.name}</p>
             {isExpired && <Badge variant="destructive">Expired</Badge>}
           </div>
-          <div className="mt-1 flex flex-col items-start text-muted-foreground text-xs">
-            <Trophy className="h-4 w-4" />
-            <Link
-              href={`/tournaments/${invitation.tournament?._id}`}
-              className="hover:underline"
-            >
-              {invitation.tournament?.name}
-            </Link>
-            <Badge variant="secondary">{invitation.tournament?.name}</Badge>
+          <div className="mt-1 flex flex-col items-start text-muted-foreground">
             <span className="flex items-center gap-1">
+              <Trophy className="h-4 w-4" />
+              <Link
+                href={`/tournaments/${invitation.tournament?._id}`}
+                className="hover:underline"
+              >
+                {invitation.tournament?.name}
+              </Link>
+            </span>
+            <span className="flex items-center gap-1 text-xs">
               <UserPlus className="h-3 w-3" />
               Invited by {invitation.invitedByUser?.name}
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 text-xs">
               <Calendar className="h-3 w-3" />
               {invitation.respondedAt
                 ? `${capitalize(invitation.status)} ${new Date(invitation.respondedAt).toLocaleDateString()}`
