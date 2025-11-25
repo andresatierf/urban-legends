@@ -4,7 +4,7 @@ This document tracks all completed features for the Urban Legends tournament tra
 
 ## Overview
 
-The platform has successfully implemented **12 major features** representing approximately **25-32 days of development effort**. These features provide core functionality for tournament management, team collaboration, scoring, submission tracking with individual accountability, detailed submission views, comprehensive data fetching, polished loading states, role-based navigation, and administration.
+The platform has successfully implemented **17 major features** representing approximately **34-43 days of development effort**. These features provide core functionality for tournament management, team collaboration, scoring, submission tracking with individual accountability, detailed submission views, comprehensive data fetching, polished loading states, role-based navigation, unified dashboard, and administration.
 
 ---
 
@@ -1993,6 +1993,261 @@ All submission card colors adapted for dark mode:
 
 ---
 
+## ✅ 17. Unified Dashboard Landing Page
+
+**Spec:** [specs/done/28-unified-dashboard-landing-page.md](specs/done/28-unified-dashboard-landing-page.md)
+**PR:** #21
+**Completed:** 2025-11-25
+**Effort:** 3-4 days
+
+### Summary
+
+Comprehensive, role-aware unified dashboard serving as the main landing page for all authenticated users, providing personalized at-a-glance information, real-time data updates, and quick access to common actions.
+
+### Implemented Features
+
+- ✅ Personalized welcome section with user name and status
+- ✅ At-a-glance statistics (teams, tournaments, submissions)
+- ✅ My Active Tournaments widget with team information
+- ✅ My Teams widget with points and member counts
+- ✅ Recent Activity Feed with 15 most recent events
+- ✅ Team Invitations widget with accept/reject actions
+- ✅ Quick Actions Panel (browse, submit, view teams)
+- ✅ Upcoming Deadlines widget for tournaments ending soon
+- ✅ Admin Overview Card with system statistics (admin-only)
+- ✅ Real-time updates via Convex subscriptions
+- ✅ Responsive 3-column layout (desktop), stacked (mobile)
+- ✅ Loading skeletons for all widgets
+- ✅ Empty states with helpful CTAs
+
+### Backend Implementation
+
+**Queries Created (convex/dashboard.ts):**
+
+- `getUserDashboardData` - Comprehensive user dashboard data (lines 14-82)
+  - Fetches user's teams with tournament info
+  - Calculates active tournaments count
+  - Counts pending submissions and invitations
+  - Returns aggregated data for all user widgets
+
+- `getAdminDashboardData` - Admin-specific system statistics (lines 84-153)
+  - Total users count with "new this week" tracking
+  - Tournament breakdown by status (active/upcoming/ended)
+  - Total teams count
+  - Submission counts by state (pending/approved/rejected)
+  - Admin-only with role check
+
+- `getRecentActivity` - Activity feed timeline (lines 155-254)
+  - Last 15 activities relevant to user
+  - Submission approvals/rejections
+  - New team member joins
+  - Join request responses (for captains)
+  - Icon indicators and relative timestamps
+  - Navigation links for clickable activities
+
+- `getUpcomingDeadlines` - Tournament deadline tracker (lines 256-305)
+  - Tournaments ending within 7 days
+  - Filters to user's participating teams
+  - Calculates days remaining
+  - Sorted by proximity to deadline
+  - Type-safe filtering with predicates
+
+### Frontend Implementation
+
+**Components Created (src/components/dashboard/):**
+
+1. **UnifiedDashboard** (`unified-dashboard.tsx`) - Main orchestrator
+   - Responsive 3-column layout (desktop), stacked (mobile)
+   - Fetches all dashboard data via Convex hooks
+   - Wires 9 child widgets together
+   - Role-aware rendering (admin card shows only for admins)
+   - Loading skeleton while data fetches
+
+2. **DashboardHeader** (`dashboard-header.tsx`) - Welcome section
+   - Personalized greeting with user's name
+   - Active tournament count in status text
+   - Uses SectionHeader component for consistency
+
+3. **UserStatsGrid** (`user-stats-grid.tsx`) - Statistics cards
+   - 3-card grid: My Teams, Active Tournaments, Pending Submissions
+   - Color-coded icons (blue, green, yellow)
+   - Responsive grid layout
+
+4. **AdminOverviewCard** (`admin-overview-card.tsx`) - Admin stats
+   - System-wide statistics dashboard
+   - Quick action buttons to management pages
+   - Purple variant styling for visual distinction
+   - Only visible to admin users
+
+5. **MyActiveTournamentsWidget** (`my-active-tournaments-widget.tsx`)
+   - Filters teams to active tournaments only
+   - Shows tournament and team names
+   - Captain badge indicators
+   - Empty state with CTA to browse tournaments
+
+6. **MyTeamsWidget** (`my-teams-widget.tsx`)
+   - Displays all user's teams
+   - Shows: team name, tournament, members, points
+   - Captain badge for team leaders
+   - Empty state with helpful message
+
+7. **RecentActivityFeed** (`recent-activity-feed.tsx`)
+   - Timeline display of 15 most recent activities
+   - Icon map for activity types (check, x, users, user-plus)
+   - Relative timestamps with date-fns
+   - Optional navigation links
+   - Proper key handling (timestamp instead of index)
+
+8. **TeamInvitationsWidget** (`team-invitations-widget.tsx`)
+   - Wrapper for existing TeamInvitationsList component
+   - Shows pending invitations only
+   - Reuses established invitation handling
+
+9. **QuickActionsPanel** (`quick-actions-panel.tsx`)
+   - 4-button grid: Browse, Submit, Teams, New Submission
+   - Context-aware (disables "New Submission" if no active teams)
+   - Responsive grid (2 cols mobile, 4 cols desktop)
+   - Icon-based buttons
+
+10. **UpcomingDeadlinesWidget** (`upcoming-deadlines-widget.tsx`)
+    - Shows tournaments ending within 7 days
+    - Countdown display ("Ends in 3 days")
+    - Color-coded urgency badges ("Urgent" ≤3 days, "Soon" >3 days)
+    - Links to tournament leaderboards
+    - Empty state message
+
+**Supporting Card Components:**
+
+- `UserTeamCard` (`src/components/teams/user-team-card.tsx`) - Reusable team card
+- `UserTournamentCard` (`src/components/tournaments/user-tournament-card.tsx`) - Reusable tournament card
+
+### Page Integration
+
+**Location:** `src/app/(all)/dashboard/page.tsx`
+
+- Imports and renders UnifiedDashboard component
+- Replaces old basic UserDashboard component
+- Real-time updates via Convex subscriptions
+- Single loading state for entire dashboard
+
+### Key Features
+
+**Personalization:**
+
+- Welcome message with user's name
+- Custom dashboard data per user
+- Role-aware widgets (admin-only sections)
+- Context-sensitive quick actions
+
+**Real-Time Updates:**
+
+- All data via Convex reactive queries
+- Instant reflection of changes (submissions, teams, tournaments)
+- Activity feed updates in real-time
+- No manual refresh needed
+
+**Responsive Design:**
+
+- 3-column desktop layout
+- 2-column tablet layout
+- Single column mobile layout
+- Touch-friendly buttons and cards
+- Optimized spacing for all screen sizes
+
+**Empty States:**
+
+- Helpful messages for each widget
+- Clear CTAs to resolve empty state
+- Encouraging onboarding flow
+- Never shows blank widgets
+
+**Performance:**
+
+- Single dashboard query reduces network calls
+- Parallel data fetching in backend
+- Skeleton loading states prevent layout shift
+- Efficient re-renders with proper React keys
+
+### Benefits
+
+**For Users:**
+
+- Centralized hub for all tournament activity
+- At-a-glance view of teams, tournaments, and pending actions
+- Quick access to common workflows
+- Reduced navigation friction
+- Clear visibility into recent events
+- Never miss important deadlines
+
+**For Captains:**
+
+- See all teams they manage
+- Pending join requests in activity feed
+- Quick access to team management
+- Tournament deadline awareness
+
+**For Admins:**
+
+- System-wide statistics overview
+- Pending submission alerts
+- Quick links to admin pages
+- Maintain awareness of platform health
+
+**For Platform:**
+
+- Increased user engagement (immediate value on login)
+- Improved retention (surfacing actionable info)
+- Reduced support burden (clear CTAs and guidance)
+- Professional, polished user experience
+- Better onboarding flow
+
+### Implementation Notes
+
+**Design Consistency:**
+
+All widgets follow shadcn/ui patterns:
+- Card-based layout with consistent padding
+- SectionHeader components for titles
+- Badge components for status indicators
+- Button components with icons
+- Responsive grid utilities
+
+**Type Safety:**
+
+- All queries return properly typed data
+- Components use TypeScript interfaces
+- Type-safe Convex API imports
+- No `any` types used
+
+**Accessibility:**
+
+- Semantic HTML structure
+- Proper heading hierarchy
+- ARIA labels where needed
+- Keyboard navigation support
+- Screen reader friendly
+
+**Code Quality:**
+
+- Reusable card components extracted
+- Clear separation of concerns
+- Single responsibility per component
+- Documented with inline comments where needed
+- Follows project conventions
+
+**Scalability Notes:**
+
+Backend includes TODO comment for admin dashboard scalability:
+- Current `.collect()` approach acceptable for MVP (<10k records)
+- Future optimizations documented:
+  - Dedicated aggregation tables
+  - Incremental counters
+  - Caching layer
+  - Background refresh jobs
+- Optimization deferred to post-MVP
+
+---
+
 ## Infrastructure & Foundation
 
 The following foundational systems were already in place before feature development:
@@ -2031,10 +2286,10 @@ The following foundational systems were already in place before feature developm
 
 ### Development Effort
 
-- **Total Completed:** 31-39 days of development
-- **Features Completed:** 16 major features
-- **PRs Merged:** 18 pull requests
-- **Files Modified:** 250+ files across backend and frontend
+- **Total Completed:** 34-43 days of development
+- **Features Completed:** 17 major features
+- **PRs Merged:** 21 pull requests
+- **Files Modified:** 270+ files across backend and frontend
 
 ### Code Metrics
 
@@ -2058,6 +2313,7 @@ The following foundational systems were already in place before feature developm
 - ✅ Role-Based Navigation (sidebar sections, badges, conditional rendering)
 - ✅ Active Navigation Highlighting (current page indication)
 - ✅ Dark Theme System (light/dark/system modes with persistence)
+- ✅ Unified Dashboard Landing Page (personalized hub, real-time widgets, role-aware)
 - ✅ Code Quality (type safety, validation, linting)
 - ✅ Data Fetching Optimization (getDetails pattern, 30-75% performance improvement)
 - ✅ Loading States (comprehensive skeleton screens across all pages)
@@ -2076,6 +2332,7 @@ The following foundational systems were already in place before feature developm
 
 ## Recent Merges
 
+- **PR #21:** Unified Dashboard Landing Page (11/25/2025) ⭐ **NEW**
 - **PR #19:** i18n Fixes (11/20/2025)
 - **PR #18:** Submission Card View with Image Gallery (11/20/2025)
 - **PR #17:** Active Sidebar Navigation Highlighting (11/20/2025)
