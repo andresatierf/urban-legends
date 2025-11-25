@@ -15,6 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DATE_FORMATS,
+  getDateFormatPreference,
+  getFormatPreview,
+  setDateFormatPreference,
+} from "@/lib/dates";
 
 const WEEKDAY_LABELS_FULL = [
   "Sunday",
@@ -32,7 +38,9 @@ export default function SettingsPage() {
   const { signOut } = useClerk();
 
   const [weekStartsOn, setWeekStartsOn] = useState<number>(0);
+  const [dateFormat, setDateFormat] = useState<string>("MM/dd/yyyy");
   const weekStartSelectId = useId();
+  const dateFormatSelectId = useId();
 
   // Load week start preference from localStorage
   useEffect(() => {
@@ -43,6 +51,9 @@ export default function SettingsPage() {
         setWeekStartsOn(parsed);
       }
     }
+    // Load date format preference
+    const storedFormat = getDateFormatPreference();
+    setDateFormat(storedFormat);
   }, []);
 
   // Save week start preference to localStorage
@@ -50,6 +61,19 @@ export default function SettingsPage() {
     const newStart = Number.parseInt(value, 10);
     setWeekStartsOn(newStart);
     localStorage.setItem(WEEK_START_STORAGE_KEY, value);
+  };
+
+  // Save date format preference to localStorage
+  const handleDateFormatChange = (value: string) => {
+    setDateFormat(value);
+    setDateFormatPreference(value as keyof typeof DATE_FORMATS);
+    // Dispatch storage event for other tabs/windows
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: "dateFormat",
+        newValue: value,
+      }),
+    );
   };
 
   return (
@@ -135,12 +159,53 @@ export default function SettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Date Format Preference */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
+                  <label
+                    htmlFor={dateFormatSelectId}
+                    className="block font-medium text-sm"
+                  >
+                    Date format
+                  </label>
+                  <p className="mt-1 text-muted-foreground text-sm">
+                    Choose how dates are displayed throughout the app
+                  </p>
+                </div>
+                <Select
+                  value={dateFormat}
+                  onValueChange={handleDateFormatChange}
+                >
+                  <SelectTrigger
+                    id={dateFormatSelectId}
+                    className="w-full sm:w-[220px]"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(DATE_FORMATS).map((format) => (
+                      <SelectItem key={format} value={format}>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="font-mono text-sm">{format}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {getFormatPreview(
+                              format as keyof typeof DATE_FORMATS,
+                            )}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Card variant="info" className="rounded-md">
                 <CardContent>
                   <p className="text-sm">
-                    <strong>Note:</strong> This setting affects how dates are
-                    displayed in the submission calendar. Your preference is
-                    saved locally and will persist across sessions.
+                    <strong>Note:</strong> These settings affect how dates are
+                    displayed throughout the app. Your preferences are saved
+                    locally and will persist across sessions.
                   </p>
                 </CardContent>
               </Card>
