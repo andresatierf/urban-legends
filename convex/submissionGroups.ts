@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+import { nowUTC, toUTCDateString } from "./lib/dates";
 import { recalculateTeamPoints } from "./teams";
 import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
@@ -139,7 +140,7 @@ export async function upsertSubmissionGroup(
     tournamentId: args.tournamentId,
   });
 
-  const now = new Date().toISOString();
+  const now = nowUTC();
 
   // Find existing group
   const existingGroup = await ctx.db
@@ -152,7 +153,7 @@ export async function upsertSubmissionGroup(
   const groupData = {
     teamId: args.teamId,
     tournamentId: args.tournamentId,
-    date: args.date,
+    date: toUTCDateString(args.date),
     state: metrics.groupState,
     tier: metrics.tier,
     participantCount: metrics.participantCount,
@@ -223,7 +224,7 @@ export const approve = mutation({
       state: "approved",
       managedBy: user._id,
       pointsEarned,
-      updatedAt: new Date().toISOString(),
+      updatedAt: nowUTC(),
     });
 
     // Update all individual submissions in group
@@ -259,7 +260,7 @@ export const reject = mutation({
       state: "rejected",
       managedBy: user._id,
       pointsEarned: 0,
-      updatedAt: new Date().toISOString(),
+      updatedAt: nowUTC(),
     });
 
     // Update all individual submissions in group

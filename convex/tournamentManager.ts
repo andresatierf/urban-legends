@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import { extractDateFromISO, nowUTC } from "./lib/dates";
 import { getCurrentUserOrThrow } from "./users";
 
 /**
@@ -58,7 +59,7 @@ export const getDashboardStats = query({
     // Get all tournaments (tournament managers can access all)
     const tournaments = await ctx.db.query("tournaments").collect();
 
-    const now = new Date().toISOString().split("T")[0];
+    const now = extractDateFromISO(nowUTC());
 
     // Categorize tournaments
     const activeTournaments = tournaments.filter(

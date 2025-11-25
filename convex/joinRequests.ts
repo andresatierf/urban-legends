@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { nowUTC } from "./lib/dates";
 import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
@@ -128,7 +129,7 @@ export const requestToJoin = mutation({
       userId: user._id,
       status: "pending",
       message: args.message,
-      createdAt: new Date().toISOString(),
+      createdAt: nowUTC(),
     });
 
     return requestId;
@@ -160,7 +161,7 @@ export const cancelJoinRequest = mutation({
     // Update request status
     await ctx.db.patch(args.requestId, {
       status: "cancelled",
-      respondedAt: new Date().toISOString(),
+      respondedAt: nowUTC(),
     });
   },
 });
@@ -206,13 +207,13 @@ export const respondToJoinRequest = mutation({
 
       await ctx.db.patch(args.requestId, {
         status: "approved",
-        respondedAt: new Date().toISOString(),
+        respondedAt: nowUTC(),
         respondedBy: user._id,
       });
     } else {
       await ctx.db.patch(args.requestId, {
         status: "rejected",
-        respondedAt: new Date().toISOString(),
+        respondedAt: nowUTC(),
         respondedBy: user._id,
       });
     }

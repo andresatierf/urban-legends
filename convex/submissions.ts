@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+import { nowUTC, toUTCDateString } from "./lib/dates";
 import {
   calculateGroupMetrics,
   upsertSubmissionGroup,
@@ -128,7 +129,7 @@ export async function recalculateSubmissionPoints(
       isTeamExercise: metrics.isTeamExercise,
       pointsEarned: metrics.pointsEarned,
       managedBy: args.managedBy,
-      updatedAt: new Date().toISOString(),
+      updatedAt: nowUTC(),
     });
 
     // Update all submissions in group with their share of points
@@ -364,7 +365,7 @@ export const upsert = mutation({
     }
 
     const data = {
-      date: args.date,
+      date: toUTCDateString(args.date),
       userId: user._id,
       teamId: args.teamId,
       tournamentId: team.tournamentId,

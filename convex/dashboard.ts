@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import { nowUTC } from "./lib/dates";
 import { getCurrentUserOrThrow } from "./users";
 
 /**
@@ -49,7 +50,7 @@ export const getUserDashboardData = query({
     );
 
     // Calculate active tournaments
-    const now = new Date().toISOString();
+    const now = nowUTC();
     const activeTournaments = validTeams.filter(
       (t) => t.tournament.startDate <= now && t.tournament.endDate >= now,
     );
@@ -112,7 +113,7 @@ export const getAdminDashboardData = query({
     ).length;
 
     // Categorize tournaments
-    const now = new Date().toISOString();
+    const now = nowUTC();
     const activeTournaments = tournaments.filter(
       (t) => t.startDate <= now && t.endDate >= now,
     );

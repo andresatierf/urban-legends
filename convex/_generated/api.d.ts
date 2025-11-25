@@ -19,6 +19,8 @@ import type * as dashboard from "../dashboard.js";
 import type * as data from "../data.js";
 import type * as http from "../http.js";
 import type * as joinRequests from "../joinRequests.js";
+import type * as lib_dates from "../lib/dates.js";
+import type * as migrations from "../migrations.js";
 import type * as reviewer from "../reviewer.js";
 import type * as seed from "../seed.js";
 import type * as submissionGroups from "../submissionGroups.js";
@@ -44,6 +46,8 @@ declare const fullApi: ApiFromModules<{
   data: typeof data;
   http: typeof http;
   joinRequests: typeof joinRequests;
+  "lib/dates": typeof lib_dates;
+  migrations: typeof migrations;
   reviewer: typeof reviewer;
   seed: typeof seed;
   submissionGroups: typeof submissionGroups;
