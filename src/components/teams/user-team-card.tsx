@@ -22,7 +22,7 @@ export function UserTeamCard({
   if (!team) return <UserTeamCardSkeleton />;
 
   return (
-    <Card key={team._id}>
+    <Card>
       <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
         <div className="flex flex-1 flex-col justify-between self-start">
           <div className="flex items-center gap-2">
