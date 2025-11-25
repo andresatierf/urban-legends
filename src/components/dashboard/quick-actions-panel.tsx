@@ -20,7 +20,9 @@ export function QuickActionsPanel({ hasActiveTeams }: QuickActionsPanelProps) {
           >
             <Link href="/tournaments">
               <Trophy className="h-5 w-5" />
-              <span className="text-xs">Browse Tournaments</span>
+              <span className="text-wrap text-center text-xs">
+                Browse Tournaments
+              </span>
             </Link>
           </Button>
           <Button
@@ -30,7 +32,9 @@ export function QuickActionsPanel({ hasActiveTeams }: QuickActionsPanelProps) {
           >
             <Link href="/submissions">
               <FileText className="h-5 w-5" />
-              <span className="text-xs">My Submissions</span>
+              <span className="text-wrap text-center text-xs">
+                My Submissions
+              </span>
             </Link>
           </Button>
           <Button
@@ -40,7 +44,7 @@ export function QuickActionsPanel({ hasActiveTeams }: QuickActionsPanelProps) {
           >
             <Link href="/teams">
               <Users className="h-5 w-5" />
-              <span className="text-xs">My Teams</span>
+              <span className="text-wrap text-center text-xs">My Teams</span>
             </Link>
           </Button>
           <Button
@@ -52,12 +56,16 @@ export function QuickActionsPanel({ hasActiveTeams }: QuickActionsPanelProps) {
             {hasActiveTeams ? (
               <Link href="/submissions/new">
                 <Plus className="h-5 w-5" />
-                <span className="text-xs">New Submission</span>
+                <span className="text-wrap text-center text-xs">
+                  New Submission
+                </span>
               </Link>
             ) : (
               <>
                 <Plus className="h-5 w-5" />
-                <span className="text-xs">New Submission</span>
+                <span className="text-wrap text-center text-xs">
+                  New Submission
+                </span>
               </>
             )}
           </Button>

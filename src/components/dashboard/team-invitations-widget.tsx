@@ -4,5 +4,5 @@ import { TeamInvitationsList } from "@/components/invitations/team-invitations-l
  * Wrapper component for TeamInvitationsList to be used in the unified dashboard
  */
 export function TeamInvitationsWidget() {
-  return <TeamInvitationsList />;
+  return <TeamInvitationsList pendingOnly />;
 }

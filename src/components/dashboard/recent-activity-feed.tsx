@@ -38,7 +38,7 @@ export function RecentActivityFeed({ activities }: RecentActivityFeedProps) {
       </CardHeader>
       <CardContent>
         {activities.length === 0 ? (
-          <Empty>
+          <Empty className="gap-3 p-2!">
             <EmptyTitle>No recent activity</EmptyTitle>
             <EmptyDescription>
               Activity will appear here as you participate in tournaments.

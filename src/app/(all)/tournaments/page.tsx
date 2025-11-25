@@ -69,7 +69,7 @@ export default function TournamentsPage() {
       )}
 
       <SectionHeader title="All Tournaments" />
-      <CardGrid data={userTournaments} empty=<JoinTournamentCard first />>
+      <CardGrid data={allTournaments} empty=<JoinTournamentCard first />>
         {(tournament) => (
           <TournamentCard
             key={tournament._id}

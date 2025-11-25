@@ -32,7 +32,7 @@ export function UpcomingDeadlinesWidget({
       </CardHeader>
       <CardContent>
         {validDeadlines.length === 0 ? (
-          <Empty>
+          <Empty className="gap-3 p-2!">
             <EmptyTitle>No upcoming deadlines</EmptyTitle>
             <EmptyDescription>
               You'll see tournaments ending soon here.

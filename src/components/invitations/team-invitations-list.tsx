@@ -15,7 +15,11 @@ import {
 import { Empty, EmptyDescription, EmptyTitle } from "../ui/empty";
 import { TeamInvitationCard } from "./team-invitation-card";
 
-export function TeamInvitationsList() {
+export function TeamInvitationsList({
+  pendingOnly,
+}: {
+  pendingOnly?: boolean;
+}) {
   const [processingId, setProcessingId] =
     useState<Id<"teamInvitations"> | null>(null);
 
@@ -64,7 +68,10 @@ export function TeamInvitationsList() {
     });
   };
 
-  if (invitations.length === 0) {
+  if (
+    invitations.length === 0 ||
+    (pendingOnly && pendingInvitations.length === 0)
+  ) {
     return (
       <Card>
         <CardHeader>
@@ -72,7 +79,7 @@ export function TeamInvitationsList() {
           <CardDescription>View your pending team invitations</CardDescription>
         </CardHeader>
         <CardContent>
-          <Empty>
+          <Empty className="gap-3 p-2!">
             <EmptyTitle>No pending invitations</EmptyTitle>
             <EmptyDescription>
               When team captains invite you to join their team, invitations will
@@ -98,7 +105,9 @@ export function TeamInvitationsList() {
       <CardContent className="space-y-4">
         {pendingInvitations.length > 0 && (
           <div className="space-y-3">
-            <h3 className="font-medium text-sm">Pending Invitations</h3>
+            {!pendingOnly && (
+              <h3 className="font-medium text-sm">Pending Invitations</h3>
+            )}
             {pendingInvitations.map((invitation) => (
               <TeamInvitationCard
                 key={invitation._id}
@@ -111,7 +120,7 @@ export function TeamInvitationsList() {
           </div>
         )}
 
-        {otherInvitations.length > 0 && (
+        {!pendingOnly && otherInvitations.length > 0 && (
           <div className="space-y-3">
             <h3 className="font-medium text-sm">Past Invitations</h3>
             {otherInvitations.map((invitation) => (

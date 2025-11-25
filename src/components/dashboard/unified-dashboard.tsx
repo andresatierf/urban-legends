@@ -37,32 +37,24 @@ export function UnifiedDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <>
       <DashboardHeader
         userName={user.name ?? "Player"}
         activeTournamentsCount={userDashboardData?.activeTournamentsCount ?? 0}
       />
 
-      {/* Admin Overview Card */}
       {isAdmin && adminDashboardData && (
         <AdminOverviewCard stats={adminDashboardData} />
       )}
 
-      {/* User Stats Grid */}
       {userDashboardData && <UserStatsGrid data={userDashboardData} />}
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Column - 2/3 width */}
         <div className="space-y-6 lg:col-span-2">
-          {/* My Active Tournaments */}
           <MyActiveTournamentsWidget teams={userDashboardData?.teams ?? []} />
 
-          {/* My Teams */}
           <MyTeamsWidget teams={userDashboardData?.teams ?? []} />
 
-          {/* Quick Actions */}
           <QuickActionsPanel
             hasActiveTeams={
               (userDashboardData?.activeTournamentsCount ?? 0) > 0
@@ -70,18 +62,14 @@ export function UnifiedDashboard() {
           />
         </div>
 
-        {/* Right Column - 1/3 width */}
         <div className="space-y-6">
-          {/* Team Invitations */}
           <TeamInvitationsWidget />
 
-          {/* Recent Activity */}
           <RecentActivityFeed activities={recentActivity ?? []} />
 
-          {/* Upcoming Deadlines */}
           <UpcomingDeadlinesWidget deadlines={upcomingDeadlines ?? []} />
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 import { capitalize } from "lodash";
-import { Calendar, Check, Loader2, UserPlus, X } from "lucide-react";
+import { Calendar, Check, Loader2, Trophy, UserPlus, X } from "lucide-react";
+import Link from "next/link";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -28,14 +29,21 @@ export function TeamInvitationCard({
 
   return (
     <Card className={className}>
-      <CardContent className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+      <CardContent className="flex flex-col flex-wrap justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <p className="font-medium">{invitation.team?.name}</p>
-            <Badge variant="secondary">{invitation.tournament?.name}</Badge>
             {isExpired && <Badge variant="destructive">Expired</Badge>}
           </div>
           <div className="mt-1 flex flex-col items-start text-muted-foreground text-xs">
+            <Trophy className="h-4 w-4" />
+            <Link
+              href={`/tournaments/${invitation.tournament?._id}`}
+              className="hover:underline"
+            >
+              {invitation.tournament?.name}
+            </Link>
+            <Badge variant="secondary">{invitation.tournament?.name}</Badge>
             <span className="flex items-center gap-1">
               <UserPlus className="h-3 w-3" />
               Invited by {invitation.invitedByUser?.name}
