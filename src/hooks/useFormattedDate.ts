@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   type DateFormat,
   type FormatLength,
@@ -8,48 +8,29 @@ import {
 } from "@/lib/dates";
 
 /**
- * Subscribe to localStorage changes for date format preferences
- */
-function subscribeDateFormatChange(callback: () => void) {
-  const handleStorageChange = (e: StorageEvent) => {
-    if (e.key === "dateFormatShort" || e.key === "dateFormatLong") {
-      callback();
-    }
-  };
-
-  window.addEventListener("storage", handleStorageChange);
-  return () => window.removeEventListener("storage", handleStorageChange);
-}
-
-/**
- * Get current date format preferences from localStorage
- */
-function getSnapshot(): { short: DateFormat; long: DateFormat } {
-  return {
-    short: getDateFormatPreference("short"),
-    long: getDateFormatPreference("long"),
-  };
-}
-
-/**
- * Server-side snapshot (returns defaults)
- */
-function getServerSnapshot(): { short: DateFormat; long: DateFormat } {
-  return {
-    short: "MM/dd/yyyy",
-    long: "MMM dd, yyyy",
-  };
-}
-
-/**
- * Hook to get user's date format preferences and format dates consistently
+ * Hook to format dates consistently using user preferences
  */
 export function useFormattedDate() {
-  const userFormats = useSyncExternalStore(
-    subscribeDateFormatChange,
-    getSnapshot,
-    getServerSnapshot,
+  const [shortFormat, setShortFormat] = useState<DateFormat>(() =>
+    getDateFormatPreference("short"),
   );
+  const [longFormat, setLongFormat] = useState<DateFormat>(() =>
+    getDateFormatPreference("long"),
+  );
+
+  // Listen for localStorage changes
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "dateFormatShort") {
+        setShortFormat(getDateFormatPreference("short"));
+      } else if (e.key === "dateFormatLong") {
+        setLongFormat(getDateFormatPreference("long"));
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const format = useCallback(
     (
@@ -57,7 +38,6 @@ export function useFormattedDate() {
       formatLength: FormatLength = "long",
       options?: {
         includeTime?: boolean;
-        timezone?: string;
       },
     ) => {
       return formatDate(isoString, formatLength, options);
@@ -75,13 +55,10 @@ export function useFormattedDate() {
     [],
   );
 
-  return useMemo(
-    () => ({
-      format,
-      formatRelative,
-      shortFormat: userFormats.short,
-      longFormat: userFormats.long,
-    }),
-    [format, formatRelative, userFormats],
-  );
+  return {
+    format,
+    formatRelative,
+    shortFormat,
+    longFormat,
+  };
 }
