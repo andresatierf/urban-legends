@@ -1,19 +1,54 @@
 "use client";
 
-import { Eye } from "lucide-react";
+import { useQuery } from "convex/react";
+import { redirect } from "next/navigation";
+import { SectionHeader } from "@/components/section-header";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TournamentDiscoveryCard } from "@/components/viewer/tournament-discovery-card";
+import { useUser } from "@/hooks/useUser";
+import { api } from "../../../../convex/_generated/api";
 
 export default function ViewerDashboard() {
+  const { user } = useUser();
+  const dashboardData = useQuery(api.viewer.getDashboardData);
+
+  if (!user) {
+    redirect("/sign-in");
+  }
+
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8 flex items-center gap-3">
-        <Eye className="h-8 w-8" />
-        <h1 className="font-bold text-3xl">Viewer Dashboard</h1>
-      </div>
-      <div className="rounded-lg border border-dashed p-12 text-center">
-        <p className="text-muted-foreground">
-          Viewer dashboard coming soon (Spec 14)
-        </p>
-      </div>
-    </div>
+    <>
+      <SectionHeader
+        as="h1"
+        title="Viewer Dashboard"
+        description="Discover and follow active tournaments"
+      />
+
+      {dashboardData === undefined ? (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Skeleton className="h-48" />
+          <Skeleton className="h-48" />
+          <Skeleton className="h-48" />
+          <Skeleton className="h-48" />
+        </div>
+      ) : dashboardData.tournaments.length === 0 ? (
+        <div className="rounded-lg border border-dashed p-12 text-center">
+          <p className="text-muted-foreground">
+            No active tournaments at the moment
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {dashboardData.tournaments.map((item) => (
+            <TournamentDiscoveryCard
+              key={item.tournament._id}
+              tournament={item.tournament}
+              teamCount={item.teamCount}
+              topTeam={item.topTeam}
+            />
+          ))}
+        </div>
+      )}
+    </>
   );
 }

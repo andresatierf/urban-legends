@@ -1,19 +1,34 @@
 "use client";
 
-import { Tv } from "lucide-react";
+import { useQuery } from "convex/react";
+import { LiveActivityFeed } from "@/components/public/live-activity-feed";
+import { SectionHeader } from "@/components/section-header";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "../../../../../convex/_generated/api";
 
 export default function LiveTournaments() {
+  const liveFeed = useQuery(api.publicQueries.getLiveTournamentFeed, {
+    limit: 30,
+  });
+
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8 flex items-center gap-3">
-        <Tv className="h-8 w-8" />
-        <h1 className="font-bold text-3xl">Live Tournaments</h1>
-      </div>
-      <div className="rounded-lg border border-dashed p-12 text-center">
-        <p className="text-muted-foreground">
-          Live tournaments feed coming soon (Spec 14)
-        </p>
-      </div>
-    </div>
+    <>
+      <SectionHeader
+        as="h1"
+        title="Live Tournaments"
+        description="Real-time feed of recent submissions across active tournaments"
+      />
+
+      {liveFeed === undefined ? (
+        <div className="space-y-4">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+      ) : (
+        <LiveActivityFeed activities={liveFeed} />
+      )}
+    </>
   );
 }
