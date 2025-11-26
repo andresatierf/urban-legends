@@ -2,7 +2,12 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
-import { nowUTC, toUTCDateString } from "./lib/dates";
+import {
+  extractDateFromISO,
+  nowUTC,
+  toUTCDateString,
+  toUTCEndOfDayString,
+} from "./lib/dates";
 import {
   calculateGroupMetrics,
   upsertSubmissionGroup,
@@ -797,10 +802,14 @@ export const getMonthSubmissions = query({
       throw new Error("Not a member of this team");
     }
 
-    // Calculate date range for month
-    const startDate = `${args.year}-${String(args.month).padStart(2, "0")}-01`;
+    // Calculate date range for month (UTC ISO format)
+    const startDateStr = `${args.year}-${String(args.month).padStart(2, "0")}-01`;
     const lastDayOfMonth = new Date(args.year, args.month, 0).getDate();
-    const endDate = `${args.year}-${String(args.month).padStart(2, "0")}-${String(lastDayOfMonth).padStart(2, "0")}`;
+    const endDateStr = `${args.year}-${String(args.month).padStart(2, "0")}-${String(lastDayOfMonth).padStart(2, "0")}`;
+
+    // Convert to UTC ISO format for comparison
+    const startDate = toUTCDateString(startDateStr);
+    const endDate = toUTCEndOfDayString(endDateStr);
 
     // Fetch submissions for month
     const submissions = await ctx.db
@@ -823,10 +832,12 @@ export const getMonthSubmissions = query({
       )
       .collect();
 
-    // Return map of date -> submission
+    // Return map of date -> submission (using YYYY-MM-DD as key for calendar compatibility)
     return submissions.reduce(
       (acc, sub) => {
-        acc[sub.date] = {
+        // Extract YYYY-MM-DD from UTC ISO string for calendar lookup
+        const dateKey = extractDateFromISO(sub.date);
+        acc[dateKey] = {
           _id: sub._id,
           state: sub.state,
           description: sub.description,
