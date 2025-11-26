@@ -2,15 +2,29 @@
  * Frontend date formatting utilities
  */
 
-export const DATE_FORMATS = {
+export const SHORT_DATE_FORMATS = {
   "MM/dd/yyyy": "MM/dd/yyyy",
   "dd/MM/yyyy": "dd/MM/yyyy",
   "yyyy-MM-dd": "yyyy-MM-dd",
-  "dd MMM yyyy": "dd MMM yyyy",
-  "MMM dd, yyyy": "MMM dd, yyyy",
-  "dd MMMM yyyy": "dd MMMM yyyy",
+  "M/d/yyyy": "M/d/yyyy",
+  "d/M/yyyy": "d/M/yyyy",
 } as const;
 
+export const LONG_DATE_FORMATS = {
+  "MMM dd, yyyy": "MMM dd, yyyy",
+  "dd MMM yyyy": "dd MMM yyyy",
+  "MMMM dd, yyyy": "MMMM dd, yyyy",
+  "dd MMMM yyyy": "dd MMMM yyyy",
+  "MMMM d, yyyy": "MMMM d, yyyy",
+} as const;
+
+export const DATE_FORMATS = {
+  ...SHORT_DATE_FORMATS,
+  ...LONG_DATE_FORMATS,
+} as const;
+
+export type ShortDateFormat = keyof typeof SHORT_DATE_FORMATS;
+export type LongDateFormat = keyof typeof LONG_DATE_FORMATS;
 export type DateFormat = keyof typeof DATE_FORMATS;
 export type FormatLength = "short" | "long";
 
@@ -52,7 +66,7 @@ function formatWithPattern(
   // Replace year
   result = result.replace("yyyy", partMap.year || "");
 
-  // Replace month
+  // Replace month (check longest patterns first)
   if (format.includes("MMMM")) {
     const monthNames = [
       "January",
@@ -91,9 +105,12 @@ function formatWithPattern(
     result = result.replace("M", String(date.getMonth() + 1));
   }
 
-  // Replace day
-  result = result.replace("dd", String(date.getDate()).padStart(2, "0"));
-  result = result.replace("d", String(date.getDate()));
+  // Replace day (check dd before d to avoid partial replacement)
+  if (format.includes("dd")) {
+    result = result.replace("dd", String(date.getDate()).padStart(2, "0"));
+  } else if (format.includes("d")) {
+    result = result.replace("d", String(date.getDate()));
+  }
 
   return result;
 }

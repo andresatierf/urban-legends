@@ -16,10 +16,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  DATE_FORMATS,
   type FormatLength,
   getDateFormatPreference,
   getFormatPreview,
+  LONG_DATE_FORMATS,
+  SHORT_DATE_FORMATS,
   setDateFormatPreference,
 } from "@/lib/dates";
 
@@ -72,10 +73,11 @@ export default function SettingsPage() {
   const handleDateFormatChange = (value: string, length: FormatLength) => {
     if (length === "short") {
       setDateFormatShort(value);
+      setDateFormatPreference(value as keyof typeof SHORT_DATE_FORMATS, length);
     } else {
       setDateFormatLong(value);
+      setDateFormatPreference(value as keyof typeof LONG_DATE_FORMATS, length);
     }
-    setDateFormatPreference(value as keyof typeof DATE_FORMATS, length);
     // Dispatch storage event for other tabs/windows
     const storageKey =
       length === "short" ? "dateFormatShort" : "dateFormatLong";
@@ -181,7 +183,7 @@ export default function SettingsPage() {
                     Short date format
                   </label>
                   <p className="mt-1 text-muted-foreground text-sm">
-                    Used for compact date displays (e.g., lists, cards)
+                    Compact numeric formats for lists and cards
                   </p>
                 </div>
                 <Select
@@ -197,13 +199,13 @@ export default function SettingsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.keys(DATE_FORMATS).map((format) => (
+                    {Object.keys(SHORT_DATE_FORMATS).map((format) => (
                       <SelectItem key={format} value={format}>
                         <div className="flex items-center justify-between gap-4">
                           <span className="font-mono text-sm">{format}</span>
                           <span className="text-muted-foreground text-xs">
                             {getFormatPreview(
-                              format as keyof typeof DATE_FORMATS,
+                              format as keyof typeof SHORT_DATE_FORMATS,
                             )}
                           </span>
                         </div>
@@ -223,7 +225,7 @@ export default function SettingsPage() {
                     Long date format
                   </label>
                   <p className="mt-1 text-muted-foreground text-sm">
-                    Used for detailed date displays (e.g., headers, details)
+                    Verbose text-based formats for headers and announcements
                   </p>
                 </div>
                 <Select
@@ -239,13 +241,13 @@ export default function SettingsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.keys(DATE_FORMATS).map((format) => (
+                    {Object.keys(LONG_DATE_FORMATS).map((format) => (
                       <SelectItem key={format} value={format}>
                         <div className="flex items-center justify-between gap-4">
                           <span className="font-mono text-sm">{format}</span>
                           <span className="text-muted-foreground text-xs">
                             {getFormatPreview(
-                              format as keyof typeof DATE_FORMATS,
+                              format as keyof typeof LONG_DATE_FORMATS,
                             )}
                           </span>
                         </div>
@@ -258,10 +260,11 @@ export default function SettingsPage() {
               <Card variant="info" className="rounded-md">
                 <CardContent>
                   <p className="text-sm">
-                    <strong>Note:</strong> Short formats are used in compact
-                    spaces like cards and lists, while long formats are used for
-                    more detailed displays. Your preferences are saved locally
-                    and will persist across sessions.
+                    <strong>Note:</strong> Short formats use compact numeric
+                    styles (e.g., 11/18/2025) for cards and lists, while long
+                    formats use verbose text styles (e.g., Nov 18, 2025) for
+                    headers and announcements. Your preferences are saved
+                    locally and will persist across sessions.
                   </p>
                 </CardContent>
               </Card>
