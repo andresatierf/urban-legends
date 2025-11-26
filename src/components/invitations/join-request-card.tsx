@@ -1,5 +1,6 @@
 import { capitalize } from "lodash";
 import { Calendar, Check, Loader2, Mail, X } from "lucide-react";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -22,6 +23,7 @@ export function JoinRequestCard({
   onReject,
   className,
 }: RequestCardProps) {
+  const { format } = useFormattedDate();
   return (
     <Card className={className}>
       <CardContent className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -42,12 +44,12 @@ export function JoinRequestCard({
           <div className="mt-1 flex flex-col items-start text-muted-foreground text-xs">
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              Requested {new Date(request.createdAt).toLocaleDateString()}
+              Requested {format(request.createdAt)}
             </span>
             {request.respondedAt && (
               <span className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
-                {`${capitalize(request.status)} ${new Date(request.respondedAt).toLocaleDateString()}`}
+                {`${capitalize(request.status)} ${format(request.respondedAt)}`}
               </span>
             )}
           </div>

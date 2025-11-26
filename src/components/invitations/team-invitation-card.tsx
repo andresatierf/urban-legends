@@ -1,6 +1,7 @@
 import { capitalize } from "lodash";
 import { Calendar, Check, Loader2, Trophy, UserPlus, X } from "lucide-react";
 import Link from "next/link";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -25,6 +26,7 @@ export function TeamInvitationCard({
   onReject,
   className,
 }: TeamInvitationCardProps) {
+  const { format } = useFormattedDate();
   const isExpired = new Date(invitation.expiresAt) < new Date();
 
   return (
@@ -52,8 +54,8 @@ export function TeamInvitationCard({
             <span className="flex items-center gap-1 text-xs">
               <Calendar className="h-3 w-3" />
               {invitation.respondedAt
-                ? `${capitalize(invitation.status)} ${new Date(invitation.respondedAt).toLocaleDateString()}`
-                : `Expires ${new Date(invitation.expiresAt).toLocaleDateString()}`}
+                ? `${capitalize(invitation.status)} ${format(invitation.respondedAt)}`
+                : `Expires ${format(invitation.expiresAt)}`}
             </span>
           </div>
         </div>
