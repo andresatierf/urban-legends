@@ -1,9 +1,9 @@
 "use client";
 
-import { format } from "date-fns";
 import { Calendar, Trophy, User, Users } from "lucide-react";
 import type { Doc } from "@/../convex/_generated/dataModel";
 import { Badge } from "@/components/ui/badge";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 
 interface SubmissionCardDetailsProps {
   submission: Doc<"submissions">;
@@ -16,6 +16,8 @@ export function SubmissionCardDetails({
   team,
   user,
 }: SubmissionCardDetailsProps) {
+  const { format } = useFormattedDate();
+
   const tierColors = {
     base: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
     advanced:
@@ -59,9 +61,7 @@ export function SubmissionCardDetails({
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
           <span>
-            {submission.date
-              ? format(new Date(submission.date), "MMM d, yyyy")
-              : "No Date"}
+            {submission.date ? format(submission.date, "long") : "No Date"}
           </span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">

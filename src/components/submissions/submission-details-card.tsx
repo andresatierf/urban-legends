@@ -2,7 +2,6 @@
 
 import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { format as formatDateFns } from "date-fns";
 import { Check, Pencil, Trash2, Trophy, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -223,10 +222,7 @@ export function SubmissionDetailsCard({
         submission={data.submission}
       />
       <DetailsCard
-        title={formatDateFns(
-          new Date(data.submission.date),
-          "EEEE, LLLL do, yyyy",
-        )}
+        title={format(data.submission.date, "full")}
         description={data.submission.description || "No description provided."}
         details={details}
         actions={actions}
