@@ -8,7 +8,12 @@
  * @returns UTC ISO string at midnight (e.g., "2025-11-18T00:00:00.000Z")
  */
 export function toUTCDateString(dateInput: string | Date): string {
-  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  if (typeof dateInput === "string") {
+    const [year, month, day] = dateInput.split("-").map(Number);
+    const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    return utcDate.toISOString();
+  }
+  const date = dateInput;
   const utcDate = new Date(
     Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0),
   );
@@ -21,7 +26,12 @@ export function toUTCDateString(dateInput: string | Date): string {
  * @returns UTC ISO string at 23:59:59.999 (e.g., "2025-11-18T23:59:59.999Z")
  */
 export function toUTCEndOfDayString(dateInput: string | Date): string {
-  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  if (typeof dateInput === "string") {
+    const [year, month, day] = dateInput.split("-").map(Number);
+    const utcDate = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+    return utcDate.toISOString();
+  }
+  const date = dateInput;
   const utcDate = new Date(
     Date.UTC(
       date.getFullYear(),
