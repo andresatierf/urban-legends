@@ -17,6 +17,9 @@ export function useFormattedDate() {
   const [longFormat, setLongFormat] = useState<DateFormat>(() =>
     getDateFormatPreference("long"),
   );
+  const [fullFormat, setFullFormat] = useState<DateFormat>(() =>
+    getDateFormatPreference("full"),
+  );
 
   // Listen for localStorage changes
   useEffect(() => {
@@ -25,6 +28,8 @@ export function useFormattedDate() {
         setShortFormat(getDateFormatPreference("short"));
       } else if (e.key === "dateFormatLong") {
         setLongFormat(getDateFormatPreference("long"));
+      } else if (e.key === "dateFormatFull") {
+        setFullFormat(getDateFormatPreference("full"));
       }
     };
 
@@ -60,5 +65,6 @@ export function useFormattedDate() {
     formatRelative,
     shortFormat,
     longFormat,
+    fullFormat,
   };
 }

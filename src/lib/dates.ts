@@ -20,20 +20,32 @@ export const LONG_DATE_FORMATS = {
   "MMMM d, yyyy": "MMMM d, yyyy",
 } as const;
 
+export const FULL_DATE_FORMATS = {
+  "EEEE, MMMM dd, yyyy": "EEEE, MMMM dd, yyyy",
+  "EEEE, dd MMMM yyyy": "EEEE, dd MMMM yyyy",
+  "EEE, MMM dd, yyyy": "EEE, MMM dd, yyyy",
+  "EEE, dd MMM yyyy": "EEE, dd MMM yyyy",
+  "EEEE, MMMM d, yyyy": "EEEE, MMMM d, yyyy",
+} as const;
+
 export const DATE_FORMATS = {
   ...SHORT_DATE_FORMATS,
   ...LONG_DATE_FORMATS,
+  ...FULL_DATE_FORMATS,
 } as const;
 
 export type ShortDateFormat = keyof typeof SHORT_DATE_FORMATS;
 export type LongDateFormat = keyof typeof LONG_DATE_FORMATS;
+export type FullDateFormat = keyof typeof FULL_DATE_FORMATS;
 export type DateFormat = keyof typeof DATE_FORMATS;
-export type FormatLength = "short" | "long";
+export type FormatLength = "short" | "long" | "full";
 
 export const DEFAULT_DATE_FORMAT_SHORT: DateFormat = "MM/dd/yyyy";
 export const DEFAULT_DATE_FORMAT_LONG: DateFormat = "MMM dd, yyyy";
+export const DEFAULT_DATE_FORMAT_FULL: DateFormat = "EEEE, MMMM dd, yyyy";
 export const DATE_FORMAT_SHORT_STORAGE_KEY = "dateFormatShort";
 export const DATE_FORMAT_LONG_STORAGE_KEY = "dateFormatLong";
+export const DATE_FORMAT_FULL_STORAGE_KEY = "dateFormatFull";
 
 /**
  * Format a UTC ISO string to user's preferred format.
@@ -156,22 +168,29 @@ export function getFormatPreview(format: DateFormat): string {
 
 /**
  * Get user's date format preference from localStorage
- * @param length - "short" or "long" format preference
+ * @param length - "short", "long", or "full" format preference
  * @returns User's preferred date format or default
  */
 export function getDateFormatPreference(length: FormatLength): DateFormat {
   if (typeof window === "undefined") {
-    return length === "short"
-      ? DEFAULT_DATE_FORMAT_SHORT
-      : DEFAULT_DATE_FORMAT_LONG;
+    if (length === "short") return DEFAULT_DATE_FORMAT_SHORT;
+    if (length === "long") return DEFAULT_DATE_FORMAT_LONG;
+    return DEFAULT_DATE_FORMAT_FULL;
   }
 
   const storageKey =
     length === "short"
       ? DATE_FORMAT_SHORT_STORAGE_KEY
-      : DATE_FORMAT_LONG_STORAGE_KEY;
+      : length === "long"
+        ? DATE_FORMAT_LONG_STORAGE_KEY
+        : DATE_FORMAT_FULL_STORAGE_KEY;
+
   const defaultFormat =
-    length === "short" ? DEFAULT_DATE_FORMAT_SHORT : DEFAULT_DATE_FORMAT_LONG;
+    length === "short"
+      ? DEFAULT_DATE_FORMAT_SHORT
+      : length === "long"
+        ? DEFAULT_DATE_FORMAT_LONG
+        : DEFAULT_DATE_FORMAT_FULL;
 
   const stored = localStorage.getItem(storageKey);
   if (stored && stored in DATE_FORMATS) {
@@ -183,7 +202,7 @@ export function getDateFormatPreference(length: FormatLength): DateFormat {
 /**
  * Save user's date format preference to localStorage
  * @param format - Date format to save
- * @param length - "short" or "long" format preference
+ * @param length - "short", "long", or "full" format preference
  */
 export function setDateFormatPreference(
   format: DateFormat,
@@ -193,6 +212,8 @@ export function setDateFormatPreference(
   const storageKey =
     length === "short"
       ? DATE_FORMAT_SHORT_STORAGE_KEY
-      : DATE_FORMAT_LONG_STORAGE_KEY;
+      : length === "long"
+        ? DATE_FORMAT_LONG_STORAGE_KEY
+        : DATE_FORMAT_FULL_STORAGE_KEY;
   localStorage.setItem(storageKey, format);
 }
