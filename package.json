@@ -10,8 +10,10 @@
     "lint:fix": "biome lint --write",
     "format": "biome format",
     "format:fix": "biome format --write",
-    "typecheck": "tsc --noEmit",
-    "ci": "biome ci"
+    "check": "biome check",
+    "check:fix": "biome check --write --unsafe",
+    "ci": "biome ci",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@auth/core": "^0.37.0",

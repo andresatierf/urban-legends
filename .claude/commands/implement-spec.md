@@ -121,25 +121,31 @@ Work through each task systematically:
 
 ## Step 6: Commit Changes
 
-After implementing each major section (schema, backend, frontend):
+After implementing each major section (schema, backend, frontend), use the `/commit` command to create descriptive commits:
+
+```
+/commit
+```
+
+The `/commit` command will:
 
 - Review changes with `git status` and `git diff`
+- Check recent commits to match the repository's commit style
 - Stage relevant files
-- Create descriptive commits following this format:
+- Create a well-formatted commit message with proper scope and description
+- Automatically include the Claude Code footer
 
-```
-feat([scope]): [brief description]
+**Example commit scopes:** `schema`, `backend`, `ui`, `pages`, `teams`, `leaderboard`
 
-[Detailed description of what was implemented]
-- List key changes
-- Reference spec file if helpful
+**When to commit:**
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+- After implementing schema changes
+- After completing backend mutations/queries
+- After creating frontend components
+- After integrating features into pages
+- After fixing validation issues from Step 7
 
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
-Example scopes: `schema`, `backend`, `ui`, `pages`, `teams`, `leaderboard`
+**Note:** The `/commit` command handles all the commit formatting and conventions automatically. Just run it when you're ready to commit a logical section of work.
 
 ## Step 7: Run Quality Checks and Validation
 
@@ -150,7 +156,7 @@ Before finishing, validate the implementation with comprehensive checks:
 Run the full CI suite to catch any issues:
 
 ```bash
-bun --bun run check --write --unsafe
+bun --bun run check:fix
 ```
 
 This runs all CI checks including linting, formatting, and type checking.
