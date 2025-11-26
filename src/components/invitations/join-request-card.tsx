@@ -44,12 +44,12 @@ export function JoinRequestCard({
           <div className="mt-1 flex flex-col items-start text-muted-foreground text-xs">
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              Requested {format(request.createdAt)}
+              Requested {format(request.createdAt, "short")}
             </span>
             {request.respondedAt && (
               <span className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
-                {`${capitalize(request.status)} ${format(request.respondedAt)}`}
+                {`${capitalize(request.status)} ${format(request.respondedAt, "short")}`}
               </span>
             )}
           </div>

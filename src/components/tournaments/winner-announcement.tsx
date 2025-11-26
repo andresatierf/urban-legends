@@ -67,7 +67,7 @@ export function WinnerAnnouncement({ tournamentId }: Props) {
 
         {winner.completedAt && (
           <p className="text-muted-foreground text-sm">
-            Tournament completed on {format(winner.completedAt)}
+            Tournament completed on {format(winner.completedAt, "long")}
           </p>
         )}
 

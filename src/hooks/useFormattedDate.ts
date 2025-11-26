@@ -1,17 +1,18 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import {
   type DateFormat,
+  type FormatLength,
   formatDate,
   formatRelativeDate,
   getDateFormatPreference,
 } from "@/lib/dates";
 
 /**
- * Subscribe to localStorage changes for date format preference
+ * Subscribe to localStorage changes for date format preferences
  */
 function subscribeDateFormatChange(callback: () => void) {
   const handleStorageChange = (e: StorageEvent) => {
-    if (e.key === "dateFormat") {
+    if (e.key === "dateFormatShort" || e.key === "dateFormatLong") {
       callback();
     }
   };
@@ -21,24 +22,30 @@ function subscribeDateFormatChange(callback: () => void) {
 }
 
 /**
- * Get current date format preference from localStorage
+ * Get current date format preferences from localStorage
  */
-function getSnapshot(): DateFormat {
-  return getDateFormatPreference();
+function getSnapshot(): { short: DateFormat; long: DateFormat } {
+  return {
+    short: getDateFormatPreference("short"),
+    long: getDateFormatPreference("long"),
+  };
 }
 
 /**
- * Server-side snapshot (returns default)
+ * Server-side snapshot (returns defaults)
  */
-function getServerSnapshot(): DateFormat {
-  return "MM/dd/yyyy";
+function getServerSnapshot(): { short: DateFormat; long: DateFormat } {
+  return {
+    short: "MM/dd/yyyy",
+    long: "MMM dd, yyyy",
+  };
 }
 
 /**
- * Hook to get user's date format preference and format dates consistently
+ * Hook to get user's date format preferences and format dates consistently
  */
 export function useFormattedDate() {
-  const userFormat = useSyncExternalStore(
+  const userFormats = useSyncExternalStore(
     subscribeDateFormatChange,
     getSnapshot,
     getServerSnapshot,
@@ -47,29 +54,34 @@ export function useFormattedDate() {
   const format = useCallback(
     (
       isoString: string | undefined | null,
+      formatLength: FormatLength = "long",
       options?: {
         includeTime?: boolean;
         timezone?: string;
       },
     ) => {
-      return formatDate(isoString, userFormat, options);
+      return formatDate(isoString, formatLength, options);
     },
-    [userFormat],
+    [],
   );
 
   const formatRelative = useCallback(
-    (isoString: string | undefined | null) => {
-      return formatRelativeDate(isoString, userFormat);
+    (
+      isoString: string | undefined | null,
+      formatLength: FormatLength = "long",
+    ) => {
+      return formatRelativeDate(isoString, formatLength);
     },
-    [userFormat],
+    [],
   );
 
   return useMemo(
     () => ({
       format,
       formatRelative,
-      userFormat,
+      shortFormat: userFormats.short,
+      longFormat: userFormats.long,
     }),
-    [format, formatRelative, userFormat],
+    [format, formatRelative, userFormats],
   );
 }

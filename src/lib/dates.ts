@@ -12,9 +12,12 @@ export const DATE_FORMATS = {
 } as const;
 
 export type DateFormat = keyof typeof DATE_FORMATS;
+export type FormatLength = "short" | "long";
 
-export const DEFAULT_DATE_FORMAT: DateFormat = "MM/dd/yyyy";
-export const DATE_FORMAT_STORAGE_KEY = "dateFormat";
+export const DEFAULT_DATE_FORMAT_SHORT: DateFormat = "MM/dd/yyyy";
+export const DEFAULT_DATE_FORMAT_LONG: DateFormat = "MMM dd, yyyy";
+export const DATE_FORMAT_SHORT_STORAGE_KEY = "dateFormatShort";
+export const DATE_FORMAT_LONG_STORAGE_KEY = "dateFormatLong";
 
 /**
  * Parse format string to determine month style
@@ -98,13 +101,13 @@ function formatWithPattern(
 /**
  * Format a UTC ISO string to user's preferred format.
  * @param isoString - UTC ISO date string
- * @param format - Desired format (defaults to "MM/dd/yyyy")
+ * @param formatLength - Use "short" or "long" format preference (defaults to "long")
  * @param options - Additional formatting options
  * @returns Formatted date string
  */
 export function formatDate(
   isoString: string | undefined | null,
-  format: DateFormat = DEFAULT_DATE_FORMAT,
+  formatLength: FormatLength = "long",
   options?: {
     includeTime?: boolean;
     timezone?: string;
@@ -114,6 +117,9 @@ export function formatDate(
 
   const date = new Date(isoString);
   if (Number.isNaN(date.getTime())) return "";
+
+  // Get user's preferred format for the specified length
+  const format = getDateFormatPreference(formatLength);
 
   // Use Intl.DateTimeFormat for consistent formatting
   const formatParts = parseFormatString(format);
@@ -136,11 +142,12 @@ export function formatDate(
 /**
  * Format a date for relative display (e.g., "2 days ago")
  * @param isoString - UTC ISO date string
+ * @param formatLength - Use "short" or "long" format for fallback (defaults to "long")
  * @returns Relative time string or formatted date if too old
  */
 export function formatRelativeDate(
   isoString: string | undefined | null,
-  fallbackFormat: DateFormat = DEFAULT_DATE_FORMAT,
+  formatLength: FormatLength = "long",
 ): string {
   if (!isoString) return "";
 
@@ -161,7 +168,7 @@ export function formatRelativeDate(
   if (diffDay < 7) return `${diffDay} day${diffDay !== 1 ? "s" : ""} ago`;
 
   // Use formatted date for older dates
-  return formatDate(isoString, fallbackFormat);
+  return formatDate(isoString, formatLength);
 }
 
 /**
@@ -233,23 +240,43 @@ export function getFormatPreview(format: DateFormat): string {
 
 /**
  * Get user's date format preference from localStorage
+ * @param length - "short" or "long" format preference
  * @returns User's preferred date format or default
  */
-export function getDateFormatPreference(): DateFormat {
-  if (typeof window === "undefined") return DEFAULT_DATE_FORMAT;
+export function getDateFormatPreference(length: FormatLength): DateFormat {
+  if (typeof window === "undefined") {
+    return length === "short"
+      ? DEFAULT_DATE_FORMAT_SHORT
+      : DEFAULT_DATE_FORMAT_LONG;
+  }
 
-  const stored = localStorage.getItem(DATE_FORMAT_STORAGE_KEY);
+  const storageKey =
+    length === "short"
+      ? DATE_FORMAT_SHORT_STORAGE_KEY
+      : DATE_FORMAT_LONG_STORAGE_KEY;
+  const defaultFormat =
+    length === "short" ? DEFAULT_DATE_FORMAT_SHORT : DEFAULT_DATE_FORMAT_LONG;
+
+  const stored = localStorage.getItem(storageKey);
   if (stored && stored in DATE_FORMATS) {
     return stored as DateFormat;
   }
-  return DEFAULT_DATE_FORMAT;
+  return defaultFormat;
 }
 
 /**
  * Save user's date format preference to localStorage
  * @param format - Date format to save
+ * @param length - "short" or "long" format preference
  */
-export function setDateFormatPreference(format: DateFormat): void {
+export function setDateFormatPreference(
+  format: DateFormat,
+  length: FormatLength,
+): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(DATE_FORMAT_STORAGE_KEY, format);
+  const storageKey =
+    length === "short"
+      ? DATE_FORMAT_SHORT_STORAGE_KEY
+      : DATE_FORMAT_LONG_STORAGE_KEY;
+  localStorage.setItem(storageKey, format);
 }

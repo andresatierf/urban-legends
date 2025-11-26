@@ -54,8 +54,8 @@ export function TeamInvitationCard({
             <span className="flex items-center gap-1 text-xs">
               <Calendar className="h-3 w-3" />
               {invitation.respondedAt
-                ? `${capitalize(invitation.status)} ${format(invitation.respondedAt)}`
-                : `Expires ${format(invitation.expiresAt)}`}
+                ? `${capitalize(invitation.status)} ${format(invitation.respondedAt, "short")}`
+                : `Expires ${format(invitation.expiresAt, "short")}`}
             </span>
           </div>
         </div>

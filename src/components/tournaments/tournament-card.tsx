@@ -42,7 +42,8 @@ export function TournamentCard({ tournament, teamCount }: Props) {
             </div>
             <div className="flex items-center gap-1 text-balance">
               <Calendar className="h-4 w-4" />
-              {format(tournament.startDate)} to {format(tournament.endDate)}
+              {format(tournament.startDate, "short")} to{" "}
+              {format(tournament.endDate, "short")}
             </div>
           </CardDescription>
         </div>

@@ -43,13 +43,13 @@ export function InvitedUserCard({
             <span className="flex items-center gap-1">
               <UserPlus className="h-3 w-3" />
               Invited by {invitation.invitedByUser?.name} on{" "}
-              {format(invitation.createdAt)}
+              {format(invitation.createdAt, "short")}
             </span>
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               {invitation.respondedAt
-                ? `${capitalize(invitation.status)} ${format(invitation.respondedAt)}`
-                : `Expires ${format(invitation.expiresAt)}`}
+                ? `${capitalize(invitation.status)} ${format(invitation.respondedAt, "short")}`
+                : `Expires ${format(invitation.expiresAt, "short")}`}
             </span>
           </div>
         </div>

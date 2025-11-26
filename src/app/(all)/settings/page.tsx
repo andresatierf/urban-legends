@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import {
   DATE_FORMATS,
+  type FormatLength,
   getDateFormatPreference,
   getFormatPreview,
   setDateFormatPreference,
@@ -38,11 +39,13 @@ export default function SettingsPage() {
   const { signOut } = useClerk();
 
   const [weekStartsOn, setWeekStartsOn] = useState<number>(0);
-  const [dateFormat, setDateFormat] = useState<string>("MM/dd/yyyy");
+  const [dateFormatShort, setDateFormatShort] = useState<string>("MM/dd/yyyy");
+  const [dateFormatLong, setDateFormatLong] = useState<string>("MMM dd, yyyy");
   const weekStartSelectId = useId();
-  const dateFormatSelectId = useId();
+  const dateFormatShortSelectId = useId();
+  const dateFormatLongSelectId = useId();
 
-  // Load week start preference from localStorage
+  // Load preferences from localStorage
   useEffect(() => {
     const stored = localStorage.getItem(WEEK_START_STORAGE_KEY);
     if (stored !== null) {
@@ -51,9 +54,11 @@ export default function SettingsPage() {
         setWeekStartsOn(parsed);
       }
     }
-    // Load date format preference
-    const storedFormat = getDateFormatPreference();
-    setDateFormat(storedFormat);
+    // Load date format preferences
+    const storedShortFormat = getDateFormatPreference("short");
+    const storedLongFormat = getDateFormatPreference("long");
+    setDateFormatShort(storedShortFormat);
+    setDateFormatLong(storedLongFormat);
   }, []);
 
   // Save week start preference to localStorage
@@ -64,13 +69,19 @@ export default function SettingsPage() {
   };
 
   // Save date format preference to localStorage
-  const handleDateFormatChange = (value: string) => {
-    setDateFormat(value);
-    setDateFormatPreference(value as keyof typeof DATE_FORMATS);
+  const handleDateFormatChange = (value: string, length: FormatLength) => {
+    if (length === "short") {
+      setDateFormatShort(value);
+    } else {
+      setDateFormatLong(value);
+    }
+    setDateFormatPreference(value as keyof typeof DATE_FORMATS, length);
     // Dispatch storage event for other tabs/windows
+    const storageKey =
+      length === "short" ? "dateFormatShort" : "dateFormatLong";
     window.dispatchEvent(
       new StorageEvent("storage", {
-        key: "dateFormat",
+        key: storageKey,
         newValue: value,
       }),
     );
@@ -160,25 +171,69 @@ export default function SettingsPage() {
                 </Select>
               </div>
 
-              {/* Date Format Preference */}
+              {/* Short Date Format Preference */}
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex-1">
                   <label
-                    htmlFor={dateFormatSelectId}
+                    htmlFor={dateFormatShortSelectId}
                     className="block font-medium text-sm"
                   >
-                    Date format
+                    Short date format
                   </label>
                   <p className="mt-1 text-muted-foreground text-sm">
-                    Choose how dates are displayed throughout the app
+                    Used for compact date displays (e.g., lists, cards)
                   </p>
                 </div>
                 <Select
-                  value={dateFormat}
-                  onValueChange={handleDateFormatChange}
+                  value={dateFormatShort}
+                  onValueChange={(value) =>
+                    handleDateFormatChange(value, "short")
+                  }
                 >
                   <SelectTrigger
-                    id={dateFormatSelectId}
+                    id={dateFormatShortSelectId}
+                    className="w-full sm:w-[220px]"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(DATE_FORMATS).map((format) => (
+                      <SelectItem key={format} value={format}>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="font-mono text-sm">{format}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {getFormatPreview(
+                              format as keyof typeof DATE_FORMATS,
+                            )}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Long Date Format Preference */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
+                  <label
+                    htmlFor={dateFormatLongSelectId}
+                    className="block font-medium text-sm"
+                  >
+                    Long date format
+                  </label>
+                  <p className="mt-1 text-muted-foreground text-sm">
+                    Used for detailed date displays (e.g., headers, details)
+                  </p>
+                </div>
+                <Select
+                  value={dateFormatLong}
+                  onValueChange={(value) =>
+                    handleDateFormatChange(value, "long")
+                  }
+                >
+                  <SelectTrigger
+                    id={dateFormatLongSelectId}
                     className="w-full sm:w-[220px]"
                   >
                     <SelectValue />
@@ -203,9 +258,10 @@ export default function SettingsPage() {
               <Card variant="info" className="rounded-md">
                 <CardContent>
                   <p className="text-sm">
-                    <strong>Note:</strong> These settings affect how dates are
-                    displayed throughout the app. Your preferences are saved
-                    locally and will persist across sessions.
+                    <strong>Note:</strong> Short formats are used in compact
+                    spaces like cards and lists, while long formats are used for
+                    more detailed displays. Your preferences are saved locally
+                    and will persist across sessions.
                   </p>
                 </CardContent>
               </Card>
