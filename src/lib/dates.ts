@@ -2,6 +2,8 @@
  * Frontend date formatting utilities
  */
 
+import { format as formatDateFns, formatDistanceToNow } from "date-fns";
+
 export const SHORT_DATE_FORMATS = {
   "MM/dd/yyyy": "MM/dd/yyyy",
   "dd/MM/yyyy": "dd/MM/yyyy",
@@ -34,88 +36,6 @@ export const DATE_FORMAT_SHORT_STORAGE_KEY = "dateFormatShort";
 export const DATE_FORMAT_LONG_STORAGE_KEY = "dateFormatLong";
 
 /**
- * Parse format string to determine month style
- */
-function parseFormatString(format: DateFormat): {
-  month: "numeric" | "2-digit" | "short" | "long";
-} {
-  if (format.includes("MMMM")) return { month: "long" };
-  if (format.includes("MMM")) return { month: "short" };
-  if (format.includes("MM")) return { month: "2-digit" };
-  return { month: "numeric" };
-}
-
-/**
- * Format date according to pattern
- */
-function formatWithPattern(
-  date: Date,
-  format: DateFormat,
-  formatter: Intl.DateTimeFormat,
-): string {
-  const parts = formatter.formatToParts(date);
-  const partMap: Record<string, string> = {};
-
-  for (const part of parts) {
-    partMap[part.type] = part.value;
-  }
-
-  // Map format tokens to values
-  let result: string = format;
-
-  // Replace year
-  result = result.replace("yyyy", partMap.year || "");
-
-  // Replace month (check longest patterns first)
-  if (format.includes("MMMM")) {
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    result = result.replace("MMMM", monthNames[date.getMonth()]);
-  } else if (format.includes("MMM")) {
-    const monthNamesShort = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-    result = result.replace("MMM", monthNamesShort[date.getMonth()]);
-  } else if (format.includes("MM")) {
-    result = result.replace("MM", String(date.getMonth() + 1).padStart(2, "0"));
-  } else if (format.includes("M")) {
-    result = result.replace("M", String(date.getMonth() + 1));
-  }
-
-  // Replace day (check dd before d to avoid partial replacement)
-  if (format.includes("dd")) {
-    result = result.replace("dd", String(date.getDate()).padStart(2, "0"));
-  } else if (format.includes("d")) {
-    result = result.replace("d", String(date.getDate()));
-  }
-
-  return result;
-}
-
-/**
  * Format a UTC ISO string to user's preferred format.
  * @param isoString - UTC ISO date string
  * @param formatLength - Use "short" or "long" format preference (defaults to "long")
@@ -127,7 +47,6 @@ export function formatDate(
   formatLength: FormatLength = "long",
   options?: {
     includeTime?: boolean;
-    timezone?: string;
   },
 ): string {
   if (!isoString) return "";
@@ -136,24 +55,16 @@ export function formatDate(
   if (Number.isNaN(date.getTime())) return "";
 
   // Get user's preferred format for the specified length
-  const format = getDateFormatPreference(formatLength);
+  const userFormat = getDateFormatPreference(formatLength);
 
-  // Use Intl.DateTimeFormat for consistent formatting
-  const formatParts = parseFormatString(format);
+  // Build format string with optional time
+  let formatString: string = userFormat;
+  if (options?.includeTime) {
+    formatString = `${userFormat} h:mm a`;
+  }
 
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: formatParts.month,
-    day: "numeric",
-    ...(options?.includeTime && {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    }),
-    ...(options?.timezone && { timeZone: options.timezone }),
-  });
-
-  return formatWithPattern(date, format, formatter);
+  // Use date-fns format function
+  return formatDateFns(date, formatString);
 }
 
 /**
@@ -173,16 +84,12 @@ export function formatRelativeDate(
 
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHour = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHour / 24);
+  const diffDay = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  // Use relative format for recent dates
-  if (diffSec < 60) return "just now";
-  if (diffMin < 60) return `${diffMin} minute${diffMin !== 1 ? "s" : ""} ago`;
-  if (diffHour < 24) return `${diffHour} hour${diffHour !== 1 ? "s" : ""} ago`;
-  if (diffDay < 7) return `${diffDay} day${diffDay !== 1 ? "s" : ""} ago`;
+  // Use relative format for recent dates (within 7 days)
+  if (diffDay < 7) {
+    return formatDistanceToNow(date, { addSuffix: true });
+  }
 
   // Use formatted date for older dates
   return formatDate(isoString, formatLength);
@@ -244,15 +151,7 @@ export function isToday(isoString: string): boolean {
  */
 export function getFormatPreview(format: DateFormat): string {
   const exampleDate = new Date(2025, 10, 18); // November 18, 2025
-  return formatWithPattern(
-    exampleDate,
-    format,
-    new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: parseFormatString(format).month,
-      day: "numeric",
-    }),
-  );
+  return formatDateFns(exampleDate, format);
 }
 
 /**
