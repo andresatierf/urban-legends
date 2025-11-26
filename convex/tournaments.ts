@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, type QueryCtx, query } from "./_generated/server";
+import { nowUTC, toUTCDateString, toUTCEndOfDayString } from "./lib/dates";
 import { getTeams, validateIsTeamMember } from "./teams";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -38,7 +39,7 @@ export const list = query({
       tournaments = await ctx.db.query("tournaments").collect();
     }
 
-    const nowIso = new Date().toISOString();
+    const nowIso = nowUTC();
 
     return tournaments.toSorted((a, b) => {
       const isActive = (x: typeof a) =>
@@ -150,7 +151,7 @@ export const getDetails = query({
     );
 
     // Calculate tournament status
-    const nowIso = new Date().toISOString();
+    const nowIso = nowUTC();
     let status: "active" | "upcoming" | "ended";
     if (tournament.startDate <= nowIso && tournament.endDate >= nowIso) {
       status = "active";
@@ -243,8 +244,8 @@ export const upsert = mutation({
     const data = {
       name: args.name,
       description: args.description || "",
-      startDate: args.startDate,
-      endDate: args.endDate,
+      startDate: toUTCDateString(args.startDate),
+      endDate: toUTCEndOfDayString(args.endDate),
       teamMinSize: args.teamMinSize,
       teamMaxSize: args.teamMaxSize,
       maxSubmissionsPerDay: args.maxSubmissionsPerDay,
@@ -554,7 +555,7 @@ export const determineWinner = mutation({
     // Update tournament with winner
     await ctx.db.patch(args.tournamentId, {
       winnerId: winner._id,
-      completedAt: new Date().toISOString(),
+      completedAt: nowUTC(),
     });
 
     return {

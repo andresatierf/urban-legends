@@ -1,5 +1,6 @@
 import { capitalize } from "lodash";
 import { Calendar, Loader2, Mail, UserPlus, X } from "lucide-react";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -23,6 +24,7 @@ export function InvitedUserCard({
   canCancel = false,
   className,
 }: InvitedUserCardProps) {
+  const { format } = useFormattedDate();
   const isExpired = new Date(invitation.expiresAt) < new Date();
 
   return (
@@ -41,13 +43,13 @@ export function InvitedUserCard({
             <span className="flex items-center gap-1">
               <UserPlus className="h-3 w-3" />
               Invited by {invitation.invitedByUser?.name} on{" "}
-              {new Date(invitation.createdAt).toLocaleDateString()}
+              {format(invitation.createdAt, "short")}
             </span>
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               {invitation.respondedAt
-                ? `${capitalize(invitation.status)} ${new Date(invitation.respondedAt).toLocaleDateString()}`
-                : `Expires ${new Date(invitation.expiresAt).toLocaleDateString()}`}
+                ? `${capitalize(invitation.status)} ${format(invitation.respondedAt, "short")}`
+                : `Expires ${format(invitation.expiresAt, "short")}`}
             </span>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Pencil, Trophy } from "lucide-react";
 import { useMemo, useState } from "react";
 import { DetailsCard } from "@/components/details-card";
 import { DetailsCardSkeleton } from "@/components/ui/details-card-skeleton";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 import type { api } from "../../../convex/_generated/api";
 import { UpsertTournamentFormDialog } from "../form/upsert-tournament-form";
 import { getStatusBadge } from "./utils";
@@ -16,6 +17,7 @@ export function TournamentDetailsCard({
   data,
   className,
 }: TournamentDetailsCardProps) {
+  const { format } = useFormattedDate();
   const [editTournamentDialogOpen, setEditTournamentDialogOpen] =
     useState(false);
 
@@ -24,8 +26,8 @@ export function TournamentDetailsCard({
 
     const baseDetails = [
       { key: "status", value: getStatusBadge(data.tournament) },
-      { key: "startDate", value: data.tournament.startDate },
-      { key: "endDate", value: data.tournament.endDate },
+      { key: "startDate", value: format(data.tournament.startDate, "long") },
+      { key: "endDate", value: format(data.tournament.endDate, "long") },
       { key: "Teams", value: `${data.statistics.totalTeams}` },
       { key: "Participants", value: `${data.statistics.totalParticipants}` },
       {
@@ -43,7 +45,7 @@ export function TournamentDetailsCard({
     }
 
     return baseDetails;
-  }, [data]);
+  }, [data, format]);
 
   const actions = useMemo(() => {
     if (!data) return [];

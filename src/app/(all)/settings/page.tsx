@@ -15,6 +15,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  type FormatLength,
+  FULL_DATE_FORMATS,
+  getDateFormatPreference,
+  getFormatPreview,
+  LONG_DATE_FORMATS,
+  SHORT_DATE_FORMATS,
+  setDateFormatPreference,
+} from "@/lib/dates";
 
 const WEEKDAY_LABELS_FULL = [
   "Sunday",
@@ -32,9 +41,17 @@ export default function SettingsPage() {
   const { signOut } = useClerk();
 
   const [weekStartsOn, setWeekStartsOn] = useState<number>(0);
+  const [dateFormatShort, setDateFormatShort] = useState<string>("MM/dd/yyyy");
+  const [dateFormatLong, setDateFormatLong] = useState<string>("MMM dd, yyyy");
+  const [dateFormatFull, setDateFormatFull] = useState<string>(
+    "EEEE, MMMM dd, yyyy",
+  );
   const weekStartSelectId = useId();
+  const dateFormatShortSelectId = useId();
+  const dateFormatLongSelectId = useId();
+  const dateFormatFullSelectId = useId();
 
-  // Load week start preference from localStorage
+  // Load preferences from localStorage
   useEffect(() => {
     const stored = localStorage.getItem(WEEK_START_STORAGE_KEY);
     if (stored !== null) {
@@ -43,6 +60,13 @@ export default function SettingsPage() {
         setWeekStartsOn(parsed);
       }
     }
+    // Load date format preferences
+    const storedShortFormat = getDateFormatPreference("short");
+    const storedLongFormat = getDateFormatPreference("long");
+    const storedFullFormat = getDateFormatPreference("full");
+    setDateFormatShort(storedShortFormat);
+    setDateFormatLong(storedLongFormat);
+    setDateFormatFull(storedFullFormat);
   }, []);
 
   // Save week start preference to localStorage
@@ -50,6 +74,33 @@ export default function SettingsPage() {
     const newStart = Number.parseInt(value, 10);
     setWeekStartsOn(newStart);
     localStorage.setItem(WEEK_START_STORAGE_KEY, value);
+  };
+
+  // Save date format preference to localStorage
+  const handleDateFormatChange = (value: string, length: FormatLength) => {
+    if (length === "short") {
+      setDateFormatShort(value);
+      setDateFormatPreference(value as keyof typeof SHORT_DATE_FORMATS, length);
+    } else if (length === "long") {
+      setDateFormatLong(value);
+      setDateFormatPreference(value as keyof typeof LONG_DATE_FORMATS, length);
+    } else {
+      setDateFormatFull(value);
+      setDateFormatPreference(value as keyof typeof FULL_DATE_FORMATS, length);
+    }
+    // Dispatch storage event for other tabs/windows
+    const storageKey =
+      length === "short"
+        ? "dateFormatShort"
+        : length === "long"
+          ? "dateFormatLong"
+          : "dateFormatFull";
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: storageKey,
+        newValue: value,
+      }),
+    );
   };
 
   return (
@@ -135,12 +186,142 @@ export default function SettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Short Date Format Preference */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
+                  <label
+                    htmlFor={dateFormatShortSelectId}
+                    className="block font-medium text-sm"
+                  >
+                    Short date format
+                  </label>
+                  <p className="mt-1 text-muted-foreground text-sm">
+                    Compact numeric formats for lists and cards
+                  </p>
+                </div>
+                <Select
+                  value={dateFormatShort}
+                  onValueChange={(value) =>
+                    handleDateFormatChange(value, "short")
+                  }
+                >
+                  <SelectTrigger
+                    id={dateFormatShortSelectId}
+                    className="w-full sm:w-[220px]"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(SHORT_DATE_FORMATS).map((format) => (
+                      <SelectItem key={format} value={format}>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="font-mono text-sm">{format}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {getFormatPreview(
+                              format as keyof typeof SHORT_DATE_FORMATS,
+                            )}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Long Date Format Preference */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
+                  <label
+                    htmlFor={dateFormatLongSelectId}
+                    className="block font-medium text-sm"
+                  >
+                    Long date format
+                  </label>
+                  <p className="mt-1 text-muted-foreground text-sm">
+                    Verbose text-based formats for headers and announcements
+                  </p>
+                </div>
+                <Select
+                  value={dateFormatLong}
+                  onValueChange={(value) =>
+                    handleDateFormatChange(value, "long")
+                  }
+                >
+                  <SelectTrigger
+                    id={dateFormatLongSelectId}
+                    className="w-full sm:w-[220px]"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(LONG_DATE_FORMATS).map((format) => (
+                      <SelectItem key={format} value={format}>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="font-mono text-sm">{format}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {getFormatPreview(
+                              format as keyof typeof LONG_DATE_FORMATS,
+                            )}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Full Date Format Preference */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
+                  <label
+                    htmlFor={dateFormatFullSelectId}
+                    className="block font-medium text-sm"
+                  >
+                    Full date format
+                  </label>
+                  <p className="mt-1 text-muted-foreground text-sm">
+                    Includes day of week for detailed displays (e.g., titles)
+                  </p>
+                </div>
+                <Select
+                  value={dateFormatFull}
+                  onValueChange={(value) =>
+                    handleDateFormatChange(value, "full")
+                  }
+                >
+                  <SelectTrigger
+                    id={dateFormatFullSelectId}
+                    className="w-full sm:w-[280px]"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.keys(FULL_DATE_FORMATS).map((format) => (
+                      <SelectItem key={format} value={format}>
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="font-mono text-sm">{format}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {getFormatPreview(
+                              format as keyof typeof FULL_DATE_FORMATS,
+                            )}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Card variant="info" className="rounded-md">
                 <CardContent>
                   <p className="text-sm">
-                    <strong>Note:</strong> This setting affects how dates are
-                    displayed in the submission calendar. Your preference is
-                    saved locally and will persist across sessions.
+                    <strong>Note:</strong> Short formats use compact numeric
+                    styles for cards and lists, long formats use verbose text
+                    styles for headers and announcements, and full formats
+                    include the day of week for detailed displays. Your
+                    preferences are saved locally and will persist across
+                    sessions.
                   </p>
                 </CardContent>
               </Card>

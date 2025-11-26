@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { Trophy, Users } from "lucide-react";
 import Link from "next/link";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function WinnerAnnouncement({ tournamentId }: Props) {
+  const { format } = useFormattedDate();
   const winner = useQuery(api.tournaments.getWinner, { tournamentId });
 
   if (winner === undefined) {
@@ -65,8 +67,7 @@ export function WinnerAnnouncement({ tournamentId }: Props) {
 
         {winner.completedAt && (
           <p className="text-muted-foreground text-sm">
-            Tournament completed on{" "}
-            {new Date(winner.completedAt).toLocaleDateString()}
+            Tournament completed on {format(winner.completedAt, "long")}
           </p>
         )}
 

@@ -1,6 +1,6 @@
-import { format } from "date-fns";
 import { Calendar, ChevronRight, Users } from "lucide-react";
 import Link from "next/link";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "../ui/card";
@@ -13,6 +13,8 @@ type Props = {
 };
 
 export function TournamentCard({ tournament, teamCount }: Props) {
+  const { format } = useFormattedDate();
+
   if (!tournament) return <TournamentCardSkeleton />;
 
   return (
@@ -40,8 +42,8 @@ export function TournamentCard({ tournament, teamCount }: Props) {
             </div>
             <div className="flex items-center gap-1 text-balance">
               <Calendar className="h-4 w-4" />
-              {format(new Date(tournament.startDate), "MMM d, yyyy")} to{" "}
-              {format(new Date(tournament.endDate), "MMM d, yyyy")}
+              {format(tournament.startDate, "short")} to{" "}
+              {format(tournament.endDate, "short")}
             </div>
           </CardDescription>
         </div>

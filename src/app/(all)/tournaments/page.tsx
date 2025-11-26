@@ -41,7 +41,7 @@ export default function TournamentsPage() {
           {isAdmin && <UpsertTournamentFormDialog />}
         </SectionHeader>
         <CardGrid data={Array.from({ length: 6 })}>
-          {() => <TournamentCardSkeleton />}
+          {(_, i) => <TournamentCardSkeleton key={i} />}
         </CardGrid>
       </>
     );

@@ -10,6 +10,7 @@ import { TournamentLeaderboard } from "@/components/tournaments/tournament-leade
 import { WinnerAnnouncement } from "@/components/tournaments/winner-announcement";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { api } from "../../../../../../convex/_generated/api";
 import type { Id } from "../../../../../../convex/_generated/dataModel";
 
@@ -19,6 +20,7 @@ type Props = {
 
 export default function TournamentLeaderboardPage({ params }: Props) {
   const { tournamentId } = use(params);
+  const { format } = useFormattedDate();
 
   const tournament = useQuery(
     api.tournaments.get,
@@ -144,9 +146,7 @@ export default function TournamentLeaderboardPage({ params }: Props) {
                 </CardHeader>
                 <CardContent>
                   <div className="font-bold text-2xl">
-                    {new Date(
-                      stats.highestScoringDay.date,
-                    ).toLocaleDateString()}
+                    {format(stats.highestScoringDay.date, "long")}
                   </div>
                   <p className="text-muted-foreground text-xs">
                     {stats.highestScoringDay.submissions} submissions

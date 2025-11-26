@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { nowUTC } from "./lib/dates";
 import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
@@ -162,7 +163,7 @@ export const inviteMember = mutation({
       invitedBy: user._id,
       status: "pending",
       expiresAt: expiresAt.toISOString(),
-      createdAt: new Date().toISOString(),
+      createdAt: nowUTC(),
     });
 
     return invitationId;
@@ -196,7 +197,7 @@ export const cancelInvitation = mutation({
     // Update invitation status
     await ctx.db.patch(args.invitationId, {
       status: "cancelled",
-      respondedAt: new Date().toISOString(),
+      respondedAt: nowUTC(),
     });
   },
 });
@@ -256,7 +257,7 @@ export const respondToInvitation = mutation({
       // Update invitation status
       await ctx.db.patch(args.invitationId, {
         status: "accepted",
-        respondedAt: new Date().toISOString(),
+        respondedAt: nowUTC(),
       });
 
       // Cancel other pending invitations for this user in the same tournament
@@ -273,7 +274,7 @@ export const respondToInvitation = mutation({
         if (invTeam && invTeam.tournamentId === team.tournamentId) {
           await ctx.db.patch(inv._id, {
             status: "cancelled",
-            respondedAt: new Date().toISOString(),
+            respondedAt: nowUTC(),
           });
         }
       }
@@ -281,7 +282,7 @@ export const respondToInvitation = mutation({
       // Reject invitation
       await ctx.db.patch(args.invitationId, {
         status: "rejected",
-        respondedAt: new Date().toISOString(),
+        respondedAt: nowUTC(),
       });
     }
   },

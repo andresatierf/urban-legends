@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { nowUTC } from "./lib/dates";
 import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
 /**
@@ -59,7 +60,7 @@ export const makeFirstUserAdmin = internalMutation({
       userId: user._id,
       roleId: adminRole._id,
       assignedBy: user._id,
-      assignedAt: new Date().toISOString(),
+      assignedAt: nowUTC(),
     });
 
     return true;
@@ -153,7 +154,7 @@ export const updateRoles = mutation({
         userId: args.userId,
         roleId: role._id,
         assignedBy: currentUser._id,
-        assignedAt: new Date().toISOString(),
+        assignedAt: nowUTC(),
       });
     }
 

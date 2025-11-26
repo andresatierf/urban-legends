@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, type QueryCtx, query } from "./_generated/server";
+import { nowUTC } from "./lib/dates";
 import { upsertSubmissionGroup } from "./submissionGroups";
 import { recalculateSubmissionPoints } from "./submissions";
 import { validateUserNotInTournamentTeam } from "./tournaments";
@@ -34,7 +35,7 @@ export async function recalculateTeamPoints(
   // Update team with recalculated points
   await ctx.db.patch(teamId, {
     points: totalPoints,
-    lastActivityAt: new Date().toISOString(),
+    lastActivityAt: nowUTC(),
   });
 }
 

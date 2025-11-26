@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx } from "./_generated/server";
 import { rolesToCreate, teamsData } from "./data";
+import { nowUTC } from "./lib/dates";
 
 /**
  * Seed mutation to populate the database with sample tournament and teams.
@@ -137,7 +138,7 @@ async function getOrCreateUser(
     await ctx.db.insert("userRoles", {
       userId,
       roleId: userRole._id,
-      assignedAt: new Date().toISOString(),
+      assignedAt: nowUTC(),
     });
   }
 

@@ -2,13 +2,13 @@
 
 import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { format } from "date-fns";
 import { Check, Pencil, Trash2, Trophy, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { DetailsCard } from "@/components/details-card";
 import { Badge } from "@/components/ui/badge";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import { UpsertSubmissionFormDialog } from "../form/upsert-submission-form";
@@ -26,6 +26,7 @@ export function SubmissionDetailsCard({
 }: SubmissionDetailsCardProps) {
   const router = useRouter();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { format } = useFormattedDate();
 
   const submissionId = data?.submission._id;
 
@@ -75,7 +76,7 @@ export function SubmissionDetailsCard({
     return [
       {
         key: "Date",
-        value: data.submission.date,
+        value: format(data.submission.date, "long"),
       },
       {
         key: "Status",
@@ -158,7 +159,7 @@ export function SubmissionDetailsCard({
           ]
         : []),
     ];
-  }, [data]);
+  }, [data, format]);
 
   const actions = useMemo(() => {
     if (!data) return [];
@@ -221,7 +222,7 @@ export function SubmissionDetailsCard({
         submission={data.submission}
       />
       <DetailsCard
-        title={format(new Date(data.submission.date), "EEEE, LLLL do, yyyy")}
+        title={format(data.submission.date, "full")}
         description={data.submission.description || "No description provided."}
         details={details}
         actions={actions}
