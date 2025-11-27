@@ -1,13 +1,28 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { CheckCircle2, FileCheck, Loader2, XCircle } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  FileCheck,
+  Loader2,
+  X,
+  XCircle,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
+import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import {
   Select,
   SelectContent,
@@ -15,10 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { useUser } from "@/hooks/useUser";
 
 export default function ReviewerDashboard() {
   const { user } = useUser();
+  const { format } = useFormattedDate();
   const router = useRouter();
   const [selectedTournament, setSelectedTournament] = useState<
     Id<"tournaments"> | "all"
@@ -115,57 +132,52 @@ export default function ReviewerDashboard() {
   const { items, total } = pendingData;
 
   return (
-    <div className="container mx-auto py-8">
-      {/* Header */}
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <FileCheck className="h-8 w-8" />
-          <div>
-            <h1 className="font-bold text-3xl">Review Queue</h1>
-            <p className="text-muted-foreground text-sm">
-              {total} pending {total === 1 ? "item" : "items"}
-            </p>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex gap-2">
-          <Select
-            value={selectedTournament}
-            onValueChange={(value) =>
-              setSelectedTournament(
-                value === "all" ? "all" : (value as Id<"tournaments">),
-              )
-            }
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="All tournaments" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All tournaments</SelectItem>
-              {tournaments.map((tournament) => (
-                <SelectItem key={tournament._id} value={tournament._id}>
-                  {tournament.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+    <>
+      <SectionHeader
+        as="h1"
+        title="Review Queue"
+        description={`${total} pending ${total === 1 ? "item" : "items"}`}
+        Icon={FileCheck}
+      >
+        <Select
+          value={selectedTournament}
+          onValueChange={(value) =>
+            setSelectedTournament(
+              value === "all" ? "all" : (value as Id<"tournaments">),
+            )
+          }
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="All tournaments" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All tournaments</SelectItem>
+            {tournaments.map((tournament) => (
+              <SelectItem key={tournament._id} value={tournament._id}>
+                {tournament.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </SectionHeader>
 
       {/* Empty state */}
       {items.length === 0 && (
-        <div className="rounded-lg border border-dashed p-12 text-center">
-          <FileCheck className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-          <p className="font-medium text-muted-foreground">
-            No pending submissions to review
-          </p>
-          <p className="text-muted-foreground text-sm">
-            {selectedTournament !== "all"
-              ? "Try selecting a different tournament"
-              : "Check back later for new submissions"}
-          </p>
-        </div>
+        <Card variant="dashed">
+          <CardContent>
+            <Empty className="gap-3 py-2! text-muted-foreground">
+              <EmptyMedia>
+                <FileCheck className="h-12 w-12" />
+              </EmptyMedia>
+              <EmptyHeader>No pending submissions to review</EmptyHeader>
+              <EmptyDescription>
+                {selectedTournament !== "all"
+                  ? "Try selecting a different tournament"
+                  : "Check back later for new submissions"}
+              </EmptyDescription>
+            </Empty>
+          </CardContent>
+        </Card>
       )}
 
       {/* Submissions list */}
@@ -190,7 +202,7 @@ export default function ReviewerDashboard() {
                     </p>
                     <p className="text-muted-foreground text-sm">
                       Submitted by {submitter?.name || "Unknown"} on{" "}
-                      {submission.date}
+                      {format(submission.date, "long")}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -218,6 +230,7 @@ export default function ReviewerDashboard() {
                 <div className="flex gap-2">
                   <Button
                     size="sm"
+                    color="green"
                     onClick={() => handleApproveIndividual(submission._id)}
                     className="gap-2"
                   >
@@ -256,8 +269,9 @@ export default function ReviewerDashboard() {
                     {tournament?.name || "Unknown Tournament"}
                   </p>
                   <p className="text-muted-foreground text-sm">
-                    Team activity on {group.date} • {group.participantCount} /{" "}
-                    {group.totalTeamMembers} members participated
+                    Team activity on {format(group.date, "long")} •{" "}
+                    {group.participantCount} / {group.totalTeamMembers} members
+                    participated
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -276,9 +290,16 @@ export default function ReviewerDashboard() {
                   <span className="font-medium">Participants:</span>{" "}
                   {submitters.map((s) => s.name).join(", ")}
                 </p>
-                {group.isTeamExercise && (
-                  <p className="text-green-600 text-sm">
-                    ✓ Qualifies as team exercise (
+                {group.isTeamExercise ? (
+                  <p className="flex items-center gap-1 text-green-600 text-sm">
+                    <Check className="h-3 w-3" />
+                    Qualifies as team exercise (
+                    {Math.round(group.participationRate * 100)}% participation)
+                  </p>
+                ) : (
+                  <p className="flex items-center gap-1 text-red-600 text-sm">
+                    <X className="h-3 w-3" />
+                    Does not qualify as team exercise (
                     {Math.round(group.participationRate * 100)}% participation)
                   </p>
                 )}
@@ -288,6 +309,7 @@ export default function ReviewerDashboard() {
               <div className="flex gap-2">
                 <Button
                   size="sm"
+                  color="green"
                   onClick={() => handleApproveGroup(group._id)}
                   className="gap-2"
                 >
@@ -308,6 +330,6 @@ export default function ReviewerDashboard() {
           );
         })}
       </div>
-    </div>
+    </>
   );
 }

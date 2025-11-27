@@ -18,8 +18,7 @@
       "reviewer": {
         "group": "Review",
         "queue": "Review Queue",
-        "statistics": "Review Stats",
-        "flagged": "Flagged Submissions"
+        "statistics": "Review Stats"
       },
       "tournamentManager": {
         "group": "Tournament Manager",
@@ -41,10 +40,7 @@
       },
       "viewer": {
         "group": "Discover",
-        "dashboard": "Viewer Dashboard",
-        "publicLeaderboards": "Public Leaderboards",
-        "live": "Live Tournaments",
-        "favorites": "Favorites"
+        "publicLeaderboards": "Public Leaderboards"
       },
       "dev": {
         "group": "Developer",

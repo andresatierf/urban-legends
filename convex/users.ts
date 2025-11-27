@@ -87,7 +87,9 @@ export const getDetails = query({
       }),
     );
 
-    const teams = teamsWithTournaments.filter((t) => t !== null);
+    const teams = teamsWithTournaments.filter(
+      (t): t is NonNullable<typeof t> => t !== null,
+    );
 
     const approvedSubmissions = allSubmissions.filter(
       (s) => s.state === "approved",
@@ -120,9 +122,19 @@ export const getDetails = query({
 });
 
 export const current = query({
-  args: {},
-  handler: async (ctx) => {
-    return await getCurrentUserOrThrow(ctx);
+  args: {
+    throw: v.optional(v.boolean()),
+  },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<
+    typeof args.throw extends false ? UserWithRoles | null : UserWithRoles
+  > => {
+    if (args.throw) {
+      return await getCurrentUserOrThrow(ctx, { throw: true });
+    }
+    return await getCurrentUserOrThrow(ctx, { throw: false });
   },
 });
 
@@ -173,9 +185,8 @@ export async function getCurrentUserOrThrow(
 ): Promise<UserWithRoles | null> {
   const userRecord = await getCurrentUser(ctx);
   if (!userRecord) {
-    if (!args || args.throw !== false)
-      throw new Error("Can't get current user");
-    return null;
+    if (args && args.throw === false) return null;
+    throw new Error("Can't get current user");
   }
   const roles = await getRolesForUser(ctx, userRecord._id);
   return {

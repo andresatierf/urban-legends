@@ -3,6 +3,7 @@
  */
 
 import { format as formatDateFns, formatDistanceToNow } from "date-fns";
+import { toUTCDateString } from "../../convex/lib/dates";
 
 export const SHORT_DATE_FORMATS = {
   "MM/dd/yyyy": "MM/dd/yyyy",
@@ -146,8 +147,8 @@ export function utcToLocalDateInput(isoString: string): string {
  * @param isoString - UTC ISO string
  * @returns true if date is today
  */
-export function isToday(isoString: string): boolean {
-  const date = new Date(isoString);
+export function isToday(isoString: string | Date): boolean {
+  const date = new Date(toUTCDateString(isoString));
   const now = new Date();
   return (
     date.getFullYear() === now.getFullYear() &&

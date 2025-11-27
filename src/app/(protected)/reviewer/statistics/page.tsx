@@ -5,6 +5,7 @@ import { CheckCircle, Loader2, TrendingUp, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { api } from "@/../convex/_generated/api";
+import { SectionHeader } from "@/components/section-header";
 import {
   Card,
   CardContent,
@@ -12,10 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { useUser } from "@/hooks/useUser";
 
 export default function ReviewStatistics() {
   const { user } = useUser();
+  const { format } = useFormattedDate();
   const router = useRouter();
 
   // Permission check (client-side navigation)
@@ -51,17 +54,13 @@ export default function ReviewStatistics() {
     statistics;
 
   return (
-    <div className="container mx-auto py-8">
-      {/* Header */}
-      <div className="mb-8 flex items-center gap-3">
-        <TrendingUp className="h-8 w-8" />
-        <div>
-          <h1 className="font-bold text-3xl">Review Statistics</h1>
-          <p className="text-muted-foreground text-sm">
-            Your performance metrics
-          </p>
-        </div>
-      </div>
+    <>
+      <SectionHeader
+        as="h1"
+        title="Review Statistics"
+        description="Your performance metrics"
+        Icon={TrendingUp}
+      />
 
       {/* Stats Cards */}
       <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -175,7 +174,7 @@ export default function ReviewStatistics() {
                       {review.state === "approved" ? "Approved" : "Rejected"}
                     </span>
                     <span className="text-muted-foreground text-xs">
-                      {review.date}
+                      {format(review.date, "short")}
                     </span>
                   </div>
                 </div>
@@ -184,6 +183,6 @@ export default function ReviewStatistics() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }

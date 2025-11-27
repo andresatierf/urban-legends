@@ -12,7 +12,7 @@ export default function ViewerDashboard() {
   const { user } = useUser();
   const dashboardData = useQuery(api.viewer.getDashboardData);
 
-  if (!user) {
+  if (user === null) {
     redirect("/sign-in");
   }
 

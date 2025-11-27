@@ -10,20 +10,16 @@ import {
   CheckSquare,
   ClipboardList,
   Code2,
-  Eye,
   FileCheck,
   FileText,
-  Flag,
   Layers,
   LayoutDashboard,
   LineChart,
   type LucideIcon,
   PlusCircle,
   Shield,
-  Star,
   TrendingUp,
   Trophy,
-  Tv,
   UserCog,
   UserPlus,
   Users,
@@ -79,40 +75,6 @@ function useSidebarItems(
 
   const sidebar: SidebarItem[] = useMemo(
     () => [
-      // ===== VIEWER SECTION (Conditional: Has 'viewer' role OR public access) =====
-      {
-        title: t("viewer.group"),
-        publicAccess: true, // Visible even without login
-        items: [
-          {
-            title: t("viewer.publicLeaderboards"),
-            href: "/public/leaderboards",
-            icon: Trophy,
-            publicAccess: true,
-          },
-          {
-            title: t("viewer.live"),
-            href: "/public/live",
-            icon: Tv,
-            publicAccess: true,
-          },
-          // Authenticated viewer-only items
-          {
-            title: t("viewer.dashboard"),
-            href: "/viewer",
-            icon: Eye,
-            roles: ["viewer"],
-            exact: true,
-          },
-          {
-            title: t("viewer.favorites"),
-            href: "/viewer/favorites",
-            icon: Star,
-            roles: ["viewer"],
-          },
-        ],
-      },
-
       // ===== USER SECTION (Always Visible) =====
       {
         title: t("user.group"),
@@ -177,7 +139,7 @@ function useSidebarItems(
           },
           {
             title: t("admin.submissions"),
-            href: "/admin/submissions",
+            href: "/manage/submissions",
             icon: FileText,
             badge: {
               query: api.admin.getAllPendingCount,
@@ -223,7 +185,7 @@ function useSidebarItems(
           },
           {
             title: t("tournamentManager.submissions"),
-            href: "/tournament-manager/submissions",
+            href: "/manage/submissions",
             icon: Calendar,
             badge: {
               query: api.tournamentManager.getPendingCount,
@@ -277,15 +239,6 @@ function useSidebarItems(
             href: "/reviewer/statistics",
             icon: TrendingUp,
           },
-          {
-            title: t("reviewer.flagged"),
-            href: "/reviewer/flagged",
-            icon: Flag,
-            badge: {
-              query: api.reviewer.getFlaggedCount,
-              color: "destructive",
-            },
-          },
         ],
       },
 
@@ -314,6 +267,20 @@ function useSidebarItems(
             title: t("captain.inviteMember"),
             onClick: () => setInviteMemberDialogOpen(true),
             icon: UserPlus,
+          },
+        ],
+      },
+
+      // ===== VIEWER SECTION (Conditional: Has 'viewer' role OR public access) =====
+      {
+        title: t("viewer.group"),
+        publicAccess: true, // Visible even without login
+        items: [
+          {
+            title: t("viewer.publicLeaderboards"),
+            href: "/public/leaderboards",
+            icon: Trophy,
+            publicAccess: true,
           },
         ],
       },
@@ -349,7 +316,7 @@ function useSidebarItems(
 }
 
 export function AppSidebar() {
-  const { user } = useUser();
+  const { user } = useUser({ shouldThrow: false });
   const { isActive } = useActiveRoute();
 
   const [submissionFormOpen, setSubmissionFormOpen] = useState(false);
@@ -375,23 +342,29 @@ export function AppSidebar() {
         {sidebarItems.map((item) =>
           renderItem(item, user, user?.roleNames || [], context, isActive),
         )}
-        <UpsertSubmissionFormDialog
-          open={submissionFormOpen}
-          onOpenChange={setSubmissionFormOpen}
-        />
-        <InviteMemberFormDialog
-          open={inviteMemberDialogOpen}
-          onOpenChange={setInviteMemberDialogOpen}
-        />
-        <UpsertTournamentFormDialog
-          open={createTournamentDialogOpen}
-          onOpenChange={setCreateTournamentDialogOpen}
-        />
+        {user && (
+          <>
+            <UpsertSubmissionFormDialog
+              open={submissionFormOpen}
+              onOpenChange={setSubmissionFormOpen}
+            />
+            <InviteMemberFormDialog
+              open={inviteMemberDialogOpen}
+              onOpenChange={setInviteMemberDialogOpen}
+            />
+            <UpsertTournamentFormDialog
+              open={createTournamentDialogOpen}
+              onOpenChange={setCreateTournamentDialogOpen}
+            />
+          </>
+        )}
       </SidebarContent>
       <SidebarSeparator />
-      <SidebarFooter>
-        <LoggedUserCard />
-      </SidebarFooter>
+      {user && (
+        <SidebarFooter>
+          <LoggedUserCard />
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }

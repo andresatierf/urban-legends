@@ -257,10 +257,6 @@ export const getDashboardData = query({
         .collect(),
     ]);
 
-    // Get flagged submissions (need to check if flag fields exist in schema)
-    // For now, we'll return 0 as flagged submissions feature is not yet implemented
-    const flaggedSubmissions: unknown[] = [];
-
     // Get all pending join requests
     const joinRequests = await ctx.db
       .query("joinRequests")
@@ -303,7 +299,6 @@ export const getDashboardData = query({
       },
       pendingActions: {
         pendingSubmissions: pendingIndividual.length + pendingGroups.length,
-        flaggedSubmissions: flaggedSubmissions.length,
         joinRequests: joinRequests.length,
       },
       recentActivity: enrichedActivity,
