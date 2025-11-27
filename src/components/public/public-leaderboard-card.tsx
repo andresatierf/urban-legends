@@ -9,6 +9,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+const getPosition = (n: number) => {
+  const m = ["🥇", "🥈", "🥉"];
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return (n > 3 ? "" : `${m[n - 1]} `) + n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
 
 interface LeaderboardEntry {
   rank: number;
@@ -37,10 +45,18 @@ export function PublicLeaderboardCard({
   totalTeams,
 }: PublicLeaderboardCardProps) {
   const getRankBadge = (rank: number) => {
-    if (rank === 1) return <Badge className="bg-podium-gold">🥇 1st</Badge>;
-    if (rank === 2) return <Badge className="bg-podium-silver">🥈 2nd</Badge>;
-    if (rank === 3) return <Badge className="bg-podium-bronze">🥉 3rd</Badge>;
-    return <Badge variant="outline">{rank}th</Badge>;
+    return (
+      <Badge
+        variant={rank > 3 ? "outline" : "default"}
+        className={cn({
+          "bg-podium-gold": rank === 1,
+          "bg-podium-silver": rank === 2,
+          "bg-podium-bronze": rank === 3,
+        })}
+      >
+        {getPosition(rank)}
+      </Badge>
+    );
   };
 
   return (

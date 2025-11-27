@@ -7,6 +7,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "../../../convex/_generated/api";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
 
 export function SystemActionsPanel() {
   const runIntegrityCheck = useMutation(api.admin.runIntegrityCheck);
@@ -37,14 +45,6 @@ export function SystemActionsPanel() {
   };
 
   const handleCleanup = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to delete all orphaned records? This action cannot be undone.",
-      )
-    ) {
-      return;
-    }
-
     setIsCleaningUp(true);
     try {
       const result = await cleanupOrphanedRecords();
@@ -80,15 +80,28 @@ export function SystemActionsPanel() {
           <Wrench className="mr-2 h-4 w-4" />
           {isCheckingIntegrity ? "Running..." : "Run Data Integrity Check"}
         </Button>
-        <Button
-          variant="outline"
-          className="w-full justify-start"
-          onClick={handleCleanup}
-          disabled={isCleaningUp}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          {isCleaningUp ? "Cleaning..." : "Cleanup Orphaned Records"}
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              disabled={isCleaningUp}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {isCleaningUp ? "Cleaning..." : "Cleanup Orphaned Records"}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all orphaned records. This action
+              cannot be undone.
+            </AlertDialogDescription>
+            <AlertDialogAction onClick={handleCleanup}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );

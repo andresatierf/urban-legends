@@ -1,3 +1,4 @@
+import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -218,26 +219,81 @@ export const getTeamsComparison = query({
       return [];
     }
 
+    const teams = await ctx.db
+      .query("teams")
+      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))))
+      .collect();
+
+    const tournamentIds = Array.from(new Set(teams.map((t) => t.tournamentId)));
+
+    const tournaments = await ctx.db
+      .query("tournaments")
+      .filter((q) =>
+        q.or(...tournamentIds.map((id) => q.eq(q.field("_id"), id))),
+      )
+      .collect();
+
+    const tournamentMap = tournaments.reduce<
+      Map<Id<"tournaments">, Doc<"tournaments">>
+    >((acc, tournament) => acc.set(tournament._id, tournament), new Map());
+
+    const tournamentTeams = await ctx.db
+      .query("teams")
+      .filter((q) =>
+        q.or(...tournamentIds.map((id) => q.eq(q.field("tournamentId"), id))),
+      )
+      .collect();
+    const tournamentTeamsByTournamentIdMap = tournamentTeams.reduce<
+      Map<Id<"tournaments">, Doc<"teams">[]>
+    >((acc, team) => {
+      if (!acc.has(team.tournamentId)) {
+        acc.set(team.tournamentId, []);
+      }
+      acc.get(team.tournamentId)?.push(team);
+      return acc;
+    }, new Map());
+
+    const members = await ctx.db
+      .query("teamMembers")
+      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
+      .collect();
+
+    const membersByTeamIdMap = members.reduce<
+      Map<Id<"teams">, Doc<"teamMembers">[]>
+    >((acc, member) => {
+      if (!acc.has(member.teamId)) {
+        acc.set(member.teamId, []);
+      }
+      acc.get(member.teamId)?.push(member);
+      return acc;
+    }, new Map());
+
+    const submissions = await ctx.db
+      .query("submissions")
+      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
+      .collect();
+
+    const submissionsByTeamIdMap = submissions.reduce<
+      Map<Id<"teams">, Doc<"submissions">[]>
+    >((acc, submission) => {
+      if (!acc.has(submission.teamId)) {
+        acc.set(submission.teamId, []);
+      }
+      acc.get(submission.teamId)?.push(submission);
+      return acc;
+    }, new Map());
+
     // Get detailed metrics for each team
     const teamsComparison = await Promise.all(
-      teamIds.map(async (teamId) => {
-        const team = await ctx.db.get(teamId);
-        if (!team) return null;
-
+      teams.map(async (team) => {
         // Get tournament
-        const tournament = await ctx.db.get(team.tournamentId);
+        const tournament = tournamentMap.get(team.tournamentId);
 
         // Get members
-        const members = await ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", teamId))
-          .collect();
+        const members = membersByTeamIdMap.get(team._id) || [];
 
         // Get all submissions
-        const submissions = await ctx.db
-          .query("submissions")
-          .withIndex("by_team", (q) => q.eq("teamId", teamId))
-          .collect();
+        const submissions = submissionsByTeamIdMap.get(team._id) || [];
 
         const approvedSubmissions = submissions.filter(
           (s) => s.state === "approved",
@@ -256,12 +312,8 @@ export const getTeamsComparison = query({
             : 0;
 
         // Get tournament rank (simplified - just count teams with more points)
-        const allTeamsInTournament = await ctx.db
-          .query("teams")
-          .withIndex("by_tournament", (q) =>
-            q.eq("tournamentId", team.tournamentId),
-          )
-          .collect();
+        const allTeamsInTournament =
+          tournamentTeamsByTournamentIdMap.get(team.tournamentId) || [];
 
         const rank =
           allTeamsInTournament.filter((t) => t.points > team.points).length + 1;
