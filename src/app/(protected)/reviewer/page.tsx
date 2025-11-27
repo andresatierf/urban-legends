@@ -15,8 +15,16 @@ import { toast } from "sonner";
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { SectionHeader } from "@/components/section-header";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -32,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { useUser } from "@/hooks/useUser";
+import { cn } from "@/lib/utils";
 
 export default function ReviewerDashboard() {
   const { user } = useUser();
@@ -187,37 +196,32 @@ export default function ReviewerDashboard() {
             const { submission, team, tournament, submitter } = item;
 
             return (
-              <div
+              <ReviewCard
                 key={item.id}
-                className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
-              >
-                {/* Header */}
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <h3 className="font-semibold">
-                      {team?.name || "Unknown Team"}
-                    </h3>
-                    <p className="text-muted-foreground text-sm">
-                      {tournament?.name || "Unknown Tournament"}
-                    </p>
-                    <p className="text-muted-foreground text-sm">
-                      Submitted by {submitter?.name || "Unknown"} on{" "}
-                      {format(submission.date, "long")}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 font-medium text-blue-800 text-xs">
-                      Individual
-                    </span>
-                    <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 font-medium text-purple-800 text-xs">
-                      {submission.tier === "base"
+                teamName={team.name}
+                tournamentName={tournament.name}
+                subtitle={`Submitted by ${submitter?.name || "Unknown"} on ${format(submission.date, "long")}`}
+                badges={[
+                  {
+                    content: "Individual",
+                    className: "bg-blue-100 text-blue-800 hover:bg-blue-100",
+                  },
+                  {
+                    content:
+                      submission.tier === "base"
                         ? "Base Tier"
-                        : "Advanced Tier"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Description */}
+                        : "Advanced Tier",
+                    className: cn("font-medium", {
+                      "bg-gray-100 text-gray-800 hover:bg-gray-100":
+                        submission.tier === "base",
+                      "bg-purple-100 text-purple-800 hover:bg-purple-100":
+                        submission.tier === "advanced",
+                    }),
+                  },
+                ]}
+                onApprove={() => handleApproveIndividual(submission._id)}
+                onReject={() => handleRejectIndividual(submission._id)}
+              >
                 {submission.description && (
                   <div className="text-sm">
                     <p className="text-muted-foreground">
@@ -225,29 +229,7 @@ export default function ReviewerDashboard() {
                     </p>
                   </div>
                 )}
-
-                {/* Actions */}
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    color="green"
-                    onClick={() => handleApproveIndividual(submission._id)}
-                    className="gap-2"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    color="destructive"
-                    onClick={() => handleRejectIndividual(submission._id)}
-                    className="gap-2"
-                  >
-                    <XCircle className="h-4 w-4" />
-                    Reject
-                  </Button>
-                </div>
-              </div>
+              </ReviewCard>
             );
           }
 
@@ -255,81 +237,116 @@ export default function ReviewerDashboard() {
           const { group, team, tournament, submitters } = item;
 
           return (
-            <div
+            <ReviewCard
               key={item.id}
-              className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
+              teamName={team.name}
+              tournamentName={tournament.name}
+              subtitle={`Team activity on ${format(group.date, "long")} • ${group.participantCount} / ${group.totalTeamMembers} members participated`}
+              badges={[
+                {
+                  content: "Team Activity",
+                  className: "bg-green-100 text-green-800 hover:bg-green-100",
+                },
+                {
+                  content:
+                    group.tier === "base" ? "Base Tier" : "Advanced Tier",
+                  className: cn({
+                    "bg-gray-100 text-gray-800 hover:bg-gray-100":
+                      group.tier === "base",
+                    "bg-purple-100 text-purple-800 hover:bg-purple-100":
+                      group.tier === "advanced",
+                  }),
+                },
+              ]}
+              onApprove={() => handleApproveGroup(group._id)}
+              onReject={() => handleRejectGroup(group._id)}
             >
-              {/* Header */}
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h3 className="font-semibold">
-                    {team?.name || "Unknown Team"}
-                  </h3>
-                  <p className="text-muted-foreground text-sm">
-                    {tournament?.name || "Unknown Tournament"}
-                  </p>
-                  <p className="text-muted-foreground text-sm">
-                    Team activity on {format(group.date, "long")} •{" "}
-                    {group.participantCount} / {group.totalTeamMembers} members
-                    participated
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 font-medium text-green-800 text-xs">
-                    Team Activity
-                  </span>
-                  <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 font-medium text-purple-800 text-xs">
-                    {group.tier === "base" ? "Base Tier" : "Advanced Tier"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Participants */}
-              <div className="text-sm">
-                <p className="text-muted-foreground">
-                  <span className="font-medium">Participants:</span>{" "}
-                  {submitters.map((s) => s.name).join(", ")}
+              <p className="text-muted-foreground">
+                <span className="font-medium">Participants:</span>{" "}
+                {submitters.map((s) => s.name).join(", ")}
+              </p>
+              {group.isTeamExercise ? (
+                <p className="flex items-center gap-1 text-green-600 text-sm">
+                  <Check className="h-3 w-3" />
+                  Qualifies as team exercise (
+                  {Math.round(group.participationRate * 100)}% participation)
                 </p>
-                {group.isTeamExercise ? (
-                  <p className="flex items-center gap-1 text-green-600 text-sm">
-                    <Check className="h-3 w-3" />
-                    Qualifies as team exercise (
-                    {Math.round(group.participationRate * 100)}% participation)
-                  </p>
-                ) : (
-                  <p className="flex items-center gap-1 text-red-600 text-sm">
-                    <X className="h-3 w-3" />
-                    Does not qualify as team exercise (
-                    {Math.round(group.participationRate * 100)}% participation)
-                  </p>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  color="green"
-                  onClick={() => handleApproveGroup(group._id)}
-                  className="gap-2"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  Approve Team Activity
-                </Button>
-                <Button
-                  size="sm"
-                  color="destructive"
-                  onClick={() => handleRejectGroup(group._id)}
-                  className="gap-2"
-                >
-                  <XCircle className="h-4 w-4" />
-                  Reject
-                </Button>
-              </div>
-            </div>
+              ) : (
+                <p className="flex items-center gap-1 text-red-600 text-sm">
+                  <X className="h-3 w-3" />
+                  Does not qualify as team exercise (
+                  {Math.round(group.participationRate * 100)}% participation)
+                </p>
+              )}
+            </ReviewCard>
           );
         })}
       </div>
     </>
+  );
+}
+
+type ReviewCardProps = {
+  teamName: string;
+  tournamentName: string;
+  subtitle: string;
+  badges: {
+    content: string;
+    variant?: BadgeProps["variant"];
+    className?: string;
+  }[];
+  children: React.ReactNode;
+  onApprove: () => void;
+  onReject: () => void;
+};
+
+function ReviewCard({
+  teamName,
+  tournamentName,
+  subtitle,
+  badges,
+  children,
+  onApprove,
+  onReject,
+}: ReviewCardProps) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between">
+        <div className="flex flex-col gap-1">
+          <CardTitle>{teamName}</CardTitle>
+          <CardDescription>
+            <p className="text-muted-foreground text-sm">{tournamentName}</p>
+            <p className="text-muted-foreground text-sm">{subtitle} </p>
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-2">
+          {badges.map(({ content, variant, className }) => (
+            <Badge
+              key={content}
+              variant={variant}
+              className={cn("font-medium", className)}
+            >
+              {content}
+            </Badge>
+          ))}
+        </div>
+      </CardHeader>
+      <CardContent className="text-sm">{children}</CardContent>
+      <CardFooter className="gap-2">
+        <Button size="sm" color="green" onClick={onApprove} className="gap-2">
+          <CheckCircle2 className="h-4 w-4" />
+          Approve Team Activity
+        </Button>
+        <Button
+          size="sm"
+          color="destructive"
+          onClick={onReject}
+          className="gap-2"
+        >
+          <XCircle className="h-4 w-4" />
+          Reject
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }
