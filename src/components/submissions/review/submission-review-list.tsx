@@ -76,6 +76,7 @@ export function SubmissionReviewList({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
+              aria-label="Search submissions by team, tournament, or submitter"
             />
           </div>
 

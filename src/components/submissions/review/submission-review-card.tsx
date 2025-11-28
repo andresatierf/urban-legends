@@ -127,7 +127,7 @@ export function SubmissionReviewCard({
                 size="sm"
                 color="green"
                 onClick={handleApprove}
-                disabled={isApproving}
+                disabled={isApproving || isRejecting}
                 className="gap-2"
               >
                 <Check className="h-4 w-4" />
@@ -139,7 +139,7 @@ export function SubmissionReviewCard({
                 size="sm"
                 color="destructive"
                 onClick={handleReject}
-                disabled={isRejecting}
+                disabled={isApproving || isRejecting}
                 className="gap-2"
               >
                 <X className="h-4 w-4" />
@@ -206,7 +206,7 @@ export function SubmissionReviewCard({
               size="sm"
               color="green"
               onClick={handleApprove}
-              disabled={isApproving}
+              disabled={isApproving || isRejecting}
               className="gap-2"
             >
               <Check className="h-4 w-4" />
@@ -218,7 +218,7 @@ export function SubmissionReviewCard({
               size="sm"
               color="destructive"
               onClick={handleReject}
-              disabled={isRejecting}
+              disabled={isApproving || isRejecting}
               className="gap-2"
             >
               <X className="h-4 w-4" />

@@ -35,7 +35,7 @@ export function SubmissionImageGallery({
     return (
       <div
         className={cn(
-          "flex aspect-square w-full max-w-[400] items-center justify-center rounded-lg border-2 border-dashed bg-muted",
+          "flex aspect-square w-full max-w-[400px] items-center justify-center rounded-lg border-2 border-dashed bg-muted",
           className,
         )}
       >
@@ -52,7 +52,7 @@ export function SubmissionImageGallery({
   return (
     <>
       {/* Image Display */}
-      <div className={cn("relative max-w-[400]", className)}>
+      <div className={cn("relative max-w-[400px]", className)}>
         {showTwoLarge ? (
           /* Two Large Images Side-by-Side */
           <div className="grid grid-cols-2 gap-2">
