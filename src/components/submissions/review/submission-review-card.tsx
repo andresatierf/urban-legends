@@ -153,7 +153,7 @@ export function SubmissionReviewCard({
   }
 
   // Group rendering
-  const { group, team, tournament, submitters } = item.data;
+  const { group, team, tournament, submitters, images } = item.data;
   const isPending = group.state === "pending";
   const canApprove = isPending && onApprove;
   const canReject = isPending && onReject;
@@ -184,6 +184,10 @@ export function SubmissionReviewCard({
       </CardHeader>
 
       <CardContent className="space-y-3">
+        {variant === "detailed" && images.length > 0 && (
+          <SubmissionImageGallery images={images} className="mb-4" />
+        )}
+
         <GroupParticipantsList
           submitters={submitters}
           participantCount={group.participantCount}

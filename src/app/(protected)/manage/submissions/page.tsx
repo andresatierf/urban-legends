@@ -37,6 +37,7 @@ export default function TournamentManagerSubmissions() {
           team: s.team,
           tournament: tournamentMap.get(s.tournamentId)!,
           submitter: s.user as UserWithRoles,
+          // TODO: Fetch images for this submission when image upload is implemented
           images: [],
           isTeamExercise: false,
           participationRate: 0,

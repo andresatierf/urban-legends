@@ -84,6 +84,8 @@ export default function ReviewerDashboard() {
             tournament: item.tournament,
             submissions: item.submissions,
             submitters: item.submitters as UserWithRoles[],
+            // TODO: Aggregate images from all submissions in the group when image upload is implemented
+            // This should collect images from item.submissions and flatten them into a single array
             images: [],
           },
         };
