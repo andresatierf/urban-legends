@@ -260,6 +260,7 @@ export default function ReviewerDashboard() {
               ]}
               onApprove={() => handleApproveGroup(group._id)}
               onReject={() => handleRejectGroup(group._id)}
+              isTeamActivity
             >
               <p className="text-muted-foreground">
                 <span className="font-medium">Participants:</span>{" "}
@@ -298,6 +299,7 @@ type ReviewCardProps = {
   children: React.ReactNode;
   onApprove: () => void;
   onReject: () => void;
+  isTeamActivity?: boolean;
 };
 
 function ReviewCard({
@@ -308,6 +310,7 @@ function ReviewCard({
   children,
   onApprove,
   onReject,
+  isTeamActivity,
 }: ReviewCardProps) {
   return (
     <Card>
@@ -335,7 +338,7 @@ function ReviewCard({
       <CardFooter className="gap-2">
         <Button size="sm" color="green" onClick={onApprove} className="gap-2">
           <CheckCircle2 className="h-4 w-4" />
-          Approve Team Activity
+          Approve {isTeamActivity ? "Team Activity" : "Activity"}
         </Button>
         <Button
           size="sm"

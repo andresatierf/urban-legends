@@ -110,14 +110,12 @@ export const getDashboardData = query({
       new Map(),
     );
 
+    const tournamentIds = teams.map((team) => team.tournamentId);
+
     const tournaments = await ctx.db
       .query("tournaments")
       .filter((q) =>
-        q.or(
-          ...Array.from(teamsMap.keys()).map((id) =>
-            q.eq(q.field("_id"), id as string),
-          ),
-        ),
+        q.or(...tournamentIds.map((id) => q.eq(q.field("_id"), id as string))),
       )
       .collect();
     const tournamentsMap = tournaments.reduce<
