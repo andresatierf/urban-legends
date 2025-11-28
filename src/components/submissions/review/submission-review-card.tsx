@@ -107,7 +107,7 @@ export function SubmissionReviewCard({
         </CardHeader>
 
         <CardContent>
-          {variant === "detailed" && images.length > 0 && (
+          {variant === "detailed" && (
             <SubmissionImageGallery images={images} className="mb-4" />
           )}
 

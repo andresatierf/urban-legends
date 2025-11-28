@@ -187,7 +187,7 @@ export default function ReviewerDashboard() {
               key={key}
               item={item}
               currentUser={user}
-              variant="compact"
+              variant="detailed"
               onApprove={() => handleApprove(item)}
               onReject={() => handleReject(item)}
             />

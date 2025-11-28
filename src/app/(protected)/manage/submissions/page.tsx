@@ -114,7 +114,7 @@ export default function TournamentManagerSubmissions() {
             onApprove={handleApprove}
             onReject={handleReject}
             showFilters={true}
-            variant="compact"
+            variant="detailed"
             emptyMessage="No submissions to display"
           />
         </TabsContent>
@@ -126,7 +126,7 @@ export default function TournamentManagerSubmissions() {
             onApprove={handleApprove}
             onReject={handleReject}
             showFilters={true}
-            variant="compact"
+            variant="detailed"
             emptyMessage="No pending submissions"
           />
         </TabsContent>
@@ -138,7 +138,7 @@ export default function TournamentManagerSubmissions() {
             onApprove={handleApprove}
             onReject={handleReject}
             showFilters={true}
-            variant="compact"
+            variant="detailed"
             emptyMessage="No resolved submissions"
           />
         </TabsContent>
