@@ -14,7 +14,7 @@ const cardVariants = cva(
           "border-2 border-card-tournament-manager-border bg-gradient-to-r from-card-tournament-manager-from to-card-tournament-manager-to shadow-md",
         info: "border-2 border-card-info-border bg-gradient-to-r from-card-info-from to-card-info-to shadow-md",
         dashed:
-          "border-2 border-card-dashed-border border-dashed bg-card-dashed-bg shadow-none",
+          "border border-card-dashed-border border-dashed bg-card-dashed-bg shadow-none",
       },
     },
     defaultVariants: {

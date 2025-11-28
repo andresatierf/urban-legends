@@ -3,6 +3,7 @@
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { toUTCDateString } from "../../../convex/lib/dates";
 
 export const cellStyles = cva(
   "cursor-pointer border-2 transition-all duration-150 hover:shadow-md",
@@ -68,16 +69,11 @@ export function CalendarDateCell({
   isOutsideTournament,
   onClick,
 }: CalendarDateCellProps) {
-  const dateStr = [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, "0"),
-    String(date.getDate()).padStart(2, "0"),
-  ].join("-");
   const dayNumber = date.getDate();
 
   const handleClick = () => {
     if (!isDisabled && !isOutsideTournament) {
-      onClick(dateStr);
+      onClick(toUTCDateString(date));
     }
   };
 

@@ -1,6 +1,13 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { internalMutation, mutation, query } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
+import {
+  internalMutation,
+  type MutationCtx,
+  mutation,
+  type QueryCtx,
+  query,
+} from "./_generated/server";
 import { nowUTC } from "./lib/dates";
 import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
@@ -216,5 +223,297 @@ export const getAllPendingCount = query({
       .collect();
 
     return pendingIndividual.length + pendingGroups.length;
+  },
+});
+
+/**
+ * Get comprehensive dashboard data for admin.
+ * Returns system-wide statistics, pending actions, and recent activity.
+ */
+export const getDashboardData = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    validateIsAdmin(user, "Admin access required");
+
+    // Get system-wide counts
+    const [users, tournaments, teams, submissions] = await Promise.all([
+      ctx.db.query("users").collect(),
+      ctx.db.query("tournaments").collect(),
+      ctx.db.query("teams").collect(),
+      ctx.db.query("submissions").collect(),
+    ]);
+
+    // Get pending submissions (individual + groups)
+    const [pendingIndividual, pendingGroups] = await Promise.all([
+      ctx.db
+        .query("submissions")
+        .withIndex("by_state", (q) => q.eq("state", "pending"))
+        .filter((q) => q.eq(q.field("submissionType"), "individual"))
+        .collect(),
+      ctx.db
+        .query("submissionGroups")
+        .withIndex("by_state", (q) => q.eq("state", "pending"))
+        .collect(),
+    ]);
+
+    // Get all pending join requests
+    const joinRequests = await ctx.db
+      .query("joinRequests")
+      .withIndex("by_status", (q) => q.eq("status", "pending"))
+      .collect();
+
+    // Get recent activity (last 20 submissions)
+    const recentSubmissions = await ctx.db
+      .query("submissions")
+      .order("desc")
+      .take(20);
+
+    // Enrich recent submissions with user, team, and tournament data
+    const enrichedActivity = await Promise.all(
+      recentSubmissions.map(async (submission) => {
+        const [submitter, team, tournament] = await Promise.all([
+          ctx.db.get(submission.userId),
+          ctx.db.get(submission.teamId),
+          ctx.db.get(submission.tournamentId),
+        ]);
+
+        return {
+          id: submission._id,
+          type: "submission" as const,
+          state: submission.state,
+          submitter,
+          team,
+          tournament,
+          createdAt: new Date(submission._creationTime).toISOString(),
+        };
+      }),
+    );
+
+    return {
+      stats: {
+        totalUsers: users.length,
+        totalTournaments: tournaments.length,
+        totalTeams: teams.length,
+        totalSubmissions: submissions.length,
+      },
+      pendingActions: {
+        pendingSubmissions: pendingIndividual.length + pendingGroups.length,
+        joinRequests: joinRequests.length,
+      },
+      recentActivity: enrichedActivity,
+    };
+  },
+});
+
+/**
+ * Get system health information including database metrics and orphaned records.
+ * Only accessible to admins.
+ */
+export const getSystemHealth = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    validateIsAdmin(user, "Admin access required");
+
+    // Get all entities for metrics
+    const [tournaments, teams, submissions, users, teamMembers] =
+      await Promise.all([
+        ctx.db.query("tournaments").collect(),
+        ctx.db.query("teams").collect(),
+        ctx.db.query("submissions").collect(),
+        ctx.db.query("users").collect(),
+        ctx.db.query("teamMembers").collect(),
+      ]);
+
+    // Check for orphaned teams (teams with non-existent tournaments)
+    const tournamentIds = new Set(tournaments.map((t) => t._id));
+    const orphanedTeams = teams.filter(
+      (t) => !tournamentIds.has(t.tournamentId),
+    );
+
+    // Check for orphaned submissions (submissions with non-existent teams or tournaments)
+    const teamIds = new Set(teams.map((t) => t._id));
+    const orphanedSubmissions = submissions.filter(
+      (s) => !teamIds.has(s.teamId) || !tournamentIds.has(s.tournamentId),
+    );
+
+    // Check for orphaned team members (members with non-existent teams or users)
+    const userIds = new Set(users.map((u) => u._id));
+    const orphanedTeamMembers = teamMembers.filter(
+      (tm) => !teamIds.has(tm.teamId) || !userIds.has(tm.userId),
+    );
+
+    return {
+      services: {
+        convex: "healthy",
+        clerk: "healthy",
+        database: "healthy",
+      },
+      databaseMetrics: {
+        tournaments: {
+          total: tournaments.length,
+          orphaned: 0,
+        },
+        teams: {
+          total: teams.length,
+          orphaned: orphanedTeams.length,
+        },
+        submissions: {
+          total: submissions.length,
+          orphaned: orphanedSubmissions.length,
+        },
+        users: {
+          total: users.length,
+          orphaned: 0,
+        },
+        teamMembers: {
+          total: teamMembers.length,
+          orphaned: orphanedTeamMembers.length,
+        },
+      },
+      orphanedRecords: {
+        teams: orphanedTeams.map((t) => ({
+          id: t._id,
+          name: t.name,
+          tournamentId: t.tournamentId,
+        })),
+        submissions: orphanedSubmissions.map((s) => ({
+          id: s._id,
+          teamId: s.teamId,
+          tournamentId: s.tournamentId,
+        })),
+        teamMembers: orphanedTeamMembers.map((tm) => ({
+          id: tm._id,
+          teamId: tm.teamId,
+          userId: tm.userId,
+        })),
+      },
+      recentErrors: [],
+    };
+  },
+});
+
+/**
+ * Helper function to get orphaned records data.
+ * Used by both queries and mutations.
+ */
+async function getOrphanedRecordsData(ctx: QueryCtx | MutationCtx): Promise<{
+  orphanedTeams: Doc<"teams">[];
+  orphanedSubmissions: Doc<"submissions">[];
+  orphanedTeamMembers: Doc<"teamMembers">[];
+}> {
+  // Get all entities for metrics
+  const [tournaments, teams, submissions, users, teamMembers] =
+    await Promise.all([
+      ctx.db.query("tournaments").collect(),
+      ctx.db.query("teams").collect(),
+      ctx.db.query("submissions").collect(),
+      ctx.db.query("users").collect(),
+      ctx.db.query("teamMembers").collect(),
+    ]);
+
+  // Check for orphaned teams (teams with non-existent tournaments)
+  const tournamentIds = new Set(tournaments.map((t) => t._id));
+  const orphanedTeams = teams.filter((t) => !tournamentIds.has(t.tournamentId));
+
+  // Check for orphaned submissions (submissions with non-existent teams or tournaments)
+  const teamIds = new Set(teams.map((t) => t._id));
+  const orphanedSubmissions = submissions.filter(
+    (s) => !teamIds.has(s.teamId) || !tournamentIds.has(s.tournamentId),
+  );
+
+  // Check for orphaned team members (members with non-existent teams or users)
+  const userIds = new Set(users.map((u) => u._id));
+  const orphanedTeamMembers = teamMembers.filter(
+    (tm) => !teamIds.has(tm.teamId) || !userIds.has(tm.userId),
+  );
+
+  return {
+    orphanedTeams,
+    orphanedSubmissions,
+    orphanedTeamMembers,
+  };
+}
+
+/**
+ * Run a data integrity check to identify orphaned records.
+ * Returns a summary of issues found.
+ * Only accessible to admins.
+ */
+export const runIntegrityCheck = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    validateIsAdmin(user, "Admin access required");
+
+    const { orphanedTeams, orphanedSubmissions, orphanedTeamMembers } =
+      await getOrphanedRecordsData(ctx);
+
+    const issuesFound = {
+      orphanedTeams: orphanedTeams.length,
+      orphanedSubmissions: orphanedSubmissions.length,
+      orphanedTeamMembers: orphanedTeamMembers.length,
+    };
+
+    const totalIssues =
+      issuesFound.orphanedTeams +
+      issuesFound.orphanedSubmissions +
+      issuesFound.orphanedTeamMembers;
+
+    return {
+      success: true,
+      issuesFound,
+      totalIssues,
+      message:
+        totalIssues === 0
+          ? "No integrity issues found"
+          : `Found ${totalIssues} integrity issue${totalIssues === 1 ? "" : "s"}`,
+    };
+  },
+});
+
+/**
+ * Clean up orphaned records from the database.
+ * This is a destructive operation that permanently deletes orphaned data.
+ * Only accessible to admins.
+ */
+export const cleanupOrphanedRecords = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    validateIsAdmin(user, "Admin access required");
+
+    const { orphanedTeams, orphanedSubmissions, orphanedTeamMembers } =
+      await getOrphanedRecordsData(ctx);
+
+    let deletedCount = 0;
+
+    // Delete orphaned team members
+    for (const tm of orphanedTeamMembers) {
+      await ctx.db.delete(tm._id);
+      deletedCount++;
+    }
+
+    // Delete orphaned submissions
+    for (const s of orphanedSubmissions) {
+      await ctx.db.delete(s._id);
+      deletedCount++;
+    }
+
+    // Delete orphaned teams
+    for (const t of orphanedTeams) {
+      await ctx.db.delete(t._id);
+      deletedCount++;
+    }
+
+    return {
+      success: true,
+      deletedCount,
+      message:
+        deletedCount === 0
+          ? "No orphaned records to clean up"
+          : `Successfully deleted ${deletedCount} orphaned record${deletedCount === 1 ? "" : "s"}`,
+    };
   },
 });

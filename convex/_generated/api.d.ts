@@ -21,6 +21,7 @@ import type * as http from "../http.js";
 import type * as joinRequests from "../joinRequests.js";
 import type * as lib_dates from "../lib/dates.js";
 import type * as migrations from "../migrations.js";
+import type * as publicQueries from "../publicQueries.js";
 import type * as reviewer from "../reviewer.js";
 import type * as seed from "../seed.js";
 import type * as submissionGroups from "../submissionGroups.js";
@@ -30,6 +31,7 @@ import type * as teams from "../teams.js";
 import type * as tournamentManager from "../tournamentManager.js";
 import type * as tournaments from "../tournaments.js";
 import type * as users from "../users.js";
+import type * as viewer from "../viewer.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -48,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   joinRequests: typeof joinRequests;
   "lib/dates": typeof lib_dates;
   migrations: typeof migrations;
+  publicQueries: typeof publicQueries;
   reviewer: typeof reviewer;
   seed: typeof seed;
   submissionGroups: typeof submissionGroups;
@@ -57,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   tournamentManager: typeof tournamentManager;
   tournaments: typeof tournaments;
   users: typeof users;
+  viewer: typeof viewer;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

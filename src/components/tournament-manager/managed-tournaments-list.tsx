@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Label } from "../ui/label";
 
@@ -25,6 +26,7 @@ type TournamentStatus = "all" | "active" | "upcoming" | "ended";
 export function ManagedTournamentsList({
   tournaments,
 }: ManagedTournamentsListProps) {
+  const { format } = useFormattedDate();
   const [statusFilter, setStatusFilter] = useState<TournamentStatus>("all");
   const [sortBy, setSortBy] = useState<"name" | "startDate" | "status">(
     "startDate",
@@ -164,7 +166,8 @@ export function ManagedTournamentsList({
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 opacity-70" />
                       <span className="text-sm">
-                        {tournament.startDate} to {tournament.endDate}
+                        {format(tournament.startDate, "short")} to{" "}
+                        {format(tournament.endDate, "short")}
                       </span>
                     </div>
                   </div>

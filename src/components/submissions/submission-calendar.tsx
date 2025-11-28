@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { capitalize, startCase } from "lodash";
 import { useEffect, useMemo, useState } from "react";
 import { useUser } from "@/hooks/useUser";
+import { isToday } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
@@ -185,15 +186,6 @@ export function SubmissionCalendar({
     dateToCheck.setHours(0, 0, 0, 0);
 
     return dateToCheck < tournamentStart || dateToCheck > tournamentEnd;
-  };
-
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
   };
 
   if (!tournament) {

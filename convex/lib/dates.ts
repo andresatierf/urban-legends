@@ -9,7 +9,9 @@
  */
 export function toUTCDateString(dateInput: string | Date): string {
   if (typeof dateInput === "string") {
-    const [year, month, day] = dateInput.split("-").map(Number);
+    let date = dateInput;
+    if (date.includes("T")) date = date.split("T")[0];
+    const [year, month, day] = date.split("-").map(Number);
     const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
     return utcDate.toISOString();
   }
@@ -27,7 +29,9 @@ export function toUTCDateString(dateInput: string | Date): string {
  */
 export function toUTCEndOfDayString(dateInput: string | Date): string {
   if (typeof dateInput === "string") {
-    const [year, month, day] = dateInput.split("-").map(Number);
+    let date = dateInput;
+    if (date.includes("T")) date = date.split("T")[0];
+    const [year, month, day] = date.split("-").map(Number);
     const utcDate = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
     return utcDate.toISOString();
   }
