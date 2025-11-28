@@ -99,26 +99,74 @@ export const getDashboardData = query({
       };
     }
 
-    // Get team details with enriched data
-    const teamsWithData = await Promise.all(
-      teamIds.map(async (teamId) => {
-        const team = await ctx.db.get(teamId);
-        if (!team) return null;
+    const teams = await ctx.db
+      .query("teams")
+      .filter((q) =>
+        q.or(...teamIds.map((id) => q.eq(q.field("_id"), id as string))),
+      )
+      .collect();
+    const teamsMap = teams.reduce<Map<Id<"teams">, Doc<"teams">>>(
+      (acc, team) => acc.set(team._id, team),
+      new Map(),
+    );
 
-        // Get tournament
-        const tournament = await ctx.db.get(team.tournamentId);
+    const tournaments = await ctx.db
+      .query("tournaments")
+      .filter((q) =>
+        q.or(
+          ...Array.from(teamsMap.keys()).map((id) =>
+            q.eq(q.field("_id"), id as string),
+          ),
+        ),
+      )
+      .collect();
+    const tournamentsMap = tournaments.reduce<
+      Map<Id<"tournaments">, Doc<"tournaments">>
+    >((acc, tournament) => acc.set(tournament._id, tournament), new Map());
 
-        // Get team members count
-        const members = await ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", teamId))
-          .collect();
+    const teamMembers = await ctx.db
+      .query("teamMembers")
+      .filter((q) =>
+        q.or(
+          ...Array.from(teamsMap.keys()).map((id) =>
+            q.eq(q.field("teamId"), id as string),
+          ),
+        ),
+      )
+      .collect();
+    const teamMembersMap = teamMembers.reduce<
+      Map<Id<"teams">, Doc<"teamMembers">[]>
+    >((acc, teamMember) => {
+      if (!acc.has(teamMember.teamId)) acc.set(teamMember.teamId, []);
+      acc.get(teamMember.teamId)?.push(teamMember);
+      return acc;
+    }, new Map());
 
-        // Get submissions count
-        const submissions = await ctx.db
-          .query("submissions")
-          .withIndex("by_team", (q) => q.eq("teamId", teamId))
-          .collect();
+    const submissions = await ctx.db
+      .query("submissions")
+      .filter((q) =>
+        q.or(
+          ...Array.from(teamsMap.keys()).map((id) =>
+            q.eq(q.field("teamId"), id as string),
+          ),
+        ),
+      )
+      .collect();
+    const submissionsMap = submissions.reduce<
+      Map<Id<"teams">, Doc<"submissions">[]>
+    >((acc, submission) => {
+      if (!acc.has(submission.teamId)) acc.set(submission.teamId, []);
+      acc.get(submission.teamId)?.push(submission);
+      return acc;
+    }, new Map());
+
+    const teamsWithData = teams
+      .map((team) => {
+        const tournament = tournamentsMap.get(team.tournamentId);
+
+        const members = teamMembersMap.get(team._id) || [];
+
+        const submissions = submissionsMap.get(team._id) || [];
 
         const approvedSubmissions = submissions.filter(
           (s) => s.state === "approved",
@@ -132,10 +180,8 @@ export const getDashboardData = query({
           approvedCount: approvedSubmissions.length,
           points: team.points,
         };
-      }),
-    );
-
-    const teams = teamsWithData.filter((t) => t !== null);
+      })
+      .filter((t) => t !== null);
 
     // Get pending join requests for captain's teams
     const teamIdsSet = new Set(teamIds);
@@ -191,7 +237,7 @@ export const getDashboardData = query({
     );
 
     return {
-      teams,
+      teams: teamsWithData,
       joinRequests: enrichedJoinRequests,
       invitations: enrichedInvitations,
     };

@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TournamentDiscoveryCard } from "@/components/viewer/tournament-discovery-card";
@@ -10,11 +11,15 @@ import { api } from "../../../../convex/_generated/api";
 
 export default function ViewerDashboard() {
   const { user } = useUser();
+  const router = useRouter();
+
   const dashboardData = useQuery(api.viewer.getDashboardData);
 
-  if (user === null) {
-    redirect("/sign-in");
-  }
+  useEffect(() => {
+    if (user === null) {
+      router.replace("/sign-in");
+    }
+  }, [user, router]);
 
   return (
     <>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { SystemActionsPanel } from "@/components/admin/system-actions-panel";
 import { SystemDatabaseMetrics } from "@/components/admin/system-database-metrics";
 import { SystemServiceStatus } from "@/components/admin/system-service-status";
@@ -12,11 +13,14 @@ import { api } from "../../../../../convex/_generated/api";
 
 export default function SystemHealth() {
   const { user } = useUser();
+  const router = useRouter();
   const systemHealth = useQuery(api.admin.getSystemHealth);
 
-  if (user && !user.roleNames?.includes("admin")) {
-    redirect("/dashboard");
-  }
+  useEffect(() => {
+    if (user && !user.roleNames?.includes("admin")) {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
 
   return (
     <>

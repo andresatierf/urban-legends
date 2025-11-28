@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 
 /**
@@ -17,16 +18,49 @@ export const getPublicLeaderboards = query({
       (t) => t.startDate <= now && t.endDate >= now,
     );
 
+    const activeTournamentIds = activeTournaments.map((t) => t._id);
+
+    const teams = await ctx.db
+      .query("teams")
+      .filter((q) =>
+        q.or(
+          ...activeTournamentIds.map((id) => q.eq(q.field("tournamentId"), id)),
+        ),
+      )
+      .collect();
+
+    const tournamentTeamsMap = teams.reduce<
+      Map<Id<"tournaments">, Doc<"teams">[]>
+    >((map, team) => {
+      if (!map.has(team.tournamentId)) {
+        map.set(team.tournamentId, []);
+      }
+      map.get(team.tournamentId)?.push(team);
+      return map;
+    }, new Map());
+
+    const teamIds = teams.map((team) => team._id);
+
+    const members = await ctx.db
+      .query("teamMembers")
+      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
+      .collect();
+
+    const teamMembersMap = members.reduce<
+      Map<Id<"teams">, Doc<"teamMembers">[]>
+    >((map, member) => {
+      if (!map.has(member.teamId)) {
+        map.set(member.teamId, []);
+      }
+      map.get(member.teamId)?.push(member);
+      return map;
+    }, new Map());
+
     // Get leaderboard data for each active tournament
     const leaderboards = await Promise.all(
       activeTournaments.map(async (tournament) => {
         // Get all teams in this tournament
-        const teams = await ctx.db
-          .query("teams")
-          .withIndex("by_tournament", (q) =>
-            q.eq("tournamentId", tournament._id),
-          )
-          .collect();
+        const teams = tournamentTeamsMap.get(tournament._id) || [];
 
         // Sort teams by points (descending)
         const sortedTeams = teams.sort((a, b) => b.points - a.points);
@@ -34,10 +68,7 @@ export const getPublicLeaderboards = query({
         // Get top 10 teams with member count
         const top10Teams = await Promise.all(
           sortedTeams.slice(0, 10).map(async (team, index) => {
-            const memberCount = await ctx.db
-              .query("teamMembers")
-              .withIndex("by_team", (q) => q.eq("teamId", team._id))
-              .collect();
+            const memberCount = teamMembersMap.get(team._id) || [];
 
             return {
               rank: index + 1,

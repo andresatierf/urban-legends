@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { AdminPendingActionsPanel } from "@/components/admin/admin-pending-actions-panel";
 import { AdminQuickActions } from "@/components/admin/admin-quick-actions";
 import { AdminRecentActivityFeed } from "@/components/admin/admin-recent-activity-feed";
@@ -20,11 +21,14 @@ import { api } from "../../../../convex/_generated/api";
 
 export default function AdminDashboard() {
   const { user } = useUser();
+  const router = useRouter();
   const dashboardData = useQuery(api.admin.getDashboardData);
 
-  if (user && !user.roleNames?.includes("admin")) {
-    redirect("/dashboard");
-  }
+  useEffect(() => {
+    if (user && !user.roleNames?.includes("admin")) {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
 
   return (
     <>

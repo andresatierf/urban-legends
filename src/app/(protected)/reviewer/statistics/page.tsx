@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { api } from "@/../convex/_generated/api";
 import { SectionHeader } from "@/components/section-header";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { useUser } from "@/hooks/useUser";
+import { cn } from "@/lib/utils";
 
 export default function ReviewStatistics() {
   const { user } = useUser();
@@ -153,26 +155,28 @@ export default function ReviewStatistics() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs ${
-                        review.type === "individual"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-green-100 text-green-800"
-                      }`}
+                    <Badge
+                      className={cn({
+                        "bg-blue-100 text-blue-800 hover:bg-blue-100":
+                          review.type === "individual",
+                        "bg-green-100 text-green-800 hover:bg-green-100":
+                          review.type !== "individual",
+                      })}
                     >
                       {review.type === "individual"
                         ? "Individual"
                         : "Team Activity"}
-                    </span>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs ${
-                        review.state === "approved"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
+                    </Badge>
+                    <Badge
+                      className={cn({
+                        "bg-green-100 text-green-800 hover:bg-green-100":
+                          review.state === "approved",
+                        "bg-red-100 text-red-800 hover:bg-red-100":
+                          review.state !== "approved",
+                      })}
                     >
                       {review.state === "approved" ? "Approved" : "Rejected"}
-                    </span>
+                    </Badge>
                     <span className="text-muted-foreground text-xs">
                       {format(review.date, "short")}
                     </span>
