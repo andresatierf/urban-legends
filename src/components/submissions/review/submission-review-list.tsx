@@ -1,0 +1,141 @@
+"use client";
+
+import { Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import type { UserWithRoles } from "@/../convex/users";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useDebounce } from "@/hooks/useDebounce";
+import { SubmissionReviewCard } from "./submission-review-card";
+import { filterReviewItems, sortReviewItems } from "./transforms";
+import type { ReviewItem } from "./types";
+
+interface SubmissionReviewListProps {
+  items: ReviewItem[];
+  currentUser: UserWithRoles;
+  onApprove: (item: ReviewItem) => void | Promise<void>;
+  onReject: (item: ReviewItem) => void | Promise<void>;
+  showFilters?: boolean;
+  defaultSortBy?: "date-desc" | "date-asc" | "points-desc" | "points-asc";
+  emptyMessage?: string;
+  variant?: "compact" | "detailed";
+}
+
+/**
+ * Filterable, sortable list of review items with search
+ * Supports both individual submissions and submission groups
+ */
+export function SubmissionReviewList({
+  items,
+  currentUser,
+  onApprove,
+  onReject,
+  showFilters = true,
+  defaultSortBy = "date-desc",
+  emptyMessage = "No submissions to display",
+  variant = "compact",
+}: SubmissionReviewListProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<
+    "date-desc" | "date-asc" | "points-desc" | "points-asc"
+  >(defaultSortBy);
+
+  // Debounce search for performance
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
+  // Filter and sort items
+  const filteredAndSortedItems = useMemo(() => {
+    let result = items;
+
+    // Apply search filter
+    if (debouncedSearch) {
+      result = filterReviewItems(result, debouncedSearch);
+    }
+
+    // Apply sorting
+    result = sortReviewItems(result, sortBy);
+
+    return result;
+  }, [items, debouncedSearch, sortBy]);
+
+  return (
+    <div className="space-y-4">
+      {/* Filters */}
+      {showFilters && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative max-w-md flex-1">
+            <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by team, tournament, or submitter..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          <Select
+            value={sortBy}
+            onValueChange={(value) => setSortBy(value as typeof sortBy)}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date-desc">Newest First</SelectItem>
+              <SelectItem value="date-asc">Oldest First</SelectItem>
+              <SelectItem value="points-desc">Highest Points</SelectItem>
+              <SelectItem value="points-asc">Lowest Points</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Count */}
+      {items.length > 0 && (
+        <p className="text-muted-foreground text-sm">
+          Showing {filteredAndSortedItems.length} of {items.length}{" "}
+          {items.length === 1 ? "submission" : "submissions"}
+        </p>
+      )}
+
+      {/* Empty state */}
+      {filteredAndSortedItems.length === 0 && (
+        <div className="rounded-lg border border-dashed p-12 text-center">
+          <p className="text-muted-foreground">{emptyMessage}</p>
+          {debouncedSearch && (
+            <p className="mt-2 text-muted-foreground text-sm">
+              Try a different search term
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Submissions list */}
+      <div className="space-y-4">
+        {filteredAndSortedItems.map((item) => {
+          const key =
+            item.type === "individual"
+              ? `individual-${item.data.submission._id}`
+              : `group-${item.data.group._id}`;
+
+          return (
+            <SubmissionReviewCard
+              key={key}
+              item={item}
+              currentUser={currentUser}
+              variant={variant}
+              onApprove={() => onApprove(item)}
+              onReject={() => onReject(item)}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
