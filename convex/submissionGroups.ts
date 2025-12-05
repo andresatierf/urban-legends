@@ -199,7 +199,15 @@ export const approve = mutation({
   args: { groupId: v.id("submissionGroups") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateIsAdmin(user, "You do not have permission to approve submissions");
+
+    // Allow admin, tournament_manager, and reviewer
+    if (
+      !["admin", "tournament_manager", "reviewer"].some((role) =>
+        user.roleNames.includes(role),
+      )
+    ) {
+      throw new Error("Reviewer access required to approve submissions");
+    }
 
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Submission group not found");
@@ -250,7 +258,15 @@ export const reject = mutation({
   args: { groupId: v.id("submissionGroups") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateIsAdmin(user, "You do not have permission to reject submissions");
+
+    // Allow admin, tournament_manager, and reviewer
+    if (
+      !["admin", "tournament_manager", "reviewer"].some((role) =>
+        user.roleNames.includes(role),
+      )
+    ) {
+      throw new Error("Reviewer access required to reject submissions");
+    }
 
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Submission group not found");

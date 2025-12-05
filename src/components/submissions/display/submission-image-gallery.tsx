@@ -13,7 +13,7 @@ interface SubmissionImageGalleryProps {
     url: string;
     filename: string;
   }>;
-  layout?: "grid" | "single" | "carousel";
+  layout?: "grid" | "single";
   maxDisplay?: number;
   className?: string;
 }
@@ -158,6 +158,7 @@ export function SubmissionImageGallery({
                       prev === 0 ? images.length - 1 : prev - 1,
                     )
                   }
+                  aria-label="Previous image"
                 >
                   <ChevronLeft />
                 </Button>
@@ -170,6 +171,7 @@ export function SubmissionImageGallery({
                       prev === images.length - 1 ? 0 : prev + 1,
                     )
                   }
+                  aria-label="Next image"
                 >
                   <ChevronRight />
                 </Button>

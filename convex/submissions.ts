@@ -673,14 +673,13 @@ export const approve = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Allow both admin and tournament_manager
+    // Allow admin, tournament_manager, and reviewer
     if (
-      !user.roleNames.includes("admin") &&
-      !user.roleNames.includes("tournament_manager")
+      !["admin", "tournament_manager", "reviewer"].some((role) =>
+        user.roleNames.includes(role),
+      )
     ) {
-      throw new Error(
-        "Admin or Tournament Manager access required to approve submissions",
-      );
+      throw new Error("Reviewer access required to approve submissions");
     }
 
     const submission = await ctx.db.get(args.submissionId);
@@ -744,14 +743,13 @@ export const reject = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Allow both admin and tournament_manager
+    // Allow admin, tournament_manager, and reviewer
     if (
-      !user.roleNames.includes("admin") &&
-      !user.roleNames.includes("tournament_manager")
+      !["admin", "tournament_manager", "reviewer"].some((role) =>
+        user.roleNames.includes(role),
+      )
     ) {
-      throw new Error(
-        "Admin or Tournament Manager access required to reject submissions",
-      );
+      throw new Error("Reviewer access required to reject submissions");
     }
 
     const submission = await ctx.db.get(args.submissionId);

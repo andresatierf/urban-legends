@@ -11,6 +11,7 @@ import { SubmissionReviewList } from "@/components/submissions/review/submission
 import type { ReviewItem } from "@/components/submissions/review/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from "@/hooks/useUser";
+import { tryMutate } from "@/lib/utils";
 
 export default function TournamentManagerSubmissions() {
   const { user } = useUser();
@@ -64,15 +65,23 @@ export default function TournamentManagerSubmissions() {
   }, [reviewItems]);
 
   const handleApprove = async (item: ReviewItem) => {
-    if (item.type === "individual") {
-      await approve({ submissionId: item.data.submission._id });
-    }
+    if (item.type !== "individual") return;
+
+    await tryMutate({
+      fn: () => approve({ submissionId: item.data.submission._id }),
+      successToast: "Submission approved successfully",
+      defaultFailureToast: "Failed to approve submission",
+    });
   };
 
   const handleReject = async (item: ReviewItem) => {
-    if (item.type === "individual") {
-      await reject({ submissionId: item.data.submission._id });
-    }
+    if (item.type !== "individual") return;
+
+    await tryMutate({
+      fn: () => reject({ submissionId: item.data.submission._id }),
+      successToast: "Submission rejected successfully",
+      defaultFailureToast: "Failed to reject submission",
+    });
   };
 
   if (
@@ -111,7 +120,6 @@ export default function TournamentManagerSubmissions() {
         <TabsContent value="all">
           <SubmissionReviewList
             items={allItems}
-            currentUser={user}
             onApprove={handleApprove}
             onReject={handleReject}
             showFilters={true}
@@ -123,7 +131,6 @@ export default function TournamentManagerSubmissions() {
         <TabsContent value="pending">
           <SubmissionReviewList
             items={pendingItems}
-            currentUser={user}
             onApprove={handleApprove}
             onReject={handleReject}
             showFilters={true}
@@ -135,7 +142,6 @@ export default function TournamentManagerSubmissions() {
         <TabsContent value="done">
           <SubmissionReviewList
             items={resolvedItems}
-            currentUser={user}
             onApprove={handleApprove}
             onReject={handleReject}
             showFilters={true}

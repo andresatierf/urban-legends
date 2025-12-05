@@ -15,10 +15,10 @@ import { SubmissionReviewCard } from "./submission-review-card";
 import { filterReviewItems, sortReviewItems } from "./transforms";
 import type { ReviewItem } from "./types";
 
-interface SubmissionReviewListProps {
+export interface SubmissionReviewListProps {
   items: ReviewItem[];
-  onApprove: (item: ReviewItem) => void | Promise<void>;
-  onReject: (item: ReviewItem) => void | Promise<void>;
+  onApprove: (item: ReviewItem) => Promise<void>;
+  onReject: (item: ReviewItem) => Promise<void>;
   showFilters?: boolean;
   defaultSortBy?: "date-desc" | "date-asc" | "points-desc" | "points-asc";
   emptyMessage?: string;

@@ -10,6 +10,7 @@ import { SectionHeader } from "@/components/section-header";
 import { SubmissionReviewList } from "@/components/submissions/review/submission-review-list";
 import type { ReviewItem } from "@/components/submissions/review/types";
 import { useUser } from "@/hooks/useUser";
+import { tryMutate } from "@/lib/utils";
 
 const ALLOWED_ROLES = ["admin", "tournament_manager", "reviewer"];
 
@@ -48,9 +49,10 @@ export default function ReviewerDashboard() {
             team: item.team,
             tournament: item.tournament,
             submitter: item.submitter as UserWithRoles,
-            images: [],
-            isTeamExercise: false,
-            participationRate: 0,
+            // Placeholders for features not yet implemented:
+            images: [], // Will be populated when image storage is implemented
+            isTeamExercise: false, // Individual submissions are not team exercises
+            participationRate: 0, // Not applicable for individual submissions
           },
         };
       } else {
@@ -62,8 +64,8 @@ export default function ReviewerDashboard() {
             tournament: item.tournament,
             submissions: item.submissions,
             submitters: item.submitters as UserWithRoles[],
+            // Placeholder for image storage feature:
             // TODO: Aggregate images from all submissions in the group when image upload is implemented
-            // This should collect images from item.submissions and flatten them into a single array
             images: [],
           },
         };
@@ -74,17 +76,33 @@ export default function ReviewerDashboard() {
   // Action handlers
   const handleApprove = async (item: ReviewItem) => {
     if (item.type === "individual") {
-      await approveSubmission({ submissionId: item.data.submission._id });
+      await tryMutate({
+        fn: () => approveSubmission({ submissionId: item.data.submission._id }),
+        successToast: "Submission approved successfully",
+        defaultFailureToast: "Failed to approve submission",
+      });
     } else {
-      await approveGroup({ groupId: item.data.group._id });
+      await tryMutate({
+        fn: () => approveGroup({ groupId: item.data.group._id }),
+        successToast: "Team activity approved successfully",
+        defaultFailureToast: "Failed to approve team activity",
+      });
     }
   };
 
   const handleReject = async (item: ReviewItem) => {
     if (item.type === "individual") {
-      await rejectSubmission({ submissionId: item.data.submission._id });
+      await tryMutate({
+        fn: () => rejectSubmission({ submissionId: item.data.submission._id }),
+        successToast: "Submission rejected successfully",
+        defaultFailureToast: "Failed to reject submission",
+      });
     } else {
-      await rejectGroup({ groupId: item.data.group._id });
+      await tryMutate({
+        fn: () => rejectGroup({ groupId: item.data.group._id }),
+        successToast: "Team activity rejected successfully",
+        defaultFailureToast: "Failed to reject team activity",
+      });
     }
   };
 

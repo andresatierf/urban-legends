@@ -2,8 +2,7 @@
 
 import { capitalize } from "lodash";
 import { Check, X } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useRef, useState } from "react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn, tryMutate } from "@/lib/utils";
 import type { Doc } from "../../../../convex/_generated/dataModel";
 import { SubmissionImageGallery } from "../display/submission-image-gallery";
 import { SubmissionMetadata } from "../display/submission-metadata";
@@ -25,8 +24,8 @@ interface SubmissionReviewCardProps {
   item: ReviewItem;
   variant?: "compact" | "detailed";
   showActions?: boolean;
-  onApprove?: () => void | Promise<void>;
-  onReject?: () => void | Promise<void>;
+  onApprove?: () => Promise<void>;
+  onReject?: () => Promise<void>;
   onViewDetails?: () => void;
 }
 
@@ -43,39 +42,51 @@ export function SubmissionReviewCard({
 }: SubmissionReviewCardProps) {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const handleApprove = async () => {
     if (!onApprove) return;
+
     setIsApproving(true);
-    try {
-      await onApprove();
-      toast.success(
+    await tryMutate({
+      fn: onApprove,
+      successToast:
         item.type === "group"
           ? "Team activity approved"
           : "Submission approved",
-      );
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to approve");
-    } finally {
-      setIsApproving(false);
-    }
+      defaultFailureToast: "Failed to approve",
+      onFinally: () => {
+        if (mountedRef.current) {
+          setIsApproving(false);
+        }
+      },
+    });
   };
 
   const handleReject = async () => {
     if (!onReject) return;
+
     setIsRejecting(true);
-    try {
-      await onReject();
-      toast.success(
+    await tryMutate({
+      fn: onReject,
+      successToast:
         item.type === "group"
           ? "Team activity rejected"
           : "Submission rejected",
-      );
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to reject");
-    } finally {
-      setIsRejecting(false);
-    }
+      defaultFailureToast: "Failed to reject",
+      onFinally: () => {
+        if (mountedRef.current) {
+          setIsRejecting(false);
+        }
+      },
+    });
   };
 
   if (item.type === "individual") {
