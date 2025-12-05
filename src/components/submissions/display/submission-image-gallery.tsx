@@ -65,6 +65,7 @@ export function SubmissionImageGallery({
                   setLightboxOpen(true);
                 }}
                 className="group relative block overflow-hidden rounded-lg"
+                aria-label={`View image ${idx + 1}: ${img.filename}`}
               >
                 <Image
                   src={img.url}
@@ -91,6 +92,7 @@ export function SubmissionImageGallery({
               setLightboxOpen(true);
             }}
             className="group relative block w-full overflow-hidden rounded-lg"
+            aria-label={`View image: ${images[0].filename}`}
           >
             <Image
               src={images[0].url}
@@ -115,6 +117,7 @@ export function SubmissionImageGallery({
                   setLightboxOpen(true);
                 }}
                 className="relative h-16 w-16 overflow-hidden rounded border hover:ring-2 hover:ring-primary"
+                aria-label={`View image ${idx + 3}: ${img.filename}`}
               >
                 <Image
                   src={img.url}

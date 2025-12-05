@@ -2,6 +2,8 @@
 
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -104,14 +106,16 @@ export function SubmissionReviewList({
 
       {/* Empty state */}
       {filteredAndSortedItems.length === 0 && (
-        <div className="rounded-lg border border-dashed p-12 text-center">
-          <p className="text-muted-foreground">{emptyMessage}</p>
-          {debouncedSearch && (
-            <p className="mt-2 text-muted-foreground text-sm">
-              Try a different search term
-            </p>
-          )}
-        </div>
+        <Card variant="dashed">
+          <CardContent>
+            <Empty className="gap-3 p-6! text-muted-foreground">
+              <EmptyTitle>{emptyMessage}</EmptyTitle>
+              {debouncedSearch && (
+                <EmptyDescription>Try a different search term</EmptyDescription>
+              )}
+            </Empty>
+          </CardContent>
+        </Card>
       )}
 
       {/* Submissions list */}

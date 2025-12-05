@@ -5,11 +5,11 @@ import { Calendar, CheckCircle, Clock } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useMemo } from "react";
 import { api } from "@/../convex/_generated/api";
-import type { UserWithRoles } from "@/../convex/users";
 import { SectionHeader } from "@/components/section-header";
 import { SubmissionReviewList } from "@/components/submissions/review/submission-review-list";
 import type { ReviewItem } from "@/components/submissions/review/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toUserWithRoles } from "@/components/users/transforms";
 import { useUser } from "@/hooks/useUser";
 import { tryMutate } from "@/lib/utils";
 
@@ -37,7 +37,7 @@ export default function TournamentManagerSubmissions() {
           submission: s,
           team: s.team,
           tournament: tournamentMap.get(s.tournamentId)!,
-          submitter: s.user as UserWithRoles,
+          submitter: toUserWithRoles(s.user),
           // TODO: Fetch images for this submission when image upload is implemented
           images: [],
           isTeamExercise: false,

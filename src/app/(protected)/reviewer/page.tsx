@@ -5,38 +5,14 @@ import { FileCheck, Loader2 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useMemo } from "react";
 import { api } from "@/../convex/_generated/api";
-import type { Doc } from "@/../convex/_generated/dataModel";
-import type { UserWithRoles } from "@/../convex/users";
 import { SectionHeader } from "@/components/section-header";
 import { SubmissionReviewList } from "@/components/submissions/review/submission-review-list";
 import type { ReviewItem } from "@/components/submissions/review/types";
+import { toUserWithRoles } from "@/components/users/transforms";
 import { useUser } from "@/hooks/useUser";
 import { tryMutate } from "@/lib/utils";
 
 const ALLOWED_ROLES = ["admin", "tournament_manager", "reviewer"];
-
-// Type guard to check if a user object has roles (UserWithRoles)
-function isUserWithRoles(user: Doc<"users">): user is UserWithRoles {
-  return (
-    "roleNames" in user &&
-    "roles" in user &&
-    Array.isArray((user as UserWithRoles).roleNames) &&
-    Array.isArray((user as UserWithRoles).roles)
-  );
-}
-
-// Convert Doc<"users"> to UserWithRoles with safe fallback
-function toUserWithRoles(user: Doc<"users">): UserWithRoles {
-  if (isUserWithRoles(user)) {
-    return user;
-  }
-  // Fallback for users without roles loaded
-  return {
-    ...user,
-    roles: [],
-    roleNames: [],
-  };
-}
 
 export default function ReviewerDashboard() {
   const { user } = useUser();

@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { cn, tryMutate } from "@/lib/utils";
 import type { Doc } from "../../../../convex/_generated/dataModel";
 import { SubmissionImageGallery } from "../display/submission-image-gallery";
@@ -40,6 +41,7 @@ export function SubmissionReviewCard({
   onApprove,
   onReject,
 }: SubmissionReviewCardProps) {
+  const { format } = useFormattedDate();
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const mountedRef = useRef(false);
@@ -191,7 +193,7 @@ export function SubmissionReviewCard({
 
       {variant === "detailed" && group.date && (
         <p className="text-muted-foreground text-sm">
-          Activity date: {new Date(group.date).toLocaleDateString()}
+          Activity date: {format(group.date, "short")}
         </p>
       )}
     </InnerSubmissionReviewCard>
