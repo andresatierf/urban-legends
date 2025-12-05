@@ -3,6 +3,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, type QueryCtx, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
+import { groupBy, toIdMap } from "./lib/helpers";
 import { upsertSubmissionGroup } from "./submissionGroups";
 import { recalculateSubmissionPoints } from "./submissions";
 import { validateUserNotInTournamentTeam } from "./tournaments";
@@ -913,3 +914,199 @@ export const getStatistics = query({
     };
   },
 });
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Enriches a single team with member count and optional member details.
+ *
+ * @param ctx - Query or Mutation context
+ * @param teamId - Team ID to enrich
+ * @param options - Configuration for what data to include
+ * @returns Enriched team with member data
+ */
+export async function enrichTeamWithMembers(
+  ctx: QueryCtx | MutationCtx,
+  teamId: Id<"teams">,
+  options?: {
+    includeMemberDetails?: boolean;
+    includeMemberRoles?: boolean;
+    excludeUserId?: Id<"users">;
+  },
+): Promise<{
+  team: Doc<"teams">;
+  memberCount: number;
+  members?: Array<Doc<"users"> & { memberRole?: "captain" | "member" }>;
+}> {
+  const team = await ctx.db.get(teamId);
+  if (!team) throw new Error("Team not found");
+
+  const teamMembers = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_team", (q) => q.eq("teamId", teamId))
+    .collect();
+
+  let filteredMembers = teamMembers;
+  if (options?.excludeUserId) {
+    filteredMembers = teamMembers.filter(
+      (m) => m.userId !== options.excludeUserId,
+    );
+  }
+
+  let memberDetails:
+    | Array<Doc<"users"> & { memberRole?: "captain" | "member" }>
+    | undefined;
+
+  if (options?.includeMemberDetails) {
+    const userIds = filteredMembers.map((m) => m.userId);
+    const users = await ctx.db
+      .query("users")
+      .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("_id"), id))))
+      .collect();
+
+    if (options?.includeMemberRoles) {
+      const membershipByUserId = new Map(teamMembers.map((m) => [m.userId, m]));
+      memberDetails = users.map((user) => {
+        const membership = membershipByUserId.get(user._id);
+        return {
+          ...user,
+          memberRole: membership?.role,
+        };
+      });
+    } else {
+      memberDetails = users;
+    }
+  }
+
+  return {
+    team,
+    memberCount: filteredMembers.length,
+    members: memberDetails,
+  };
+}
+
+/**
+ * Enriches multiple teams in parallel with member data.
+ * More efficient than calling enrichTeamWithMembers in a loop.
+ *
+ * @param ctx - Query or Mutation context
+ * @param teamIds - Array of team IDs to enrich
+ * @param options - Configuration for what data to include
+ * @returns Array of enriched teams with member data
+ */
+export async function enrichTeamsWithMembers(
+  ctx: QueryCtx | MutationCtx,
+  teamIds: Id<"teams">[],
+  options?: {
+    includeMemberDetails?: boolean;
+    includeMemberRoles?: boolean;
+  },
+): Promise<
+  Array<{
+    team: Doc<"teams">;
+    memberCount: number;
+    members?: Array<Doc<"users"> & { memberRole?: "captain" | "member" }>;
+  }>
+> {
+  // Fetch all teams
+  const teams = await ctx.db
+    .query("teams")
+    .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))))
+    .collect();
+
+  // Fetch all team members for these teams in one query
+  const allTeamMembers = await ctx.db
+    .query("teamMembers")
+    .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
+    .collect();
+
+  // Group team members by team ID using helper
+  const membersByTeamId = groupBy(allTeamMembers, (member) => member.teamId);
+
+  // If we need user details, fetch all users at once
+  let usersMap: Map<Id<"users">, Doc<"users">> | undefined;
+  if (options?.includeMemberDetails) {
+    const allUserIds = allTeamMembers.map((m) => m.userId);
+    const users = await ctx.db
+      .query("users")
+      .filter((q) => q.or(...allUserIds.map((id) => q.eq(q.field("_id"), id))))
+      .collect();
+    usersMap = toIdMap(users);
+  }
+
+  // Enrich each team
+  return teams.map((team) => {
+    const members = membersByTeamId.get(team._id) || [];
+    let memberDetails:
+      | Array<Doc<"users"> & { memberRole?: "captain" | "member" }>
+      | undefined;
+
+    if (options?.includeMemberDetails && usersMap) {
+      memberDetails = members
+        .map((member) => {
+          const user = usersMap?.get(member.userId);
+          if (!user) return null;
+          return options?.includeMemberRoles
+            ? { ...user, memberRole: member.role }
+            : user;
+        })
+        .filter((u): u is NonNullable<typeof u> => u !== null);
+    }
+
+    return {
+      team,
+      memberCount: members.length,
+      members: memberDetails,
+    };
+  });
+}
+
+/**
+ * Gets team members with full user details.
+ * Optimized for fetching members of a single team.
+ *
+ * @param ctx - Query or Mutation context
+ * @param teamId - Team ID
+ * @param options - Configuration options
+ * @returns Array of users with optional role information
+ */
+export async function getTeamMembersWithUsers(
+  ctx: QueryCtx | MutationCtx,
+  teamId: Id<"teams">,
+  options?: {
+    includeRoles?: boolean;
+    excludeUserId?: Id<"users">;
+  },
+): Promise<Array<Doc<"users"> & { memberRole?: "captain" | "member" }>> {
+  const teamMembers = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_team", (q) => q.eq("teamId", teamId))
+    .collect();
+
+  const userIds = teamMembers
+    .filter(
+      (m) => !options?.excludeUserId || m.userId !== options.excludeUserId,
+    )
+    .map((m) => m.userId);
+
+  if (userIds.length === 0) return [];
+
+  const users = await ctx.db
+    .query("users")
+    .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("_id"), id))))
+    .collect();
+
+  if (!options?.includeRoles) {
+    return users;
+  }
+
+  return users.map((user) => {
+    const membership = teamMembers.find((m) => m.userId === user._id);
+    return {
+      ...user,
+      memberRole: membership?.role,
+    };
+  });
+}

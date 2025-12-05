@@ -1,7 +1,9 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
-import { mutation, type QueryCtx, query } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString, toUTCEndOfDayString } from "./lib/dates";
+import { toIdMap } from "./lib/helpers";
 import { getTeams, validateIsTeamMember } from "./teams";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -647,3 +649,39 @@ export const getStatistics = query({
     };
   },
 });
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Enriches teams with their tournament context.
+ * Useful for dashboard and list views.
+ *
+ * @param ctx - Query or Mutation context
+ * @param teams - Array of teams to enrich
+ * @returns Teams with tournament information
+ */
+export async function enrichTeamsWithTournaments(
+  ctx: QueryCtx | MutationCtx,
+  teams: Doc<"teams">[],
+): Promise<
+  Array<{
+    team: Doc<"teams">;
+    tournament: Doc<"tournaments"> | null;
+  }>
+> {
+  const tournamentIds = Array.from(new Set(teams.map((t) => t.tournamentId)));
+
+  const tournaments = await ctx.db
+    .query("tournaments")
+    .filter((q) => q.or(...tournamentIds.map((id) => q.eq(q.field("_id"), id))))
+    .collect();
+
+  const tournamentMap = toIdMap(tournaments);
+
+  return teams.map((team) => ({
+    team,
+    tournament: tournamentMap.get(team.tournamentId) || null,
+  }));
+}
