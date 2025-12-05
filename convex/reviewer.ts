@@ -1,7 +1,11 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
-import { getCurrentUserOrThrow } from "./users";
+import {
+  getCurrentUserOrThrow,
+  hasMinimumRole,
+  validateMinimumRole,
+} from "./users";
 
 /**
  * Get the count of pending submissions (both individual and groups) for reviewers.
@@ -13,10 +17,7 @@ export const getPendingCount = query({
     const user = await getCurrentUserOrThrow(ctx);
 
     // Validate user has reviewer or admin role
-    if (
-      !user.roleNames.includes("reviewer") &&
-      !user.roleNames.includes("admin")
-    ) {
+    if (!hasMinimumRole(user, "reviewer")) {
       return 0;
     }
 
@@ -52,12 +53,7 @@ export const getPendingSubmissions = query({
     const user = await getCurrentUserOrThrow(ctx);
 
     // Validate user has reviewer or admin role
-    if (
-      !user.roleNames.includes("reviewer") &&
-      !user.roleNames.includes("admin")
-    ) {
-      throw new Error("Reviewer or admin access required");
-    }
+    validateMinimumRole(user, "reviewer");
 
     const limit = args.limit ?? 20;
     const offset = args.offset ?? 0;
@@ -232,12 +228,7 @@ export const getStatistics = query({
     const user = await getCurrentUserOrThrow(ctx);
 
     // Validate user has reviewer or admin role
-    if (
-      !user.roleNames.includes("reviewer") &&
-      !user.roleNames.includes("admin")
-    ) {
-      throw new Error("Reviewer or admin access required");
-    }
+    validateMinimumRole(user, "reviewer");
 
     // Get all submissions managed by this reviewer
     const reviewedSubmissions = await ctx.db
