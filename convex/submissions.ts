@@ -679,7 +679,9 @@ export const approve = mutation({
         user.roleNames.includes(role),
       )
     ) {
-      throw new Error("Reviewer access required to approve submissions");
+      throw new Error(
+        "Admin, tournament manager, or reviewer access required to approve submissions",
+      );
     }
 
     const submission = await ctx.db.get(args.submissionId);
@@ -749,7 +751,9 @@ export const reject = mutation({
         user.roleNames.includes(role),
       )
     ) {
-      throw new Error("Reviewer access required to reject submissions");
+      throw new Error(
+        "Admin, tournament manager, or reviewer access required to reject submissions",
+      );
     }
 
     const submission = await ctx.db.get(args.submissionId);

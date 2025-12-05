@@ -81,7 +81,7 @@ export function SubmissionReviewList({
             value={sortBy}
             onValueChange={(value) => setSortBy(value as typeof sortBy)}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-[200px]" aria-label="Sort submissions">
               <SelectValue placeholder="Sort by..." />
             </SelectTrigger>
             <SelectContent>

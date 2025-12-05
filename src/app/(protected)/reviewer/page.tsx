@@ -2,9 +2,10 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { FileCheck, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { redirect } from "next/navigation";
+import { useMemo } from "react";
 import { api } from "@/../convex/_generated/api";
+import type { Doc } from "@/../convex/_generated/dataModel";
 import type { UserWithRoles } from "@/../convex/users";
 import { SectionHeader } from "@/components/section-header";
 import { SubmissionReviewList } from "@/components/submissions/review/submission-review-list";
@@ -14,21 +15,39 @@ import { tryMutate } from "@/lib/utils";
 
 const ALLOWED_ROLES = ["admin", "tournament_manager", "reviewer"];
 
+// Type guard to check if a user object has roles (UserWithRoles)
+function isUserWithRoles(user: Doc<"users">): user is UserWithRoles {
+  return (
+    "roleNames" in user &&
+    "roles" in user &&
+    Array.isArray((user as UserWithRoles).roleNames) &&
+    Array.isArray((user as UserWithRoles).roles)
+  );
+}
+
+// Convert Doc<"users"> to UserWithRoles with safe fallback
+function toUserWithRoles(user: Doc<"users">): UserWithRoles {
+  if (isUserWithRoles(user)) {
+    return user;
+  }
+  // Fallback for users without roles loaded
+  return {
+    ...user,
+    roles: [],
+    roleNames: [],
+  };
+}
+
 export default function ReviewerDashboard() {
   const { user } = useUser();
-  const router = useRouter();
 
-  useEffect(() => {
-    if (!user) return;
-    if (ALLOWED_ROLES.some((role) => user.roleNames.includes(role))) return;
-
-    router.replace("/dashboard");
-  }, [user, router]);
-
-  // Queries
-  const pendingData = useQuery(api.reviewer.getPendingSubmissions, {});
-
-  const tournaments = useQuery(api.tournaments.list, {});
+  // Queries (must be called before any conditional returns - hooks rule)
+  const pendingData = useQuery(
+    api.reviewer.getPendingSubmissions,
+    user && ALLOWED_ROLES.some((role) => user.roleNames.includes(role))
+      ? {}
+      : "skip",
+  );
 
   // Mutations
   const approveSubmission = useMutation(api.submissions.approve);
@@ -48,7 +67,7 @@ export default function ReviewerDashboard() {
             submission: item.submission,
             team: item.team,
             tournament: item.tournament,
-            submitter: item.submitter as UserWithRoles,
+            submitter: toUserWithRoles(item.submitter),
             // Placeholders for features not yet implemented:
             images: [], // Will be populated when image storage is implemented
             isTeamExercise: false, // Individual submissions are not team exercises
@@ -63,7 +82,7 @@ export default function ReviewerDashboard() {
             team: item.team,
             tournament: item.tournament,
             submissions: item.submissions,
-            submitters: item.submitters as UserWithRoles[],
+            submitters: item.submitters.map(toUserWithRoles),
             // Placeholder for image storage feature:
             // TODO: Aggregate images from all submissions in the group when image upload is implemented
             images: [],
@@ -106,8 +125,23 @@ export default function ReviewerDashboard() {
     }
   };
 
+  // Authorization check (after all hooks to comply with React rules)
+  if (!user) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!ALLOWED_ROLES.some((role) => user.roleNames.includes(role))) {
+    redirect("/dashboard");
+  }
+
   // Loading state
-  if (!pendingData || !tournaments || !user) {
+  if (!pendingData) {
     return (
       <div className="container mx-auto py-8">
         <div className="mb-8 flex items-center gap-3">

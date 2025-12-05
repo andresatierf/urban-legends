@@ -22,11 +22,13 @@ export function SubmissionMetadata({
   compact = false,
 }: SubmissionMetadataProps) {
   const { format } = useFormattedDate();
+  const displaySubmitter = submitter.trim() || "Unknown";
+  const displayManagedBy = managedBy?.trim() || "Unknown";
 
   return (
     <div className="space-y-2 text-sm">
       <p className="text-muted-foreground">
-        <span className="font-medium">Submitted by:</span> {submitter}
+        <span className="font-medium">Submitted by:</span> {displaySubmitter}
       </p>
       <p className="text-muted-foreground">
         <span className="font-medium">Date:</span> {format(date, "long")}
@@ -41,7 +43,7 @@ export function SubmissionMetadata({
 
       {!compact && managedBy && (
         <p className="text-muted-foreground">
-          <span className="font-medium">Managed by:</span> {managedBy}
+          <span className="font-medium">Managed by:</span> {displayManagedBy}
         </p>
       )}
     </div>
