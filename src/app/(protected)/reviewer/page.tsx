@@ -3,51 +3,29 @@
 import { useMutation, useQuery } from "convex/react";
 import { FileCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { api } from "@/../convex/_generated/api";
-import type { Id } from "@/../convex/_generated/dataModel";
 import type { UserWithRoles } from "@/../convex/users";
 import { SectionHeader } from "@/components/section-header";
-import { SubmissionReviewCard } from "@/components/submissions/review/submission-review-card";
+import { SubmissionReviewList } from "@/components/submissions/review/submission-review-list";
 import type { ReviewItem } from "@/components/submissions/review/types";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-} from "@/components/ui/empty";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useUser } from "@/hooks/useUser";
+
+const ALLOWED_ROLES = ["admin", "tournament_manager", "reviewer"];
 
 export default function ReviewerDashboard() {
   const { user } = useUser();
   const router = useRouter();
-  const [selectedTournament, setSelectedTournament] = useState<
-    Id<"tournaments"> | "all"
-  >("all");
 
-  // Permission check (client-side navigation)
   useEffect(() => {
-    if (
-      user &&
-      !user.roleNames.includes("reviewer") &&
-      !user.roleNames.includes("admin")
-    ) {
-      router.replace("/dashboard");
-    }
+    if (!user) return;
+    if (ALLOWED_ROLES.some((role) => user.roleNames.includes(role))) return;
+
+    router.replace("/dashboard");
   }, [user, router]);
 
   // Queries
-  const pendingData = useQuery(api.reviewer.getPendingSubmissions, {
-    tournamentId: selectedTournament === "all" ? undefined : selectedTournament,
-  });
+  const pendingData = useQuery(api.reviewer.getPendingSubmissions, {});
 
   const tournaments = useQuery(api.tournaments.list, {});
 
@@ -134,68 +112,14 @@ export default function ReviewerDashboard() {
         title="Review Queue"
         description={`${total} pending ${total === 1 ? "item" : "items"}`}
         Icon={FileCheck}
-      >
-        <Select
-          value={selectedTournament}
-          onValueChange={(value) =>
-            setSelectedTournament(
-              value === "all" ? "all" : (value as Id<"tournaments">),
-            )
-          }
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="All tournaments" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All tournaments</SelectItem>
-            {tournaments.map((tournament) => (
-              <SelectItem key={tournament._id} value={tournament._id}>
-                {tournament.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </SectionHeader>
+      />
 
-      {/* Empty state */}
-      {reviewItems.length === 0 && (
-        <Card variant="dashed">
-          <CardContent>
-            <Empty className="gap-3 py-2! text-muted-foreground">
-              <EmptyMedia>
-                <FileCheck className="h-12 w-12" />
-              </EmptyMedia>
-              <EmptyHeader>No pending submissions to review</EmptyHeader>
-              <EmptyDescription>
-                {selectedTournament !== "all"
-                  ? "Try selecting a different tournament"
-                  : "Check back later for new submissions"}
-              </EmptyDescription>
-            </Empty>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Submissions list using new component */}
-      <div className="space-y-4">
-        {reviewItems.map((item) => {
-          const key =
-            item.type === "individual"
-              ? `individual-${item.data.submission._id}`
-              : `group-${item.data.group._id}`;
-
-          return (
-            <SubmissionReviewCard
-              key={key}
-              item={item}
-              currentUser={user}
-              variant="detailed"
-              onApprove={() => handleApprove(item)}
-              onReject={() => handleReject(item)}
-            />
-          );
-        })}
-      </div>
+      <SubmissionReviewList
+        variant="detailed"
+        items={reviewItems}
+        onApprove={handleApprove}
+        onReject={handleReject}
+      />
     </>
   );
 }

@@ -1,7 +1,17 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
-import { getCurrentUserOrThrow } from "./users";
+import { getCurrentUserOrThrow, type UserWithRoles } from "./users";
+
+function validateHasReviewerAccess(user: UserWithRoles) {
+  if (
+    !["admin", "tournament_manager", "reviewer"].some((role) =>
+      user.roleNames.includes(role),
+    )
+  ) {
+    throw new Error("Reviewer or admin access required");
+  }
+}
 
 /**
  * Get the count of pending submissions (both individual and groups) for reviewers.
@@ -11,14 +21,7 @@ export const getPendingCount = query({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
-
-    // Validate user has reviewer or admin role
-    if (
-      !user.roleNames.includes("reviewer") &&
-      !user.roleNames.includes("admin")
-    ) {
-      return 0;
-    }
+    validateHasReviewerAccess(user);
 
     // Count all pending individual submissions
     const pendingIndividual = await ctx.db
@@ -50,14 +53,7 @@ export const getPendingSubmissions = query({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-
-    // Validate user has reviewer or admin role
-    if (
-      !user.roleNames.includes("reviewer") &&
-      !user.roleNames.includes("admin")
-    ) {
-      throw new Error("Reviewer or admin access required");
-    }
+    validateHasReviewerAccess(user);
 
     const limit = args.limit ?? 20;
     const offset = args.offset ?? 0;
@@ -230,14 +226,7 @@ export const getStatistics = query({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
-
-    // Validate user has reviewer or admin role
-    if (
-      !user.roleNames.includes("reviewer") &&
-      !user.roleNames.includes("admin")
-    ) {
-      throw new Error("Reviewer or admin access required");
-    }
+    validateHasReviewerAccess(user);
 
     // Get all submissions managed by this reviewer
     const reviewedSubmissions = await ctx.db

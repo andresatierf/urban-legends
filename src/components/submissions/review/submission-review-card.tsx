@@ -1,21 +1,25 @@
 "use client";
 
+import { capitalize } from "lodash";
 import { Check, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { UserWithRoles } from "@/../convex/users";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import type { Doc } from "../../../../convex/_generated/dataModel";
 import { SubmissionImageGallery } from "../display/submission-image-gallery";
 import { SubmissionMetadata } from "../display/submission-metadata";
 import { GroupParticipantsList } from "./group-participants-list";
-import type { ReviewItem } from "./types";
+import type { ReviewItem, SubmissionImage } from "./types";
 
 interface SubmissionReviewCardProps {
   item: ReviewItem;
@@ -24,7 +28,6 @@ interface SubmissionReviewCardProps {
   onApprove?: () => void | Promise<void>;
   onReject?: () => void | Promise<void>;
   onViewDetails?: () => void;
-  currentUser: UserWithRoles;
 }
 
 /**
@@ -78,129 +81,185 @@ export function SubmissionReviewCard({
   if (item.type === "individual") {
     const { submission, team, tournament, submitter, images } = item.data;
     const isPending = submission.state === "pending";
-    const canApprove = isPending && onApprove;
-    const canReject = isPending && onReject;
+    const canApprove = isPending && !!onApprove;
+    const canReject = isPending && !!onReject;
+
+    const badges: Array<{
+      condition?: boolean;
+      content: string;
+      variant?: BadgeProps["variant"];
+      className?: string;
+    }> = [
+      { content: capitalize(submission.state), variant: submission.state },
+      {
+        content: "Individual",
+        className: "bg-blue-100 text-blue-800 hover:bg-blue-100",
+      },
+      { content: capitalize(submission.tier), variant: "outline" },
+      {
+        condition: submission.pointsEarned > 0,
+        content: `${submission.pointsEarned} pts`,
+        variant: "outline",
+      },
+    ];
 
     return (
-      <Card>
-        <CardHeader className={variant === "compact" ? "pb-3" : undefined}>
-          <div className="flex items-start justify-between">
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-wrap gap-2">
-                <Badge variant={submission.state}>{submission.state}</Badge>
-                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                  Individual
-                </Badge>
-                <Badge variant="outline">
-                  {submission.tier === "base" ? "Base" : "Advanced"}
-                </Badge>
-                {submission.pointsEarned > 0 && (
-                  <Badge variant="outline">{submission.pointsEarned} pts</Badge>
-                )}
-              </div>
-              <div className="space-y-1 text-sm">
-                <p className="font-medium">{team.name}</p>
-                <p className="text-muted-foreground">{tournament.name}</p>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent>
-          {variant === "detailed" && (
-            <SubmissionImageGallery images={images} className="mb-4" />
-          )}
-
-          <SubmissionMetadata
-            submitter={submitter.name}
-            date={submission.date}
-            description={
-              variant === "detailed" ? submission.description : undefined
-            }
-          />
-        </CardContent>
-
-        {showActions && (canApprove || canReject) && (
-          <CardFooter className="gap-2">
-            {canApprove && (
-              <Button
-                size="sm"
-                color="green"
-                onClick={handleApprove}
-                disabled={isApproving || isRejecting}
-                className="gap-2"
-              >
-                <Check className="h-4 w-4" />
-                {isApproving ? "Approving..." : "Approve"}
-              </Button>
-            )}
-            {canReject && (
-              <Button
-                size="sm"
-                color="destructive"
-                onClick={handleReject}
-                disabled={isApproving || isRejecting}
-                className="gap-2"
-              >
-                <X className="h-4 w-4" />
-                {isRejecting ? "Rejecting..." : "Reject"}
-              </Button>
-            )}
-          </CardFooter>
-        )}
-      </Card>
+      <InnerSubmissionReviewCard
+        variant={variant}
+        team={team}
+        tournament={tournament}
+        images={images}
+        badges={badges}
+        showActions={showActions}
+        canApprove={canApprove}
+        canReject={canReject}
+        handleApprove={handleApprove}
+        handleReject={handleReject}
+        isApproving={isApproving}
+        isRejecting={isRejecting}
+      >
+        <SubmissionMetadata
+          submitter={submitter.name}
+          date={submission.date}
+          description={
+            variant === "detailed" ? submission.description : undefined
+          }
+        />
+      </InnerSubmissionReviewCard>
     );
   }
 
   // Group rendering
   const { group, team, tournament, submitters, images } = item.data;
   const isPending = group.state === "pending";
-  const canApprove = isPending && onApprove;
-  const canReject = isPending && onReject;
+  const canApprove = isPending && !!onApprove;
+  const canReject = isPending && !!onReject;
+
+  const badges: {
+    condition?: boolean;
+    content: string;
+    variant?: BadgeProps["variant"];
+    className?: string;
+  }[] = [
+    { content: capitalize(group.state), variant: group.state },
+    {
+      content: "Team Activity",
+      className: "bg-green-100 text-green-800 hover:bg-green-100",
+    },
+    { content: capitalize(group.tier), variant: "outline" },
+    {
+      condition: group.pointsEarned > 0,
+      content: `${group.pointsEarned} pts`,
+      variant: "outline",
+    },
+  ];
 
   return (
+    <InnerSubmissionReviewCard
+      variant={variant}
+      team={team}
+      tournament={tournament}
+      images={images}
+      badges={badges}
+      isTeamActivity
+      showActions={showActions}
+      canApprove={canApprove}
+      canReject={canReject}
+      handleApprove={handleApprove}
+      handleReject={handleReject}
+      isApproving={isApproving}
+      isRejecting={isRejecting}
+    >
+      <GroupParticipantsList
+        submitters={submitters}
+        participantCount={group.participantCount}
+        totalMembers={group.totalTeamMembers}
+        isTeamExercise={group.isTeamExercise}
+        participationRate={group.participationRate}
+      />
+
+      {variant === "detailed" && group.date && (
+        <p className="text-muted-foreground text-sm">
+          Activity date: {new Date(group.date).toLocaleDateString()}
+        </p>
+      )}
+    </InnerSubmissionReviewCard>
+  );
+}
+
+type InnerSubmissionReviewCardProps = {
+  variant: "compact" | "detailed";
+  team: Doc<"teams">;
+  tournament: Doc<"tournaments">;
+  images: Array<SubmissionImage>;
+  badges: {
+    condition?: boolean;
+    content: string;
+    variant?: BadgeProps["variant"];
+    className?: string;
+  }[];
+  isTeamActivity?: boolean;
+  showActions: boolean;
+  canApprove: boolean;
+  canReject: boolean;
+  handleApprove: () => void | Promise<void>;
+  handleReject: () => void | Promise<void>;
+  isApproving: boolean;
+  isRejecting: boolean;
+  children?: React.ReactNode;
+};
+
+function InnerSubmissionReviewCard({
+  variant,
+  team,
+  tournament,
+  images,
+  badges,
+  isTeamActivity,
+  showActions,
+  canApprove,
+  canReject,
+  handleApprove,
+  handleReject,
+  isApproving,
+  isRejecting,
+  children,
+}: InnerSubmissionReviewCardProps) {
+  return (
     <Card>
-      <CardHeader className={variant === "compact" ? "pb-3" : undefined}>
-        <div className="flex items-start justify-between">
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap gap-2">
-              <Badge variant={group.state}>{group.state}</Badge>
-              <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                Team Activity
-              </Badge>
-              <Badge variant="outline">
-                {group.tier === "base" ? "Base" : "Advanced"}
-              </Badge>
-              {group.pointsEarned > 0 && (
-                <Badge variant="outline">{group.pointsEarned} pts</Badge>
-              )}
-            </div>
-            <div className="space-y-1 text-sm">
-              <p className="font-medium">{team.name}</p>
-              <p className="text-muted-foreground">{tournament.name}</p>
-            </div>
-          </div>
+      <CardHeader
+        className={cn("flex flex-row items-start justify-between", {
+          "pb-3": variant === "compact",
+        })}
+      >
+        <div className="flex flex-col gap-1">
+          <CardTitle>{team.name}</CardTitle>
+          <CardDescription>
+            <p className="text-muted-foreground text-sm">{tournament.name}</p>
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-2">
+          {badges.map(
+            ({ condition, content, variant, className }) =>
+              condition !== false && (
+                <Badge
+                  key={content}
+                  variant={variant}
+                  className={cn("font-medium", className)}
+                >
+                  {content}
+                </Badge>
+              ),
+          )}
         </div>
       </CardHeader>
 
       <CardContent className="space-y-3">
-        {variant === "detailed" && images.length > 0 && (
+        {variant === "detailed" && (
           <SubmissionImageGallery images={images} className="mb-4" />
         )}
 
-        <GroupParticipantsList
-          submitters={submitters}
-          participantCount={group.participantCount}
-          totalMembers={group.totalTeamMembers}
-          isTeamExercise={group.isTeamExercise}
-          participationRate={group.participationRate}
-        />
-
-        {variant === "detailed" && group.date && (
-          <p className="text-muted-foreground text-sm">
-            Activity date: {new Date(group.date).toLocaleDateString()}
-          </p>
-        )}
+        {children}
       </CardContent>
 
       {showActions && (canApprove || canReject) && (
@@ -214,7 +273,11 @@ export function SubmissionReviewCard({
               className="gap-2"
             >
               <Check className="h-4 w-4" />
-              {isApproving ? "Approving..." : "Approve Team Activity"}
+              {isApproving
+                ? "Approving..."
+                : isTeamActivity
+                  ? "Approve Team Activity"
+                  : "Approve"}
             </Button>
           )}
           {canReject && (

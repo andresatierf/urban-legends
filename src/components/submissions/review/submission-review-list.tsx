@@ -2,7 +2,6 @@
 
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { UserWithRoles } from "@/../convex/users";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -18,7 +17,6 @@ import type { ReviewItem } from "./types";
 
 interface SubmissionReviewListProps {
   items: ReviewItem[];
-  currentUser: UserWithRoles;
   onApprove: (item: ReviewItem) => void | Promise<void>;
   onReject: (item: ReviewItem) => void | Promise<void>;
   showFilters?: boolean;
@@ -33,7 +31,6 @@ interface SubmissionReviewListProps {
  */
 export function SubmissionReviewList({
   items,
-  currentUser,
   onApprove,
   onReject,
   showFilters = true,
@@ -129,7 +126,6 @@ export function SubmissionReviewList({
             <SubmissionReviewCard
               key={key}
               item={item}
-              currentUser={currentUser}
               variant={variant}
               onApprove={() => onApprove(item)}
               onReject={() => onReject(item)}
