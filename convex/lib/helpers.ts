@@ -72,76 +72,21 @@ export async function batchGetDocuments<T extends keyof DataModel>(
 }
 
 /**
- * Enriches items with related documents by foreign key.
- *
- * @param ctx - Query or Mutation context
- * @param items - Items to enrich
- * @param relatedTable - Table name of related documents
- * @param key - Key to store related documents in
- * @param foreignKeyFn - Function to extract foreign key from item
- * @returns Items enriched with related documents
+ * Specification for enriching items with related documents.
+ * Supports both many-to-one and one-to-many relationships.
  */
-export async function enrichWithRelated<
-  TItem,
-  TTable extends keyof DataModel,
-  TKey extends string,
->(
-  ctx: QueryCtx | MutationCtx,
-  items: TItem[],
-  relatedTable: TTable,
-  key: TKey,
-  foreignKeyFn: (item: TItem) => Id<TTable>,
-): Promise<Array<TItem & { [K in TKey]: Doc<TTable> | null }>> {
-  const foreignKeys = items.map(foreignKeyFn);
-  const relatedDocs = await batchGetDocuments(ctx, relatedTable, foreignKeys);
-  const relatedMap = toIdMap(relatedDocs);
-
-  return items.map((item) => ({
-    ...item,
-    [key]: relatedMap.get(foreignKeyFn(item)) || null,
-  })) as Array<TItem & { [K in TKey]: Doc<TTable> | null }>;
-}
-
-/**
- * Enriches items with related documents array by foreign key.
- *
- * @param ctx - Query or Mutation context
- * @param items - Items to enrich
- * @param relatedTable - Table name of related documents
- * @param key - Key to store related documents in
- * @param foreignKeyFn - Function to extract foreign key from item
- * @param groupingFn - Function to extract grouping key from related doc
- * @returns Items enriched with related documents
- */
-export async function enrichWithRelatedArray<
-  TItem,
-  TTable extends keyof DataModel,
-  TKey extends string,
->(
-  ctx: QueryCtx | MutationCtx,
-  items: TItem[],
-  relatedTable: TTable,
-  key: TKey,
-  foreignKeyFn: (item: TItem) => Id<TTable>,
-  groupingFn: (doc: Doc<TTable>) => keyof Doc<TTable>,
-): Promise<Array<TItem & { [K in TKey]: Doc<TTable>[] }>> {
-  const foreignKeys = items.map(foreignKeyFn);
-  const relatedDocs = await batchGetDocuments(ctx, relatedTable, foreignKeys);
-  const relatedMap = groupBy(relatedDocs, groupingFn);
-
-  return items.map((item) => ({
-    ...item,
-    [key]: relatedMap.get(foreignKeyFn(item)) || [],
-  })) as Array<TItem & { [K in TKey]: Doc<TTable>[] }>;
-}
-
-/**
- * Specification for enriching items with a related document.
- */
-export type EnrichmentSpec<TItem, TTable extends keyof DataModel> = {
-  table: TTable;
-  foreignKey: (item: TItem) => Id<TTable>;
-};
+export type EnrichmentSpec<TItem, TTable extends keyof DataModel> =
+  | {
+      // Many-to-one: Single related document (e.g., team -> tournament)
+      table: TTable;
+      foreignKey: (item: TItem) => Id<TTable>;
+    }
+  | {
+      // One-to-many: Array of related documents (e.g., team -> teamMembers[])
+      table: TTable;
+      foreignKeyField: keyof Doc<TTable>; // Field on related table that references parent
+      itemKey?: (item: TItem) => string; // Defaults to item._id
+    };
 
 /**
  * Helper type to extract table name from enrichment spec.
@@ -153,14 +98,26 @@ type ExtractTableType<T> = T extends { table: infer TTable }
   : never;
 
 /**
+ * Helper type to determine result type based on enrichment spec.
+ * - Many-to-one (foreignKey): returns Doc<Table> | null
+ * - One-to-many (foreignKeyField): returns Doc<Table>[]
+ */
+type EnrichmentResultType<TSpec> = TSpec extends { foreignKey: any }
+  ? Doc<ExtractTableType<TSpec>> | null
+  : TSpec extends { foreignKeyField: any }
+    ? Doc<ExtractTableType<TSpec>>[]
+    : never;
+
+/**
  * Helper type for enriched result.
  */
 type EnrichedResult<TItem, TSpecs> = TItem & {
-  [K in keyof TSpecs]: Doc<ExtractTableType<TSpecs[K]>> | null;
+  [K in keyof TSpecs]: EnrichmentResultType<TSpecs[K]>;
 };
 
 /**
  * Enriches items with multiple related documents in a single operation.
+ * Supports both many-to-one and one-to-many relationships.
  * More efficient than chaining multiple enrichWithRelated calls.
  *
  * @param ctx - Query or Mutation context
@@ -169,11 +126,28 @@ type EnrichedResult<TItem, TSpecs> = TItem & {
  * @returns Items enriched with all specified related documents
  *
  * @example
+ * // Many-to-one relationships
  * const enriched = await enrichWithRelations(ctx, invitations, {
  *   team: { table: "teams", foreignKey: (inv) => inv.teamId },
  *   invitedByUser: { table: "users", foreignKey: (inv) => inv.invitedBy }
  * });
- * // Result type: Array<Invitation & { team: Doc<"teams"> | null, invitedByUser: Doc<"users"> | null }>
+ * // Result: Array<Invitation & { team: Doc<"teams"> | null, invitedByUser: Doc<"users"> | null }>
+ *
+ * @example
+ * // One-to-many relationships
+ * const enriched = await enrichWithRelations(ctx, teams, {
+ *   members: { table: "teamMembers", foreignKeyField: "teamId" },
+ *   submissions: { table: "submissions", foreignKeyField: "teamId" }
+ * });
+ * // Result: Array<Team & { members: Doc<"teamMembers">[], submissions: Doc<"submissions">[] }>
+ *
+ * @example
+ * // Mixed relationships
+ * const enriched = await enrichWithRelations(ctx, teams, {
+ *   tournament: { table: "tournaments", foreignKey: (team) => team.tournamentId },
+ *   members: { table: "teamMembers", foreignKeyField: "teamId" }
+ * });
+ * // Result: Array<Team & { tournament: Doc<"tournaments"> | null, members: Doc<"teamMembers">[] }>
  */
 export async function enrichWithRelations<
   TItem,
@@ -188,26 +162,55 @@ export async function enrichWithRelations<
   // Fetch all relations in parallel
   const enrichmentPromises = Object.entries(specs).map(
     async ([key, spec]: [string, EnrichmentSpec<TItem, any>]) => {
-      const foreignKeys = items.map(spec.foreignKey);
-      const relatedDocs = await batchGetDocuments(ctx, spec.table, foreignKeys);
-      const relatedMap = toIdMap(relatedDocs);
-      return { key, spec, relatedMap };
+      // Check if this is a many-to-one or one-to-many relationship
+      if ("foreignKey" in spec) {
+        // Many-to-one: fetch related documents by their _id
+        const foreignKeys = items.map(spec.foreignKey);
+        const relatedDocs = await batchGetDocuments(
+          ctx,
+          spec.table,
+          foreignKeys,
+        );
+        const relatedMap = toIdMap(relatedDocs);
+        return { key, spec, relatedMap, isArray: false };
+      }
+
+      // One-to-many: fetch related documents by foreign key field
+      const itemKeyFn = spec.itemKey || ((item: any) => item._id);
+      const itemKeys = items.map(itemKeyFn);
+
+      const relatedDocs = await ctx.db
+        .query(spec.table)
+        .filter((q) =>
+          q.or(
+            ...itemKeys.map((id) => q.eq(q.field(spec.foreignKeyField), id)),
+          ),
+        )
+        .collect();
+
+      const relatedMap = groupBy(
+        relatedDocs,
+        (doc: any) => doc[spec.foreignKeyField],
+      );
+      return { key, spec, relatedMap, isArray: true, itemKeyFn };
     },
   );
 
   const enrichmentResults = await Promise.all(enrichmentPromises);
 
-  // Build enrichment maps
-  const enrichmentMaps = new Map(
-    enrichmentResults.map((result) => [result.key, result]),
-  );
-
   // Enrich all items
   return items.map((item) => {
     const enriched: any = { ...item };
-    for (const [key, result] of Array.from(enrichmentMaps.entries())) {
-      enriched[key] =
-        result.relatedMap.get(result.spec.foreignKey(item)) || null;
+    for (const result of enrichmentResults) {
+      if (result.isArray) {
+        // One-to-many: return array
+        const itemKey = result.itemKeyFn?.(item);
+        enriched[result.key] = result.relatedMap.get(itemKey) || [];
+      } else {
+        // Many-to-one: return single doc or null
+        const foreignKey = (result.spec as any).foreignKey(item);
+        enriched[result.key] = result.relatedMap.get(foreignKey) || null;
+      }
     }
     return enriched;
   });
