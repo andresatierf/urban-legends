@@ -3,17 +3,14 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString, toUTCEndOfDayString } from "./lib/dates";
-import { batchGetByIds, toIdMap } from "./lib/helpers";
+import { batchGetDocuments, toIdMap } from "./lib/helpers";
+import { hasMinimumRole, validateMinimumRole } from "./roles";
 import {
   enrichTeamsWithMembers,
   getTeams,
   validateIsTeamMember,
 } from "./teams";
-import {
-  getCurrentUserOrThrow,
-  hasMinimumRole,
-  validateMinimumRole,
-} from "./users";
+import { getCurrentUserOrThrow } from "./users";
 
 export const list = query({
   args: {
@@ -451,10 +448,7 @@ export const getWinner = query({
       .collect();
 
     const userIds = members.map((m) => m.userId);
-    const usersMap = await batchGetByIds(ctx, "users", userIds);
-    const users = userIds
-      .map((id) => usersMap.get(id))
-      .filter((u) => u !== undefined);
+    const users = await batchGetDocuments(ctx, "users", userIds);
 
     return {
       team,

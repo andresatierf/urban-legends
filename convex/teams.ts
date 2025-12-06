@@ -4,15 +4,11 @@ import type { MutationCtx } from "./_generated/server";
 import { mutation, type QueryCtx, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
 import { groupBy, toIdMap } from "./lib/helpers";
+import { hasMinimumRole, validateMinimumRole } from "./roles";
 import { upsertSubmissionGroup } from "./submissionGroups";
 import { recalculateSubmissionPoints } from "./submissions";
 import { validateUserNotInTournamentTeam } from "./tournaments";
-import {
-  getCurrentUserOrThrow,
-  getUser,
-  hasMinimumRole,
-  validateMinimumRole,
-} from "./users";
+import { getCurrentUserOrThrow, getUser } from "./users";
 
 /**
  * Internal helper to recalculate and update a team's total points

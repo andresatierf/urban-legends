@@ -1,12 +1,9 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
-import { batchGetByIds, toIdMap } from "./lib/helpers";
-import {
-  getCurrentUserOrThrow,
-  hasMinimumRole,
-  validateMinimumRole,
-} from "./users";
+import { batchGetDocuments, toIdMap } from "./lib/helpers";
+import { hasMinimumRole, validateMinimumRole } from "./roles";
+import { getCurrentUserOrThrow } from "./users";
 
 /**
  * Get the count of pending submissions (both individual and groups) for reviewers.
@@ -176,10 +173,7 @@ export const getPendingSubmissions = query({
 
           // Get submitters using batchGetByIds
           const userIds = groupSubmissions.map((s) => s.userId);
-          const submittersMap = await batchGetByIds(ctx, "users", userIds);
-          const submitters = userIds
-            .map((id) => submittersMap.get(id))
-            .filter((s) => s !== undefined);
+          const submitters = await batchGetDocuments(ctx, "users", userIds);
 
           return {
             type: "group" as const,

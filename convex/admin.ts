@@ -3,7 +3,8 @@ import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
 import { detectOrphanedRecords } from "./lib/helpers";
-import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
+import { validateMinimumRole } from "./roles";
+import { getCurrentUserOrThrow } from "./users";
 
 /**
  * ADMIN UTILITY - Manual Execution Only
@@ -76,7 +77,7 @@ export const updateRoles = mutation({
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
 
-    validateIsAdmin(currentUser);
+    validateMinimumRole(currentUser, "admin");
 
     // Verify target user exists
     const targetUser = await ctx.db.get(args.userId);
@@ -201,7 +202,7 @@ export const getAllPendingCount = query({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateIsAdmin(user, "Admin access required");
+    validateMinimumRole(user, "admin");
 
     // Count all pending individual submissions
     const pendingIndividual = await ctx.db
@@ -228,7 +229,7 @@ export const getDashboardData = query({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateIsAdmin(user, "Admin access required");
+    validateMinimumRole(user, "admin");
 
     // Get system-wide counts
     const [users, tournaments, teams, submissions] = await Promise.all([
@@ -308,7 +309,7 @@ export const getSystemHealth = query({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateIsAdmin(user, "Admin access required");
+    validateMinimumRole(user, "admin");
 
     // Get all entities for metrics
     const [tournaments, teams, submissions, users, teamMembers] =
@@ -383,7 +384,7 @@ export const runIntegrityCheck = mutation({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateIsAdmin(user, "Admin access required");
+    validateMinimumRole(user, "admin");
 
     const { orphanedTeams, orphanedSubmissions, orphanedTeamMembers } =
       await detectOrphanedRecords(ctx);
@@ -420,7 +421,7 @@ export const cleanupOrphanedRecords = mutation({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateIsAdmin(user, "Admin access required");
+    validateMinimumRole(user, "admin");
 
     const { orphanedTeams, orphanedSubmissions, orphanedTeamMembers } =
       await detectOrphanedRecords(ctx);

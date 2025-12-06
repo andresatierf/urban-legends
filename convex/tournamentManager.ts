@@ -3,11 +3,8 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { extractDateFromISO, nowUTC } from "./lib/dates";
 import { groupBy } from "./lib/helpers";
-import {
-  getCurrentUserOrThrow,
-  hasMinimumRole,
-  validateMinimumRole,
-} from "./users";
+import { hasMinimumRole, validateMinimumRole } from "./roles";
+import { getCurrentUserOrThrow } from "./users";
 
 /**
  * Get the count of pending submissions for tournaments assigned to this manager.

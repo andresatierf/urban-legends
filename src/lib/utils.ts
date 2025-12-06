@@ -35,49 +35,40 @@ export async function tryMutate<T>({
   }
 }
 
-// TODO: figure this out
-// export function toIdMap<T extends { _id: string }, K extends keyof T>(
-//   array: T[],
-// ) {
-//   return array.reduce<Map<T[K], T>>(
-//     (acc, curr) => acc.set(curr._id, curr),
-//     new Map(),
-//   );
-// }
-//
-// export function toDictionary<TOriginal, TKey extends keyof TOriginal, TValue>(
-//   array: Array<TOriginal>,
-//   key: TKey,
-// ): Record<TKey, TOriginal> {
-//   return array.reduce<Record<TKey, TOriginal>>(
-//     (acc, curr) => {
-//       const keyValue = curr[key];
-//       if (!acc[keyValue]) {
-//         acc[keyValue] = curr;
-//       }
-//       return acc;
-//     },
-//     {} as Record<TKey, TOriginal>,
-//   );
-// }
-//
-// export function toDictionary<
-//   TOriginal,
-//   TKey extends string | number | symbol,
-//   TValue,
-// >(
-//   array: Array<TOriginal>,
-//   key: (x: TOriginal) => TKey,
-//   value: (x: TOriginal) => TValue = (x) => x as unknown as TValue,
-// ): Record<TKey, TValue> {
-//   return array.reduce<Record<TKey, TValue>>(
-//     (acc, curr) => {
-//       const keyValue = key(curr);
-//       if (!acc[keyValue]) {
-//         acc[keyValue] = value(curr);
-//       }
-//       return acc;
-//     },
-//     {} as Record<TKey, TValue>,
-//   );
-// }
+type DeepValue<T, P> = P extends `${infer K}.${infer R}`
+  ? K extends keyof T
+    ? DeepValue<T[K], R>
+    : undefined
+  : P extends keyof T
+    ? T[P]
+    : undefined;
+
+export function toMap<
+  TItem extends object,
+  TMapKey extends string,
+  TMapValue extends keyof TItem | undefined = undefined,
+>(
+  items: Array<TItem>,
+  mapKey: TMapKey,
+  mapValue?: TMapValue,
+): Map<
+  NonNullable<DeepValue<TItem, TMapKey>>,
+  TMapValue extends keyof TItem ? TItem[TMapValue] : TItem
+> {
+  return new Map(
+    items.map((item) => {
+      const k = (mapKey as string)
+        .split(".")
+        .reduce(
+          (acc: any, path: string) => (acc ? acc[path] : undefined),
+          item,
+        );
+
+      // Explicitly type `v` to match the expected return type based on TMapValue
+      const v: TMapValue extends keyof TItem ? TItem[TMapValue] : TItem =
+        mapValue !== undefined ? (item[mapValue] as any) : (item as any); // Use 'as any' as a temporary bridge for inference
+
+      return [k, v];
+    }),
+  );
+}

@@ -1,16 +1,22 @@
+import { toMap } from "../../src/lib/utils";
 import type { DataModel, Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+
+// Re-export to keep dependencies clean
+export { toMap };
 
 /**
  * Converts an array of documents to a Map keyed by _id for efficient lookups.
  *
  * @param items - Array of Convex documents with _id field
+ * @param [key] - Optional key instead of "_id"
  * @returns Map keyed by document ID
  */
 export function toIdMap<T extends { _id: Id<any> }>(
   items: T[],
 ): Map<T["_id"], T> {
-  return new Map(items.map((item) => [item._id, item]));
+  return toMap(items, "_id");
+  // return new Map(items.map((item) => [item[key], item]));
 }
 
 /**
@@ -31,35 +37,29 @@ export function groupBy<T, K>(items: T[], keyFn: (item: T) => K): Map<K, T[]> {
 }
 
 /**
- * Batch fetches documents by IDs with efficient querying.
+ * Batch fetches documents by IDs with efficient querying and returns them as an array.
  * Automatically deduplicates IDs.
+ * Filters out any documents that don't exist, preserving order.
  *
  * @param ctx - Query or Mutation context
  * @param tableName - Name of the table to query
  * @param ids - Array of document IDs to fetch
- * @returns Map of documents keyed by ID
+ * @returns Array of documents (non-null only), in same order as input IDs
  */
-export async function batchGetByIds<T extends keyof DataModel>(
+export async function batchGetDocuments<T extends keyof DataModel>(
   ctx: QueryCtx | MutationCtx,
   tableName: T,
   ids: Id<T>[],
-): Promise<Map<Id<T>, Doc<T>>> {
-  if (ids.length === 0) return new Map();
+): Promise<Doc<T>[]> {
+  if (ids.length === 0) return [];
 
-  // Deduplicate IDs
   const uniqueIds = Array.from(new Set(ids));
 
-  // For small batches, use individual gets (more efficient)
   if (uniqueIds.length <= 5) {
     const docs = await Promise.all(uniqueIds.map((id) => ctx.db.get(id)));
-    return new Map(
-      docs
-        .map((doc, i) => [uniqueIds[i], doc])
-        .filter(([, doc]) => doc !== null) as Array<[Id<T>, Doc<T>]>,
-    );
+    return docs.filter((doc) => doc !== null) as Array<Doc<T>>;
   }
 
-  // For larger batches, use filter query
   const docs = await ctx.db
     .query(tableName)
     .filter((q) =>
@@ -68,7 +68,7 @@ export async function batchGetByIds<T extends keyof DataModel>(
     )
     .collect();
 
-  return toIdMap(docs);
+  return docs.filter((doc): doc is Doc<T> => doc !== undefined);
 }
 
 /**
@@ -76,22 +76,57 @@ export async function batchGetByIds<T extends keyof DataModel>(
  *
  * @param ctx - Query or Mutation context
  * @param items - Items to enrich
- * @param foreignKeyFn - Function to extract foreign key from item
  * @param relatedTable - Table name of related documents
+ * @param key - Key to store related documents in
+ * @param foreignKeyFn - Function to extract foreign key from item
  * @returns Items enriched with related documents
  */
 export async function enrichWithRelated<TItem, TTable extends keyof DataModel>(
   ctx: QueryCtx | MutationCtx,
   items: TItem[],
-  foreignKeyFn: (item: TItem) => Id<TTable>,
   relatedTable: TTable,
-): Promise<Array<TItem & { related: Doc<TTable> | null }>> {
+  key: string,
+  foreignKeyFn: (item: TItem) => Id<TTable>,
+): Promise<Array<TItem & { [key]: Doc<TTable> | null }>> {
   const foreignKeys = items.map(foreignKeyFn);
-  const relatedMap = await batchGetByIds(ctx, relatedTable, foreignKeys);
+  const relatedDocs = await batchGetDocuments(ctx, relatedTable, foreignKeys);
+  const relatedMap = toIdMap(relatedDocs);
 
   return items.map((item) => ({
     ...item,
-    related: relatedMap.get(foreignKeyFn(item)) || null,
+    [key]: relatedMap.get(foreignKeyFn(item)) || null,
+  }));
+}
+
+/**
+ * Enriches items with related documents array by foreign key.
+ *
+ * @param ctx - Query or Mutation context
+ * @param items - Items to enrich
+ * @param relatedTable - Table name of related documents
+ * @param key - Key to store related documents in
+ * @param foreignKeyFn - Function to extract foreign key from item
+ * @param groupingFn - Function to extract grouping key from related doc
+ * @returns Items enriched with related documents
+ */
+export async function enrichWithMultipleRelated<
+  TItem,
+  TTable extends keyof DataModel,
+>(
+  ctx: QueryCtx | MutationCtx,
+  items: TItem[],
+  relatedTable: TTable,
+  key: string,
+  foreignKeyFn: (item: TItem) => Id<TTable>,
+  groupingFn: (doc: Doc<TTable>) => keyof Doc<TTable>,
+): Promise<Array<TItem & { [key]: Doc<TTable>[] }>> {
+  const foreignKeys = items.map(foreignKeyFn);
+  const relatedDocs = await batchGetDocuments(ctx, relatedTable, foreignKeys);
+  const relatedMap = groupBy(relatedDocs, groupingFn);
+
+  return items.map((item) => ({
+    ...item,
+    [key]: relatedMap.get(foreignKeyFn(item)) || [],
   }));
 }
 

@@ -2,10 +2,11 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
-import { batchGetByIds } from "./lib/helpers";
+import { batchGetDocuments, toMap } from "./lib/helpers";
+import { hasMinimumRole } from "./roles";
 import { enrichTeamsWithMembers } from "./teams";
 import { enrichTeamsWithTournaments } from "./tournaments";
-import { getCurrentUserOrThrow, hasMinimumRole } from "./users";
+import { getCurrentUserOrThrow } from "./users";
 
 /**
  * Dashboard Queries
@@ -27,10 +28,7 @@ export const getUserDashboardData = query({
 
     // Get teams with member counts and tournament data using helpers
     const teamIds = teamMemberships.map((m) => m.teamId);
-    const teamsMap = await batchGetByIds(ctx, "teams", teamIds);
-    const validTeamsData = teamIds
-      .map((id) => teamsMap.get(id))
-      .filter((t) => t !== undefined);
+    const validTeamsData = await batchGetDocuments(ctx, "teams", teamIds);
 
     // Enrich with member counts and tournament data in parallel
     const [teamsWithMembers, teamsWithTournaments] = await Promise.all([
@@ -39,14 +37,11 @@ export const getUserDashboardData = query({
     ]);
 
     // Combine data with user role
-    const membershipByTeamId = new Map(
-      teamMemberships.map((m) => [m.teamId, m]),
-    );
-    const teamsWithTournamentsMap = new Map(
-      teamsWithTournaments.map((t) => [t.team._id, t.tournament]),
-    );
-    const _teamsWithMembersMap = new Map(
-      teamsWithMembers.map((t) => [t.team._id, t.memberCount]),
+    const membershipByTeamId = toMap(teamMemberships, "teamId");
+    const teamsWithTournamentsMap = toMap(
+      teamsWithTournaments,
+      "team._id",
+      "tournament",
     );
 
     const validTeams = teamsWithMembers

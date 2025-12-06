@@ -9,18 +9,13 @@ import {
   toUTCEndOfDayString,
 } from "./lib/dates";
 import { toIdMap } from "./lib/helpers";
+import { hasMinimumRole, validateMinimumRole } from "./roles";
 import {
   calculateGroupMetrics,
   upsertSubmissionGroup,
 } from "./submissionGroups";
 import { recalculateTeamPoints } from "./teams";
-import {
-  getCurrentUserOrThrow,
-  getUser,
-  hasMinimumRole,
-  type UserWithRoles,
-  validateMinimumRole,
-} from "./users";
+import { getCurrentUserOrThrow, getUser, type UserWithRoles } from "./users";
 
 /**
  * Gets the count of active participants in a submission group.

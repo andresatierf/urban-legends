@@ -3,13 +3,10 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString } from "./lib/dates";
+import { hasMinimumRole, validateMinimumRole } from "./roles";
 import { enrichSubmissionsWithUsers } from "./submissions";
 import { recalculateTeamPoints } from "./teams";
-import {
-  getCurrentUserOrThrow,
-  hasMinimumRole,
-  validateIsAdmin,
-} from "./users";
+import { getCurrentUserOrThrow } from "./users";
 
 /**
  * Calculates group metrics for a set of team submissions.
@@ -204,7 +201,9 @@ export const approve = mutation({
   args: { groupId: v.id("submissionGroups") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateIsAdmin(user, "You do not have permission to approve submissions");
+    validateMinimumRole(user, "admin", {
+      customMessage: "You do not have permission to approve submissions",
+    });
 
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Submission group not found");
@@ -255,7 +254,9 @@ export const reject = mutation({
   args: { groupId: v.id("submissionGroups") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateIsAdmin(user, "You do not have permission to reject submissions");
+    validateMinimumRole(user, "admin", {
+      customMessage: "You do not have permission to reject submissions",
+    });
 
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Submission group not found");
@@ -304,7 +305,7 @@ export const list = query({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateIsAdmin(user);
+    validateMinimumRole(user, "admin");
 
     let query = ctx.db.query("submissionGroups");
 
