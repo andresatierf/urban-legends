@@ -81,13 +81,17 @@ export async function batchGetDocuments<T extends keyof DataModel>(
  * @param foreignKeyFn - Function to extract foreign key from item
  * @returns Items enriched with related documents
  */
-export async function enrichWithRelated<TItem, TTable extends keyof DataModel>(
+export async function enrichWithRelated<
+  TItem,
+  TTable extends keyof DataModel,
+  TKey extends string,
+>(
   ctx: QueryCtx | MutationCtx,
   items: TItem[],
   relatedTable: TTable,
-  key: string,
+  key: TKey,
   foreignKeyFn: (item: TItem) => Id<TTable>,
-): Promise<Array<TItem & { [key]: Doc<TTable> | null }>> {
+): Promise<Array<TItem & { [K in TKey]: Doc<TTable> | null }>> {
   const foreignKeys = items.map(foreignKeyFn);
   const relatedDocs = await batchGetDocuments(ctx, relatedTable, foreignKeys);
   const relatedMap = toIdMap(relatedDocs);
@@ -95,7 +99,7 @@ export async function enrichWithRelated<TItem, TTable extends keyof DataModel>(
   return items.map((item) => ({
     ...item,
     [key]: relatedMap.get(foreignKeyFn(item)) || null,
-  }));
+  })) as Array<TItem & { [K in TKey]: Doc<TTable> | null }>;
 }
 
 /**
@@ -112,14 +116,15 @@ export async function enrichWithRelated<TItem, TTable extends keyof DataModel>(
 export async function enrichWithMultipleRelated<
   TItem,
   TTable extends keyof DataModel,
+  TKey extends string,
 >(
   ctx: QueryCtx | MutationCtx,
   items: TItem[],
   relatedTable: TTable,
-  key: string,
+  key: TKey,
   foreignKeyFn: (item: TItem) => Id<TTable>,
   groupingFn: (doc: Doc<TTable>) => keyof Doc<TTable>,
-): Promise<Array<TItem & { [key]: Doc<TTable>[] }>> {
+): Promise<Array<TItem & { [K in TKey]: Doc<TTable>[] }>> {
   const foreignKeys = items.map(foreignKeyFn);
   const relatedDocs = await batchGetDocuments(ctx, relatedTable, foreignKeys);
   const relatedMap = groupBy(relatedDocs, groupingFn);
@@ -127,7 +132,7 @@ export async function enrichWithMultipleRelated<
   return items.map((item) => ({
     ...item,
     [key]: relatedMap.get(foreignKeyFn(item)) || [],
-  }));
+  })) as Array<TItem & { [K in TKey]: Doc<TTable>[] }>;
 }
 
 /**

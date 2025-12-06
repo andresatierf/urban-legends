@@ -1,5 +1,5 @@
 import { query } from "./_generated/server";
-import { groupBy, toIdMap } from "./lib/helpers";
+import { enrichWithRelated, groupBy, toIdMap } from "./lib/helpers";
 import { getCurrentUserOrThrow } from "./users";
 
 /**
@@ -176,19 +176,20 @@ export const getDashboardData = query({
     );
 
     // Enrich join requests with user and team data
-    const enrichedJoinRequests = await Promise.all(
-      relevantJoinRequests.map(async (jr) => {
-        const [requestUser, team] = await Promise.all([
-          ctx.db.get(jr.userId),
-          ctx.db.get(jr.teamId),
-        ]);
+    const withUser = await enrichWithRelated(
+      ctx,
+      relevantJoinRequests,
+      "users",
+      "user",
+      (jr) => jr.userId,
+    );
 
-        return {
-          ...jr,
-          user: requestUser,
-          team,
-        };
-      }),
+    const enrichedJoinRequests = await enrichWithRelated(
+      ctx,
+      withUser,
+      "teams",
+      "team",
+      (jr) => jr.teamId,
     );
 
     // Get pending invitations sent by this captain
@@ -201,20 +202,21 @@ export const getDashboardData = query({
       (inv) => inv.invitedBy === user._id,
     );
 
-    // Enrich invitations with team data
-    const enrichedInvitations = await Promise.all(
-      relevantInvitations.map(async (inv) => {
-        const [invitedUser, team] = await Promise.all([
-          ctx.db.get(inv.invitedUserId),
-          ctx.db.get(inv.teamId),
-        ]);
+    // Enrich invitations with invitedUser and team data
+    const withInvitedUser = await enrichWithRelated(
+      ctx,
+      relevantInvitations,
+      "users",
+      "invitedUser",
+      (inv) => inv.invitedUserId,
+    );
 
-        return {
-          ...inv,
-          invitedUser,
-          team,
-        };
-      }),
+    const enrichedInvitations = await enrichWithRelated(
+      ctx,
+      withInvitedUser,
+      "teams",
+      "team",
+      (inv) => inv.teamId,
     );
 
     return {

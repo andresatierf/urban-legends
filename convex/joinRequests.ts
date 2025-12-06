@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
+import { enrichWithRelated } from "./lib/helpers";
 import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
@@ -31,18 +32,14 @@ export const listJoinRequests = query({
       requests = requests.filter((r) => r.status === args.status);
     }
 
-    // Fetch user details for each request
-    const requestsWithUsers = await Promise.all(
-      requests.map(async (request) => {
-        const requestUser = await ctx.db.get(request.userId);
-        return {
-          ...request,
-          user: requestUser,
-        };
-      }),
+    // Enrich requests with user details
+    return await enrichWithRelated(
+      ctx,
+      requests,
+      "users",
+      "user",
+      (request) => request.userId,
     );
-
-    return requestsWithUsers;
   },
 });
 
