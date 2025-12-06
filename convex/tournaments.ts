@@ -4,7 +4,11 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString, toUTCEndOfDayString } from "./lib/dates";
 import { toIdMap } from "./lib/helpers";
-import { getTeams, validateIsTeamMember } from "./teams";
+import {
+  enrichTeamsWithMembers,
+  getTeams,
+  validateIsTeamMember,
+} from "./teams";
 import {
   getCurrentUserOrThrow,
   hasMinimumRole,
@@ -124,26 +128,17 @@ export const getDetails = query({
       )
       .collect();
 
-    // Fetch member counts and member details for each team in parallel
-    const teamsWithMembers = await Promise.all(
-      teams.map(async (team) => {
-        const members = await ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect();
+    // Enrich teams with member counts and member details using helper
+    const teamIds = teams.map((t) => t._id);
+    const teamsWithMembersData = await enrichTeamsWithMembers(ctx, teamIds, {
+      includeMemberDetails: true,
+    });
 
-        // Fetch user details for each member
-        const memberUsers = await Promise.all(
-          members.map((member) => ctx.db.get(member.userId)),
-        );
-
-        return {
-          ...team,
-          memberCount: members.length,
-          members: memberUsers.filter((u) => u !== null),
-        };
-      }),
-    );
+    const teamsWithMembers = teamsWithMembersData.map((data) => ({
+      ...data.team,
+      memberCount: data.memberCount,
+      members: data.members || [],
+    }));
 
     // Find user's team in this tournament
     const userTeamMemberships = await ctx.db
@@ -379,25 +374,26 @@ export const getLeaderboard = query({
       )
       .collect();
 
-    // Get member counts for each team
-    const teamsWithCounts = await Promise.all(
-      teams.map(async (team) => {
-        const members = await ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect();
+    // Enrich teams with member counts using helper
+    const teamIds = teams.map((t) => t._id);
+    const teamsWithMembersData = await enrichTeamsWithMembers(ctx, teamIds);
 
-        const points = team.points ?? 0;
-        return {
-          teamId: team._id,
-          teamName: team.name,
-          points,
-          memberCount: members.length,
-          lastActivityAt: team.lastActivityAt,
-          createdAt: team._creationTime,
-        };
-      }),
+    const teamsWithCountsMap = new Map(
+      teamsWithMembersData.map((data) => [data.team._id, data.memberCount]),
     );
+
+    const teamsWithCounts = teams.map((team) => {
+      const points = team.points ?? 0;
+      const memberCount = teamsWithCountsMap.get(team._id) || 0;
+      return {
+        teamId: team._id,
+        teamName: team.name,
+        points,
+        memberCount,
+        lastActivityAt: team.lastActivityAt,
+        createdAt: team._creationTime,
+      };
+    });
 
     // Sort by points DESC, lastActivityAt DESC (more recent wins), createdAt ASC (earlier creation wins)
     const sortedTeams = teamsWithCounts.sort((a, b) => {

@@ -2,6 +2,8 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
+import { enrichTeamsWithMembers } from "./teams";
+import { enrichTeamsWithTournaments } from "./tournaments";
 import { getCurrentUserOrThrow, hasMinimumRole } from "./users";
 
 /**
@@ -22,32 +24,44 @@ export const getUserDashboardData = query({
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
 
-    const teams = await Promise.all(
-      teamMemberships.map(async (membership) => {
-        const team = await ctx.db.get(membership.teamId);
-        if (!team) return null;
+    // Get teams with member counts and tournament data using helpers
+    const teamIds = teamMemberships.map((m) => m.teamId);
+    const teamsData = await Promise.all(
+      teamIds.map((teamId) => ctx.db.get(teamId)),
+    );
+    const validTeamsData = teamsData.filter((t) => t !== null);
 
-        const tournament = await ctx.db.get(team.tournamentId);
-        if (!tournament) return null;
+    // Enrich with member counts and tournament data in parallel
+    const [teamsWithMembers, teamsWithTournaments] = await Promise.all([
+      enrichTeamsWithMembers(ctx, teamIds),
+      enrichTeamsWithTournaments(ctx, validTeamsData),
+    ]);
 
-        const memberCount = await ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect()
-          .then((members) => members.length);
+    // Combine data with user role
+    const membershipByTeamId = new Map(
+      teamMemberships.map((m) => [m.teamId, m]),
+    );
+    const teamsWithTournamentsMap = new Map(
+      teamsWithTournaments.map((t) => [t.team._id, t.tournament]),
+    );
+    const _teamsWithMembersMap = new Map(
+      teamsWithMembers.map((t) => [t.team._id, t.memberCount]),
+    );
+
+    const validTeams = teamsWithMembers
+      .map((teamData) => {
+        const tournament = teamsWithTournamentsMap.get(teamData.team._id);
+        const membership = membershipByTeamId.get(teamData.team._id);
+        if (!tournament || !membership) return null;
 
         return {
-          team,
+          team: teamData.team,
           tournament,
-          memberCount,
+          memberCount: teamData.memberCount,
           userRole: membership.role,
         };
-      }),
-    );
-
-    const validTeams = teams.filter(
-      (t): t is NonNullable<typeof t> => t !== null,
-    );
+      })
+      .filter((t): t is NonNullable<typeof t> => t !== null);
 
     // Calculate active tournaments
     const now = nowUTC();

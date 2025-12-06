@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import { enrichTeamsWithMembers } from "./teams";
 
 /**
  * Get public leaderboards for all active tournaments.
@@ -41,20 +42,11 @@ export const getPublicLeaderboards = query({
 
     const teamIds = teams.map((team) => team._id);
 
-    const members = await ctx.db
-      .query("teamMembers")
-      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
-      .collect();
-
-    const teamMembersMap = members.reduce<
-      Map<Id<"teams">, Doc<"teamMembers">[]>
-    >((map, member) => {
-      if (!map.has(member.teamId)) {
-        map.set(member.teamId, []);
-      }
-      map.get(member.teamId)?.push(member);
-      return map;
-    }, new Map());
+    // Enrich all teams with member counts using helper
+    const teamsWithMembersData = await enrichTeamsWithMembers(ctx, teamIds);
+    const teamMemberCountMap = new Map(
+      teamsWithMembersData.map((data) => [data.team._id, data.memberCount]),
+    );
 
     // Get leaderboard data for each active tournament
     const leaderboards = await Promise.all(
@@ -66,21 +58,19 @@ export const getPublicLeaderboards = query({
         const sortedTeams = teams.sort((a, b) => b.points - a.points);
 
         // Get top 10 teams with member count
-        const top10Teams = await Promise.all(
-          sortedTeams.slice(0, 10).map(async (team, index) => {
-            const memberCount = teamMembersMap.get(team._id) || [];
+        const top10Teams = sortedTeams.slice(0, 10).map((team, index) => {
+          const memberCount = teamMemberCountMap.get(team._id) || 0;
 
-            return {
-              rank: index + 1,
-              team: {
-                _id: team._id,
-                name: team.name,
-                points: team.points,
-              },
-              memberCount: memberCount.length,
-            };
-          }),
-        );
+          return {
+            rank: index + 1,
+            team: {
+              _id: team._id,
+              name: team.name,
+              points: team.points,
+            },
+            memberCount,
+          };
+        });
 
         return {
           tournament: {
