@@ -1,14 +1,8 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import type { Doc } from "./_generated/dataModel";
-import {
-  internalMutation,
-  type MutationCtx,
-  mutation,
-  type QueryCtx,
-  query,
-} from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
+import { detectOrphanedRecords } from "./lib/helpers";
 import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
 
 /**
@@ -326,23 +320,9 @@ export const getSystemHealth = query({
         ctx.db.query("teamMembers").collect(),
       ]);
 
-    // Check for orphaned teams (teams with non-existent tournaments)
-    const tournamentIds = new Set(tournaments.map((t) => t._id));
-    const orphanedTeams = teams.filter(
-      (t) => !tournamentIds.has(t.tournamentId),
-    );
-
-    // Check for orphaned submissions (submissions with non-existent teams or tournaments)
-    const teamIds = new Set(teams.map((t) => t._id));
-    const orphanedSubmissions = submissions.filter(
-      (s) => !teamIds.has(s.teamId) || !tournamentIds.has(s.tournamentId),
-    );
-
-    // Check for orphaned team members (members with non-existent teams or users)
-    const userIds = new Set(users.map((u) => u._id));
-    const orphanedTeamMembers = teamMembers.filter(
-      (tm) => !teamIds.has(tm.teamId) || !userIds.has(tm.userId),
-    );
+    // Detect orphaned records using helper
+    const { orphanedTeams, orphanedSubmissions, orphanedTeamMembers } =
+      await detectOrphanedRecords(ctx);
 
     return {
       services: {
@@ -395,48 +375,6 @@ export const getSystemHealth = query({
 });
 
 /**
- * Helper function to get orphaned records data.
- * Used by both queries and mutations.
- */
-async function getOrphanedRecordsData(ctx: QueryCtx | MutationCtx): Promise<{
-  orphanedTeams: Doc<"teams">[];
-  orphanedSubmissions: Doc<"submissions">[];
-  orphanedTeamMembers: Doc<"teamMembers">[];
-}> {
-  // Get all entities for metrics
-  const [tournaments, teams, submissions, users, teamMembers] =
-    await Promise.all([
-      ctx.db.query("tournaments").collect(),
-      ctx.db.query("teams").collect(),
-      ctx.db.query("submissions").collect(),
-      ctx.db.query("users").collect(),
-      ctx.db.query("teamMembers").collect(),
-    ]);
-
-  // Check for orphaned teams (teams with non-existent tournaments)
-  const tournamentIds = new Set(tournaments.map((t) => t._id));
-  const orphanedTeams = teams.filter((t) => !tournamentIds.has(t.tournamentId));
-
-  // Check for orphaned submissions (submissions with non-existent teams or tournaments)
-  const teamIds = new Set(teams.map((t) => t._id));
-  const orphanedSubmissions = submissions.filter(
-    (s) => !teamIds.has(s.teamId) || !tournamentIds.has(s.tournamentId),
-  );
-
-  // Check for orphaned team members (members with non-existent teams or users)
-  const userIds = new Set(users.map((u) => u._id));
-  const orphanedTeamMembers = teamMembers.filter(
-    (tm) => !teamIds.has(tm.teamId) || !userIds.has(tm.userId),
-  );
-
-  return {
-    orphanedTeams,
-    orphanedSubmissions,
-    orphanedTeamMembers,
-  };
-}
-
-/**
  * Run a data integrity check to identify orphaned records.
  * Returns a summary of issues found.
  * Only accessible to admins.
@@ -448,7 +386,7 @@ export const runIntegrityCheck = mutation({
     validateIsAdmin(user, "Admin access required");
 
     const { orphanedTeams, orphanedSubmissions, orphanedTeamMembers } =
-      await getOrphanedRecordsData(ctx);
+      await detectOrphanedRecords(ctx);
 
     const issuesFound = {
       orphanedTeams: orphanedTeams.length,
@@ -485,7 +423,7 @@ export const cleanupOrphanedRecords = mutation({
     validateIsAdmin(user, "Admin access required");
 
     const { orphanedTeams, orphanedSubmissions, orphanedTeamMembers } =
-      await getOrphanedRecordsData(ctx);
+      await detectOrphanedRecords(ctx);
 
     let deletedCount = 0;
 
