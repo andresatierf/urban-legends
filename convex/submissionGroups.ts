@@ -3,6 +3,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString } from "./lib/dates";
+import { enrichSubmissionsWithUsers } from "./submissions";
 import { recalculateTeamPoints } from "./teams";
 import {
   getCurrentUserOrThrow,
@@ -364,21 +365,10 @@ export const getWithSubmissions = query({
       .withIndex("by_group", (q) => q.eq("submissionGroupId", args.groupId))
       .collect();
 
-    // Enrich with user data
-    const submissionsWithUsers = await Promise.all(
-      submissions.map(async (submission) => {
-        const user = await ctx.db.get(submission.userId);
-        return {
-          ...submission,
-          user: user
-            ? {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-              }
-            : null,
-        };
-      }),
+    // Enrich with user data using helper
+    const submissionsWithUsers = await enrichSubmissionsWithUsers(
+      ctx,
+      submissions,
     );
 
     return {
