@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
-import { getCurrentUserOrThrow } from "./users";
+import { getCurrentUserOrThrow, hasMinimumRole } from "./users";
 
 /**
  * Dashboard Queries
@@ -86,7 +86,7 @@ export const getAdminDashboardData = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!user.roleNames.includes("admin")) {
+    if (!hasMinimumRole(user, "admin")) {
       return null; // Not an admin, return null
     }
 

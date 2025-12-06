@@ -2,7 +2,11 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { extractDateFromISO, nowUTC } from "./lib/dates";
-import { getCurrentUserOrThrow } from "./users";
+import {
+  getCurrentUserOrThrow,
+  hasMinimumRole,
+  validateMinimumRole,
+} from "./users";
 
 /**
  * Get the count of pending submissions for tournaments assigned to this manager.
@@ -16,9 +20,7 @@ export const getPendingCount = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (
-      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
-    ) {
+    if (!hasMinimumRole(user, "tournament_manager")) {
       return 0;
     }
 
@@ -50,11 +52,7 @@ export const getDashboardStats = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (
-      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
-    ) {
-      throw new Error("Tournament Manager or Admin access required");
-    }
+    validateMinimumRole(user, "tournament_manager");
 
     // Get all tournaments (tournament managers can access all)
     const tournaments = await ctx.db.query("tournaments").collect();
@@ -148,11 +146,7 @@ export const getRecentActivity = query({
     const user = await getCurrentUserOrThrow(ctx);
     const limit = args.limit || 30;
 
-    if (
-      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
-    ) {
-      throw new Error("Tournament Manager or Admin access required");
-    }
+    validateMinimumRole(user, "tournament_manager");
 
     // Get all tournaments
     const tournaments = await ctx.db.query("tournaments").collect();
@@ -215,11 +209,7 @@ export const getSubmissions = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (
-      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
-    ) {
-      throw new Error("Tournament Manager or Admin access required");
-    }
+    validateMinimumRole(user, "tournament_manager");
 
     const submissions = await ctx.db.query("submissions").collect();
     if (submissions.length === 0) return [];

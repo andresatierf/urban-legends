@@ -5,7 +5,11 @@ import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString, toUTCEndOfDayString } from "./lib/dates";
 import { toIdMap } from "./lib/helpers";
 import { getTeams, validateIsTeamMember } from "./teams";
-import { getCurrentUserOrThrow } from "./users";
+import {
+  getCurrentUserOrThrow,
+  hasMinimumRole,
+  validateMinimumRole,
+} from "./users";
 
 export const list = query({
   args: {
@@ -164,10 +168,8 @@ export const getDetails = query({
     }
 
     // Determine permissions
-    const isAdmin = user.roleNames.includes("admin");
-    const isTournamentManager = user.roleNames.includes("tournament_manager");
-    const canEdit = isAdmin || isTournamentManager;
-    const canDelete = isAdmin; // Only admins can delete tournaments
+    const canEdit = hasMinimumRole(user, "tournament_manager");
+    const canDelete = hasMinimumRole(user, "admin"); // Only admins can delete tournaments
     const canViewLeaderboard = true; // Anyone can view leaderboard
 
     // Calculate statistics
@@ -229,12 +231,7 @@ export const upsert = mutation({
     const user = await getCurrentUserOrThrow(ctx);
 
     // Allow both admin and tournament_manager
-    if (
-      !user.roleNames.includes("admin") &&
-      !user.roleNames.includes("tournament_manager")
-    ) {
-      throw new Error("Admin or Tournament Manager access required");
-    }
+    validateMinimumRole(user, "tournament_manager");
 
     // Default scoring config if not provided
     const defaultScoringConfig = {
@@ -276,9 +273,7 @@ export const getAvailableUsersForTeam = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (
-      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
-    ) {
+    if (!hasMinimumRole(user, "tournament_manager")) {
       await validateIsTeamMember(ctx, {
         teamId: args.teamId,
         userId: user._id,
@@ -506,12 +501,7 @@ export const determineWinner = mutation({
     const user = await getCurrentUserOrThrow(ctx);
 
     // Allow both admin and tournament_manager
-    if (
-      !user.roleNames.includes("admin") &&
-      !user.roleNames.includes("tournament_manager")
-    ) {
-      throw new Error("Admin or Tournament Manager access required");
-    }
+    validateMinimumRole(user, "tournament_manager");
 
     const tournament = await ctx.db.get(args.tournamentId);
     if (!tournament) {

@@ -7,7 +7,12 @@ import { groupBy, toIdMap } from "./lib/helpers";
 import { upsertSubmissionGroup } from "./submissionGroups";
 import { recalculateSubmissionPoints } from "./submissions";
 import { validateUserNotInTournamentTeam } from "./tournaments";
-import { getCurrentUserOrThrow, getUser } from "./users";
+import {
+  getCurrentUserOrThrow,
+  getUser,
+  hasMinimumRole,
+  validateMinimumRole,
+} from "./users";
 
 /**
  * Internal helper to recalculate and update a team's total points
@@ -229,7 +234,7 @@ export const getDetails = query({
       totalSubmissions > 0 ? approvedSubmissions.length / totalSubmissions : 0;
 
     // Determine permissions
-    const isAdmin = user.roleNames.includes("admin");
+    const isAdmin = hasMinimumRole(user, "admin");
     const isCaptain = userMembership?.role === "captain";
     const isMember = Boolean(userMembership);
 
@@ -274,10 +279,7 @@ export const removeUserTeam = mutation({
     const user = await getCurrentUserOrThrow(ctx);
 
     // Allow admin/tournament_manager to remove any team, or team captain to remove their own team
-    const isAdmin = user.roleNames.includes("admin");
-    const isTournamentManager = user.roleNames.includes("tournament_manager");
-
-    if (!isAdmin && !isTournamentManager) {
+    if (!hasMinimumRole(user, "tournament_manager")) {
       await validateIsTeamMember(ctx, {
         teamId: args.teamId,
         userId: user._id,
@@ -450,9 +452,7 @@ export const upsertUserTeam = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const isAdmin = user.roleNames.includes("admin");
-
-    if (!isAdmin) {
+    if (!hasMinimumRole(user, "admin")) {
       if (args._id) {
         await validateIsTeamMember(ctx, {
           teamId: args._id,
@@ -735,14 +735,10 @@ export const recalculatePoints = mutation({
     const user = await getCurrentUserOrThrow(ctx);
 
     // Allow both admin and tournament_manager
-    if (
-      !user.roleNames.includes("admin") &&
-      !user.roleNames.includes("tournament_manager")
-    ) {
-      throw new Error(
+    validateMinimumRole(user, "tournament_manager", {
+      customMessage:
         "Admin or Tournament Manager access required to recalculate team points",
-      );
-    }
+    });
 
     const team = await ctx.db.get(args.teamId);
     if (!team) {

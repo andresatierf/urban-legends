@@ -4,7 +4,11 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString } from "./lib/dates";
 import { recalculateTeamPoints } from "./teams";
-import { getCurrentUserOrThrow, validateIsAdmin } from "./users";
+import {
+  getCurrentUserOrThrow,
+  hasMinimumRole,
+  validateIsAdmin,
+} from "./users";
 
 /**
  * Calculates group metrics for a set of team submissions.
@@ -343,7 +347,7 @@ export const getWithSubmissions = query({
     const group = await ctx.db.get(args.groupId);
     if (!group) return null;
 
-    const isAdmin = currentUser.roleNames.includes("admin");
+    const isAdmin = hasMinimumRole(currentUser, "admin");
     const membership = await ctx.db
       .query("teamMembers")
       .withIndex("by_team_and_user", (q) =>
@@ -394,10 +398,7 @@ export const getPendingCount = query({
     const user = await getCurrentUserOrThrow(ctx);
 
     // Only admins, reviewers, and tournament managers can see this
-    const hasAccess =
-      user.roleNames.includes("admin") ||
-      user.roleNames.includes("reviewer") ||
-      user.roleNames.includes("tournament_manager");
+    const hasAccess = hasMinimumRole(user, "reviewer");
 
     if (!hasAccess) return 0;
 

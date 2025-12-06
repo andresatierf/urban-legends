@@ -14,7 +14,13 @@ import {
   upsertSubmissionGroup,
 } from "./submissionGroups";
 import { recalculateTeamPoints } from "./teams";
-import { getCurrentUserOrThrow, getUser, type UserWithRoles } from "./users";
+import {
+  getCurrentUserOrThrow,
+  getUser,
+  hasMinimumRole,
+  type UserWithRoles,
+  validateMinimumRole,
+} from "./users";
 
 /**
  * Gets the count of active participants in a submission group.
@@ -502,9 +508,11 @@ export const getDetails = query({
   args: { submissionId: v.id("submissions") },
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
-    const isAdmin = currentUser.roleNames.includes("admin");
-    const isTournamentManager =
-      currentUser.roleNames.includes("tournament_manager");
+    const isAdmin = hasMinimumRole(currentUser, "admin");
+    const isTournamentManager = hasMinimumRole(
+      currentUser,
+      "tournament_manager",
+    );
 
     // Fetch submission
     const submission = await ctx.db.get(args.submissionId);
@@ -623,8 +631,8 @@ export const remove = mutation({
   args: { submissionId: v.id("submissions") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    const isAdmin = user.roleNames.includes("admin");
-    const isTournamentManager = user.roleNames.includes("tournament_manager");
+    const isAdmin = hasMinimumRole(user, "admin");
+    const isTournamentManager = hasMinimumRole(user, "tournament_manager");
 
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) {
@@ -675,14 +683,10 @@ export const approve = mutation({
     const user = await getCurrentUserOrThrow(ctx);
 
     // Allow both admin and tournament_manager
-    if (
-      !user.roleNames.includes("admin") &&
-      !user.roleNames.includes("tournament_manager")
-    ) {
-      throw new Error(
+    validateMinimumRole(user, "tournament_manager", {
+      customMessage:
         "Admin or Tournament Manager access required to approve submissions",
-      );
-    }
+    });
 
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) {
@@ -1118,8 +1122,8 @@ export const recalculatePoints = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const isAdmin = user.roleNames.includes("admin");
-    const isTournamentManager = user.roleNames.includes("tournament_manager");
+    const isAdmin = hasMinimumRole(user, "admin");
+    const isTournamentManager = hasMinimumRole(user, "tournament_manager");
 
     if (!isAdmin && !isTournamentManager) {
       throw new Error(
