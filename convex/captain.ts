@@ -1,5 +1,5 @@
-import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import { groupBy, toIdMap } from "./lib/helpers";
 import { getCurrentUserOrThrow } from "./users";
 
 /**
@@ -105,10 +105,7 @@ export const getDashboardData = query({
         q.or(...teamIds.map((id) => q.eq(q.field("_id"), id as string))),
       )
       .collect();
-    const teamsMap = teams.reduce<Map<Id<"teams">, Doc<"teams">>>(
-      (acc, team) => acc.set(team._id, team),
-      new Map(),
-    );
+    const teamsMap = toIdMap(teams);
 
     const tournamentIds = teams.map((team) => team.tournamentId);
 
@@ -118,9 +115,7 @@ export const getDashboardData = query({
         q.or(...tournamentIds.map((id) => q.eq(q.field("_id"), id as string))),
       )
       .collect();
-    const tournamentsMap = tournaments.reduce<
-      Map<Id<"tournaments">, Doc<"tournaments">>
-    >((acc, tournament) => acc.set(tournament._id, tournament), new Map());
+    const tournamentsMap = toIdMap(tournaments);
 
     const teamMembers = await ctx.db
       .query("teamMembers")
@@ -132,13 +127,7 @@ export const getDashboardData = query({
         ),
       )
       .collect();
-    const teamMembersMap = teamMembers.reduce<
-      Map<Id<"teams">, Doc<"teamMembers">[]>
-    >((acc, teamMember) => {
-      if (!acc.has(teamMember.teamId)) acc.set(teamMember.teamId, []);
-      acc.get(teamMember.teamId)?.push(teamMember);
-      return acc;
-    }, new Map());
+    const teamMembersMap = groupBy(teamMembers, (tm) => tm.teamId);
 
     const submissions = await ctx.db
       .query("submissions")
@@ -150,13 +139,7 @@ export const getDashboardData = query({
         ),
       )
       .collect();
-    const submissionsMap = submissions.reduce<
-      Map<Id<"teams">, Doc<"submissions">[]>
-    >((acc, submission) => {
-      if (!acc.has(submission.teamId)) acc.set(submission.teamId, []);
-      acc.get(submission.teamId)?.push(submission);
-      return acc;
-    }, new Map());
+    const submissionsMap = groupBy(submissions, (s) => s.teamId);
 
     const teamsWithData = teams
       .map((team) => {
@@ -277,9 +260,7 @@ export const getTeamsComparison = query({
       )
       .collect();
 
-    const tournamentMap = tournaments.reduce<
-      Map<Id<"tournaments">, Doc<"tournaments">>
-    >((acc, tournament) => acc.set(tournament._id, tournament), new Map());
+    const tournamentMap = toIdMap(tournaments);
 
     const tournamentTeams = await ctx.db
       .query("teams")
@@ -287,45 +268,24 @@ export const getTeamsComparison = query({
         q.or(...tournamentIds.map((id) => q.eq(q.field("tournamentId"), id))),
       )
       .collect();
-    const tournamentTeamsByTournamentIdMap = tournamentTeams.reduce<
-      Map<Id<"tournaments">, Doc<"teams">[]>
-    >((acc, team) => {
-      if (!acc.has(team.tournamentId)) {
-        acc.set(team.tournamentId, []);
-      }
-      acc.get(team.tournamentId)?.push(team);
-      return acc;
-    }, new Map());
+    const tournamentTeamsByTournamentIdMap = groupBy(
+      tournamentTeams,
+      (t) => t.tournamentId,
+    );
 
     const members = await ctx.db
       .query("teamMembers")
       .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
       .collect();
 
-    const membersByTeamIdMap = members.reduce<
-      Map<Id<"teams">, Doc<"teamMembers">[]>
-    >((acc, member) => {
-      if (!acc.has(member.teamId)) {
-        acc.set(member.teamId, []);
-      }
-      acc.get(member.teamId)?.push(member);
-      return acc;
-    }, new Map());
+    const membersByTeamIdMap = groupBy(members, (m) => m.teamId);
 
     const submissions = await ctx.db
       .query("submissions")
       .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
       .collect();
 
-    const submissionsByTeamIdMap = submissions.reduce<
-      Map<Id<"teams">, Doc<"submissions">[]>
-    >((acc, submission) => {
-      if (!acc.has(submission.teamId)) {
-        acc.set(submission.teamId, []);
-      }
-      acc.get(submission.teamId)?.push(submission);
-      return acc;
-    }, new Map());
+    const submissionsByTeamIdMap = groupBy(submissions, (s) => s.teamId);
 
     // Get detailed metrics for each team
     const teamsComparison = await Promise.all(

@@ -1,6 +1,7 @@
 import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
+import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import { toIdMap } from "./lib/helpers";
 import {
   getCurrentUserOrThrow,
   hasMinimumRole,
@@ -126,19 +127,9 @@ export const getPendingSubmissions = query({
         .collect(),
     ]);
 
-    const teamMap = teams.reduce<Map<Id<"teams">, Doc<"teams">>>(
-      (map, team) => map.set(team._id, team),
-      new Map(),
-    );
-
-    const tournamentMap = tournaments.reduce<
-      Map<Id<"tournaments">, Doc<"tournaments">>
-    >((map, tournament) => map.set(tournament._id, tournament), new Map());
-
-    const userMap = users.reduce<Map<Id<"users">, Doc<"users">>>(
-      (map, user) => map.set(user._id, user),
-      new Map(),
-    );
+    const teamMap = toIdMap(teams);
+    const tournamentMap = toIdMap(tournaments);
+    const userMap = toIdMap(users);
 
     // Enrich individual submissions with context
     const enrichedIndividual = individualSubmissions

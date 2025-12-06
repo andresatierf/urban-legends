@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import { groupBy } from "./lib/helpers";
 import { enrichTeamsWithMembers } from "./teams";
 
 /**
@@ -30,15 +30,7 @@ export const getPublicLeaderboards = query({
       )
       .collect();
 
-    const tournamentTeamsMap = teams.reduce<
-      Map<Id<"tournaments">, Doc<"teams">[]>
-    >((map, team) => {
-      if (!map.has(team.tournamentId)) {
-        map.set(team.tournamentId, []);
-      }
-      map.get(team.tournamentId)?.push(team);
-      return map;
-    }, new Map());
+    const tournamentTeamsMap = groupBy(teams, (t) => t.tournamentId);
 
     const teamIds = teams.map((team) => team._id);
 

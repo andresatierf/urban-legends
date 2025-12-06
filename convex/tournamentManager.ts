@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { extractDateFromISO, nowUTC } from "./lib/dates";
+import { groupBy } from "./lib/helpers";
 import {
   getCurrentUserOrThrow,
   hasMinimumRole,
@@ -74,12 +75,7 @@ export const getDashboardStats = query({
       )
       .collect();
 
-    const teamsByTournamentId = teams.reduce<
-      Map<Id<"tournaments">, Doc<"teams">[]>
-    >((acc, team) => {
-      acc.set(team.tournamentId, [...(acc.get(team.tournamentId) || []), team]);
-      return acc;
-    }, new Map());
+    const teamsByTournamentId = groupBy(teams, (t) => t.tournamentId);
 
     const teamIds = teams.map((t) => t._id);
     const submissions = await ctx.db
@@ -87,15 +83,7 @@ export const getDashboardStats = query({
       .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
       .collect();
 
-    const submissionsByTeamId = submissions.reduce<
-      Map<Id<"teams">, Doc<"submissions">[]>
-    >((acc, submission) => {
-      acc.set(submission.teamId, [
-        ...(acc.get(submission.teamId) || []),
-        submission,
-      ]);
-      return acc;
-    }, new Map());
+    const submissionsByTeamId = groupBy(submissions, (s) => s.teamId);
 
     // Count teams and submissions across all tournaments
     let totalTeams = 0;
