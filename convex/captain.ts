@@ -1,5 +1,6 @@
+import type { Doc } from "./_generated/dataModel";
 import { query } from "./_generated/server";
-import { enrichWithRelated, groupBy, toIdMap } from "./lib/helpers";
+import { enrichWithRelations, groupBy, toIdMap } from "./lib/helpers";
 import { getCurrentUserOrThrow } from "./users";
 
 /**
@@ -175,22 +176,22 @@ export const getDashboardData = query({
       teamIdsSet.has(jr.teamId),
     );
 
-    // Enrich join requests with user and team data
-    const withUser = await enrichWithRelated(
-      ctx,
-      relevantJoinRequests,
-      "users",
-      "user",
-      (jr) => jr.userId,
-    );
-
-    const enrichedJoinRequests = await enrichWithRelated(
-      ctx,
-      withUser,
-      "teams",
-      "team",
-      (jr) => jr.teamId,
-    );
+    // Enrich join requests with user and team data in parallel
+    const enrichedJoinRequests: Array<
+      Doc<"joinRequests"> & {
+        user: Doc<"users"> | null;
+        team: Doc<"teams"> | null;
+      }
+    > = await enrichWithRelations(ctx, relevantJoinRequests, {
+      user: {
+        table: "users",
+        foreignKey: (jr) => jr.userId,
+      },
+      team: {
+        table: "teams",
+        foreignKey: (jr) => jr.teamId,
+      },
+    });
 
     // Get pending invitations sent by this captain
     const allPendingInvitations = await ctx.db
@@ -202,22 +203,22 @@ export const getDashboardData = query({
       (inv) => inv.invitedBy === user._id,
     );
 
-    // Enrich invitations with invitedUser and team data
-    const withInvitedUser = await enrichWithRelated(
-      ctx,
-      relevantInvitations,
-      "users",
-      "invitedUser",
-      (inv) => inv.invitedUserId,
-    );
-
-    const enrichedInvitations = await enrichWithRelated(
-      ctx,
-      withInvitedUser,
-      "teams",
-      "team",
-      (inv) => inv.teamId,
-    );
+    // Enrich invitations with invitedUser and team data in parallel
+    const enrichedInvitations: Array<
+      Doc<"teamInvitations"> & {
+        invitedUser: Doc<"users"> | null;
+        team: Doc<"teams"> | null;
+      }
+    > = await enrichWithRelations(ctx, relevantInvitations, {
+      invitedUser: {
+        table: "users",
+        foreignKey: (inv) => inv.invitedUserId,
+      },
+      team: {
+        table: "teams",
+        foreignKey: (inv) => inv.teamId,
+      },
+    });
 
     return {
       teams: teamsWithData,

@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
-import { enrichWithRelated } from "./lib/helpers";
+import { enrichWithRelations } from "./lib/helpers";
 import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
@@ -32,14 +32,9 @@ export const listJoinRequests = query({
       requests = requests.filter((r) => r.status === args.status);
     }
 
-    // Enrich requests with user details
-    return await enrichWithRelated(
-      ctx,
-      requests,
-      "users",
-      "user",
-      (request) => request.userId,
-    );
+    return await enrichWithRelations(ctx, requests, {
+      user: { table: "users", foreignKey: (request) => request.userId },
+    });
   },
 });
 

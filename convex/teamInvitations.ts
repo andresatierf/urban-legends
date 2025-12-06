@@ -1,7 +1,8 @@
 import { v } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
-import { enrichWithRelated } from "./lib/helpers";
+import { enrichWithRelations } from "./lib/helpers";
 import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
@@ -36,22 +37,17 @@ export const listTeamInvitations = query({
 
     const invitations = await invitationsQuery.collect();
 
-    // Enrich invitations with invited user and invitedBy user details
-    const withInvitedUser = await enrichWithRelated(
-      ctx,
-      invitations,
-      "users",
-      "invitedUser",
-      (inv) => inv.invitedUserId,
-    );
-
-    return await enrichWithRelated(
-      ctx,
-      withInvitedUser,
-      "users",
-      "invitedByUser",
-      (inv) => inv.invitedBy,
-    );
+    // Enrich invitations with both users in parallel
+    return await enrichWithRelations(ctx, invitations, {
+      invitedUser: {
+        table: "users",
+        foreignKey: (inv) => inv.invitedUserId,
+      },
+      invitedByUser: {
+        table: "users",
+        foreignKey: (inv) => inv.invitedBy,
+      },
+    });
   },
 });
 
@@ -84,28 +80,25 @@ export const listUserInvitations = query({
 
     const invitations = await invitationsQuery.collect();
 
-    // Enrich invitations with team and invitedBy user details
-    const withTeam = await enrichWithRelated(
-      ctx,
-      invitations,
-      "teams",
-      "team",
-      (inv) => inv.teamId,
-    );
-
-    const withInvitedBy = await enrichWithRelated(
-      ctx,
-      withTeam,
-      "users",
-      "invitedByUser",
-      (inv) => inv.invitedBy,
-    );
+    // Enrich invitations with team and invitedBy user in parallel
+    const enriched = await enrichWithRelations(ctx, invitations, {
+      team: {
+        table: "teams",
+        foreignKey: (inv) => inv.teamId,
+      },
+      invitedByUser: {
+        table: "users",
+        foreignKey: (inv) => inv.invitedBy,
+      },
+    });
 
     // Fetch tournaments for teams (nested enrichment)
     return await Promise.all(
-      withInvitedBy.map(async (inv) => ({
+      enriched.map(async (inv) => ({
         ...inv,
-        tournament: inv.team ? await ctx.db.get(inv.team.tournamentId) : null,
+        tournament: inv.team
+          ? await ctx.db.get((inv.team as Doc<"teams">).tournamentId)
+          : null,
       })),
     );
   },

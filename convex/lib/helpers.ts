@@ -113,7 +113,7 @@ export async function enrichWithRelated<
  * @param groupingFn - Function to extract grouping key from related doc
  * @returns Items enriched with related documents
  */
-export async function enrichWithMultipleRelated<
+export async function enrichWithRelatedArray<
   TItem,
   TTable extends keyof DataModel,
   TKey extends string,
@@ -133,6 +133,84 @@ export async function enrichWithMultipleRelated<
     ...item,
     [key]: relatedMap.get(foreignKeyFn(item)) || [],
   })) as Array<TItem & { [K in TKey]: Doc<TTable>[] }>;
+}
+
+/**
+ * Specification for enriching items with a related document.
+ */
+export type EnrichmentSpec<TItem, TTable extends keyof DataModel> = {
+  table: TTable;
+  foreignKey: (item: TItem) => Id<TTable>;
+};
+
+/**
+ * Helper type to extract table name from enrichment spec.
+ */
+type ExtractTableType<T> = T extends { table: infer TTable }
+  ? TTable extends keyof DataModel
+    ? TTable
+    : never
+  : never;
+
+/**
+ * Helper type for enriched result.
+ */
+type EnrichedResult<TItem, TSpecs> = TItem & {
+  [K in keyof TSpecs]: Doc<ExtractTableType<TSpecs[K]>> | null;
+};
+
+/**
+ * Enriches items with multiple related documents in a single operation.
+ * More efficient than chaining multiple enrichWithRelated calls.
+ *
+ * @param ctx - Query or Mutation context
+ * @param items - Items to enrich
+ * @param specs - Record of enrichment specifications, keyed by desired property name
+ * @returns Items enriched with all specified related documents
+ *
+ * @example
+ * const enriched = await enrichWithRelations(ctx, invitations, {
+ *   team: { table: "teams", foreignKey: (inv) => inv.teamId },
+ *   invitedByUser: { table: "users", foreignKey: (inv) => inv.invitedBy }
+ * });
+ * // Result type: Array<Invitation & { team: Doc<"teams"> | null, invitedByUser: Doc<"users"> | null }>
+ */
+export async function enrichWithRelations<
+  TItem,
+  TSpecs extends Record<string, EnrichmentSpec<TItem, any>>,
+>(
+  ctx: QueryCtx | MutationCtx,
+  items: TItem[],
+  specs: TSpecs,
+): Promise<Array<EnrichedResult<TItem, TSpecs>>> {
+  if (items.length === 0) return [];
+
+  // Fetch all relations in parallel
+  const enrichmentPromises = Object.entries(specs).map(
+    async ([key, spec]: [string, EnrichmentSpec<TItem, any>]) => {
+      const foreignKeys = items.map(spec.foreignKey);
+      const relatedDocs = await batchGetDocuments(ctx, spec.table, foreignKeys);
+      const relatedMap = toIdMap(relatedDocs);
+      return { key, spec, relatedMap };
+    },
+  );
+
+  const enrichmentResults = await Promise.all(enrichmentPromises);
+
+  // Build enrichment maps
+  const enrichmentMaps = new Map(
+    enrichmentResults.map((result) => [result.key, result]),
+  );
+
+  // Enrich all items
+  return items.map((item) => {
+    const enriched: any = { ...item };
+    for (const [key, result] of Array.from(enrichmentMaps.entries())) {
+      enriched[key] =
+        result.relatedMap.get(result.spec.foreignKey(item)) || null;
+    }
+    return enriched;
+  });
 }
 
 /**
