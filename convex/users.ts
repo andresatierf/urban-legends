@@ -8,7 +8,7 @@ import {
   query,
 } from "./_generated/server";
 import { rolesToCreate } from "./data";
-import { groupBy, toIdMap } from "./lib/helpers";
+import { batchGetByIds, groupBy, toIdMap } from "./lib/helpers";
 
 export const list = query({
   args: { userIds: v.optional(v.array(v.id("users"))) },
@@ -253,14 +253,11 @@ export async function getRolesForUser(ctx: QueryCtx, userId: Id<"users">) {
     .query("userRoles")
     .withIndex("by_user", (q) => q.eq("userId", userId))
     .collect();
-  const roles = await Promise.all(
-    userRoles.map(({ roleId }) => ctx.db.get(roleId)),
-  );
-  return (
-    roles
-      // .map((r) => r?.name)
-      .filter((role): role is NonNullable<typeof role> => Boolean(role))
-  );
+  const roleIds = userRoles.map((ur) => ur.roleId);
+  const rolesMap = await batchGetByIds(ctx, "roles", roleIds);
+  return roleIds
+    .map((id) => rolesMap.get(id))
+    .filter((role): role is NonNullable<typeof role> => role !== undefined);
 }
 
 export function validateIsAdmin(user: UserWithRoles, message?: string) {

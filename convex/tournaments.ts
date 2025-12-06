@@ -3,7 +3,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString, toUTCEndOfDayString } from "./lib/dates";
-import { toIdMap } from "./lib/helpers";
+import { batchGetByIds, toIdMap } from "./lib/helpers";
 import {
   enrichTeamsWithMembers,
   getTeams,
@@ -450,13 +450,15 @@ export const getWinner = query({
       )
       .collect();
 
-    const users = await Promise.all(
-      members.map((member) => ctx.db.get(member.userId)),
-    );
+    const userIds = members.map((m) => m.userId);
+    const usersMap = await batchGetByIds(ctx, "users", userIds);
+    const users = userIds
+      .map((id) => usersMap.get(id))
+      .filter((u) => u !== undefined);
 
     return {
       team,
-      members: users.filter((u) => u !== null),
+      members: users,
       completedAt: tournament.completedAt,
     };
   },

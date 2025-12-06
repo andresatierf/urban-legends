@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
+import { batchGetByIds } from "./lib/helpers";
 import { enrichTeamsWithMembers } from "./teams";
 import { enrichTeamsWithTournaments } from "./tournaments";
 import { getCurrentUserOrThrow, hasMinimumRole } from "./users";
@@ -26,10 +27,10 @@ export const getUserDashboardData = query({
 
     // Get teams with member counts and tournament data using helpers
     const teamIds = teamMemberships.map((m) => m.teamId);
-    const teamsData = await Promise.all(
-      teamIds.map((teamId) => ctx.db.get(teamId)),
-    );
-    const validTeamsData = teamsData.filter((t) => t !== null);
+    const teamsMap = await batchGetByIds(ctx, "teams", teamIds);
+    const validTeamsData = teamIds
+      .map((id) => teamsMap.get(id))
+      .filter((t) => t !== undefined);
 
     // Enrich with member counts and tournament data in parallel
     const [teamsWithMembers, teamsWithTournaments] = await Promise.all([

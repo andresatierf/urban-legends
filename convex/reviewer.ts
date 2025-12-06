@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
-import { toIdMap } from "./lib/helpers";
+import { batchGetByIds, toIdMap } from "./lib/helpers";
 import {
   getCurrentUserOrThrow,
   hasMinimumRole,
@@ -174,10 +174,12 @@ export const getPendingSubmissions = query({
             .withIndex("by_group", (q) => q.eq("submissionGroupId", group._id))
             .collect();
 
-          // Get submitters
-          const submitters = await Promise.all(
-            groupSubmissions.map((s) => ctx.db.get(s.userId)),
-          );
+          // Get submitters using batchGetByIds
+          const userIds = groupSubmissions.map((s) => s.userId);
+          const submittersMap = await batchGetByIds(ctx, "users", userIds);
+          const submitters = userIds
+            .map((id) => submittersMap.get(id))
+            .filter((s) => s !== undefined);
 
           return {
             type: "group" as const,
@@ -186,7 +188,7 @@ export const getPendingSubmissions = query({
             team,
             tournament,
             submissions: groupSubmissions,
-            submitters: submitters.filter((s) => s !== null),
+            submitters,
             date: group.date,
             createdAt: group.createdAt,
           };
