@@ -2,10 +2,8 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
-import { batchGetDocuments, toMap } from "./lib/helpers";
+import { batchGetDocuments, enrichWithRelations, toMap } from "./lib/helpers";
 import { hasMinimumRole } from "./roles";
-import { enrichTeamsWithMembers } from "./teams";
-import { enrichTeamsWithTournaments } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
 
 /**
@@ -30,30 +28,26 @@ export const getUserDashboardData = query({
     const teamIds = teamMemberships.map((m) => m.teamId);
     const validTeamsData = await batchGetDocuments(ctx, "teams", teamIds);
 
-    // Enrich with member counts and tournament data in parallel
-    const [teamsWithMembers, teamsWithTournaments] = await Promise.all([
-      enrichTeamsWithMembers(ctx, teamIds),
-      enrichTeamsWithTournaments(ctx, validTeamsData),
-    ]);
+    const enrichedTeams = await enrichWithRelations(ctx, validTeamsData, {
+      tournament: {
+        table: "tournaments",
+        foreignKey: (team) => team.tournamentId,
+      },
+      members: { table: "teamMembers", foreignKeyField: "teamId" },
+    });
 
-    // Combine data with user role
     const membershipByTeamId = toMap(teamMemberships, "teamId");
-    const teamsWithTournamentsMap = toMap(
-      teamsWithTournaments,
-      "team._id",
-      "tournament",
-    );
 
-    const validTeams = teamsWithMembers
-      .map((teamData) => {
-        const tournament = teamsWithTournamentsMap.get(teamData.team._id);
-        const membership = membershipByTeamId.get(teamData.team._id);
+    const validTeams = enrichedTeams
+      .map((enrichedTeam) => {
+        const { tournament, members, ...team } = enrichedTeam;
+        const membership = membershipByTeamId.get(team._id);
         if (!tournament || !membership) return null;
 
         return {
-          team: teamData.team,
+          team,
           tournament,
-          memberCount: teamData.memberCount,
+          memberCount: members.length,
           userRole: membership.role,
         };
       })

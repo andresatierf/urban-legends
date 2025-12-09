@@ -8,7 +8,6 @@ import {
   toUTCDateString,
   toUTCEndOfDayString,
 } from "./lib/dates";
-import { toIdMap } from "./lib/helpers";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
 import {
   calculateGroupMetrics,
@@ -1144,51 +1143,3 @@ export const recalculatePoints = mutation({
     };
   },
 });
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Enriches submissions with user data.
- *
- * @param ctx - Query or Mutation context
- * @param submissions - Array of submissions to enrich
- * @param options - Configuration options
- * @returns Submissions with user data
- */
-export async function enrichSubmissionsWithUsers(
-  ctx: QueryCtx | MutationCtx,
-  submissions: Doc<"submissions">[],
-  _options?: {
-    includeFullUser?: boolean; // Include email, etc.
-  },
-): Promise<
-  Array<
-    Doc<"submissions"> & {
-      user: Pick<Doc<"users">, "_id" | "name" | "email"> | null;
-    }
-  >
-> {
-  const userIds = Array.from(new Set(submissions.map((s) => s.userId)));
-  const users = await ctx.db
-    .query("users")
-    .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("_id"), id))))
-    .collect();
-
-  const userMap = toIdMap(users);
-
-  return submissions.map((submission) => {
-    const user = userMap.get(submission.userId);
-    return {
-      ...submission,
-      user: user
-        ? {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-          }
-        : null,
-    };
-  });
-}

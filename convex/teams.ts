@@ -901,76 +901,7 @@ export const getStatistics = query({
 // ============================================================================
 
 /**
- * Enriches a single team with member count and optional member details.
- *
- * @param ctx - Query or Mutation context
- * @param teamId - Team ID to enrich
- * @param options - Configuration for what data to include
- * @returns Enriched team with member data
- */
-export async function enrichTeamWithMembers(
-  ctx: QueryCtx | MutationCtx,
-  teamId: Id<"teams">,
-  options?: {
-    includeMemberDetails?: boolean;
-    includeMemberRoles?: boolean;
-    excludeUserId?: Id<"users">;
-  },
-): Promise<{
-  team: Doc<"teams">;
-  memberCount: number;
-  members?: Array<Doc<"users"> & { memberRole?: "captain" | "member" }>;
-}> {
-  const team = await ctx.db.get(teamId);
-  if (!team) throw new Error("Team not found");
-
-  const teamMembers = await ctx.db
-    .query("teamMembers")
-    .withIndex("by_team", (q) => q.eq("teamId", teamId))
-    .collect();
-
-  let filteredMembers = teamMembers;
-  if (options?.excludeUserId) {
-    filteredMembers = teamMembers.filter(
-      (m) => m.userId !== options.excludeUserId,
-    );
-  }
-
-  let memberDetails:
-    | Array<Doc<"users"> & { memberRole?: "captain" | "member" }>
-    | undefined;
-
-  if (options?.includeMemberDetails) {
-    const userIds = filteredMembers.map((m) => m.userId);
-    const users = await ctx.db
-      .query("users")
-      .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("_id"), id))))
-      .collect();
-
-    if (options?.includeMemberRoles) {
-      const membershipByUserId = new Map(teamMembers.map((m) => [m.userId, m]));
-      memberDetails = users.map((user) => {
-        const membership = membershipByUserId.get(user._id);
-        return {
-          ...user,
-          memberRole: membership?.role,
-        };
-      });
-    } else {
-      memberDetails = users;
-    }
-  }
-
-  return {
-    team,
-    memberCount: filteredMembers.length,
-    members: memberDetails,
-  };
-}
-
-/**
  * Enriches multiple teams in parallel with member data.
- * More efficient than calling enrichTeamWithMembers in a loop.
  *
  * @param ctx - Query or Mutation context
  * @param teamIds - Array of team IDs to enrich

@@ -3,8 +3,8 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString } from "./lib/dates";
+import { enrichWithRelations } from "./lib/helpers";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
-import { enrichSubmissionsWithUsers } from "./submissions";
 import { recalculateTeamPoints } from "./teams";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -360,21 +360,19 @@ export const getWithSubmissions = query({
     if (!isAdmin && !membership) {
       throw new Error("You do not have permission to view this group");
     }
-    // Get all individual submissions
+
     const submissions = await ctx.db
       .query("submissions")
       .withIndex("by_group", (q) => q.eq("submissionGroupId", args.groupId))
       .collect();
 
-    // Enrich with user data using helper
-    const submissionsWithUsers = await enrichSubmissionsWithUsers(
-      ctx,
-      submissions,
-    );
+    const enrichedSubmissions = await enrichWithRelations(ctx, submissions, {
+      user: { table: "users", foreignKey: (s) => s.userId },
+    });
 
     return {
       ...group,
-      submissions: submissionsWithUsers,
+      submissions: enrichedSubmissions,
     };
   },
 });
