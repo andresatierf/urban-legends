@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { enrichWithRelations } from "./lib/helpers";
-import { enrichTeamsWithMembers } from "./teams";
 
 /**
  * Get public leaderboards for all active tournaments.
@@ -23,28 +22,24 @@ export const getPublicLeaderboards = query({
       ctx,
       activeTournaments,
       {
-        teams: { table: "teams", foreignKeyField: "tournamentId" },
+        teams: {
+          table: "teams",
+          foreignKeyField: "tournamentId",
+          enrich: {
+            teamMembers: { table: "teamMembers", foreignKeyField: "teamId" },
+          },
+        },
       },
-    );
-
-    const allTeams = enrichedTournaments.flatMap((t) => t.teams);
-    const teamIds = allTeams.map((team) => team._id);
-
-    const teamsWithMembersData = await enrichTeamsWithMembers(ctx, teamIds);
-    const teamMemberCountMap = new Map(
-      teamsWithMembersData.map((data) => [data.team._id, data.memberCount]),
     );
 
     const leaderboards = await Promise.all(
       enrichedTournaments.map(async (enrichedTournament) => {
         const { teams, ...tournament } = enrichedTournament;
 
-        // Sort teams by points (descending)
         const sortedTeams = teams.sort((a, b) => b.points - a.points);
 
-        // Get top 10 teams with member count
         const top10Teams = sortedTeams.slice(0, 10).map((team, index) => {
-          const memberCount = teamMemberCountMap.get(team._id) || 0;
+          const memberCount = team.teamMembers.length;
 
           return {
             rank: index + 1,

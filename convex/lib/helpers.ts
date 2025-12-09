@@ -74,21 +74,25 @@ export async function batchGetDocuments<T extends keyof DataModel>(
 /**
  * Many-to-one enrichment spec: Single related document (e.g., team -> tournament)
  * Uses generic function type to allow proper item type inference at call site.
+ * Supports nested enrichment via optional `enrich` property.
  */
 type ManyToOneSpec<TTable extends keyof DataModel> = {
   table: TTable;
   foreignKey: (item: any) => Id<TTable>;
+  enrich?: Record<string, AnyEnrichmentSpec>;
 };
 
 /**
  * One-to-many enrichment spec: Array of related documents (e.g., team -> teamMembers[])
  * Note: foreignKeyField uses string to allow proper type inference when used in specs.
  * The table type constraint ensures the correct document type is returned.
+ * Supports nested enrichment via optional `enrich` property.
  */
 type OneToManySpec<TTable extends keyof DataModel> = {
   table: TTable;
   foreignKeyField: string;
   itemKey?: (item: any) => string;
+  enrich?: Record<string, AnyEnrichmentSpec>;
 };
 
 /**
@@ -110,18 +114,37 @@ type ExtractTable<TSpec> = TSpec extends { table: infer T }
 
 /**
  * Helper type to determine result type based on enrichment spec.
- * - Many-to-one (foreignKey): returns Doc<Table> | null
- * - One-to-many (foreignKeyField): returns Doc<Table>[]
+ * - Many-to-one (foreignKey): returns Doc<Table> | null (with nested enrichment if specified)
+ * - One-to-many (foreignKeyField): returns Doc<Table>[] (with nested enrichment if specified)
  */
-type EnrichmentResultType<TSpec> = TSpec extends { foreignKey: unknown }
-  ? Doc<ExtractTable<TSpec>> | null
-  : TSpec extends { foreignKeyField: unknown }
-    ? Doc<ExtractTable<TSpec>>[]
-    : never;
+type EnrichmentResultType<TSpec> = TSpec extends {
+  foreignKey: unknown;
+  enrich: infer TEnrich extends Record<string, AnyEnrichmentSpec>;
+}
+  ?
+      | (Doc<ExtractTable<TSpec>> & {
+          [K in keyof TEnrich]: EnrichmentResultType<TEnrich[K]>;
+        })
+      | null
+  : TSpec extends { foreignKey: unknown }
+    ? Doc<ExtractTable<TSpec>> | null
+    : TSpec extends {
+          foreignKeyField: unknown;
+          enrich: infer TEnrich extends Record<string, AnyEnrichmentSpec>;
+        }
+      ? Array<
+          Doc<ExtractTable<TSpec>> & {
+            [K in keyof TEnrich]: EnrichmentResultType<TEnrich[K]>;
+          }
+        >
+      : TSpec extends { foreignKeyField: unknown }
+        ? Doc<ExtractTable<TSpec>>[]
+        : never;
 
 /**
  * Enriches items with multiple related documents in a single operation.
  * Supports both many-to-one and one-to-many relationships.
+ * Supports nested enrichment for multi-level relationships.
  * More efficient than chaining multiple enrichWithRelated calls.
  *
  * @param ctx - Query or Mutation context
@@ -152,6 +175,19 @@ type EnrichmentResultType<TSpec> = TSpec extends { foreignKey: unknown }
  *   members: { table: "teamMembers", foreignKeyField: "teamId" }
  * });
  * // Result: Array<Team & { tournament: Doc<"tournaments"> | null, members: Doc<"teamMembers">[] }>
+ *
+ * @example
+ * // Nested enrichment (multi-level)
+ * const enriched = await enrichWithRelations(ctx, teams, {
+ *   teamMembers: {
+ *     table: "teamMembers",
+ *     foreignKeyField: "teamId",
+ *     enrich: {
+ *       user: { table: "users", foreignKey: (m) => m.userId }
+ *     }
+ *   }
+ * });
+ * // Result: Array<Team & { teamMembers: Array<TeamMember & { user: Doc<"users"> | null }> }>
  */
 export async function enrichWithRelations<
   TItem,
@@ -169,11 +205,16 @@ export async function enrichWithRelations<
     async ([key, spec]: [string, AnyEnrichmentSpec]) => {
       if ("foreignKey" in spec) {
         const foreignKeys = items.map(spec.foreignKey);
-        const relatedDocs = await batchGetDocuments(
-          ctx,
-          spec.table,
-          foreignKeys,
-        );
+        let relatedDocs = await batchGetDocuments(ctx, spec.table, foreignKeys);
+
+        if (spec.enrich && relatedDocs.length > 0) {
+          relatedDocs = await enrichWithRelations(
+            ctx,
+            relatedDocs,
+            spec.enrich,
+          );
+        }
+
         const relatedMap = toIdMap(relatedDocs);
         return { key, spec, relatedMap, isArray: false };
       }
@@ -181,7 +222,7 @@ export async function enrichWithRelations<
       const itemKeyFn = spec.itemKey || ((item: any) => item._id);
       const itemKeys = items.map(itemKeyFn);
 
-      const relatedDocs = await ctx.db
+      let relatedDocs = await ctx.db
         .query(spec.table)
         .filter((q) =>
           q.or(
@@ -191,6 +232,10 @@ export async function enrichWithRelations<
           ),
         )
         .collect();
+
+      if (spec.enrich && relatedDocs.length > 0) {
+        relatedDocs = await enrichWithRelations(ctx, relatedDocs, spec.enrich);
+      }
 
       const relatedMap = groupBy(
         relatedDocs,

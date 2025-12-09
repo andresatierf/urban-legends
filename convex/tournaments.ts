@@ -3,13 +3,9 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString, toUTCEndOfDayString } from "./lib/dates";
-import { batchGetDocuments } from "./lib/helpers";
+import { batchGetDocuments, enrichWithRelations } from "./lib/helpers";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
-import {
-  enrichTeamsWithMembers,
-  getTeams,
-  validateIsTeamMember,
-} from "./teams";
+import { getTeams, validateIsTeamMember } from "./teams";
 import { getCurrentUserOrThrow } from "./users";
 
 export const list = query({
@@ -117,7 +113,6 @@ export const getDetails = query({
       throw new Error("Tournament not found");
     }
 
-    // Fetch all teams for this tournament
     const teams = await ctx.db
       .query("teams")
       .withIndex("by_tournament", (q) =>
@@ -125,17 +120,28 @@ export const getDetails = query({
       )
       .collect();
 
-    // Enrich teams with member counts and member details using helper
-    const teamIds = teams.map((t) => t._id);
-    const teamsWithMembersData = await enrichTeamsWithMembers(ctx, teamIds, {
-      includeMemberDetails: true,
+    const enrichedTeams = await enrichWithRelations(ctx, teams, {
+      teamMembers: {
+        table: "teamMembers",
+        foreignKeyField: "teamId",
+        enrich: {
+          user: { table: "users", foreignKey: (m) => m.userId },
+        },
+      },
     });
 
-    const teamsWithMembers = teamsWithMembersData.map((data) => ({
-      ...data.team,
-      memberCount: data.memberCount,
-      members: data.members || [],
-    }));
+    const teamsWithMembers = enrichedTeams.map((enrichedTeam) => {
+      const { teamMembers, ...team } = enrichedTeam;
+      const memberDetails = teamMembers
+        .map((member) => member.user)
+        .filter((u): u is NonNullable<typeof u> => u !== null);
+
+      return {
+        ...team,
+        memberCount: teamMembers.length,
+        members: memberDetails,
+      };
+    });
 
     // Find user's team in this tournament
     const userTeamMemberships = await ctx.db
@@ -363,7 +369,6 @@ export const getLeaderboard = query({
       throw new Error("Tournament not found");
     }
 
-    // Get all teams for tournament
     const teams = await ctx.db
       .query("teams")
       .withIndex("by_tournament", (q) =>
@@ -371,22 +376,18 @@ export const getLeaderboard = query({
       )
       .collect();
 
-    // Enrich teams with member counts using helper
-    const teamIds = teams.map((t) => t._id);
-    const teamsWithMembersData = await enrichTeamsWithMembers(ctx, teamIds);
+    const enrichedTeams = await enrichWithRelations(ctx, teams, {
+      teamMembers: { table: "teamMembers", foreignKeyField: "teamId" },
+    });
 
-    const teamsWithCountsMap = new Map(
-      teamsWithMembersData.map((data) => [data.team._id, data.memberCount]),
-    );
-
-    const teamsWithCounts = teams.map((team) => {
+    const teamsWithCounts = enrichedTeams.map((enrichedTeam) => {
+      const { teamMembers, ...team } = enrichedTeam;
       const points = team.points ?? 0;
-      const memberCount = teamsWithCountsMap.get(team._id) || 0;
       return {
         teamId: team._id,
         teamName: team.name,
         points,
-        memberCount,
+        memberCount: teamMembers.length,
         lastActivityAt: team.lastActivityAt,
         createdAt: team._creationTime,
       };
