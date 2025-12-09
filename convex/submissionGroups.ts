@@ -185,7 +185,8 @@ export const approve = mutation({
   args: { groupId: v.id("submissionGroups") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateMinimumRole(user, "admin", {
+
+    validateMinimumRole(user, "reviewer", {
       customMessage: "You do not have permission to approve submissions",
     });
 
@@ -233,7 +234,7 @@ export const reject = mutation({
   args: { groupId: v.id("submissionGroups") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateMinimumRole(user, "admin", {
+    validateMinimumRole(user, "reviewer", {
       customMessage: "You do not have permission to reject submissions",
     });
 

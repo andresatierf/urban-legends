@@ -631,9 +631,9 @@ export const approve = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateMinimumRole(user, "tournament_manager", {
+    validateMinimumRole(user, "reviewer", {
       customMessage:
-        "Admin or Tournament Manager access required to approve submissions",
+        "You do not have permission to approve submissions for this tournament.",
     });
 
     const submission = await ctx.db.get(args.submissionId);
@@ -691,14 +691,10 @@ export const reject = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (
-      !user.roleNames.includes("admin") &&
-      !user.roleNames.includes("tournament_manager")
-    ) {
-      throw new Error(
-        "Admin or Tournament Manager access required to reject submissions",
-      );
-    }
+    validateMinimumRole(user, "reviewer", {
+      customMessage:
+        "You do not have permission to reject submissions for this tournament.",
+    });
 
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) {
