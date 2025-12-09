@@ -87,8 +87,8 @@ type ManyToOneSpec<TTable extends keyof DataModel> = {
  */
 type OneToManySpec<TTable extends keyof DataModel> = {
   table: TTable;
-  foreignKeyField: string; // Field on related table that references parent
-  itemKey?: (item: any) => string; // Defaults to item._id
+  foreignKeyField: string;
+  itemKey?: (item: any) => string;
 };
 
 /**
@@ -165,12 +165,9 @@ export async function enrichWithRelations<
 > {
   if (items.length === 0) return [];
 
-  // Fetch all relations in parallel
   const enrichmentPromises = Object.entries(specs).map(
     async ([key, spec]: [string, AnyEnrichmentSpec]) => {
-      // Check if this is a many-to-one or one-to-many relationship
       if ("foreignKey" in spec) {
-        // Many-to-one: fetch related documents by their _id
         const foreignKeys = items.map(spec.foreignKey);
         const relatedDocs = await batchGetDocuments(
           ctx,
@@ -181,7 +178,6 @@ export async function enrichWithRelations<
         return { key, spec, relatedMap, isArray: false };
       }
 
-      // One-to-many: fetch related documents by foreign key field
       const itemKeyFn = spec.itemKey || ((item: any) => item._id);
       const itemKeys = items.map(itemKeyFn);
 
@@ -206,16 +202,13 @@ export async function enrichWithRelations<
 
   const enrichmentResults = await Promise.all(enrichmentPromises);
 
-  // Enrich all items
   return items.map((item) => {
     const enriched: any = { ...item };
     for (const result of enrichmentResults) {
       if (result.isArray) {
-        // One-to-many: return array
         const itemKey = result.itemKeyFn?.(item);
         enriched[result.key] = result.relatedMap.get(itemKey) || [];
       } else {
-        // Many-to-one: return single doc or null
         const foreignKey = (result.spec as any).foreignKey(item);
         enriched[result.key] = result.relatedMap.get(foreignKey) || null;
       }

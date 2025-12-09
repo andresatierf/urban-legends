@@ -19,7 +19,6 @@ export const getPublicLeaderboards = query({
       (t) => t.startDate <= now && t.endDate >= now,
     );
 
-    // Enrich active tournaments with their teams in parallel
     const enrichedTournaments = await enrichWithRelations(
       ctx,
       activeTournaments,
@@ -28,7 +27,6 @@ export const getPublicLeaderboards = query({
       },
     );
 
-    // Get all teams and enrich with member counts
     const allTeams = enrichedTournaments.flatMap((t) => t.teams);
     const teamIds = allTeams.map((team) => team._id);
 
@@ -37,10 +35,8 @@ export const getPublicLeaderboards = query({
       teamsWithMembersData.map((data) => [data.team._id, data.memberCount]),
     );
 
-    // Get leaderboard data for each active tournament
     const leaderboards = await Promise.all(
       enrichedTournaments.map(async (enrichedTournament) => {
-        // Extract base tournament properties
         const { teams, ...tournament } = enrichedTournament;
 
         // Sort teams by points (descending)

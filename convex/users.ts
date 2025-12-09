@@ -270,7 +270,6 @@ export async function getUsersWithRoles(
 ): Promise<UserWithRoles[]> {
   if (userIds.length === 0) return [];
 
-  // Fetch all users and enrich with user roles in parallel
   const users = await ctx.db
     .query("users")
     .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("_id"), id))))
@@ -280,7 +279,6 @@ export async function getUsersWithRoles(
     userRoles: { table: "userRoles", foreignKeyField: "userId" },
   });
 
-  // Get all unique role IDs and fetch roles
   const allUserRoles = enrichedUsers.flatMap((u) => u.userRoles);
   const roleIds = Array.from(new Set(allUserRoles.map((ur) => ur.roleId)));
   const roles = await ctx.db

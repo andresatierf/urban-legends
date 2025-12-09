@@ -21,20 +21,17 @@ export async function recalculateTeamPoints(
   ctx: MutationCtx,
   teamId: Id<"teams">,
 ): Promise<void> {
-  // Get all approved submissions for the team
   const approvedSubmissions = await ctx.db
     .query("submissions")
     .withIndex("by_team", (q) => q.eq("teamId", teamId))
     .filter((q) => q.eq(q.field("state"), "approved"))
     .collect();
 
-  // Sum up all points from approved submissions
   const totalPoints = approvedSubmissions.reduce(
     (sum, submission) => sum + (submission.pointsEarned || 0),
     0,
   );
 
-  // Update team with recalculated points
   await ctx.db.patch(teamId, {
     points: totalPoints,
     lastActivityAt: nowUTC(),
@@ -178,13 +175,11 @@ export const getDetails = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Fetch team
     const team = await ctx.db.get(args.teamId);
     if (!team) {
       throw new Error("Team not found");
     }
 
-    // Fetch tournament (in parallel with other fetches)
     const [tournament, teamMembers, submissions] = await Promise.all([
       ctx.db.get(team.tournamentId),
       ctx.db
@@ -197,7 +192,6 @@ export const getDetails = query({
         .collect(),
     ]);
 
-    // Fetch user details for each member with their roles
     const membersWithRoles = await Promise.all(
       teamMembers.map(async (member) => {
         const memberUser = await getUser(ctx, {
@@ -212,16 +206,12 @@ export const getDetails = query({
       }),
     );
 
-    // Filter out null users (deleted users)
     const members = membersWithRoles.filter((m) => m !== null);
 
-    // Find captain
     const captain = members.find((m) => m.memberRole === "captain") || null;
 
-    // Find current user's membership
     const userMembership = teamMembers.find((m) => m.userId === user._id);
 
-    // Calculate statistics
     const approvedSubmissions = submissions.filter(
       (s) => s.state === "approved",
     );
@@ -229,7 +219,6 @@ export const getDetails = query({
     const approvalRate =
       totalSubmissions > 0 ? approvedSubmissions.length / totalSubmissions : 0;
 
-    // Determine permissions
     const isAdmin = hasMinimumRole(user, "admin");
     const isCaptain = userMembership?.role === "captain";
     const isMember = Boolean(userMembership);

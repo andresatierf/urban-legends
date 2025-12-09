@@ -64,12 +64,10 @@ export const getDashboardStats = query({
     const upcomingTournaments = tournaments.filter((t) => t.startDate > now);
     const endedTournaments = tournaments.filter((t) => t.endDate < now);
 
-    // Enrich tournaments with teams in parallel
     const enrichedTournaments = await enrichWithRelations(ctx, tournaments, {
       teams: { table: "teams", foreignKeyField: "tournamentId" },
     });
 
-    // Get all teams and enrich with submissions
     const allTeams = enrichedTournaments.flatMap((t) => t.teams);
     const enrichedTeams = await enrichWithRelations(ctx, allTeams, {
       submissions: { table: "submissions", foreignKeyField: "teamId" },
@@ -79,7 +77,6 @@ export const getDashboardStats = query({
       enrichedTeams.map((t) => [t._id, t.submissions]),
     );
 
-    // Count teams and submissions across all tournaments
     let totalTeams = 0;
     let totalSubmissions = 0;
     let pendingSubmissions = 0;

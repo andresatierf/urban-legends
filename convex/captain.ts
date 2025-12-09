@@ -13,7 +13,6 @@ export const getPendingActionsCount = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Get all teams user captains
     const captainedTeams = await ctx.db
       .query("teamMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -23,23 +22,19 @@ export const getPendingActionsCount = query({
     const teamIds = captainedTeams.map((tm) => tm.teamId);
     const teamIdsSet = new Set(teamIds);
 
-    // If user doesn't captain any teams, return 0
     if (teamIds.length === 0) {
       return 0;
     }
 
-    // Count pending join requests for all teams the user captains
     const joinRequests = await ctx.db
       .query("joinRequests")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
       .collect();
 
-    // Filter join requests to only those for captain's teams
     const relevantJoinRequests = joinRequests.filter((jr) =>
       teamIdsSet.has(jr.teamId),
     );
 
-    // Count pending invitations sent by the user
     const allPendingInvitations = await ctx.db
       .query("teamInvitations")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
@@ -82,7 +77,6 @@ export const getDashboardData = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Get all teams user captains
     const captainedTeamMembers = await ctx.db
       .query("teamMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -106,7 +100,6 @@ export const getDashboardData = query({
       )
       .collect();
 
-    // Enrich teams with tournament, members, and submissions in parallel
     const enrichedTeams = await enrichWithRelations(ctx, teams, {
       tournament: {
         table: "tournaments",
@@ -121,7 +114,6 @@ export const getDashboardData = query({
         (s) => s.state === "approved",
       );
 
-      // Extract base team properties
       const { tournament, members, submissions, ...team } = enrichedTeam;
 
       return {
@@ -134,7 +126,6 @@ export const getDashboardData = query({
       };
     });
 
-    // Get pending join requests for captain's teams
     const teamIdsSet = new Set(teamIds);
     const allJoinRequests = await ctx.db
       .query("joinRequests")
@@ -145,7 +136,6 @@ export const getDashboardData = query({
       teamIdsSet.has(jr.teamId),
     );
 
-    // Enrich join requests with user and team data in parallel
     const enrichedJoinRequests = await enrichWithRelations(
       ctx,
       relevantJoinRequests,
@@ -161,7 +151,6 @@ export const getDashboardData = query({
       },
     );
 
-    // Get pending invitations sent by this captain
     const allPendingInvitations = await ctx.db
       .query("teamInvitations")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
@@ -171,7 +160,6 @@ export const getDashboardData = query({
       (inv) => inv.invitedBy === user._id,
     );
 
-    // Enrich invitations with invitedUser and team data in parallel
     const enrichedInvitations = await enrichWithRelations(
       ctx,
       relevantInvitations,
@@ -203,7 +191,6 @@ export const getTeamsComparison = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Get all teams user captains
     const captainedTeamMembers = await ctx.db
       .query("teamMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -221,7 +208,6 @@ export const getTeamsComparison = query({
       .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))))
       .collect();
 
-    // Enrich teams with tournament, members, and submissions in parallel
     const enrichedTeams = await enrichWithRelations(ctx, teams, {
       tournament: {
         table: "tournaments",
@@ -231,7 +217,6 @@ export const getTeamsComparison = query({
       submissions: { table: "submissions", foreignKeyField: "teamId" },
     });
 
-    // For ranking, we need all teams in these tournaments
     const tournamentIds = Array.from(new Set(teams.map((t) => t.tournamentId)));
     const tournaments = await ctx.db
       .query("tournaments")
@@ -248,7 +233,6 @@ export const getTeamsComparison = query({
       enrichedTournaments.map((t) => [t._id, t.teams]),
     );
 
-    // Get detailed metrics for each team
     const teamsComparison = enrichedTeams.map((enrichedTeam) => {
       const approvedSubmissions = enrichedTeam.submissions.filter(
         (s) => s.state === "approved",
@@ -257,7 +241,6 @@ export const getTeamsComparison = query({
         (s) => s.state === "pending",
       );
 
-      // Calculate approval rate
       const totalReviewed =
         approvedSubmissions.length +
         enrichedTeam.submissions.filter((s) => s.state === "rejected").length;
@@ -266,7 +249,6 @@ export const getTeamsComparison = query({
           ? Math.round((approvedSubmissions.length / totalReviewed) * 100)
           : 0;
 
-      // Get tournament rank (simplified - just count teams with more points)
       const allTeamsInTournament =
         tournamentTeamsByTournamentIdMap.get(enrichedTeam.tournamentId) || [];
 
@@ -274,7 +256,6 @@ export const getTeamsComparison = query({
         allTeamsInTournament.filter((t) => t.points > enrichedTeam.points)
           .length + 1;
 
-      // Extract base team properties
       const { tournament, members, submissions, ...team } = enrichedTeam;
 
       return {
