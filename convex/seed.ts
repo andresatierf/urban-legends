@@ -18,7 +18,6 @@ export const seedTournamentAndTeams = internalMutation({
     const tournamentName =
       args.tournamentName || "Urban Legends Tournament 2024";
 
-    // Check if tournament already exists
     const existingTournament = await ctx.db
       .query("tournaments")
       .withIndex("by_name", (q) => q.eq("name", tournamentName))
@@ -28,7 +27,6 @@ export const seedTournamentAndTeams = internalMutation({
       throw new Error(`Tournament "${tournamentName}" already exists`);
     }
 
-    // Create tournament
     const tournamentId = await ctx.db.insert("tournaments", {
       name: tournamentName,
       description: "Sample tournament with seeded teams and participants",
@@ -44,18 +42,14 @@ export const seedTournamentAndTeams = internalMutation({
       },
     });
 
-    // Team data from the screenshot
-
     const createdTeams = [];
 
     for (const teamData of teamsData) {
-      // Create or get captain user
       const captainUser = await getOrCreateUser(ctx, {
         name: teamData.captain.name,
         email: teamData.captain.email,
       });
 
-      // Create team
       const teamId = await ctx.db.insert("teams", {
         name: teamData.name,
         tournamentId,
@@ -64,14 +58,12 @@ export const seedTournamentAndTeams = internalMutation({
         points: 0,
       });
 
-      // Add captain as team member
       await ctx.db.insert("teamMembers", {
         teamId,
         userId: captainUser._id,
         role: "captain",
       });
 
-      // Create or get member users and add them to team
       for (const memberData of teamData.members) {
         const memberUser = await getOrCreateUser(ctx, {
           name: memberData.name,
@@ -89,7 +81,7 @@ export const seedTournamentAndTeams = internalMutation({
         teamId,
         teamName: teamData.name,
         captainName: teamData.captain.name,
-        memberCount: teamData.members.length + 1, // +1.f captain
+        memberCount: teamData.members.length + 1,
       });
     }
 
@@ -110,7 +102,6 @@ async function getOrCreateUser(
   ctx: MutationCtx,
   userData: { name: string; email: string },
 ) {
-  // Check if user exists by email
   const existingUser = await ctx.db
     .query("users")
     .withIndex("by_email", (q) => q.eq("email", userData.email))
@@ -128,7 +119,6 @@ async function getOrCreateUser(
     externalId: `seed_${userData.email.replace(/[^a-z0-9]/gi, "_")}`,
   });
 
-  // Assign default "player" role
   const userRole = await ctx.db
     .query("roles")
     .withIndex("by_name", (q) => q.eq("name", "player"))
@@ -154,7 +144,6 @@ export const clearSeededData = internalMutation({
     tournamentName: v.string(),
   },
   handler: async (ctx, args) => {
-    // Find tournament
     const tournament = await ctx.db
       .query("tournaments")
       .withIndex("by_name", (q) => q.eq("name", args.tournamentName))
@@ -164,7 +153,6 @@ export const clearSeededData = internalMutation({
       throw new Error(`Tournament "${args.tournamentName}" not found`);
     }
 
-    // Get all teams for this tournament
     const teams = await ctx.db
       .query("teams")
       .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
@@ -173,9 +161,7 @@ export const clearSeededData = internalMutation({
     let deletedTeamMembers = 0;
     let deletedSubmissions = 0;
 
-    // Delete team members and submissions for each team
     for (const team of teams) {
-      // Delete team members
       const teamMembers = await ctx.db
         .query("teamMembers")
         .withIndex("by_team", (q) => q.eq("teamId", team._id))
@@ -186,7 +172,6 @@ export const clearSeededData = internalMutation({
         deletedTeamMembers++;
       }
 
-      // Delete submissions
       const submissions = await ctx.db
         .query("submissions")
         .withIndex("by_team", (q) => q.eq("teamId", team._id))
@@ -197,17 +182,14 @@ export const clearSeededData = internalMutation({
         deletedSubmissions++;
       }
 
-      // Delete team
       await ctx.db.delete(team._id);
     }
 
-    // Delete seeded users (those with externalId starting with "seed_")
     const allUsers = await ctx.db.query("users").collect();
     let deletedUsers = 0;
 
     for (const userDoc of allUsers) {
       if (userDoc.externalId.startsWith("seed_")) {
-        // Delete user roles first
         const userRoles = await ctx.db
           .query("userRoles")
           .withIndex("by_user", (q) => q.eq("userId", userDoc._id))
@@ -217,13 +199,11 @@ export const clearSeededData = internalMutation({
           await ctx.db.delete(userRole._id);
         }
 
-        // Delete user
         await ctx.db.delete(userDoc._id);
         deletedUsers++;
       }
     }
 
-    // Delete tournament
     await ctx.db.delete(tournament._id);
 
     return {
@@ -253,7 +233,6 @@ export const seedRoles = internalMutation({
     const createdRoles = [];
 
     for (const roleData of rolesToCreate) {
-      // Check if role already exists
       const existingRole = await ctx.db
         .query("roles")
         .withIndex("by_name", (q) => q.eq("name", roleData.name))
@@ -263,7 +242,6 @@ export const seedRoles = internalMutation({
         const roleId = await ctx.db.insert("roles", roleData);
         createdRoles.push({ id: roleId, ...roleData, created: true });
       } else {
-        // Update all fields if role exists
         await ctx.db.patch(existingRole._id, {
           displayName: roleData.displayName,
           description: roleData.description,

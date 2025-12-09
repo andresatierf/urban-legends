@@ -13,7 +13,6 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as admin from "../admin.js";
 import type * as captain from "../captain.js";
 import type * as dashboard from "../dashboard.js";
 import type * as data from "../data.js";
@@ -21,19 +20,19 @@ import type * as http from "../http.js";
 import type * as joinRequests from "../joinRequests.js";
 import type * as lib_dates from "../lib/dates.js";
 import type * as lib_helpers from "../lib/helpers.js";
-import type * as migrations from "../migrations.js";
-import type * as publicQueries from "../publicQueries.js";
-import type * as reviewer from "../reviewer.js";
+import type * as public_ from "../public.js";
+import type * as role_admin from "../role/admin.js";
+import type * as role_reviewer from "../role/reviewer.js";
+import type * as role_tournamentManager from "../role/tournamentManager.js";
+import type * as role_viewer from "../role/viewer.js";
 import type * as roles from "../roles.js";
 import type * as seed from "../seed.js";
 import type * as submissionGroups from "../submissionGroups.js";
 import type * as submissions from "../submissions.js";
 import type * as teamInvitations from "../teamInvitations.js";
 import type * as teams from "../teams.js";
-import type * as tournamentManager from "../tournamentManager.js";
 import type * as tournaments from "../tournaments.js";
 import type * as users from "../users.js";
-import type * as viewer from "../viewer.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -44,7 +43,6 @@ import type * as viewer from "../viewer.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  admin: typeof admin;
   captain: typeof captain;
   dashboard: typeof dashboard;
   data: typeof data;
@@ -52,19 +50,19 @@ declare const fullApi: ApiFromModules<{
   joinRequests: typeof joinRequests;
   "lib/dates": typeof lib_dates;
   "lib/helpers": typeof lib_helpers;
-  migrations: typeof migrations;
-  publicQueries: typeof publicQueries;
-  reviewer: typeof reviewer;
+  public: typeof public_;
+  "role/admin": typeof role_admin;
+  "role/reviewer": typeof role_reviewer;
+  "role/tournamentManager": typeof role_tournamentManager;
+  "role/viewer": typeof role_viewer;
   roles: typeof roles;
   seed: typeof seed;
   submissionGroups: typeof submissionGroups;
   submissions: typeof submissions;
   teamInvitations: typeof teamInvitations;
   teams: typeof teams;
-  tournamentManager: typeof tournamentManager;
   tournaments: typeof tournaments;
   users: typeof users;
-  viewer: typeof viewer;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

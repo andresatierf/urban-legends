@@ -14,7 +14,7 @@ import { api } from "../../../../../convex/_generated/api";
 export default function SystemHealth() {
   const { user } = useUser();
   const router = useRouter();
-  const systemHealth = useQuery(api.admin.getSystemHealth);
+  const systemHealth = useQuery(api.role.admin.getSystemHealth);
 
   useEffect(() => {
     if (user && !user.roleNames?.includes("admin")) {

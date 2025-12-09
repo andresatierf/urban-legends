@@ -33,7 +33,6 @@ export async function calculateGroupMetrics(
   groupState: "pending" | "approved" | "rejected" | "deleted";
   pointsEarned: number;
 }> {
-  // Get current team member count
   const teamMembers = await ctx.db
     .query("teamMembers")
     .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
@@ -44,7 +43,6 @@ export async function calculateGroupMetrics(
   const participationRate =
     totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
 
-  // Get tournament for scoring config
   const tournament = await ctx.db.get(args.tournamentId);
   if (!tournament) throw new Error("Tournament not found");
 
@@ -57,22 +55,18 @@ export async function calculateGroupMetrics(
   const isTeamExercise =
     participationRate >= scoringConfig.teamExerciseThreshold;
 
-  // Determine tier - use highest tier if mixed
   const hasAdvanced = args.groupSubmissions.some((s) => s.tier === "advanced");
   const tier: "base" | "advanced" = hasAdvanced ? "advanced" : "base";
 
-  // Determine group state - all must be same state
   const states = new Set(args.groupSubmissions.map((s) => s.state));
   let groupState: "pending" | "approved" | "rejected" | "deleted";
 
   if (states.size === 1) {
     groupState = Array.from(states)[0] as typeof groupState;
   } else {
-    // Mixed states - default to pending
     groupState = "pending";
   }
 
-  // Calculate points if approved
   let pointsEarned = 0;
   if (groupState === "approved") {
     pointsEarned = isTeamExercise
@@ -103,9 +97,6 @@ export async function upsertSubmissionGroup(
     date: string;
   },
 ) {
-  // Find all TEAM activity submissions for this team on this date
-  // (Individual submissions are NOT grouped)
-  // Exclude deleted and rejected submissions from the group
   const submissions = await ctx.db
     .query("submissions")
     .withIndex("by_team_and_date", (q) =>
@@ -121,7 +112,6 @@ export async function upsertSubmissionGroup(
     .collect();
 
   if (submissions.length === 0) {
-    // All submissions deleted - delete group if exists
     const existingGroup = await ctx.db
       .query("submissionGroups")
       .withIndex("by_team_and_date", (q) =>
@@ -135,7 +125,6 @@ export async function upsertSubmissionGroup(
     return;
   }
 
-  // Calculate group metrics using shared logic
   const metrics = await calculateGroupMetrics(ctx, {
     groupSubmissions: submissions,
     teamId: args.teamId,
@@ -144,7 +133,6 @@ export async function upsertSubmissionGroup(
 
   const now = nowUTC();
 
-  // Find existing group
   const existingGroup = await ctx.db
     .query("submissionGroups")
     .withIndex("by_team_and_date", (q) =>
@@ -167,11 +155,8 @@ export async function upsertSubmissionGroup(
   };
 
   if (existingGroup) {
-    // Update existing group
     await ctx.db.patch(existingGroup._id, groupData);
 
-    // Update all submissions with group reference only
-    // Clear points since group is being recalculated
     for (const submission of submissions) {
       await ctx.db.patch(submission._id, {
         submissionGroupId: existingGroup._id,
@@ -181,13 +166,12 @@ export async function upsertSubmissionGroup(
 
     return existingGroup._id;
   }
-  // Create new group
+
   const groupId = await ctx.db.insert("submissionGroups", {
     ...groupData,
     createdAt: now,
   });
 
-  // Link all submissions to group
   for (const submission of submissions) {
     await ctx.db.patch(submission._id, {
       submissionGroupId: groupId,
@@ -208,7 +192,6 @@ export const approve = mutation({
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Submission group not found");
 
-    // Get tournament for scoring
     const tournament = await ctx.db.get(group.tournamentId);
     if (!tournament) throw new Error("Tournament not found");
 
@@ -218,12 +201,10 @@ export const approve = mutation({
       teamExerciseThreshold: 0.5,
     };
 
-    // Calculate points based on group participation
     const pointsEarned = group.isTeamExercise
       ? scoringConfig.teamExercisePoints[group.tier]
       : scoringConfig.individualPoints[group.tier];
 
-    // Update group
     await ctx.db.patch(args.groupId, {
       state: "approved",
       managedBy: user._id,
@@ -231,7 +212,6 @@ export const approve = mutation({
       updatedAt: nowUTC(),
     });
 
-    // Update all individual submissions in group
     const submissions = await ctx.db
       .query("submissions")
       .withIndex("by_group", (q) => q.eq("submissionGroupId", args.groupId))
@@ -241,11 +221,10 @@ export const approve = mutation({
       await ctx.db.patch(submission._id, {
         state: "approved",
         managedBy: user._id,
-        pointsEarned: pointsEarned / submissions.length, // Each submission gets same points (for consistency)
+        pointsEarned: pointsEarned / submissions.length,
       });
     }
 
-    // Recalculate team points from all approved submissions for consistency
     await recalculateTeamPoints(ctx, group.teamId);
   },
 });
@@ -261,7 +240,6 @@ export const reject = mutation({
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Submission group not found");
 
-    // Update group
     await ctx.db.patch(args.groupId, {
       state: "rejected",
       managedBy: user._id,
@@ -269,7 +247,6 @@ export const reject = mutation({
       updatedAt: nowUTC(),
     });
 
-    // Update all individual submissions in group
     const submissions = await ctx.db
       .query("submissions")
       .withIndex("by_group", (q) => q.eq("submissionGroupId", args.groupId))
@@ -283,7 +260,6 @@ export const reject = mutation({
       });
     }
 
-    // Recalculate team points from all approved submissions for consistency
     await recalculateTeamPoints(ctx, group.teamId);
   },
 });
@@ -386,7 +362,6 @@ export const getPendingCount = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Only admins, reviewers, and tournament managers can see this
     const hasAccess = hasMinimumRole(user, "reviewer");
 
     if (!hasAccess) return 0;

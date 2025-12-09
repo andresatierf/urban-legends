@@ -1,13 +1,8 @@
 import type { UserJSON } from "@clerk/backend";
 import { type Validator, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
-import {
-  internalMutation,
-  type MutationCtx,
-  type QueryCtx,
-  query,
-} from "./_generated/server";
-import { batchGetDocuments, enrichWithRelations, toIdMap } from "./lib/helpers";
+import { internalMutation, type QueryCtx, query } from "./_generated/server";
+import { batchGetDocuments } from "./lib/helpers";
 
 export const list = query({
   args: { userIds: v.optional(v.array(v.id("users"))) },
@@ -62,10 +57,8 @@ export const getDetails = query({
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
 
-    // Fetch user
     const user = await getUser(ctx, { userId: args.userId });
 
-    // Fetch roles for the target user
     const [teamMemberships, allSubmissions] = await Promise.all([
       ctx.db
         .query("teamMembers")
@@ -77,7 +70,6 @@ export const getDetails = query({
         .collect(),
     ]);
 
-    // Fetch teams with tournament context
     const teamsWithTournaments = await Promise.all(
       teamMemberships.map(async (membership) => {
         const team = await ctx.db.get(membership.teamId);
@@ -101,13 +93,11 @@ export const getDetails = query({
       (s) => s.state === "approved",
     );
 
-    // Calculate total points earned
     const totalPointsEarned = approvedSubmissions.reduce(
       (sum, s) => sum + (s.pointsEarned || 0),
       0,
     );
 
-    // Determine permissions
     const isAdmin = currentUser.roleNames.includes("admin");
     const canManageRoles = isAdmin;
     const isViewingSelf = currentUser._id === args.userId;
@@ -145,7 +135,7 @@ export const current = query({
 });
 
 export const upsertFromClerk = internalMutation({
-  args: { data: v.any() as Validator<UserJSON> }, // no runtime validation, trust Clerk
+  args: { data: v.any() as Validator<UserJSON> },
   async handler(ctx, { data }) {
     const userAttributes = {
       email: data.email_addresses[0].email_address,
@@ -254,51 +244,4 @@ export async function getRolesForUser(ctx: QueryCtx, userId: Id<"users">) {
     .collect();
   const roleIds = userRoles.map((ur) => ur.roleId);
   return await batchGetDocuments(ctx, "roles", roleIds);
-}
-
-/**
- * Enriches multiple users with roles in parallel.
- * More efficient than calling getUser in a loop.
- *
- * @param ctx - Query or Mutation context
- * @param userIds - Array of user IDs to enrich
- * @returns Array of users with roles
- */
-export async function getUsersWithRoles(
-  ctx: QueryCtx | MutationCtx,
-  userIds: Id<"users">[],
-): Promise<UserWithRoles[]> {
-  if (userIds.length === 0) return [];
-
-  const users = await ctx.db
-    .query("users")
-    .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("_id"), id))))
-    .collect();
-
-  const enrichedUsers = await enrichWithRelations(ctx, users, {
-    userRoles: { table: "userRoles", foreignKeyField: "userId" },
-  });
-
-  const allUserRoles = enrichedUsers.flatMap((u) => u.userRoles);
-  const roleIds = Array.from(new Set(allUserRoles.map((ur) => ur.roleId)));
-  const roles = await ctx.db
-    .query("roles")
-    .filter((q) => q.or(...roleIds.map((id) => q.eq(q.field("_id"), id))))
-    .collect();
-
-  const rolesMap = toIdMap(roles);
-
-  // Enrich users with roles
-  return enrichedUsers.map((enrichedUser) => {
-    const { userRoles, ...user } = enrichedUser;
-    const enrichedRoles = userRoles
-      .map((ur) => rolesMap.get(ur.roleId))
-      .filter((r): r is Doc<"roles"> => r !== undefined);
-
-    return {
-      ...user,
-      roles: enrichedRoles,
-      roleNames: enrichedRoles.map((r) => r.name),
-    };
-  });
 }

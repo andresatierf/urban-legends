@@ -29,7 +29,7 @@ export default function TournamentManagerSubmissions() {
   const reject = useMutation(api.submissions.reject);
   const remove = useMutation(api.submissions.remove);
 
-  const submissions = useQuery(api.tournamentManager.getSubmissions, {});
+  const submissions = useQuery(api.role.tournamentManager.getSubmissions, {});
 
   // Filter and sort submissions
   const filteredSubmissions = useMemo(() => {

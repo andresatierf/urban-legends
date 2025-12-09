@@ -1,10 +1,10 @@
 import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
-import { query } from "./_generated/server";
-import { extractDateFromISO, nowUTC } from "./lib/dates";
-import { enrichWithRelations } from "./lib/helpers";
-import { hasMinimumRole, validateMinimumRole } from "./roles";
-import { getCurrentUserOrThrow } from "./users";
+import type { Doc, Id } from "../_generated/dataModel";
+import { query } from "../_generated/server";
+import { extractDateFromISO, nowUTC } from "../lib/dates";
+import { enrichWithRelations } from "../lib/helpers";
+import { hasMinimumRole, validateMinimumRole } from "../roles";
+import { getCurrentUserOrThrow } from "../users";
 
 /**
  * Get the count of pending submissions for tournaments assigned to this manager.
@@ -22,17 +22,12 @@ export const getPendingCount = query({
       return 0;
     }
 
-    // TODO: Filter by assigned tournaments once spec 11 is implemented
-    // For now, show all pending submissions
-
-    // Count pending individual submissions
     const pendingIndividual = await ctx.db
       .query("submissions")
       .withIndex("by_state", (q) => q.eq("state", "pending"))
       .filter((q) => q.eq(q.field("submissionType"), "individual"))
       .collect();
 
-    // Count pending submission groups
     const pendingGroups = await ctx.db
       .query("submissionGroups")
       .withIndex("by_state", (q) => q.eq("state", "pending"))
@@ -52,12 +47,10 @@ export const getDashboardStats = query({
 
     validateMinimumRole(user, "tournament_manager");
 
-    // Get all tournaments (tournament managers can access all)
     const tournaments = await ctx.db.query("tournaments").collect();
 
     const now = extractDateFromISO(nowUTC());
 
-    // Categorize tournaments
     const activeTournaments = tournaments.filter(
       (t) => t.startDate <= now && t.endDate >= now,
     );
@@ -126,7 +119,6 @@ export const getRecentActivity = query({
 
     validateMinimumRole(user, "tournament_manager");
 
-    // Get all tournaments
     const tournaments = await ctx.db.query("tournaments").collect();
 
     const activities: Array<{
@@ -136,7 +128,6 @@ export const getRecentActivity = query({
       tournamentName?: string;
     }> = [];
 
-    // Get recent teams and submissions for each tournament
     for (const tournament of tournaments) {
       const teams = await ctx.db
         .query("teams")
@@ -154,7 +145,6 @@ export const getRecentActivity = query({
         });
       }
 
-      // Get recent submissions
       for (const team of teams) {
         const submissions = await ctx.db
           .query("submissions")
@@ -176,7 +166,6 @@ export const getRecentActivity = query({
       }
     }
 
-    // Sort by timestamp and limit
     activities.sort((a, b) => b.timestamp - a.timestamp);
     return activities.slice(0, limit);
   },

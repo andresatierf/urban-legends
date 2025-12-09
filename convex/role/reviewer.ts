@@ -1,9 +1,9 @@
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
-import { query } from "./_generated/server";
-import { batchGetDocuments, toIdMap } from "./lib/helpers";
-import { hasMinimumRole, validateMinimumRole } from "./roles";
-import { getCurrentUserOrThrow } from "./users";
+import type { Id } from "../_generated/dataModel";
+import { query } from "../_generated/server";
+import { batchGetDocuments, toIdMap } from "../lib/helpers";
+import { hasMinimumRole, validateMinimumRole } from "../roles";
+import { getCurrentUserOrThrow } from "../users";
 
 /**
  * Get the count of pending submissions (both individual and groups) for reviewers.
@@ -14,19 +14,16 @@ export const getPendingCount = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Validate user has reviewer or admin role
     if (!hasMinimumRole(user, "reviewer")) {
       return 0;
     }
 
-    // Count all pending individual submissions
     const pendingIndividual = await ctx.db
       .query("submissions")
       .withIndex("by_state", (q) => q.eq("state", "pending"))
       .filter((q) => q.eq(q.field("submissionType"), "individual"))
       .collect();
 
-    // Count all pending submission groups (team activities)
     const pendingGroups = await ctx.db
       .query("submissionGroups")
       .withIndex("by_state", (q) => q.eq("state", "pending"))
@@ -50,19 +47,16 @@ export const getPendingSubmissions = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Validate user has reviewer or admin role
     validateMinimumRole(user, "reviewer");
 
     const limit = args.limit ?? 20;
     const offset = args.offset ?? 0;
 
-    // Get pending individual submissions
     let individualQuery = ctx.db
       .query("submissions")
       .withIndex("by_state", (q) => q.eq("state", "pending"))
       .filter((q) => q.eq(q.field("submissionType"), "individual"));
 
-    // Get pending submission groups
     let groupQuery = ctx.db
       .query("submissionGroups")
       .withIndex("by_state", (q) => q.eq("state", "pending"));
@@ -128,14 +122,12 @@ export const getPendingSubmissions = query({
     const tournamentMap = toIdMap(tournaments);
     const userMap = toIdMap(users);
 
-    // Enrich individual submissions with context
     const enrichedIndividual = individualSubmissions
       .map((submission) => {
         const team = teamMap.get(submission.teamId);
         const tournament = tournamentMap.get(submission.tournamentId);
         const submitter = userMap.get(submission.userId);
 
-        // Skip submissions with missing data (data integrity issue)
         if (!team || !tournament || !submitter) {
           return null;
         }
@@ -148,30 +140,26 @@ export const getPendingSubmissions = query({
           tournament,
           submitter,
           date: submission.date,
-          createdAt: submission.date, // Use date for sorting
+          createdAt: submission.date,
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
 
-    // Enrich submission groups with context
     const enrichedGroups = (
       await Promise.all(
         submissionGroups.map(async (group) => {
           const team = teamMap.get(group.teamId);
           const tournament = tournamentMap.get(group.tournamentId);
 
-          // Skip groups with missing data (data integrity issue)
           if (!team || !tournament) {
             return null;
           }
 
-          // Get all submissions in this group
           const groupSubmissions = await ctx.db
             .query("submissions")
             .withIndex("by_group", (q) => q.eq("submissionGroupId", group._id))
             .collect();
 
-          // Get submitters using batchGetByIds
           const userIds = groupSubmissions.map((s) => s.userId);
           const submitters = await batchGetDocuments(ctx, "users", userIds);
 
@@ -190,12 +178,10 @@ export const getPendingSubmissions = query({
       )
     ).filter((item): item is NonNullable<typeof item> => item !== null);
 
-    // Combine and sort by date (most recent first)
     const combined = [...enrichedIndividual, ...enrichedGroups].sort((a, b) =>
       b.createdAt.localeCompare(a.createdAt),
     );
 
-    // Apply pagination
     const paginated = combined.slice(offset, offset + limit);
 
     return {
@@ -214,16 +200,13 @@ export const getStatistics = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Validate user has reviewer or admin role
     validateMinimumRole(user, "reviewer");
 
-    // Get all submissions managed by this reviewer
     const reviewedSubmissions = await ctx.db
       .query("submissions")
       .filter((q) => q.eq(q.field("managedBy"), user._id))
       .collect();
 
-    // Get all submission groups managed by this reviewer
     const reviewedGroups = await ctx.db
       .query("submissionGroups")
       .filter((q) => q.eq(q.field("managedBy"), user._id))
@@ -249,7 +232,6 @@ export const getStatistics = query({
     const approvalRate =
       totalReviews > 0 ? Math.round((approved / totalReviews) * 100) : 0;
 
-    // Get recent reviews (last 20)
     const recentReviews = [...reviewedSubmissions, ...reviewedGroups]
       .sort((a, b) => {
         const aDate = "updatedAt" in a ? a.updatedAt : a.date;
@@ -258,11 +240,9 @@ export const getStatistics = query({
       })
       .slice(0, 20);
 
-    // Enrich recent reviews with context
     const enrichedRecent = await Promise.all(
       recentReviews.map(async (item) => {
         if ("submissionType" in item) {
-          // It's a submission
           const [team, tournament] = await Promise.all([
             ctx.db.get(item.teamId),
             ctx.db.get(item.tournamentId),
@@ -277,7 +257,7 @@ export const getStatistics = query({
             tournament,
           };
         }
-        // It's a submission group
+
         const [team, tournament] = await Promise.all([
           ctx.db.get(item.teamId),
           ctx.db.get(item.tournamentId),

@@ -142,7 +142,7 @@ function useSidebarItems(
             href: "/manage/submissions",
             icon: FileText,
             badge: {
-              query: api.admin.getAllPendingCount,
+              query: api.role.admin.getAllPendingCount,
               color: "secondary",
             },
             roles: ["admin", "tournament_manager"], // Allow tournament_manager
@@ -188,7 +188,7 @@ function useSidebarItems(
             href: "/manage/submissions",
             icon: Calendar,
             badge: {
-              query: api.tournamentManager.getPendingCount,
+              query: api.role.tournamentManager.getPendingCount,
               color: "secondary",
               tooltip: tTooltip("pendingSubmissions"),
             },
@@ -198,7 +198,7 @@ function useSidebarItems(
             href: "/tournament-manager/approvals",
             icon: CheckSquare,
             badge: {
-              query: api.tournamentManager.getPendingCount,
+              query: api.role.tournamentManager.getPendingCount,
               color: "secondary",
               tooltip: tTooltip("pendingSubmissions"),
             },
@@ -229,7 +229,7 @@ function useSidebarItems(
             href: "/reviewer",
             icon: FileCheck,
             badge: {
-              query: api.reviewer.getPendingCount,
+              query: api.role.reviewer.getPendingCount,
               color: "secondary",
             },
             exact: true,

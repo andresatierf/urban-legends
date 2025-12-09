@@ -83,7 +83,6 @@ export function hasMinimumRole(
     throw new Error(`Unknown role: ${minimumRole}`);
   }
 
-  // Check if user has any role with equal or higher privilege (lower hierarchy number)
   return user.roleNames.some((roleName) => {
     const userRoleHierarchy = ROLE_HIERARCHY.get(roleName);
     return (

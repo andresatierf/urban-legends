@@ -1,4 +1,4 @@
-import { toMap } from "../../src/lib/utils";
+import { toMap } from "../../common/utils";
 import type { DataModel, Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 
@@ -16,7 +16,6 @@ export function toIdMap<T extends { _id: Id<any> }>(
   items: T[],
 ): Map<T["_id"], T> {
   return toMap(items, "_id");
-  // return new Map(items.map((item) => [item[key], item]));
 }
 
 /**
@@ -39,12 +38,12 @@ export function groupBy<T, K>(items: T[], keyFn: (item: T) => K): Map<K, T[]> {
 /**
  * Batch fetches documents by IDs with efficient querying and returns them as an array.
  * Automatically deduplicates IDs.
- * Filters out any documents that don't exist, preserving order.
+ * Filters out any documents that don't exist.
  *
  * @param ctx - Query or Mutation context
  * @param tableName - Name of the table to query
  * @param ids - Array of document IDs to fetch
- * @returns Array of documents (non-null only), in same order as input IDs
+ * @returns Array of documents (non-null only)
  */
 export async function batchGetDocuments<T extends keyof DataModel>(
   ctx: QueryCtx | MutationCtx,

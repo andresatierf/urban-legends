@@ -23,7 +23,7 @@ export default defineSchema({
       }),
       teamExerciseThreshold: v.number(),
     }),
-    maxSubmissionsPerDay: v.optional(v.number()), // Limit submissions per user per day
+    maxSubmissionsPerDay: v.optional(v.number()),
   }).index("by_name", ["name"]),
 
   teams: defineTable({
@@ -52,7 +52,7 @@ export default defineSchema({
     name: v.string(),
     displayName: v.string(),
     description: v.optional(v.string()),
-    hierarchy: v.number(), // Lower number = more access (0 = highest)
+    hierarchy: v.number(),
   }).index("by_name", ["name"]),
 
   userRoles: defineTable({
@@ -80,44 +80,44 @@ export default defineSchema({
     ),
     createdBy: v.id("users"),
     managedBy: v.optional(v.id("users")),
-    // Scoring fields
+
     tier: v.union(v.literal("base"), v.literal("advanced")),
-    pointsEarned: v.number(), // Calculated when approved
-    submissionGroupId: v.optional(v.id("submissionGroups")), // NEW - reference to group
+    pointsEarned: v.number(),
+    submissionGroupId: v.optional(v.id("submissionGroups")),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "date"])
     .index("by_team", ["teamId"])
     .index("by_team_and_user", ["teamId", "userId"])
     .index("by_team_and_date", ["teamId", "date"])
-    .index("by_team_and_type", ["teamId", "submissionType"]) // NEW
+    .index("by_team_and_type", ["teamId", "submissionType"])
     .index("by_tournament_and_date", ["tournamentId", "date"])
     .index("by_state", ["state"])
     .index("by_user_and_state", ["userId", "state"])
-    .index("by_group", ["submissionGroupId"]), // NEW
+    .index("by_group", ["submissionGroupId"]),
 
   submissionGroups: defineTable({
     teamId: v.id("teams"),
     tournamentId: v.id("tournaments"),
-    date: v.string(), // YYYY-MM-DD
+    date: v.string(),
     state: v.union(
       v.literal("pending"),
       v.literal("approved"),
       v.literal("rejected"),
       v.literal("deleted"),
     ),
-    tier: v.union(v.literal("base"), v.literal("advanced")), // Derived from submissions (highest tier wins)
-    participantCount: v.number(), // How many members submitted for this team activity
-    totalTeamMembers: v.number(), // Team size at time of submission
-    participationRate: v.number(), // participantCount / totalTeamMembers
-    isTeamExercise: v.boolean(), // participationRate >= threshold
-    pointsEarned: v.number(), // Total points for team (calculated on approval)
-    managedBy: v.optional(v.id("users")), // Admin who approved/rejected
-    createdAt: v.string(), // First submission in group
-    updatedAt: v.string(), // Last modification
+    tier: v.union(v.literal("base"), v.literal("advanced")),
+    participantCount: v.number(),
+    totalTeamMembers: v.number(),
+    participationRate: v.number(),
+    isTeamExercise: v.boolean(),
+    pointsEarned: v.number(),
+    managedBy: v.optional(v.id("users")),
+    createdAt: v.string(),
+    updatedAt: v.string(),
   })
     .index("by_team", ["teamId"])
-    .index("by_team_and_date", ["teamId", "date"]) // Ensures uniqueness: one group per team per date
+    .index("by_team_and_date", ["teamId", "date"])
     .index("by_tournament_and_date", ["tournamentId", "date"])
     .index("by_state", ["state"]),
 
@@ -141,7 +141,7 @@ export default defineSchema({
       v.literal("cancelled"),
       v.literal("expired"),
     ),
-    expiresAt: v.string(), // ISO date
+    expiresAt: v.string(),
     createdAt: v.string(),
     respondedAt: v.optional(v.string()),
   })
@@ -165,7 +165,7 @@ export default defineSchema({
       v.literal("rejected"),
       v.literal("cancelled"),
     ),
-    message: v.optional(v.string()), // User's message to team
+    message: v.optional(v.string()),
     createdAt: v.string(),
     respondedAt: v.optional(v.string()),
     respondedBy: v.optional(v.id("users")),

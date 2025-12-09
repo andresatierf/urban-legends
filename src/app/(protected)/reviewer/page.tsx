@@ -62,7 +62,7 @@ export default function ReviewerDashboard() {
   }, [user, router]);
 
   // Queries
-  const pendingData = useQuery(api.reviewer.getPendingSubmissions, {
+  const pendingData = useQuery(api.role.reviewer.getPendingSubmissions, {
     tournamentId: selectedTournament === "all" ? undefined : selectedTournament,
   });
 

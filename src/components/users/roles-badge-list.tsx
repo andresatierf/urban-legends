@@ -31,7 +31,7 @@ export function RolesBadgeList({
   onRemove,
   className,
 }: RolesBadgeListProps) {
-  const rolesData = useQuery(api.admin.listRoles);
+  const rolesData = useQuery(api.role.admin.listRoles);
 
   // Create a map of role name to role data
   const roleMap = useMemo(() => {

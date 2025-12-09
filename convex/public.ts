@@ -9,10 +9,8 @@ import { enrichWithRelations } from "./lib/helpers";
 export const getPublicLeaderboards = query({
   args: {},
   handler: async (ctx) => {
-    // Get all tournaments
     const tournaments = await ctx.db.query("tournaments").collect();
 
-    // Filter to active tournaments (ongoing tournaments)
     const now = new Date().toISOString();
     const activeTournaments = tournaments.filter(
       (t) => t.startDate <= now && t.endDate >= now,
@@ -80,10 +78,8 @@ export const getLiveTournamentFeed = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 20;
 
-    // Get all tournaments
     const tournaments = await ctx.db.query("tournaments").collect();
 
-    // Filter to active tournaments
     const now = new Date().toISOString();
     const activeTournaments = tournaments.filter(
       (t) => t.startDate <= now && t.endDate >= now,
@@ -95,14 +91,12 @@ export const getLiveTournamentFeed = query({
 
     const activeTournamentIds = new Set(activeTournaments.map((t) => t._id));
 
-    // Get recent approved submissions from active tournaments
     const allSubmissions = await ctx.db
       .query("submissions")
       .withIndex("by_state", (q) => q.eq("state", "approved"))
       .order("desc")
-      .take(limit * 2); // Take more to filter
+      .take(limit * 2);
 
-    // Filter to submissions from active tournaments and enrich
     const filteredSubmissions = allSubmissions
       .filter((s) => activeTournamentIds.has(s.tournamentId))
       .slice(0, limit);

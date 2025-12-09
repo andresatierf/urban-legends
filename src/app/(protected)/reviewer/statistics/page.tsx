@@ -35,7 +35,7 @@ export default function ReviewStatistics() {
   }, [user, router]);
 
   // Query
-  const statistics = useQuery(api.reviewer.getStatistics);
+  const statistics = useQuery(api.role.reviewer.getStatistics);
 
   // Loading state
   if (!statistics) {

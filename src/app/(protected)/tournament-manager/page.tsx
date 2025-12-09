@@ -20,9 +20,9 @@ import { api } from "../../../../convex/_generated/api";
 
 export default function TournamentManagerDashboard() {
   const { user } = useUser();
-  const stats = useQuery(api.tournamentManager.getDashboardStats);
+  const stats = useQuery(api.role.tournamentManager.getDashboardStats);
   const tournaments = useQuery(api.tournaments.list, {});
-  const activity = useQuery(api.tournamentManager.getRecentActivity, {
+  const activity = useQuery(api.role.tournamentManager.getRecentActivity, {
     limit: 30,
   });
 
