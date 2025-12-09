@@ -1,6 +1,5 @@
-import type { Doc } from "./_generated/dataModel";
 import { query } from "./_generated/server";
-import { enrichWithRelations, groupBy, toIdMap } from "./lib/helpers";
+import { enrichWithRelations } from "./lib/helpers";
 import { getCurrentUserOrThrow } from "./users";
 
 /**
@@ -106,64 +105,34 @@ export const getDashboardData = query({
         q.or(...teamIds.map((id) => q.eq(q.field("_id"), id as string))),
       )
       .collect();
-    const teamsMap = toIdMap(teams);
 
-    const tournamentIds = teams.map((team) => team.tournamentId);
+    // Enrich teams with tournament, members, and submissions in parallel
+    const enrichedTeams = await enrichWithRelations(ctx, teams, {
+      tournament: {
+        table: "tournaments",
+        foreignKey: (team) => team.tournamentId,
+      },
+      members: { table: "teamMembers", foreignKeyField: "teamId" },
+      submissions: { table: "submissions", foreignKeyField: "teamId" },
+    });
 
-    const tournaments = await ctx.db
-      .query("tournaments")
-      .filter((q) =>
-        q.or(...tournamentIds.map((id) => q.eq(q.field("_id"), id as string))),
-      )
-      .collect();
-    const tournamentsMap = toIdMap(tournaments);
+    const teamsWithData = enrichedTeams.map((enrichedTeam) => {
+      const approvedSubmissions = enrichedTeam.submissions.filter(
+        (s) => s.state === "approved",
+      );
 
-    const teamMembers = await ctx.db
-      .query("teamMembers")
-      .filter((q) =>
-        q.or(
-          ...Array.from(teamsMap.keys()).map((id) =>
-            q.eq(q.field("teamId"), id as string),
-          ),
-        ),
-      )
-      .collect();
-    const teamMembersMap = groupBy(teamMembers, (tm) => tm.teamId);
+      // Extract base team properties
+      const { tournament, members, submissions, ...team } = enrichedTeam;
 
-    const submissions = await ctx.db
-      .query("submissions")
-      .filter((q) =>
-        q.or(
-          ...Array.from(teamsMap.keys()).map((id) =>
-            q.eq(q.field("teamId"), id as string),
-          ),
-        ),
-      )
-      .collect();
-    const submissionsMap = groupBy(submissions, (s) => s.teamId);
-
-    const teamsWithData = teams
-      .map((team) => {
-        const tournament = tournamentsMap.get(team.tournamentId);
-
-        const members = teamMembersMap.get(team._id) || [];
-
-        const submissions = submissionsMap.get(team._id) || [];
-
-        const approvedSubmissions = submissions.filter(
-          (s) => s.state === "approved",
-        );
-
-        return {
-          team,
-          tournament,
-          membersCount: members.length,
-          submissionsCount: submissions.length,
-          approvedCount: approvedSubmissions.length,
-          points: team.points,
-        };
-      })
-      .filter((t) => t !== null);
+      return {
+        team,
+        tournament,
+        membersCount: members.length,
+        submissionsCount: submissions.length,
+        approvedCount: approvedSubmissions.length,
+        points: team.points,
+      };
+    });
 
     // Get pending join requests for captain's teams
     const teamIdsSet = new Set(teamIds);
@@ -177,21 +146,20 @@ export const getDashboardData = query({
     );
 
     // Enrich join requests with user and team data in parallel
-    const enrichedJoinRequests: Array<
-      Doc<"joinRequests"> & {
-        user: Doc<"users"> | null;
-        team: Doc<"teams"> | null;
-      }
-    > = await enrichWithRelations(ctx, relevantJoinRequests, {
-      user: {
-        table: "users",
-        foreignKey: (jr) => jr.userId,
+    const enrichedJoinRequests = await enrichWithRelations(
+      ctx,
+      relevantJoinRequests,
+      {
+        user: {
+          table: "users",
+          foreignKey: (jr) => jr.userId,
+        },
+        team: {
+          table: "teams",
+          foreignKey: (jr) => jr.teamId,
+        },
       },
-      team: {
-        table: "teams",
-        foreignKey: (jr) => jr.teamId,
-      },
-    });
+    );
 
     // Get pending invitations sent by this captain
     const allPendingInvitations = await ctx.db
@@ -204,21 +172,20 @@ export const getDashboardData = query({
     );
 
     // Enrich invitations with invitedUser and team data in parallel
-    const enrichedInvitations: Array<
-      Doc<"teamInvitations"> & {
-        invitedUser: Doc<"users"> | null;
-        team: Doc<"teams"> | null;
-      }
-    > = await enrichWithRelations(ctx, relevantInvitations, {
-      invitedUser: {
-        table: "users",
-        foreignKey: (inv) => inv.invitedUserId,
+    const enrichedInvitations = await enrichWithRelations(
+      ctx,
+      relevantInvitations,
+      {
+        invitedUser: {
+          table: "users",
+          foreignKey: (inv) => inv.invitedUserId,
+        },
+        team: {
+          table: "teams",
+          foreignKey: (inv) => inv.teamId,
+        },
       },
-      team: {
-        table: "teams",
-        foreignKey: (inv) => inv.teamId,
-      },
-    });
+    );
 
     return {
       teams: teamsWithData,
@@ -254,8 +221,18 @@ export const getTeamsComparison = query({
       .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))))
       .collect();
 
-    const tournamentIds = Array.from(new Set(teams.map((t) => t.tournamentId)));
+    // Enrich teams with tournament, members, and submissions in parallel
+    const enrichedTeams = await enrichWithRelations(ctx, teams, {
+      tournament: {
+        table: "tournaments",
+        foreignKey: (team) => team.tournamentId,
+      },
+      members: { table: "teamMembers", foreignKeyField: "teamId" },
+      submissions: { table: "submissions", foreignKeyField: "teamId" },
+    });
 
+    // For ranking, we need all teams in these tournaments
+    const tournamentIds = Array.from(new Set(teams.map((t) => t.tournamentId)));
     const tournaments = await ctx.db
       .query("tournaments")
       .filter((q) =>
@@ -263,83 +240,57 @@ export const getTeamsComparison = query({
       )
       .collect();
 
-    const tournamentMap = toIdMap(tournaments);
+    const enrichedTournaments = await enrichWithRelations(ctx, tournaments, {
+      teams: { table: "teams", foreignKeyField: "tournamentId" },
+    });
 
-    const tournamentTeams = await ctx.db
-      .query("teams")
-      .filter((q) =>
-        q.or(...tournamentIds.map((id) => q.eq(q.field("tournamentId"), id))),
-      )
-      .collect();
-    const tournamentTeamsByTournamentIdMap = groupBy(
-      tournamentTeams,
-      (t) => t.tournamentId,
+    const tournamentTeamsByTournamentIdMap = new Map(
+      enrichedTournaments.map((t) => [t._id, t.teams]),
     );
-
-    const members = await ctx.db
-      .query("teamMembers")
-      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
-      .collect();
-
-    const membersByTeamIdMap = groupBy(members, (m) => m.teamId);
-
-    const submissions = await ctx.db
-      .query("submissions")
-      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
-      .collect();
-
-    const submissionsByTeamIdMap = groupBy(submissions, (s) => s.teamId);
 
     // Get detailed metrics for each team
-    const teamsComparison = await Promise.all(
-      teams.map(async (team) => {
-        // Get tournament
-        const tournament = tournamentMap.get(team.tournamentId);
+    const teamsComparison = enrichedTeams.map((enrichedTeam) => {
+      const approvedSubmissions = enrichedTeam.submissions.filter(
+        (s) => s.state === "approved",
+      );
+      const pendingSubmissions = enrichedTeam.submissions.filter(
+        (s) => s.state === "pending",
+      );
 
-        // Get members
-        const members = membersByTeamIdMap.get(team._id) || [];
+      // Calculate approval rate
+      const totalReviewed =
+        approvedSubmissions.length +
+        enrichedTeam.submissions.filter((s) => s.state === "rejected").length;
+      const approvalRate =
+        totalReviewed > 0
+          ? Math.round((approvedSubmissions.length / totalReviewed) * 100)
+          : 0;
 
-        // Get all submissions
-        const submissions = submissionsByTeamIdMap.get(team._id) || [];
+      // Get tournament rank (simplified - just count teams with more points)
+      const allTeamsInTournament =
+        tournamentTeamsByTournamentIdMap.get(enrichedTeam.tournamentId) || [];
 
-        const approvedSubmissions = submissions.filter(
-          (s) => s.state === "approved",
-        );
-        const pendingSubmissions = submissions.filter(
-          (s) => s.state === "pending",
-        );
+      const rank =
+        allTeamsInTournament.filter((t) => t.points > enrichedTeam.points)
+          .length + 1;
 
-        // Calculate approval rate
-        const totalReviewed =
-          approvedSubmissions.length +
-          submissions.filter((s) => s.state === "rejected").length;
-        const approvalRate =
-          totalReviewed > 0
-            ? Math.round((approvedSubmissions.length / totalReviewed) * 100)
-            : 0;
+      // Extract base team properties
+      const { tournament, members, submissions, ...team } = enrichedTeam;
 
-        // Get tournament rank (simplified - just count teams with more points)
-        const allTeamsInTournament =
-          tournamentTeamsByTournamentIdMap.get(team.tournamentId) || [];
+      return {
+        team,
+        tournament,
+        membersCount: members.length,
+        totalSubmissions: submissions.length,
+        approvedSubmissions: approvedSubmissions.length,
+        pendingSubmissions: pendingSubmissions.length,
+        approvalRate,
+        points: team.points,
+        rank,
+        totalTeamsInTournament: allTeamsInTournament.length,
+      };
+    });
 
-        const rank =
-          allTeamsInTournament.filter((t) => t.points > team.points).length + 1;
-
-        return {
-          team,
-          tournament,
-          membersCount: members.length,
-          totalSubmissions: submissions.length,
-          approvedSubmissions: approvedSubmissions.length,
-          pendingSubmissions: pendingSubmissions.length,
-          approvalRate,
-          points: team.points,
-          rank,
-          totalTeamsInTournament: allTeamsInTournament.length,
-        };
-      }),
-    );
-
-    return teamsComparison.filter((t) => t !== null);
+    return teamsComparison;
   },
 });

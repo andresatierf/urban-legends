@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
-import { groupBy } from "./lib/helpers";
+import { enrichWithRelations } from "./lib/helpers";
 import { enrichTeamsWithMembers } from "./teams";
 
 /**
@@ -19,22 +19,19 @@ export const getPublicLeaderboards = query({
       (t) => t.startDate <= now && t.endDate >= now,
     );
 
-    const activeTournamentIds = activeTournaments.map((t) => t._id);
+    // Enrich active tournaments with their teams in parallel
+    const enrichedTournaments = await enrichWithRelations(
+      ctx,
+      activeTournaments,
+      {
+        teams: { table: "teams", foreignKeyField: "tournamentId" },
+      },
+    );
 
-    const teams = await ctx.db
-      .query("teams")
-      .filter((q) =>
-        q.or(
-          ...activeTournamentIds.map((id) => q.eq(q.field("tournamentId"), id)),
-        ),
-      )
-      .collect();
+    // Get all teams and enrich with member counts
+    const allTeams = enrichedTournaments.flatMap((t) => t.teams);
+    const teamIds = allTeams.map((team) => team._id);
 
-    const tournamentTeamsMap = groupBy(teams, (t) => t.tournamentId);
-
-    const teamIds = teams.map((team) => team._id);
-
-    // Enrich all teams with member counts using helper
     const teamsWithMembersData = await enrichTeamsWithMembers(ctx, teamIds);
     const teamMemberCountMap = new Map(
       teamsWithMembersData.map((data) => [data.team._id, data.memberCount]),
@@ -42,9 +39,9 @@ export const getPublicLeaderboards = query({
 
     // Get leaderboard data for each active tournament
     const leaderboards = await Promise.all(
-      activeTournaments.map(async (tournament) => {
-        // Get all teams in this tournament
-        const teams = tournamentTeamsMap.get(tournament._id) || [];
+      enrichedTournaments.map(async (enrichedTournament) => {
+        // Extract base tournament properties
+        const { teams, ...tournament } = enrichedTournament;
 
         // Sort teams by points (descending)
         const sortedTeams = teams.sort((a, b) => b.points - a.points);

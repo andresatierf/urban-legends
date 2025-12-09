@@ -7,7 +7,7 @@ import {
   type QueryCtx,
   query,
 } from "./_generated/server";
-import { batchGetDocuments, groupBy, toIdMap } from "./lib/helpers";
+import { batchGetDocuments, enrichWithRelations, toIdMap } from "./lib/helpers";
 
 export const list = query({
   args: { userIds: v.optional(v.array(v.id("users"))) },
@@ -270,22 +270,18 @@ export async function getUsersWithRoles(
 ): Promise<UserWithRoles[]> {
   if (userIds.length === 0) return [];
 
-  // Fetch all users
+  // Fetch all users and enrich with user roles in parallel
   const users = await ctx.db
     .query("users")
     .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("_id"), id))))
     .collect();
 
-  // Fetch all user roles for these users in one query
-  const allUserRoles = await ctx.db
-    .query("userRoles")
-    .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("userId"), id))))
-    .collect();
+  const enrichedUsers = await enrichWithRelations(ctx, users, {
+    userRoles: { table: "userRoles", foreignKeyField: "userId" },
+  });
 
-  // Group user roles by user ID using helper
-  const userRolesByUserId = groupBy(allUserRoles, (ur) => ur.userId);
-
-  // Get unique role IDs
+  // Get all unique role IDs and fetch roles
+  const allUserRoles = enrichedUsers.flatMap((u) => u.userRoles);
   const roleIds = Array.from(new Set(allUserRoles.map((ur) => ur.roleId)));
   const roles = await ctx.db
     .query("roles")
@@ -295,16 +291,16 @@ export async function getUsersWithRoles(
   const rolesMap = toIdMap(roles);
 
   // Enrich users with roles
-  return users.map((user) => {
-    const userRoleRecords = userRolesByUserId.get(user._id) || [];
-    const userRoles = userRoleRecords
+  return enrichedUsers.map((enrichedUser) => {
+    const { userRoles, ...user } = enrichedUser;
+    const enrichedRoles = userRoles
       .map((ur) => rolesMap.get(ur.roleId))
       .filter((r): r is Doc<"roles"> => r !== undefined);
 
     return {
       ...user,
-      roles: userRoles,
-      roleNames: userRoles.map((r) => r.name),
+      roles: enrichedRoles,
+      roleNames: enrichedRoles.map((r) => r.name),
     };
   });
 }

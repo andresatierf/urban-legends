@@ -3,7 +3,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, type QueryCtx, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
-import { groupBy, toIdMap } from "./lib/helpers";
+import { enrichWithRelations, toIdMap } from "./lib/helpers";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
 import { upsertSubmissionGroup } from "./submissionGroups";
 import { recalculateSubmissionPoints } from "./submissions";
@@ -1002,24 +1002,20 @@ export async function enrichTeamsWithMembers(
     members?: Array<Doc<"users"> & { memberRole?: "captain" | "member" }>;
   }>
 > {
-  // Fetch all teams
+  // Fetch all teams and enrich with team members in parallel
   const teams = await ctx.db
     .query("teams")
     .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))))
     .collect();
 
-  // Fetch all team members for these teams in one query
-  const allTeamMembers = await ctx.db
-    .query("teamMembers")
-    .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
-    .collect();
-
-  // Group team members by team ID using helper
-  const membersByTeamId = groupBy(allTeamMembers, (member) => member.teamId);
+  const enrichedTeams = await enrichWithRelations(ctx, teams, {
+    teamMembers: { table: "teamMembers", foreignKeyField: "teamId" },
+  });
 
   // If we need user details, fetch all users at once
   let usersMap: Map<Id<"users">, Doc<"users">> | undefined;
   if (options?.includeMemberDetails) {
+    const allTeamMembers = enrichedTeams.flatMap((t) => t.teamMembers);
     const allUserIds = allTeamMembers.map((m) => m.userId);
     const users = await ctx.db
       .query("users")
@@ -1029,14 +1025,14 @@ export async function enrichTeamsWithMembers(
   }
 
   // Enrich each team
-  return teams.map((team) => {
-    const members = membersByTeamId.get(team._id) || [];
+  return enrichedTeams.map((enrichedTeam) => {
+    const { teamMembers, ...team } = enrichedTeam;
     let memberDetails:
       | Array<Doc<"users"> & { memberRole?: "captain" | "member" }>
       | undefined;
 
     if (options?.includeMemberDetails && usersMap) {
-      memberDetails = members
+      memberDetails = teamMembers
         .map((member) => {
           const user = usersMap?.get(member.userId);
           if (!user) return null;
@@ -1049,7 +1045,7 @@ export async function enrichTeamsWithMembers(
 
     return {
       team,
-      memberCount: members.length,
+      memberCount: teamMembers.length,
       members: memberDetails,
     };
   });

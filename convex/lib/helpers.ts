@@ -72,28 +72,39 @@ export async function batchGetDocuments<T extends keyof DataModel>(
 }
 
 /**
- * Specification for enriching items with related documents.
- * Supports both many-to-one and one-to-many relationships.
+ * Many-to-one enrichment spec: Single related document (e.g., team -> tournament)
+ * Uses generic function type to allow proper item type inference at call site.
  */
-export type EnrichmentSpec<TItem, TTable extends keyof DataModel> =
-  | {
-      // Many-to-one: Single related document (e.g., team -> tournament)
-      table: TTable;
-      foreignKey: (item: TItem) => Id<TTable>;
-    }
-  | {
-      // One-to-many: Array of related documents (e.g., team -> teamMembers[])
-      table: TTable;
-      foreignKeyField: keyof Doc<TTable>; // Field on related table that references parent
-      itemKey?: (item: TItem) => string; // Defaults to item._id
-    };
+type ManyToOneSpec<TTable extends keyof DataModel> = {
+  table: TTable;
+  foreignKey: (item: any) => Id<TTable>;
+};
+
+/**
+ * One-to-many enrichment spec: Array of related documents (e.g., team -> teamMembers[])
+ * Note: foreignKeyField uses string to allow proper type inference when used in specs.
+ * The table type constraint ensures the correct document type is returned.
+ */
+type OneToManySpec<TTable extends keyof DataModel> = {
+  table: TTable;
+  foreignKeyField: string; // Field on related table that references parent
+  itemKey?: (item: any) => string; // Defaults to item._id
+};
+
+/**
+ * Combined spec type with flexible constraint for inference.
+ * Uses string intersection to allow literal type inference.
+ */
+type AnyEnrichmentSpec =
+  | ManyToOneSpec<keyof DataModel & string>
+  | OneToManySpec<keyof DataModel & string>;
 
 /**
  * Helper type to extract table name from enrichment spec.
  */
-type ExtractTableType<T> = T extends { table: infer TTable }
-  ? TTable extends keyof DataModel
-    ? TTable
+type ExtractTable<TSpec> = TSpec extends { table: infer T }
+  ? T extends keyof DataModel
+    ? T
     : never
   : never;
 
@@ -102,18 +113,11 @@ type ExtractTableType<T> = T extends { table: infer TTable }
  * - Many-to-one (foreignKey): returns Doc<Table> | null
  * - One-to-many (foreignKeyField): returns Doc<Table>[]
  */
-type EnrichmentResultType<TSpec> = TSpec extends { foreignKey: any }
-  ? Doc<ExtractTableType<TSpec>> | null
-  : TSpec extends { foreignKeyField: any }
-    ? Doc<ExtractTableType<TSpec>>[]
+type EnrichmentResultType<TSpec> = TSpec extends { foreignKey: unknown }
+  ? Doc<ExtractTable<TSpec>> | null
+  : TSpec extends { foreignKeyField: unknown }
+    ? Doc<ExtractTable<TSpec>>[]
     : never;
-
-/**
- * Helper type for enriched result.
- */
-type EnrichedResult<TItem, TSpecs> = TItem & {
-  [K in keyof TSpecs]: EnrichmentResultType<TSpecs[K]>;
-};
 
 /**
  * Enriches items with multiple related documents in a single operation.
@@ -151,17 +155,19 @@ type EnrichedResult<TItem, TSpecs> = TItem & {
  */
 export async function enrichWithRelations<
   TItem,
-  TSpecs extends Record<string, EnrichmentSpec<TItem, any>>,
+  const TSpecs extends Record<string, AnyEnrichmentSpec>,
 >(
   ctx: QueryCtx | MutationCtx,
   items: TItem[],
   specs: TSpecs,
-): Promise<Array<EnrichedResult<TItem, TSpecs>>> {
+): Promise<
+  Array<TItem & { [K in keyof TSpecs]: EnrichmentResultType<TSpecs[K]> }>
+> {
   if (items.length === 0) return [];
 
   // Fetch all relations in parallel
   const enrichmentPromises = Object.entries(specs).map(
-    async ([key, spec]: [string, EnrichmentSpec<TItem, any>]) => {
+    async ([key, spec]: [string, AnyEnrichmentSpec]) => {
       // Check if this is a many-to-one or one-to-many relationship
       if ("foreignKey" in spec) {
         // Many-to-one: fetch related documents by their _id
@@ -183,7 +189,9 @@ export async function enrichWithRelations<
         .query(spec.table)
         .filter((q) =>
           q.or(
-            ...itemKeys.map((id) => q.eq(q.field(spec.foreignKeyField), id)),
+            ...itemKeys.map((id) =>
+              q.eq(q.field(spec.foreignKeyField as any), id),
+            ),
           ),
         )
         .collect();

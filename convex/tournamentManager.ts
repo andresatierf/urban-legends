@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { extractDateFromISO, nowUTC } from "./lib/dates";
-import { groupBy } from "./lib/helpers";
+import { enrichWithRelations } from "./lib/helpers";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -64,35 +64,31 @@ export const getDashboardStats = query({
     const upcomingTournaments = tournaments.filter((t) => t.startDate > now);
     const endedTournaments = tournaments.filter((t) => t.endDate < now);
 
-    const tournamentIds = tournaments.map((t) => t._id);
-    const teams = await ctx.db
-      .query("teams")
-      .filter((q) =>
-        q.or(...tournamentIds.map((id) => q.eq(q.field("tournamentId"), id))),
-      )
-      .collect();
+    // Enrich tournaments with teams in parallel
+    const enrichedTournaments = await enrichWithRelations(ctx, tournaments, {
+      teams: { table: "teams", foreignKeyField: "tournamentId" },
+    });
 
-    const teamsByTournamentId = groupBy(teams, (t) => t.tournamentId);
+    // Get all teams and enrich with submissions
+    const allTeams = enrichedTournaments.flatMap((t) => t.teams);
+    const enrichedTeams = await enrichWithRelations(ctx, allTeams, {
+      submissions: { table: "submissions", foreignKeyField: "teamId" },
+    });
 
-    const teamIds = teams.map((t) => t._id);
-    const submissions = await ctx.db
-      .query("submissions")
-      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
-      .collect();
-
-    const submissionsByTeamId = groupBy(submissions, (s) => s.teamId);
+    const teamSubmissionsMap = new Map(
+      enrichedTeams.map((t) => [t._id, t.submissions]),
+    );
 
     // Count teams and submissions across all tournaments
     let totalTeams = 0;
     let totalSubmissions = 0;
     let pendingSubmissions = 0;
 
-    for (const tournament of tournaments) {
-      const teams = teamsByTournamentId.get(tournament._id) || [];
-      totalTeams += teams.length;
+    for (const enrichedTournament of enrichedTournaments) {
+      totalTeams += enrichedTournament.teams.length;
 
-      for (const team of teams) {
-        const submissions = submissionsByTeamId.get(team._id) || [];
+      for (const team of enrichedTournament.teams) {
+        const submissions = teamSubmissionsMap.get(team._id) || [];
 
         totalSubmissions += submissions.length;
         pendingSubmissions += submissions.filter(
