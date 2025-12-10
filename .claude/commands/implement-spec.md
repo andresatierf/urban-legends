@@ -121,21 +121,11 @@ Work through each task systematically:
 
 ## Step 6: Commit Changes
 
-After implementing each major section (schema, backend, frontend), use the `/commit` command to create descriptive commits:
+After implementing each major section (schema, backend, frontend), use the SlashCommand tool to execute the `/commit` command:
 
 ```
-/commit
+Use SlashCommand tool with command: "/commit"
 ```
-
-The `/commit` command will:
-
-- Review changes with `git status` and `git diff`
-- Check recent commits to match the repository's commit style
-- Stage relevant files
-- Create a well-formatted commit message with proper scope and description
-- Automatically include the Claude Code footer
-
-**Example commit scopes:** `schema`, `backend`, `ui`, `pages`, `teams`, `leaderboard`
 
 **When to commit:**
 
@@ -145,7 +135,11 @@ The `/commit` command will:
 - After integrating features into pages
 - After fixing validation issues from Step 7
 
-**Note:** The `/commit` command handles all the commit formatting and conventions automatically. Just run it when you're ready to commit a logical section of work.
+**Important:**
+- Use the SlashCommand tool to invoke `/commit` - don't manually run git commands
+- The `/commit` command analyzes staged changes, matches repository commit style, and creates well-formatted commits automatically
+- Stage files with `git add` before running `/commit`
+- Create atomic commits for logical sections of work
 
 ## Step 7: Run Quality Checks and Validation
 
@@ -219,12 +213,8 @@ This is an iterative process. You must repeat these steps until CodeRabbit repor
 3. **Fix Issues Systematically**
 
    - Address each issue one by one
-   - Make atomic commits for each fix or group of related fixes
-   - Use descriptive commit messages: `fix: [description of what was fixed]`
-   - Examples:
-     - `fix: add null checks for user data access`
-     - `fix: improve error handling in team mutations`
-     - `fix: remove unused imports and variables`
+   - Stage fixes with `git add` then use SlashCommand tool with `/commit` for each fix or group of related fixes
+   - The `/commit` command will create appropriate fix messages based on the changes
 
 4. **Re-run CodeRabbit**
 
@@ -278,7 +268,7 @@ If any validation step fails:
 
 1. **Add issues to todo list** - Use TodoWrite to track each issue
 2. **Fix systematically** - Address each issue one by one
-3. **Commit fixes** - Make atomic commits for fixes
+3. **Commit fixes** - Stage changes with `git add`, then use SlashCommand tool with `/commit`
 4. **Re-run validation** - Ensure all checks pass
 
 ### 7.5: Final Validation Summary
@@ -564,22 +554,22 @@ You would:
 3. Change directory to worktree: `cd ../urban-legends-team-joining`
 4. Create task list with ~15-20 tasks
 5. Implement schema changes (teamInvitations, joinRequests tables)
-6. Commit: "feat(schema): add team invitation and join request tables"
+6. Stage changes: `git add convex/schema.ts` → Use SlashCommand tool with `/commit`
 7. Implement backend mutations (requestToJoin, approveJoinRequest, etc.)
-8. Commit: "feat(backend): implement team joining mutations"
+8. Stage changes: `git add convex/teams.ts` → Use SlashCommand tool with `/commit`
 9. Create UI components (JoinTeamButton, JoinRequestsList, etc.)
-10. Commit: "feat(ui): add team joining components"
+10. Stage changes: `git add src/components/teams/*` → Use SlashCommand tool with `/commit`
 11. Update pages to integrate new features
-12. Commit: "feat(pages): integrate team joining UI"
+12. Stage changes: `git add src/app/(all)/teams/*` → Use SlashCommand tool with `/commit`
 13. Run validation checks:
     - Run `bun --bun run ci` and fix any issues
     - Run `bun --bun run typecheck` and fix type errors
     - Run `coderabbit --prompt-only` (iteration 1)
     - Wait for CodeRabbit to complete (never interrupt it)
-    - Fix issues and commit: "fix: address CodeRabbit feedback (iteration 1)"
+    - Fix issues, stage with `git add`, then use SlashCommand tool with `/commit`
     - Run `coderabbit --prompt-only` (iteration 2)
     - Continue iterating until no significant issues remain
-    - Commit final fixes if needed: "fix: final code quality improvements"
+    - Commit final fixes if needed using SlashCommand tool with `/commit`
 14. Push branch to remote: `git push -u origin andre/feat/team-joining`
 15. Create draft PR with `gh pr create --draft --assignee "@me"`
 16. Provide summary with:
