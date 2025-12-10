@@ -24,6 +24,10 @@ The codebase is approximately **99%+ complete** for core MVP, **99%+ complete** 
 - ✅ **Active sidebar navigation** - PR #17
 - ✅ **Submission card view with image gallery** - PR #18
 - ✅ **Unified dashboard landing page** - PR #21
+- ✅ **UTC date migration with user formatting** - PR #23
+- ✅ **Action-based navigation system** - PR #22 (Phases 1-2 complete)
+- ✅ **Unified submission approval components** - PR #24
+- ✅ **Convex code deduplication refactor** - PR #25
 - ✅ **Code quality and type safety** - PR #4, #12, #19
 - ✅ **Submission progress calendar** - PR #8
 - ✅ **Submission detail page** - PR #9
@@ -34,7 +38,6 @@ The codebase is approximately **99%+ complete** for core MVP, **99%+ complete** 
 
 ### ⚠️ High Priority Features (Still Needed)
 
-- ❌ Reviewer Dashboard (navigation/placeholders complete)
 - ❌ Image Upload System (spec ready: 26-submission-image-upload-s3-abstraction.md)
 
 **Note:** For details on completed features, see [COMPLETED.md](COMPLETED.md)
@@ -75,29 +78,28 @@ These features significantly improve user experience and should be implemented s
 
 **Benefits:** Real image upload functionality, optimized delivery, CDN integration, improved performance.
 
-### 2. Reviewer Dashboard ([spec](specs/12-reviewer-dashboard.md))
+### 2. Reviewer Dashboard - Flagged Submissions ([spec](specs/12-reviewer-dashboard.md))
 
-**Status:** ⚠️ Navigation & Placeholders Complete (PR #14) - Dashboard Implementation Pending
-**Priority:** HIGH
-**Effort:** 1-2 days (reduced from 2-3 days due to navigation foundation)
+**Status:** ⚠️ MOSTLY COMPLETE (PR #22, #24) - Only Flagged Submissions Pending
+**Priority:** LOW (Main functionality complete)
+**Effort:** 0.5-1 day (just flagged submissions feature)
 
-**Foundation Completed (PR #14):**
+**Completed (PR #22, #24):**
 
-- ✅ Sidebar navigation section with badges
-- ✅ Placeholder pages created (`/reviewer`, `/reviewer/statistics`, `/reviewer/flagged`)
-- ✅ Badge count queries (`reviewer.getPendingCount`, `reviewer.getFlaggedCount`)
-- ✅ Routing structure established
+- ✅ Review queue dashboard with all pending submissions (PR #22)
+- ✅ Inline approve/reject actions (PR #24)
+- ✅ Review statistics and performance tracking (PR #22)
+- ✅ Permission checks for reviewer role (PR #22)
+- ✅ Unified approval components (PR #24)
+- ✅ Search, filter, and sort capabilities (PR #24)
 
 **Still Required:**
 
-- Review queue dashboard with all pending submissions
-- Inline approve/reject actions with keyboard shortcuts
-- Bulk review operations
-- Review statistics and performance tracking
-- Dispute resolution workflow
-- Permission checks allowing reviewer role for mutations
+- Flagged submissions workflow
+- Flag/unflag submission mutations
+- Dispute resolution page at `/reviewer/flagged`
 
-**Benefits:** Enables dedicated content moderation role, improves submission review efficiency, separates concerns from admin role.
+**Benefits:** Enables handling of disputed/problematic submissions separately from normal review queue.
 
 ## Medium Priority (Nice to Have)
 
@@ -105,28 +107,22 @@ These features enhance the platform but are not essential for MVP launch:
 
 ### 3. Team Captain Dashboard ([spec](specs/13-team-captain-dashboard.md))
 
-**Status:** ⚠️ Navigation & Placeholders Complete (PR #14) - Dashboard Implementation Pending
-**Priority:** MEDIUM
-**Effort:** 1-1.5 days (reduced from 2 days due to navigation foundation)
+**Status:** ✅ COMPLETE (PR #22)
+**Priority:** ~~MEDIUM~~ DONE
+**Effort:** ~~1-1.5 days~~ COMPLETED
 
-**Foundation Completed (PR #14):**
+**Implemented (PR #22):**
 
-- ✅ Sidebar navigation section with conditional rendering (only visible if user captains teams)
-- ✅ Placeholder pages created (`/captain`, `/captain/comparison`)
-- ✅ Badge count query (`captain.getPendingActionsCount` - join requests + invitations)
-- ✅ Captain teams count query (`captain.getCaptainedTeamsCount`)
-- ✅ Routing structure established
+- ✅ Centralized dashboard showing all teams user captains
+- ✅ Consolidated pending actions (join requests, invitations) across all teams
+- ✅ Team performance comparison view (`/captain/comparison`)
+- ✅ Aggregated statistics across all captain's teams
+- ✅ Quick navigation and management actions
+- ✅ Activity feed across all teams
+- ✅ Sidebar navigation with conditional rendering
+- ✅ Badge count queries
 
-**Still Required:**
-
-- Centralized dashboard showing all teams user captains
-- Consolidated pending actions (join requests, invitations) across all teams
-- Team performance comparison view
-- Aggregated statistics across all captain's teams
-- Quick navigation and management actions
-- Activity feed across all teams
-
-**Benefits:** Improves efficiency for captains managing multiple teams, reduces likelihood of missed actions.
+**Benefits:** Captains can efficiently manage multiple teams from a single dashboard.
 
 ### 4. Complete Admin Dashboard ([spec](specs/07-admin-dashboard.md))
 
@@ -237,7 +233,7 @@ Minor issues that should be addressed when time permits:
 
 ## Estimated Effort Summary
 
-### ✅ Completed (31-39 days)
+### ✅ Completed (46-57 days)
 
 - Team Joining/Self-Service (3-5 days)
 - Leaderboard & Scoring (2-3 days)
@@ -247,6 +243,10 @@ Minor issues that should be addressed when time permits:
 - Dark Theme System (2-3 days)
 - Active Sidebar Navigation (0.5-1 day)
 - Submission Card View with Image Gallery (2-3 days)
+- UTC Date Migration with User Formatting (2-3 days) ⭐ **NEW**
+- Action-Based Navigation (4-5 days, Phases 1-2) ⭐ **NEW**
+- Unified Submission Approval Components (2-3 days) ⭐ **NEW**
+- Convex Code Deduplication Refactor (4-5 days) ⭐ **NEW**
 - Code Quality Fixes (1 day) + Code Cleanup (1 day) + i18n Fixes (0.5 day)
 - Submission Calendar (1-2 days)
 - Submission Detail Page (2-3 days)
@@ -254,14 +254,15 @@ Minor issues that should be addressed when time permits:
 - Loading States / Skeleton Screens (1-2 days)
 - Individual Submission Tracking & Automatic Grouping (5-7 days)
 - Enhanced Role-Based Sidebar Navigation (1-2 days)
+- Unified Dashboard Landing Page (3-4 days)
 
 ### ⚠️ Remaining for Full Enhanced MVP
 
-- **High Priority:** 3-4 days (Image Upload + Reviewer dashboard)
-- **Medium Priority:** 6-8 days (Team Captain + Admin Dashboard + Notifications + Viewer Dashboard)
-- **Total Remaining:** 9-12 days
+- **High Priority:** 2-3 days (Image Upload only)
+- **Medium Priority:** 5-7 days (Admin Dashboard + Notifications + Viewer Dashboard)
+- **Total Remaining:** 7-10 days
 
-**Note:** Effort estimates reduced by ~30% due to PR #14, #15, and #21 completing navigation foundation, badge queries, placeholder pages, tournament manager implementation, and unified dashboard.
+**Note:** Captain Dashboard and Reviewer Dashboard (queue + statistics) now complete! Only flagged submissions and admin/viewer dashboards remain.
 
 ---
 
@@ -285,18 +286,22 @@ Minor issues that should be addressed when time permits:
   - ✅ Loading States / Skeleton Screens
   - ✅ Individual Submission Tracking & Automatic Grouping
   - ✅ Enhanced Role-Based Sidebar Navigation
-- **High Priority Features:** 0/2 complete
+- **High Priority Features:** 1/2 complete
   - ❌ Image Upload System (spec ready)
-  - ⚠️ Reviewer Dashboard (navigation/placeholders done)
-- **Medium Priority Features:** 0/4 complete (navigation foundation done)
-  - ⚠️ Team Captain Dashboard (placeholders + queries done)
+  - ✅ Reviewer Dashboard (queue + statistics complete, only flagged pending)
+- **Medium Priority Features:** 1/4 complete (navigation foundation done)
+  - ✅ Team Captain Dashboard (fully complete!)
   - ⚠️ Admin Dashboard (placeholders + queries done)
   - ❌ Notifications (spec complete)
   - ⚠️ Viewer & Public Dashboard (placeholders done)
 
 ### Recent Merges
 
-- **PR #21:** Unified Dashboard Landing Page (11/25/2025) ⭐ **NEW**
+- **PR #25:** Convex Code Deduplication Refactor (12/10/2025) ⭐ **NEW**
+- **PR #24:** Unified Submission Approval Components (Spec 30) (11/28/2025) ⭐ **NEW**
+- **PR #23:** UTC Date Migration with User-Configurable Formatting (Spec 20) (11/25/2025) ⭐ **NEW**
+- **PR #22:** Action-Based Navigation (Spec 29) (11/24/2025) ⭐ **NEW**
+- **PR #21:** Unified Dashboard Landing Page (11/25/2025)
 - **PR #19:** i18n Fixes (11/20/2025)
 - **PR #18:** Submission Card View with Image Gallery (11/20/2025)
 - **PR #17:** Active Sidebar Navigation Highlighting (11/20/2025)
