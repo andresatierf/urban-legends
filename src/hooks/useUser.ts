@@ -1,5 +1,5 @@
 import { useQuery } from "convex/react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { api } from "../../convex/_generated/api";
 import { hasMinimumRole, type RoleName } from "../../convex/roles";
@@ -19,15 +19,18 @@ export function useUser({ shouldThrow }: { shouldThrow?: boolean } = {}) {
   };
 }
 
-export function useUserWithMinimumRole(role: RoleName) {
+export function useUserWithMinimumRole(
+  role: RoleName,
+  target: string = "/dashboard",
+) {
   const { user } = useUser();
   const router = useRouter();
 
   useEffect(() => {
     if (user && !hasMinimumRole(user, role)) {
-      router.replace("/dashboard");
+      router.replace(target);
     }
-  }, [user, router, role]);
+  }, [user, router, role, target]);
 
   return { user };
 }

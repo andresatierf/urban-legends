@@ -15,7 +15,6 @@ interface AdminStatsCardsProps {
 export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {/* Users Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="font-medium text-sm">Users</CardTitle>
@@ -29,7 +28,6 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
         </CardContent>
       </Card>
 
-      {/* Tournaments Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="font-medium text-sm">Tournaments</CardTitle>
@@ -43,7 +41,6 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
         </CardContent>
       </Card>
 
-      {/* Teams Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="font-medium text-sm">Teams</CardTitle>
@@ -57,7 +54,6 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
         </CardContent>
       </Card>
 
-      {/* Submissions Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="font-medium text-sm">Submissions</CardTitle>

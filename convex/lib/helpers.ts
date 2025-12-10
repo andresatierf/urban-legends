@@ -12,9 +12,10 @@ export { toMap };
  * @param [key] - Optional key instead of "_id"
  * @returns Map keyed by document ID
  */
-export function toIdMap<T extends { _id: Id<any> }>(
-  items: T[],
-): Map<T["_id"], T> {
+export function toIdMap<
+  TTable extends keyof DataModel,
+  T extends { _id: Id<TTable> },
+>(items: T[]): Map<T["_id"], T> {
   return toMap(items, "_id");
 }
 

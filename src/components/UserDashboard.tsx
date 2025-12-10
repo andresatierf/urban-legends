@@ -25,40 +25,30 @@ interface UserDashboardProps {
 }
 
 export function UserDashboard(_props: UserDashboardProps) {
-  // Fetch current user
   const { user, isAdmin } = useUser();
 
-  // Fetch user's teams
   const userTeams = useQuery(
     api.teams.list,
     user ? { userId: user._id } : "skip",
   );
 
-  // Fetch all tournaments
   const tournaments = useQuery(api.tournaments.list, {});
 
-  // Fetch user's submissions
   const userSubmissions = useQuery(api.submissions.listUserSubmissions, {});
 
-  // Admin-only: Fetch all users
   const allUsers = useQuery(api.users.list, isAdmin ? {} : "skip");
 
-  // Admin-only: Fetch all teams
   const allTeams = useQuery(api.teams.list, isAdmin ? {} : "skip");
 
-  // Admin-only: Fetch all submissions for review
   const allSubmissions = useQuery(api.submissions.list, isAdmin ? {} : "skip");
 
-  // Calculate stats
   const stats = useMemo(() => {
     const teamsCount = userTeams?.length || 0;
     const pendingSubmissions =
       userSubmissions?.filter((s) => s.state === "pending").length || 0;
 
-    // Get unique tournament IDs from user's teams
     const userTournamentIds = new Set(userTeams?.map((t) => t.tournamentId));
 
-    // Filter active tournaments where user has a team
     const activeTournaments =
       tournaments?.filter((t) => {
         if (!userTournamentIds.has(t._id)) return false;
@@ -73,7 +63,6 @@ export function UserDashboard(_props: UserDashboardProps) {
     };
   }, [userTeams, userSubmissions, tournaments]);
 
-  // Calculate admin stats
   const adminStats = useMemo(() => {
     if (!isAdmin) return null;
 

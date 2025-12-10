@@ -32,7 +32,6 @@ export function SubmissionCardDetails({
 
   return (
     <div className="flex-1 space-y-3">
-      {/* Header: Badges */}
       <div className="flex flex-wrap gap-2">
         <Badge variant={submission.state}>
           {submission.state.charAt(0).toUpperCase() + submission.state.slice(1)}
@@ -56,7 +55,6 @@ export function SubmissionCardDetails({
         )}
       </div>
 
-      {/* Metadata Grid */}
       <div className="grid gap-2 text-sm">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
@@ -74,7 +72,6 @@ export function SubmissionCardDetails({
         </div>
       </div>
 
-      {/* Description */}
       {submission.description && (
         <div className="rounded-md bg-muted/50 p-3">
           <p className="line-clamp-3 text-muted-foreground text-sm">

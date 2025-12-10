@@ -39,21 +39,17 @@ export function SubmissionCard({
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-shadow hover:shadow-md md:flex-row">
-      {/* Left: Image Display */}
       <div className="w-full shrink-0 md:w-64">
         <SubmissionCardImage images={images} />
       </div>
 
-      {/* Right: Details and Actions */}
       <div className="flex flex-1 flex-col gap-4">
-        {/* Details Section */}
         <SubmissionCardDetails
           submission={submission}
           team={submission.team}
           user={submission.user}
         />
 
-        {/* Actions Section */}
         <SubmissionCardActions
           submission={submission}
           isAdmin={isAdmin}

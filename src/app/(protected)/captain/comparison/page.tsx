@@ -27,10 +27,8 @@ export default function TeamComparison() {
     }
   }, [captainedCount, router]);
 
-  // Data
   const teamsComparison = useQuery(api.captain.getTeamsComparison);
 
-  // Loading state
   if (!teamsComparison || captainedCount === undefined) {
     return (
       <div className="container mx-auto py-8">
@@ -47,7 +45,6 @@ export default function TeamComparison() {
 
   return (
     <div className="container mx-auto py-8">
-      {/* Header */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Trophy className="h-8 w-8" />
@@ -68,7 +65,6 @@ export default function TeamComparison() {
         </Link>
       </div>
 
-      {/* Empty State */}
       {teamsComparison.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
