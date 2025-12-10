@@ -3,12 +3,13 @@
 import { useMutation, useQuery } from "convex/react";
 import { FileCheck, Loader2 } from "lucide-react";
 import { useMemo } from "react";
-import { api } from "@/../convex/_generated/api";
 import { SectionHeader } from "@/components/section-header";
 import { SubmissionReviewList } from "@/components/submissions/review/submission-review-list";
-import { convertToReviewItems, type ReviewItem } from "@/dto/reviewer";
+import type { ReviewItem } from "@/components/submissions/review/types";
+import { convertToReviewItems } from "@/dto/reviewer";
 import { useUserWithMinimumRole } from "@/hooks/useUser";
 import { tryMutate } from "@/lib/utils";
+import { api } from "../../../../convex/_generated/api";
 
 export default function ReviewerDashboard() {
   const { user } = useUserWithMinimumRole("reviewer");

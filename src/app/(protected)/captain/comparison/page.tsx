@@ -5,7 +5,6 @@ import { ArrowLeft, Loader2, TrendingUp, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { api } from "@/../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { api } from "../../../../../convex/_generated/api";
 
 export default function TeamComparison() {
   const router = useRouter();

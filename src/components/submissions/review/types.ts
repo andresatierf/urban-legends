@@ -1,5 +1,5 @@
-import type { Doc, Id } from "@/../convex/_generated/dataModel";
-import type { UserWithRoles } from "@/../convex/users";
+import type { Doc, Id } from "../../../../convex/_generated/dataModel";
+import type { UserWithRoles } from "../../../../convex/users";
 
 /**
  * Image metadata for submission attachments
@@ -18,14 +18,13 @@ export interface SubmissionImage {
  */
 export interface SubmissionWithContext {
   submission: Doc<"submissions">;
+  state: Doc<"submissions">["state"];
   team: Doc<"teams">;
   tournament: Doc<"tournaments">;
   submitter: UserWithRoles;
   images: SubmissionImage[];
   teammates?: UserWithRoles[];
   managedBy?: UserWithRoles;
-  isTeamExercise: boolean;
-  participationRate: number;
 }
 
 /**
@@ -33,6 +32,7 @@ export interface SubmissionWithContext {
  */
 export interface GroupWithContext {
   group: Doc<"submissionGroups">;
+  state: Doc<"submissionGroups">["state"];
   team: Doc<"teams">;
   tournament: Doc<"tournaments">;
   submissions: Array<Doc<"submissions">>;

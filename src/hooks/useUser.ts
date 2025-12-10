@@ -1,8 +1,8 @@
 import { useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { hasMinimumRole, type RoleName } from "../../common/roles";
 import { api } from "../../convex/_generated/api";
-import { hasMinimumRole, type RoleName } from "../../convex/roles";
 import type { UserWithRoles } from "../../convex/users";
 
 export function useUser({ shouldThrow }: { shouldThrow?: boolean } = {}) {

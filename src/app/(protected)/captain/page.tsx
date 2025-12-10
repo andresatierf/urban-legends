@@ -12,7 +12,6 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ import {
 } from "@/components/ui/card";
 import { CardGrid } from "@/components/ui/card-grid";
 import { tryMutate } from "@/lib/utils";
+import { api } from "../../../../convex/_generated/api";
 
 export default function CaptainDashboard() {
   const router = useRouter();

@@ -1,5 +1,4 @@
 import { v } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
 import { query } from "../_generated/server";
 import { extractDateFromISO, nowUTC } from "../lib/dates";
 import { enrichWithRelations } from "../lib/helpers";
@@ -168,58 +167,5 @@ export const getRecentActivity = query({
 
     activities.sort((a, b) => b.timestamp - a.timestamp);
     return activities.slice(0, limit);
-  },
-});
-
-export const getSubmissions = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    validateMinimumRole(user, "tournament_manager");
-
-    const submissions = await ctx.db.query("submissions").collect();
-    if (submissions.length === 0) return [];
-
-    const userIds = Array.from(new Set(submissions.map((s) => s.userId)));
-    const teamIds = Array.from(new Set(submissions.map((s) => s.teamId)));
-
-    const [users, teams] = await Promise.all([
-      ctx.db
-        .query("users")
-        .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("_id"), id))))
-        .collect(),
-      ctx.db
-        .query("teams")
-        .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))))
-        .collect(),
-    ]);
-
-    const userIdMap = users.reduce<Map<Id<"users">, Doc<"users">>>(
-      (acc, user) => {
-        acc.set(user._id, user);
-        return acc;
-      },
-      new Map(),
-    );
-
-    const teamIdMap = teams.reduce<Map<Id<"teams">, Doc<"teams">>>(
-      (acc, team) => {
-        acc.set(team._id, team);
-        return acc;
-      },
-      new Map(),
-    );
-
-    const submissionsWithUserAndTeam = submissions.map((s) => ({
-      ...s,
-      user: userIdMap.get(s.userId) as Doc<"users">,
-      team: teamIdMap.get(s.teamId) as Doc<"teams">,
-    }));
-
-    return submissionsWithUserAndTeam.toSorted((a, b) => {
-      if (a.date === b.date) return 0;
-      return a.date.localeCompare(b.date);
-    });
   },
 });

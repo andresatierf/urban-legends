@@ -171,47 +171,5 @@ export const teamsData = [
   },
 ];
 
-export const rolesToCreate = [
-  {
-    name: "dev",
-    displayName: "Developer",
-    description:
-      "Full system access - can manage all tournaments, users, teams, and system settings. This role is reserved for developers only.",
-    hierarchy: 0,
-  },
-  {
-    name: "admin",
-    displayName: "Administrator",
-    description:
-      "Full system access - can manage all tournaments, users, teams, and system settings",
-    hierarchy: 1,
-  },
-  {
-    name: "tournament_manager",
-    displayName: "Tournament Manager",
-    description:
-      "Can create and manage tournaments, approve submissions, and view analytics for their tournaments",
-    hierarchy: 2,
-  },
-  {
-    name: "reviewer",
-    displayName: "Reviewer",
-    description:
-      "Can review and approve/reject submissions across all tournaments, moderate content, and handle disputes",
-    hierarchy: 3,
-  },
-  {
-    name: "player",
-    displayName: "Player",
-    description:
-      "Basic user access - can join teams and participate in tournaments",
-    hierarchy: 4,
-  },
-  {
-    name: "viewer",
-    displayName: "Viewer",
-    description:
-      "Read-only access to tournament statistics, leaderboards, and analytics",
-    hierarchy: 5,
-  },
-];
+// Re-export role definitions from common directory
+export { rolesToCreate } from "../common/roleData";

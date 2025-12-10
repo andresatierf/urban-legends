@@ -3,6 +3,7 @@ import { type Validator, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, type QueryCtx, query } from "./_generated/server";
 import { batchGetDocuments } from "./lib/helpers";
+import type { RoleName } from "./roles";
 
 export const list = query({
   args: { userIds: v.optional(v.array(v.id("users"))) },
@@ -188,13 +189,13 @@ export async function getCurrentUserOrThrow(
   return {
     ...userRecord,
     roles,
-    roleNames: roles.map(({ name }) => name),
+    roleNames: roles.map(({ name }) => name as RoleName),
   };
 }
 
 export type UserWithRoles = Doc<"users"> & {
   roles: Array<Doc<"roles">>;
-  roleNames: string[];
+  roleNames: RoleName[];
 };
 
 export async function getUser(
@@ -218,7 +219,7 @@ export async function getUser(
   return {
     ...user,
     roles,
-    roleNames: roles.map(({ name }) => name),
+    roleNames: roles.map(({ name }) => name as RoleName),
   };
 }
 
