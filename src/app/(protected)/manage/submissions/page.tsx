@@ -4,57 +4,37 @@ import { useMutation, useQuery } from "convex/react";
 import { Calendar, CheckCircle, Clock } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useMemo } from "react";
-import { api } from "@/../convex/_generated/api";
 import { SectionHeader } from "@/components/section-header";
 import { SubmissionReviewList } from "@/components/submissions/review/submission-review-list";
 import type { ReviewItem } from "@/components/submissions/review/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toUserWithRoles } from "@/components/users/transforms";
+import { convertToReviewItems } from "@/dto/reviewer";
 import { useUser } from "@/hooks/useUser";
 import { tryMutate } from "@/lib/utils";
+import { hasMinimumRole } from "../../../../../common/roles";
+import { api } from "../../../../../convex/_generated/api";
 
 export default function TournamentManagerSubmissions() {
   const { user } = useUser();
 
+  const data = useQuery(
+    api.role.reviewer.getPendingSubmissions,
+    user ? {} : "skip",
+  );
+
   const approve = useMutation(api.submissions.approve);
   const reject = useMutation(api.submissions.reject);
 
-  const submissions = useQuery(api.tournamentManager.getSubmissions, {});
-  const tournaments = useQuery(api.tournaments.list, {});
-
-  // Transform submissions to ReviewItem format
   const reviewItems: ReviewItem[] = useMemo(() => {
-    if (!submissions || !tournaments) return [];
+    if (!data) return [];
 
-    // Create tournament map for quick lookup
-    const tournamentMap = new Map(tournaments.map((t) => [t._id, t]));
+    return convertToReviewItems(data);
+  }, [data]);
 
-    return submissions
-      .filter((s) => tournamentMap.has(s.tournamentId))
-      .map((s) => ({
-        type: "individual" as const,
-        data: {
-          submission: s,
-          team: s.team,
-          tournament: tournamentMap.get(s.tournamentId)!,
-          submitter: toUserWithRoles(s.user),
-          // TODO: Fetch images for this submission when image upload is implemented
-          images: [],
-          isTeamExercise: false,
-          participationRate: 0,
-        },
-      }));
-  }, [submissions, tournaments]);
-
-  // Filter items by state for tabs
   const { allItems, pendingItems, resolvedItems } = useMemo(() => {
-    const pending = reviewItems.filter(
-      (item) =>
-        item.type === "individual" && item.data.submission.state === "pending",
-    );
+    const pending = reviewItems.filter((item) => item.data.state === "pending");
     const resolved = reviewItems.filter(
-      (item) =>
-        item.type === "individual" && item.data.submission.state !== "pending",
+      (item) => item.data.state !== "pending",
     );
 
     return {
@@ -84,14 +64,11 @@ export default function TournamentManagerSubmissions() {
     });
   };
 
-  if (
-    user &&
-    !["admin", "tournament_manager"].some((r) => user.roleNames?.includes(r))
-  ) {
+  if (user && !hasMinimumRole(user, "tournament_manager")) {
     redirect("/dashboard");
   }
 
-  if (!submissions || !tournaments || !user) return null; // TODO: add skeleton
+  if (!data || !user) return null; // TODO: add skeleton
 
   return (
     <>

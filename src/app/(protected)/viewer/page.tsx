@@ -13,7 +13,7 @@ export default function ViewerDashboard() {
   const { user } = useUser();
   const router = useRouter();
 
-  const dashboardData = useQuery(api.viewer.getDashboardData);
+  const dashboardData = useQuery(api.role.viewer.getDashboardData);
 
   useEffect(() => {
     if (user === null) {

@@ -12,7 +12,6 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
@@ -25,12 +24,12 @@ import {
 } from "@/components/ui/card";
 import { CardGrid } from "@/components/ui/card-grid";
 import { tryMutate } from "@/lib/utils";
+import { api } from "../../../../convex/_generated/api";
 
 export default function CaptainDashboard() {
   const router = useRouter();
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  // Permission check - redirect if not a captain
   const captainedCount = useQuery(api.captain.getCaptainedTeamsCount);
 
   useEffect(() => {
@@ -39,16 +38,13 @@ export default function CaptainDashboard() {
     }
   }, [captainedCount, router]);
 
-  // Data
   const dashboardData = useQuery(api.captain.getDashboardData);
 
-  // Mutations
   const respondToJoinRequest = useMutation(
     api.joinRequests.respondToJoinRequest,
   );
   const cancelInvitation = useMutation(api.teamInvitations.cancelInvitation);
 
-  // Loading state
   if (!dashboardData || captainedCount === undefined) {
     return (
       <div className="container mx-auto py-8">
@@ -144,7 +140,6 @@ export default function CaptainDashboard() {
         )}
       </CardGrid>
 
-      {/* Pending Actions */}
       {(joinRequests.length > 0 || invitations.length > 0) && (
         <>
           <SectionHeader
@@ -153,153 +148,103 @@ export default function CaptainDashboard() {
           />
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* Join Requests */}
             {joinRequests.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Join Requests ({joinRequests.length})</CardTitle>
-                  <CardDescription>
-                    Players requesting to join your teams
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {joinRequests.map((request) => (
-                    <div
-                      key={request._id}
-                      className="flex items-center justify-between rounded-lg border p-3"
-                    >
-                      <div>
-                        <p className="font-medium text-sm">
-                          {request.user?.name || "Unknown User"}
+              <ListCard
+                title={`Join Requests (${joinRequests.length})`}
+                description={"Players requesting to join your teams"}
+                data={joinRequests}
+              >
+                {(request) => (
+                  <div
+                    key={request._id}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
+                    <div>
+                      <p className="font-medium text-sm">
+                        {request.user?.name || "Unknown User"}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        wants to join {request.team?.name || "Unknown Team"}
+                      </p>
+                      {request.message && (
+                        <p className="mt-1 text-muted-foreground text-xs">
+                          "{request.message}"
                         </p>
-                        <p className="text-muted-foreground text-xs">
-                          wants to join {request.team?.name || "Unknown Team"}
-                        </p>
-                        {request.message && (
-                          <p className="mt-1 text-muted-foreground text-xs">
-                            "{request.message}"
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleApproveRequest(request._id)}
-                          disabled={processingId === request._id}
-                        >
-                          {processingId === request._id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <CheckCircle className="h-4 w-4" />
-                          )}
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          color="destructive"
-                          onClick={() => handleRejectRequest(request._id)}
-                          disabled={processingId === request._id}
-                        >
-                          {processingId === request._id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <XCircle className="h-4 w-4" />
-                          )}
-                          Reject
-                        </Button>
-                      </div>
+                      )}
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Pending Invitations */}
-            {invitations.length > 0 && (
-              <>
-                <ListCard
-                  title={`Sent Invitations (${invitations.length})`}
-                  description={"Invitations you've sent to players"}
-                  data={invitations}
-                >
-                  {(invitation) => (
-                    <div
-                      key={invitation._id}
-                      className="flex items-center justify-between rounded-lg border p-3"
-                    >
-                      <div>
-                        <p className="font-medium text-sm">
-                          {invitation.invitedUser?.name ||
-                            invitation.invitedEmail}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Invited to {invitation.team?.name || "Unknown Team"} •
-                          Pending
-                        </p>
-                      </div>
+                    <div className="flex gap-2">
                       <Button
                         size="sm"
-                        variant="ghost"
-                        onClick={() => handleCancelInvitation(invitation._id)}
-                        disabled={processingId === invitation._id}
+                        onClick={() => handleApproveRequest(request._id)}
+                        disabled={processingId === request._id}
                       >
-                        {processingId === invitation._id ? (
+                        {processingId === request._id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          "Cancel"
+                          <CheckCircle className="h-4 w-4" />
                         )}
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        color="destructive"
+                        onClick={() => handleRejectRequest(request._id)}
+                        disabled={processingId === request._id}
+                      >
+                        {processingId === request._id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <XCircle className="h-4 w-4" />
+                        )}
+                        Reject
                       </Button>
                     </div>
-                  )}
-                </ListCard>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>
-                      Sent Invitations ({invitations.length})
-                    </CardTitle>
-                    <CardDescription>
-                      Invitations you've sent to players
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="m-4 max-h-72 space-y-2 overflow-scroll p-0">
-                    {invitations.map((invitation) => (
-                      <div
-                        key={invitation._id}
-                        className="flex items-center justify-between rounded-lg border p-3"
-                      >
-                        <div>
-                          <p className="font-medium text-sm">
-                            {invitation.invitedUser?.name ||
-                              invitation.invitedEmail}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            Invited to {invitation.team?.name || "Unknown Team"}{" "}
-                            • Pending
-                          </p>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleCancelInvitation(invitation._id)}
-                          disabled={processingId === invitation._id}
-                        >
-                          {processingId === invitation._id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            "Cancel"
-                          )}
-                        </Button>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </>
+                  </div>
+                )}
+              </ListCard>
+            )}
+
+            {invitations.length > 0 && (
+              <ListCard
+                title={`Sent Invitations (${invitations.length})`}
+                description={"Invitations you've sent to players"}
+                data={invitations}
+              >
+                {(invitation) => (
+                  <div
+                    key={invitation._id}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
+                    <div>
+                      <p className="font-medium text-sm">
+                        {invitation.invitedUser?.name ||
+                          invitation.invitedEmail}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        Invited to {invitation.team?.name || "Unknown Team"} •
+                        Pending
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleCancelInvitation(invitation._id)}
+                      disabled={processingId === invitation._id}
+                    >
+                      {processingId === invitation._id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Cancel"
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </ListCard>
             )}
           </div>
         </>
       )}
 
-      {/* Quick Actions */}
       <Card>
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>

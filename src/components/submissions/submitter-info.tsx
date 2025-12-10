@@ -17,7 +17,6 @@ export function SubmitterInfo({ submitter, teammates }: SubmitterInfoProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Submitter */}
           <div className="flex items-center gap-3">
             <Avatar>
               <AvatarFallback>{getInitials(submitter.name)}</AvatarFallback>
@@ -34,7 +33,6 @@ export function SubmitterInfo({ submitter, teammates }: SubmitterInfoProps) {
             </div>
           </div>
 
-          {/* Teammates */}
           {teammates.length > 0 && (
             <>
               <hr />

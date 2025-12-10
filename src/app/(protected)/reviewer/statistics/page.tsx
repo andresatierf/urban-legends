@@ -4,7 +4,6 @@ import { useQuery } from "convex/react";
 import { CheckCircle, Loader2, TrendingUp, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { api } from "@/../convex/_generated/api";
 import { SectionHeader } from "@/components/section-header";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,6 +16,7 @@ import {
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
+import { api } from "../../../../../convex/_generated/api";
 
 export default function ReviewStatistics() {
   const { user } = useUser();
@@ -35,7 +35,7 @@ export default function ReviewStatistics() {
   }, [user, router]);
 
   // Query
-  const statistics = useQuery(api.reviewer.getStatistics);
+  const statistics = useQuery(api.role.reviewer.getStatistics);
 
   // Loading state
   if (!statistics) {

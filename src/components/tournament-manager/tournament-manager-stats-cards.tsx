@@ -22,7 +22,6 @@ export function TournamentManagerStatsCards({
 }: TournamentManagerStatsCardsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-      {/* Tournaments Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="font-medium text-sm">Tournaments</CardTitle>
@@ -44,7 +43,6 @@ export function TournamentManagerStatsCards({
         </CardContent>
       </Card>
 
-      {/* Teams Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="font-medium text-sm">Teams</CardTitle>
@@ -58,7 +56,6 @@ export function TournamentManagerStatsCards({
         </CardContent>
       </Card>
 
-      {/* Submissions Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="font-medium text-sm">Submissions</CardTitle>

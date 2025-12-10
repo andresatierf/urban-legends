@@ -1,11 +1,11 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
+import { enrichWithRelations } from "./lib/helpers";
 import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
 
-// List join requests for a team
 export const listJoinRequests = query({
   args: {
     teamId: v.id("teams"),
@@ -21,7 +21,6 @@ export const listJoinRequests = query({
   handler: async (ctx, args) => {
     await getCurrentUserOrThrow(ctx);
 
-    // Get join requests
     let requests = await ctx.db
       .query("joinRequests")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
@@ -31,22 +30,12 @@ export const listJoinRequests = query({
       requests = requests.filter((r) => r.status === args.status);
     }
 
-    // Fetch user details for each request
-    const requestsWithUsers = await Promise.all(
-      requests.map(async (request) => {
-        const requestUser = await ctx.db.get(request.userId);
-        return {
-          ...request,
-          user: requestUser,
-        };
-      }),
-    );
-
-    return requestsWithUsers;
+    return await enrichWithRelations(ctx, requests, {
+      user: { table: "users", foreignKey: (request) => request.userId },
+    });
   },
 });
 
-// Get user's join request for a specific team
 export const getUserJoinRequest = query({
   args: {
     teamId: v.id("teams"),
@@ -65,7 +54,6 @@ export const getUserJoinRequest = query({
   },
 });
 
-// Request to join a public team
 export const requestToJoin = mutation({
   args: {
     teamId: v.id("teams"),
@@ -76,7 +64,6 @@ export const requestToJoin = mutation({
 
     const team = await validateTeamHasSpace(ctx, { teamId: args.teamId });
 
-    // Check if team is public
     if (team.visibility !== "public") {
       throw new Error("Cannot request to join a private team");
     }
@@ -91,7 +78,6 @@ export const requestToJoin = mutation({
       tournamentId: team.tournamentId,
     });
 
-    // Check if user already has a pending request
     const pendingRequest = await ctx.db
       .query("joinRequests")
       .withIndex("by_team_and_user_and_status", (q) =>
@@ -106,7 +92,6 @@ export const requestToJoin = mutation({
       throw new Error("You already have a pending join request for this team");
     }
 
-    // Check if user was previously rejected
     const rejectedRequest = await ctx.db
       .query("joinRequests")
       .withIndex("by_team_and_user_and_status", (q) =>
@@ -123,7 +108,6 @@ export const requestToJoin = mutation({
       );
     }
 
-    // Create join request
     const requestId = await ctx.db.insert("joinRequests", {
       teamId: args.teamId,
       userId: user._id,
@@ -136,7 +120,6 @@ export const requestToJoin = mutation({
   },
 });
 
-// Cancel a join request (requester only)
 export const cancelJoinRequest = mutation({
   args: {
     requestId: v.id("joinRequests"),
@@ -144,7 +127,6 @@ export const cancelJoinRequest = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Get join request
     const request = await ctx.db.get(args.requestId);
     if (!request) {
       throw new Error("Join request not found");
@@ -158,7 +140,6 @@ export const cancelJoinRequest = mutation({
       throw new Error("Join request is not pending");
     }
 
-    // Update request status
     await ctx.db.patch(args.requestId, {
       status: "cancelled",
       respondedAt: nowUTC(),
@@ -166,7 +147,6 @@ export const cancelJoinRequest = mutation({
   },
 });
 
-// Approve a join request (captain or admin only)
 export const respondToJoinRequest = mutation({
   args: {
     requestId: v.id("joinRequests"),
@@ -175,7 +155,6 @@ export const respondToJoinRequest = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Get join request
     const request = await ctx.db.get(args.requestId);
     if (!request) {
       throw new Error("Join request not found");

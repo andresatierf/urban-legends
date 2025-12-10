@@ -52,8 +52,8 @@ export function ManageRolesFormDialog({
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
 
-  const roles = useQuery(api.admin.listRoles);
-  const updateRoles = useMutation(api.admin.updateRoles);
+  const roles = useQuery(api.role.admin.listRoles);
+  const updateRoles = useMutation(api.role.admin.updateRoles);
 
   // Sort roles by hierarchy (most access to least access)
   const sortedRoles = roles?.toSorted((a, b) => {

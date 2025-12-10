@@ -37,7 +37,6 @@ export function SubmissionCardActions({
 
   return (
     <div className="flex flex-wrap gap-2 border-t pt-3">
-      {/* Admin Actions */}
       {canApprove && (
         <Button
           size="sm"
@@ -61,7 +60,6 @@ export function SubmissionCardActions({
         </Button>
       )}
 
-      {/* Owner Actions */}
       {canEdit && (
         <Button size="sm" variant="outline" onClick={onEdit}>
           <Edit className="mr-1 h-4 w-4" />

@@ -19,7 +19,6 @@ export function MyActiveTournamentsWidget({
 }: MyActiveTournamentsWidgetProps) {
   const now = new Date().toISOString();
 
-  // Filter for active tournaments only
   const activeTournaments = teams.filter(
     (t) => t.tournament.startDate <= now && t.tournament.endDate >= now,
   );

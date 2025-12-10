@@ -130,7 +130,6 @@ export function CalendarStatistics({
           ))}
         </div>
 
-        {/* Submission breakdown */}
         <div className="space-y-3">
           <h4 className="mb-3 font-medium text-muted-foreground text-sm">
             Submission Status

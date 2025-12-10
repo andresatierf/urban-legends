@@ -1,5 +1,5 @@
-import { query } from "./_generated/server";
-import { getCurrentUserOrThrow } from "./users";
+import { query } from "../_generated/server";
+import { getCurrentUserOrThrow } from "../users";
 
 /**
  * Get viewer dashboard data including active tournaments to follow.
@@ -10,14 +10,12 @@ export const getDashboardData = query({
   handler: async (ctx) => {
     await getCurrentUserOrThrow(ctx);
 
-    // Get all active tournaments (for discovery)
     const allTournaments = await ctx.db.query("tournaments").collect();
     const now = new Date().toISOString();
     const activeTournaments = allTournaments.filter(
       (t) => t.startDate <= now && t.endDate >= now,
     );
 
-    // Get tournament details for active tournaments
     const tournaments = await Promise.all(
       activeTournaments.slice(0, 10).map(async (tournament) => {
         const teams = await ctx.db
@@ -27,7 +25,6 @@ export const getDashboardData = query({
           )
           .collect();
 
-        // Get top team
         const topTeam = teams.sort((a, b) => b.points - a.points)[0];
 
         return {

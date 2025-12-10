@@ -2,60 +2,52 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
+import { batchGetDocuments, enrichWithRelations, toMap } from "./lib/helpers";
+import { hasMinimumRole } from "./roles";
 import { getCurrentUserOrThrow } from "./users";
-
-/**
- * Dashboard Queries
- *
- * This file contains queries for the unified dashboard landing page.
- * These queries aggregate data from multiple tables to provide a comprehensive
- * view of user activity, teams, tournaments, and notifications.
- */
 
 export const getUserDashboardData = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Fetch user's teams with tournament info
     const teamMemberships = await ctx.db
       .query("teamMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
 
-    const teams = await Promise.all(
-      teamMemberships.map(async (membership) => {
-        const team = await ctx.db.get(membership.teamId);
-        if (!team) return null;
+    const teamIds = teamMemberships.map((m) => m.teamId);
+    const validTeamsData = await batchGetDocuments(ctx, "teams", teamIds);
 
-        const tournament = await ctx.db.get(team.tournamentId);
-        if (!tournament) return null;
+    const enrichedTeams = await enrichWithRelations(ctx, validTeamsData, {
+      tournament: {
+        table: "tournaments",
+        foreignKey: (team) => team.tournamentId,
+      },
+      members: { table: "teamMembers", foreignKeyField: "teamId" },
+    });
 
-        const memberCount = await ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect()
-          .then((members) => members.length);
+    const membershipByTeamId = toMap(teamMemberships, "teamId");
+
+    const validTeams = enrichedTeams
+      .map((enrichedTeam) => {
+        const { tournament, members, ...team } = enrichedTeam;
+        const membership = membershipByTeamId.get(team._id);
+        if (!tournament || !membership) return null;
 
         return {
           team,
           tournament,
-          memberCount,
+          memberCount: members.length,
           userRole: membership.role,
         };
-      }),
-    );
+      })
+      .filter((t): t is NonNullable<typeof t> => t !== null);
 
-    const validTeams = teams.filter(
-      (t): t is NonNullable<typeof t> => t !== null,
-    );
-
-    // Calculate active tournaments
     const now = nowUTC();
     const activeTournaments = validTeams.filter(
       (t) => t.tournament.startDate <= now && t.tournament.endDate >= now,
     );
 
-    // Fetch user's submissions
     const userSubmissions = await ctx.db
       .query("submissions")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -65,7 +57,6 @@ export const getUserDashboardData = query({
       (s) => s.state === "pending",
     );
 
-    // Fetch team invitations
     const invitations = await ctx.db
       .query("teamInvitations")
       .withIndex("by_user_and_status", (q) =>
@@ -86,8 +77,8 @@ export const getAdminDashboardData = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!user.roleNames.includes("admin")) {
-      return null; // Not an admin, return null
+    if (!hasMinimumRole(user, "admin")) {
+      return null;
     }
 
     // TODO: Optimize for scale - Replace .collect() with aggregations/counts
@@ -98,7 +89,6 @@ export const getAdminDashboardData = query({
     // - Using Convex aggregations when available
     // This is acceptable for MVP with small datasets (<10k records)
 
-    // Fetch all data in parallel
     const [users, tournaments, teams, submissions] = await Promise.all([
       ctx.db.query("users").collect(),
       ctx.db.query("tournaments").collect(),
@@ -106,13 +96,11 @@ export const getAdminDashboardData = query({
       ctx.db.query("submissions").collect(),
     ]);
 
-    // Calculate new users this week
     const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const newUsersThisWeek = users.filter(
       (u) => u._creationTime > oneWeekAgo,
     ).length;
 
-    // Categorize tournaments
     const now = nowUTC();
     const activeTournaments = tournaments.filter(
       (t) => t.startDate <= now && t.endDate >= now,
@@ -120,7 +108,6 @@ export const getAdminDashboardData = query({
     const upcomingTournaments = tournaments.filter((t) => t.startDate > now);
     const endedTournaments = tournaments.filter((t) => t.endDate < now);
 
-    // Categorize submissions
     const pendingSubmissions = submissions.filter((s) => s.state === "pending");
     const approvedSubmissions = submissions.filter(
       (s) => s.state === "approved",
@@ -165,11 +152,10 @@ export const getRecentActivity = query({
       type: string;
       description: string;
       timestamp: number;
-      icon: string; // Icon identifier
-      link?: string; // Optional navigation link
+      icon: string;
+      link?: string;
     }> = [];
 
-    // Get user's recent submissions (last 20)
     const userSubmissions = await ctx.db
       .query("submissions")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -189,19 +175,16 @@ export const getRecentActivity = query({
       }
     }
 
-    // Get teams user is captain of
     const captainTeams = await ctx.db
       .query("teamMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .filter((q) => q.eq(q.field("role"), "captain"))
       .collect();
 
-    // For each captain team, get recent join requests and new members
     for (const membership of captainTeams) {
       const team = await ctx.db.get(membership.teamId);
       if (!team) continue;
 
-      // Recent join requests
       const joinRequests = await ctx.db
         .query("joinRequests")
         .withIndex("by_team", (q) => q.eq("teamId", team._id))
@@ -227,7 +210,6 @@ export const getRecentActivity = query({
         }
       }
 
-      // Recent team members
       const recentMembers = await ctx.db
         .query("teamMembers")
         .withIndex("by_team", (q) => q.eq("teamId", team._id))
@@ -248,7 +230,6 @@ export const getRecentActivity = query({
       }
     }
 
-    // Sort by timestamp descending and limit
     activities.sort((a, b) => b.timestamp - a.timestamp);
     return activities.slice(0, limit);
   },
@@ -258,7 +239,6 @@ export const getUpcomingDeadlines = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Get user's teams
     const teamMemberships = await ctx.db
       .query("teamMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -272,7 +252,6 @@ export const getUpcomingDeadlines = query({
       }
     }
 
-    // Get tournaments ending within 7 days
     const now = new Date();
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
@@ -289,7 +268,6 @@ export const getUpcomingDeadlines = query({
         return endDate >= now && endDate <= sevenDaysFromNow;
       })
       .map((t) => {
-        // TypeScript knows t is not null here due to filter above
         const endDate = new Date(t.endDate);
         const daysUntilEnd = Math.ceil(
           (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),

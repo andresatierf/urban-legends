@@ -1,7 +1,10 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
-import { mutation, type QueryCtx, query } from "./_generated/server";
+import type { QueryCtx } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString, toUTCEndOfDayString } from "./lib/dates";
+import { batchGetDocuments, enrichWithRelations } from "./lib/helpers";
+import { hasMinimumRole, validateMinimumRole } from "./roles";
 import { getTeams, validateIsTeamMember } from "./teams";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -104,13 +107,11 @@ export const getDetails = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Fetch tournament
     const tournament = await ctx.db.get(args.tournamentId);
     if (!tournament) {
       throw new Error("Tournament not found");
     }
 
-    // Fetch all teams for this tournament
     const teams = await ctx.db
       .query("teams")
       .withIndex("by_tournament", (q) =>
@@ -118,28 +119,29 @@ export const getDetails = query({
       )
       .collect();
 
-    // Fetch member counts and member details for each team in parallel
-    const teamsWithMembers = await Promise.all(
-      teams.map(async (team) => {
-        const members = await ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect();
+    const enrichedTeams = await enrichWithRelations(ctx, teams, {
+      teamMembers: {
+        table: "teamMembers",
+        foreignKeyField: "teamId",
+        enrich: {
+          user: { table: "users", foreignKey: (m) => m.userId },
+        },
+      },
+    });
 
-        // Fetch user details for each member
-        const memberUsers = await Promise.all(
-          members.map((member) => ctx.db.get(member.userId)),
-        );
+    const teamsWithMembers = enrichedTeams.map((enrichedTeam) => {
+      const { teamMembers, ...team } = enrichedTeam;
+      const memberDetails = teamMembers
+        .map((member) => member.user)
+        .filter((u): u is NonNullable<typeof u> => u !== null);
 
-        return {
-          ...team,
-          memberCount: members.length,
-          members: memberUsers.filter((u) => u !== null),
-        };
-      }),
-    );
+      return {
+        ...team,
+        memberCount: teamMembers.length,
+        members: memberDetails,
+      };
+    });
 
-    // Find user's team in this tournament
     const userTeamMemberships = await ctx.db
       .query("teamMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -150,7 +152,6 @@ export const getDetails = query({
       userTeamIds.includes(team._id),
     );
 
-    // Calculate tournament status
     const nowIso = nowUTC();
     let status: "active" | "upcoming" | "ended";
     if (tournament.startDate <= nowIso && tournament.endDate >= nowIso) {
@@ -161,14 +162,10 @@ export const getDetails = query({
       status = "ended";
     }
 
-    // Determine permissions
-    const isAdmin = user.roleNames.includes("admin");
-    const isTournamentManager = user.roleNames.includes("tournament_manager");
-    const canEdit = isAdmin || isTournamentManager;
-    const canDelete = isAdmin; // Only admins can delete tournaments
-    const canViewLeaderboard = true; // Anyone can view leaderboard
+    const canEdit = hasMinimumRole(user, "tournament_manager");
+    const canDelete = hasMinimumRole(user, "admin");
+    const canViewLeaderboard = true;
 
-    // Calculate statistics
     const totalTeams = teams.length;
     const totalParticipants = teamsWithMembers.reduce(
       (sum, team) => sum + team.memberCount,
@@ -208,7 +205,7 @@ export const upsert = mutation({
     teamMinSize: v.number(),
     teamMaxSize: v.number(),
     maxSubmissionsPerDay: v.optional(v.number()),
-    // Scoring configuration (optional for backwards compatibility)
+
     scoringConfig: v.optional(
       v.object({
         individualPoints: v.object({
@@ -226,15 +223,8 @@ export const upsert = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Allow both admin and tournament_manager
-    if (
-      !user.roleNames.includes("admin") &&
-      !user.roleNames.includes("tournament_manager")
-    ) {
-      throw new Error("Admin or Tournament Manager access required");
-    }
+    validateMinimumRole(user, "tournament_manager");
 
-    // Default scoring config if not provided
     const defaultScoringConfig = {
       individualPoints: { base: 1, advanced: 1 },
       teamExercisePoints: { base: 1, advanced: 1 },
@@ -266,7 +256,6 @@ export const upsert = mutation({
   },
 });
 
-// Get users not in any team for a given tournament
 export const getAvailableUsersForTeam = query({
   args: {
     teamId: v.id("teams"),
@@ -274,9 +263,7 @@ export const getAvailableUsersForTeam = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (
-      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
-    ) {
+    if (!hasMinimumRole(user, "tournament_manager")) {
       await validateIsTeamMember(ctx, {
         teamId: args.teamId,
         userId: user._id,
@@ -287,7 +274,6 @@ export const getAvailableUsersForTeam = query({
     const team = await ctx.db.get(args.teamId);
     if (!team) throw new Error("Team not found");
 
-    // Get all teams in this tournament
     const teams = await ctx.db
       .query("teams")
       .withIndex("by_tournament", (q) =>
@@ -295,7 +281,6 @@ export const getAvailableUsersForTeam = query({
       )
       .collect();
 
-    // Get all team members in this tournament
     const teamMembers = await Promise.all(
       teams.map((team) =>
         ctx.db
@@ -333,7 +318,6 @@ export async function validateUserNotInTournamentTeam(
   ctx: QueryCtx,
   args: ValidateUserInTournamentTeamArgs,
 ) {
-  // Check if user already has a team in this tournament
   const userTeams = await ctx.db
     .query("teamMembers")
     .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -360,7 +344,6 @@ export async function validateUserNotInTournamentTeam(
   }
 }
 
-// Get leaderboard for a tournament with rankings
 export const getLeaderboard = query({
   args: {
     tournamentId: v.id("tournaments"),
@@ -374,7 +357,6 @@ export const getLeaderboard = query({
       throw new Error("Tournament not found");
     }
 
-    // Get all teams for tournament
     const teams = await ctx.db
       .query("teams")
       .withIndex("by_tournament", (q) =>
@@ -382,50 +364,41 @@ export const getLeaderboard = query({
       )
       .collect();
 
-    // Get member counts for each team
-    const teamsWithCounts = await Promise.all(
-      teams.map(async (team) => {
-        const members = await ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect();
+    const enrichedTeams = await enrichWithRelations(ctx, teams, {
+      teamMembers: { table: "teamMembers", foreignKeyField: "teamId" },
+    });
 
-        const points = team.points ?? 0;
-        return {
-          teamId: team._id,
-          teamName: team.name,
-          points,
-          memberCount: members.length,
-          lastActivityAt: team.lastActivityAt,
-          createdAt: team._creationTime,
-        };
-      }),
-    );
+    const teamsWithCounts = enrichedTeams.map((enrichedTeam) => {
+      const { teamMembers, ...team } = enrichedTeam;
+      const points = team.points ?? 0;
+      return {
+        teamId: team._id,
+        teamName: team.name,
+        points,
+        memberCount: teamMembers.length,
+        lastActivityAt: team.lastActivityAt,
+        createdAt: team._creationTime,
+      };
+    });
 
-    // Sort by points DESC, lastActivityAt DESC (more recent wins), createdAt ASC (earlier creation wins)
     const sortedTeams = teamsWithCounts.sort((a, b) => {
-      // First sort by points (descending)
       if (a.points !== b.points) {
         return b.points - a.points;
       }
 
-      // If points are equal, sort by lastActivityAt (descending - more recent wins)
       if (a.lastActivityAt && b.lastActivityAt) {
         return b.lastActivityAt.localeCompare(a.lastActivityAt);
       }
       if (a.lastActivityAt) return -1;
       if (b.lastActivityAt) return 1;
 
-      // If still tied, sort by creation time (ascending - earlier wins)
       return a.createdAt - b.createdAt;
     });
 
-    // Apply limit if provided
     const limitedTeams = args.limit
       ? sortedTeams.slice(0, args.limit)
       : sortedTeams;
 
-    // Add rank and isWinner flag
     const leaderboard = limitedTeams.map((team, index) => ({
       rank: index + 1,
       ...team,
@@ -436,7 +409,6 @@ export const getLeaderboard = query({
   },
 });
 
-// Get winner of a tournament
 export const getWinner = query({
   args: {
     tournamentId: v.id("tournaments"),
@@ -457,13 +429,12 @@ export const getWinner = query({
       )
       .collect();
 
-    const users = await Promise.all(
-      members.map((member) => ctx.db.get(member.userId)),
-    );
+    const userIds = members.map((m) => m.userId);
+    const users = await batchGetDocuments(ctx, "users", userIds);
 
     return {
       team,
-      members: users.filter((u) => u !== null),
+      members: users,
       completedAt: tournament.completedAt,
     };
   },
@@ -503,27 +474,19 @@ export const determineWinner = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Allow both admin and tournament_manager
-    if (
-      !user.roleNames.includes("admin") &&
-      !user.roleNames.includes("tournament_manager")
-    ) {
-      throw new Error("Admin or Tournament Manager access required");
-    }
+    validateMinimumRole(user, "tournament_manager");
 
     const tournament = await ctx.db.get(args.tournamentId);
     if (!tournament) {
       throw new Error("Tournament not found");
     }
 
-    // Validate tournament has ended
     const now = new Date();
     const endDate = new Date(tournament.endDate);
     if (now < endDate) {
       throw new Error("Cannot determine winner before tournament ends");
     }
 
-    // Get all teams sorted by points
     const teams = await ctx.db
       .query("teams")
       .withIndex("by_tournament", (q) =>
@@ -535,7 +498,6 @@ export const determineWinner = mutation({
       throw new Error("No teams in this tournament");
     }
 
-    // Sort teams using same logic as leaderboard
     const sortedTeams = teams.sort((a, b) => {
       if (a.points !== b.points) {
         return b.points - a.points;
@@ -552,7 +514,6 @@ export const determineWinner = mutation({
 
     const winner = sortedTeams[0];
 
-    // Update tournament with winner
     await ctx.db.patch(args.tournamentId, {
       winnerId: winner._id,
       completedAt: nowUTC(),
@@ -566,7 +527,6 @@ export const determineWinner = mutation({
   },
 });
 
-// Get tournament statistics
 export const getStatistics = query({
   args: {
     tournamentId: v.id("tournaments"),
@@ -577,7 +537,6 @@ export const getStatistics = query({
     const tournament = await ctx.db.get(args.tournamentId);
     if (!tournament) return null;
 
-    // Get all teams
     const teams = await ctx.db
       .query("teams")
       .withIndex("by_tournament", (q) =>
@@ -585,7 +544,6 @@ export const getStatistics = query({
       )
       .collect();
 
-    // Get all submissions for this tournament
     const allSubmissions = await ctx.db
       .query("submissions")
       .withIndex("by_tournament_and_date", (q) =>
@@ -597,17 +555,14 @@ export const getStatistics = query({
       (s) => s.state === "approved",
     );
 
-    // Calculate average team score
     const averageTeamScore =
       teams.length > 0
         ? teams.reduce((sum, team) => sum + team.points, 0) / teams.length
         : 0;
 
-    // Find most active team (highest points)
     const mostActiveTeam =
       teams.length > 0 ? teams.sort((a, b) => b.points - a.points)[0] : null;
 
-    // Find highest scoring day
     const submissionsByDate = new Map<string, number>();
     for (const submission of approvedSubmissions) {
       submissionsByDate.set(
@@ -624,7 +579,6 @@ export const getStatistics = query({
       }
     }
 
-    // Calculate participation rate (teams with at least one submission)
     const teamsWithSubmissions = new Set(
       approvedSubmissions.map((s) => s.teamId),
     );

@@ -1,11 +1,12 @@
 import { v } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
+import { enrichWithRelations } from "./lib/helpers";
 import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
 
-// List team invitations (captain/admin only)
 export const listTeamInvitations = query({
   args: {
     teamId: v.id("teams"),
@@ -22,7 +23,6 @@ export const listTeamInvitations = query({
   handler: async (ctx, args) => {
     await getCurrentUserOrThrow(ctx);
 
-    // Get invitations
     let invitationsQuery = ctx.db
       .query("teamInvitations")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId));
@@ -35,25 +35,19 @@ export const listTeamInvitations = query({
 
     const invitations = await invitationsQuery.collect();
 
-    // Fetch invited user details for each invitation
-    const invitationsWithDetails = await Promise.all(
-      invitations.map(async (invitation) => {
-        const invitedUser = await ctx.db.get(invitation.invitedUserId);
-        const invitedByUser = await ctx.db.get(invitation.invitedBy);
-
-        return {
-          ...invitation,
-          invitedUser,
-          invitedByUser,
-        };
-      }),
-    );
-
-    return invitationsWithDetails;
+    return await enrichWithRelations(ctx, invitations, {
+      invitedUser: {
+        table: "users",
+        foreignKey: (inv) => inv.invitedUserId,
+      },
+      invitedByUser: {
+        table: "users",
+        foreignKey: (inv) => inv.invitedBy,
+      },
+    });
   },
 });
 
-// List invitations for current user
 export const listUserInvitations = query({
   args: {
     status: v.optional(
@@ -69,7 +63,6 @@ export const listUserInvitations = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Get invitations
     let invitationsQuery = ctx.db
       .query("teamInvitations")
       .withIndex("by_user", (q) => q.eq("invitedUserId", user._id));
@@ -82,29 +75,28 @@ export const listUserInvitations = query({
 
     const invitations = await invitationsQuery.collect();
 
-    // Fetch team and tournament details for each invitation
-    const invitationsWithDetails = await Promise.all(
-      invitations.map(async (invitation) => {
-        const [team, invitedBy] = await Promise.all([
-          ctx.db.get(invitation.teamId),
-          ctx.db.get(invitation.invitedBy),
-        ]);
+    const enriched = await enrichWithRelations(ctx, invitations, {
+      team: {
+        table: "teams",
+        foreignKey: (inv) => inv.teamId,
+      },
+      invitedByUser: {
+        table: "users",
+        foreignKey: (inv) => inv.invitedBy,
+      },
+    });
 
-        const tournament = team ? await ctx.db.get(team.tournamentId) : null;
-        return {
-          ...invitation,
-          team,
-          tournament,
-          invitedByUser: invitedBy,
-        };
-      }),
+    return await Promise.all(
+      enriched.map(async (inv) => ({
+        ...inv,
+        tournament: inv.team
+          ? await ctx.db.get((inv.team as Doc<"teams">).tournamentId)
+          : null,
+      })),
     );
-
-    return invitationsWithDetails;
   },
 });
 
-// Invite a member to the team (captain only)
 export const inviteMember = mutation({
   args: {
     teamId: v.id("teams"),
@@ -121,7 +113,6 @@ export const inviteMember = mutation({
       captain: true,
     });
 
-    // Look up user by email
     const invitedUser = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", args.email))
@@ -131,13 +122,11 @@ export const inviteMember = mutation({
       throw new Error("User not found with this email");
     }
 
-    // Check invited user isn't already in another team in this tournament
     await validateUserNotInTournamentTeam(ctx, {
       userId: invitedUser._id,
       tournamentId: team.tournamentId,
     });
 
-    // Check if user already has pending invitation
     const existingInvitation = await ctx.db
       .query("teamInvitations")
       .withIndex("by_team_and_user_and_status", (q) =>
@@ -152,7 +141,6 @@ export const inviteMember = mutation({
       throw new Error("User already has a pending invitation to this team");
     }
 
-    // Create invitation with 7-day expiry
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
@@ -170,7 +158,6 @@ export const inviteMember = mutation({
   },
 });
 
-// Cancel an invitation (captain/admin only)
 export const cancelInvitation = mutation({
   args: {
     invitationId: v.id("teamInvitations"),
@@ -178,7 +165,6 @@ export const cancelInvitation = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Get invitation
     const invitation = await ctx.db.get(args.invitationId);
     if (!invitation) {
       throw new Error("Invitation not found");
@@ -194,7 +180,6 @@ export const cancelInvitation = mutation({
       captain: true,
     });
 
-    // Update invitation status
     await ctx.db.patch(args.invitationId, {
       status: "cancelled",
       respondedAt: nowUTC(),
@@ -202,7 +187,6 @@ export const cancelInvitation = mutation({
   },
 });
 
-// Respond to an invitation (accept or reject)
 export const respondToInvitation = mutation({
   args: {
     invitationId: v.id("teamInvitations"),
@@ -211,13 +195,11 @@ export const respondToInvitation = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Get invitation
     const invitation = await ctx.db.get(args.invitationId);
     if (!invitation) {
       throw new Error("Invitation not found");
     }
 
-    // Validate invitation belongs to user
     if (invitation.invitedUserId !== user._id) {
       throw new Error("This invitation is not for you");
     }
@@ -226,7 +208,6 @@ export const respondToInvitation = mutation({
       throw new Error("Invitation is not pending");
     }
 
-    // Check if invitation hasn't expired
     const now = new Date();
     const expiresAt = new Date(invitation.expiresAt);
     if (now > expiresAt) {
@@ -247,20 +228,17 @@ export const respondToInvitation = mutation({
         tournamentId: team.tournamentId,
       });
 
-      // Add user to team
       await ctx.db.insert("teamMembers", {
         teamId: invitation.teamId,
         userId: user._id,
         role: "member",
       });
 
-      // Update invitation status
       await ctx.db.patch(args.invitationId, {
         status: "accepted",
         respondedAt: nowUTC(),
       });
 
-      // Cancel other pending invitations for this user in the same tournament
       const otherInvitations = await ctx.db
         .query("teamInvitations")
         .withIndex("by_user_and_status", (q) =>
@@ -279,7 +257,6 @@ export const respondToInvitation = mutation({
         }
       }
     } else {
-      // Reject invitation
       await ctx.db.patch(args.invitationId, {
         status: "rejected",
         respondedAt: nowUTC(),

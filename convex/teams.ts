@@ -3,6 +3,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, type QueryCtx, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
+import { hasMinimumRole, validateMinimumRole } from "./roles";
 import { upsertSubmissionGroup } from "./submissionGroups";
 import { recalculateSubmissionPoints } from "./submissions";
 import { validateUserNotInTournamentTeam } from "./tournaments";
@@ -19,20 +20,17 @@ export async function recalculateTeamPoints(
   ctx: MutationCtx,
   teamId: Id<"teams">,
 ): Promise<void> {
-  // Get all approved submissions for the team
   const approvedSubmissions = await ctx.db
     .query("submissions")
     .withIndex("by_team", (q) => q.eq("teamId", teamId))
     .filter((q) => q.eq(q.field("state"), "approved"))
     .collect();
 
-  // Sum up all points from approved submissions
   const totalPoints = approvedSubmissions.reduce(
     (sum, submission) => sum + (submission.pointsEarned || 0),
     0,
   );
 
-  // Update team with recalculated points
   await ctx.db.patch(teamId, {
     points: totalPoints,
     lastActivityAt: nowUTC(),
@@ -176,13 +174,11 @@ export const getDetails = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Fetch team
     const team = await ctx.db.get(args.teamId);
     if (!team) {
       throw new Error("Team not found");
     }
 
-    // Fetch tournament (in parallel with other fetches)
     const [tournament, teamMembers, submissions] = await Promise.all([
       ctx.db.get(team.tournamentId),
       ctx.db
@@ -195,7 +191,6 @@ export const getDetails = query({
         .collect(),
     ]);
 
-    // Fetch user details for each member with their roles
     const membersWithRoles = await Promise.all(
       teamMembers.map(async (member) => {
         const memberUser = await getUser(ctx, {
@@ -210,16 +205,12 @@ export const getDetails = query({
       }),
     );
 
-    // Filter out null users (deleted users)
     const members = membersWithRoles.filter((m) => m !== null);
 
-    // Find captain
     const captain = members.find((m) => m.memberRole === "captain") || null;
 
-    // Find current user's membership
     const userMembership = teamMembers.find((m) => m.userId === user._id);
 
-    // Calculate statistics
     const approvedSubmissions = submissions.filter(
       (s) => s.state === "approved",
     );
@@ -227,8 +218,7 @@ export const getDetails = query({
     const approvalRate =
       totalSubmissions > 0 ? approvedSubmissions.length / totalSubmissions : 0;
 
-    // Determine permissions
-    const isAdmin = user.roleNames.includes("admin");
+    const isAdmin = hasMinimumRole(user, "admin");
     const isCaptain = userMembership?.role === "captain";
     const isMember = Boolean(userMembership);
 
@@ -272,11 +262,7 @@ export const removeUserTeam = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Allow admin/tournament_manager to remove any team, or team captain to remove their own team
-    const isAdmin = user.roleNames.includes("admin");
-    const isTournamentManager = user.roleNames.includes("tournament_manager");
-
-    if (!isAdmin && !isTournamentManager) {
+    if (!hasMinimumRole(user, "tournament_manager")) {
       await validateIsTeamMember(ctx, {
         teamId: args.teamId,
         userId: user._id,
@@ -431,7 +417,6 @@ export async function getTeams(
     .filter((q) =>
       q.and(
         q.or(...filter.teamIds.map((id) => q.eq(q.field("_id"), id as string))),
-        // q.eq(q.field("tournamentId"), filter.tournamentId),
       ),
     )
     .collect();
@@ -449,9 +434,7 @@ export const upsertUserTeam = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const isAdmin = user.roleNames.includes("admin");
-
-    if (!isAdmin) {
+    if (!hasMinimumRole(user, "admin")) {
       if (args._id) {
         await validateIsTeamMember(ctx, {
           teamId: args._id,
@@ -485,7 +468,6 @@ export const upsertUserTeam = mutation({
       return args._id;
     }
 
-    // Validate tournament exists
     const tournament = await ctx.db.get(args.tournamentId);
     if (!tournament) {
       throw new Error("Tournament not found");
@@ -518,7 +500,6 @@ export const upsertUserTeam = mutation({
   },
 });
 
-// Leave a team
 export const leaveTeam = mutation({
   args: {
     teamId: v.id("teams"),
@@ -526,13 +507,11 @@ export const leaveTeam = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Get team
     const team = await ctx.db.get(args.teamId);
     if (!team) {
       throw new Error("Team not found");
     }
 
-    // Validate user is in team
     const membership = await ctx.db
       .query("teamMembers")
       .withIndex("by_team_and_user", (q) =>
@@ -544,30 +523,25 @@ export const leaveTeam = mutation({
       throw new Error("You are not a member of this team");
     }
 
-    // Get all team members
     const allMembers = await ctx.db
       .query("teamMembers")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
       .collect();
 
-    // If captain and other members exist, must transfer captaincy first
     if (membership.role === "captain" && allMembers.length > 1) {
       throw new Error(
         "As captain, you must transfer captaincy before leaving the team",
       );
     }
 
-    // Remove user from team
     await ctx.db.delete(membership._id);
 
-    // If last member, delete the team
     if (allMembers.length === 1) {
       await ctx.db.delete(args.teamId);
     }
   },
 });
 
-// Transfer captaincy to another team member
 export const transferCaptaincy = mutation({
   args: {
     teamId: v.id("teams"),
@@ -587,7 +561,6 @@ export const transferCaptaincy = mutation({
       userId: args.newCaptainId,
     });
 
-    // Update both roles
     await ctx.db.patch(currentCaptainMembership._id, { role: "member" });
     await ctx.db.patch(newCaptainMembership._id, { role: "captain" });
   },
@@ -647,7 +620,6 @@ async function validateUniqueTeamName(
   ctx: QueryCtx,
   args: ValidateUniqueTeamNameArgs,
 ) {
-  // Validate team name uniqueness within tournament
   const existingTeamName = await ctx.db
     .query("teams")
     .withIndex("by_tournament_and_name", (q) =>
@@ -668,13 +640,11 @@ export async function validateTeamHasSpace(
   ctx: QueryCtx,
   args: ValidateTeamHasSpaceArgs,
 ) {
-  // Get team
   const team = await ctx.db.get(args.teamId);
   if (!team) {
     throw new Error("Team not found");
   }
 
-  // Check team still has space
   const currentMembers = await ctx.db
     .query("teamMembers")
     .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
@@ -733,28 +703,21 @@ export const recalculatePoints = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Allow both admin and tournament_manager
-    if (
-      !user.roleNames.includes("admin") &&
-      !user.roleNames.includes("tournament_manager")
-    ) {
-      throw new Error(
+    validateMinimumRole(user, "tournament_manager", {
+      customMessage:
         "Admin or Tournament Manager access required to recalculate team points",
-      );
-    }
+    });
 
     const team = await ctx.db.get(args.teamId);
     if (!team) {
       throw new Error("Team not found");
     }
 
-    // Get all submissions for team (all states, all dates)
     const allSubmissions = await ctx.db
       .query("submissions")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
       .collect();
 
-    // Group submissions by date for team activities
     const submissionsByDate = new Map<string, typeof allSubmissions>();
     for (const submission of allSubmissions) {
       if (submission.submissionType === "team") {
@@ -764,7 +727,6 @@ export const recalculatePoints = mutation({
       }
     }
 
-    // Rebuild all submission groups
     for (const [date, _] of Array.from(submissionsByDate.entries())) {
       await upsertSubmissionGroup(ctx, {
         teamId: args.teamId,
@@ -773,7 +735,6 @@ export const recalculatePoints = mutation({
       });
     }
 
-    // Recalculate points for all submissions
     let updatedCount = 0;
     for (const submission of allSubmissions) {
       await recalculateSubmissionPoints(ctx, {
@@ -785,10 +746,8 @@ export const recalculatePoints = mutation({
       updatedCount++;
     }
 
-    // Recalculate team points once after all submissions updated
     await recalculateTeamPoints(ctx, args.teamId);
 
-    // Get final team state
     const updatedTeam = await ctx.db.get(args.teamId);
 
     return {
@@ -800,7 +759,6 @@ export const recalculatePoints = mutation({
   },
 });
 
-// Get detailed statistics for a team
 export const getStatistics = query({
   args: {
     teamId: v.id("teams"),
@@ -814,7 +772,6 @@ export const getStatistics = query({
     const tournament = await ctx.db.get(team.tournamentId);
     if (!tournament) return null;
 
-    // Get all submissions for the team
     const allSubmissions = await ctx.db
       .query("submissions")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
@@ -830,7 +787,6 @@ export const getStatistics = query({
       (s) => s.state === "rejected",
     );
 
-    // Calculate tournament duration and expected days
     const startDate = new Date(tournament.startDate);
     const endDate = new Date(tournament.endDate);
     const today = new Date();
@@ -848,16 +804,13 @@ export const getStatistics = query({
               (1000 * 60 * 60 * 24),
           ) + 1;
 
-    // Calculate approval rate
     const approvalRate =
       allSubmissions.length > 0
         ? approvedSubmissions.length / allSubmissions.length
         : 0;
 
-    // Calculate average points per day
     const averagePointsPerDay = daysSoFar > 0 ? team.points / daysSoFar : 0;
 
-    // Calculate current streak (consecutive days with approved submissions)
     const approvedDates = new Set(
       approvedSubmissions
         .map((s) => s.date)
@@ -880,7 +833,6 @@ export const getStatistics = query({
       }
     }
 
-    // Calculate member contributions
     const memberContributions = new Map<Id<"users">, number>();
     for (const submission of approvedSubmissions) {
       memberContributions.set(
@@ -893,7 +845,6 @@ export const getStatistics = query({
       memberContributions.entries(),
     ).map(([userId, count]) => ({ userId, count }));
 
-    // Calculate completion rate
     const uniqueSubmissionDays = new Set(approvedSubmissions.map((s) => s.date))
       .size;
     const completionRate = daysSoFar > 0 ? uniqueSubmissionDays / daysSoFar : 0;

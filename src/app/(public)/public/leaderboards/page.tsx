@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "../../../../../convex/_generated/api";
 
 export default function PublicLeaderboards() {
-  const leaderboards = useQuery(api.publicQueries.getPublicLeaderboards);
+  const leaderboards = useQuery(api.public.getPublicLeaderboards);
 
   return (
     <>

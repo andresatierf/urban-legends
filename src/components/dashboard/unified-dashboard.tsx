@@ -17,7 +17,6 @@ import { UserStatsGrid } from "./user-stats-grid";
 export function UnifiedDashboard() {
   const { user, isAdmin } = useUser();
 
-  // Fetch dashboard data
   const userDashboardData = useQuery(api.dashboard.getUserDashboardData);
   const adminDashboardData = useQuery(
     api.dashboard.getAdminDashboardData,

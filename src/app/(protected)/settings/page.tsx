@@ -51,7 +51,6 @@ export default function SettingsPage() {
   const dateFormatLongSelectId = useId();
   const dateFormatFullSelectId = useId();
 
-  // Load preferences from localStorage
   useEffect(() => {
     const stored = localStorage.getItem(WEEK_START_STORAGE_KEY);
     if (stored !== null) {
@@ -60,7 +59,6 @@ export default function SettingsPage() {
         setWeekStartsOn(parsed);
       }
     }
-    // Load date format preferences
     const storedShortFormat = getDateFormatPreference("short");
     const storedLongFormat = getDateFormatPreference("long");
     const storedFullFormat = getDateFormatPreference("full");
@@ -69,14 +67,12 @@ export default function SettingsPage() {
     setDateFormatFull(storedFullFormat);
   }, []);
 
-  // Save week start preference to localStorage
   const handleWeekStartChange = (value: string) => {
     const newStart = Number.parseInt(value, 10);
     setWeekStartsOn(newStart);
     localStorage.setItem(WEEK_START_STORAGE_KEY, value);
   };
 
-  // Save date format preference to localStorage
   const handleDateFormatChange = (value: string, length: FormatLength) => {
     if (length === "short") {
       setDateFormatShort(value);
@@ -113,7 +109,6 @@ export default function SettingsPage() {
       </SectionHeader>
 
       <div className="space-y-8">
-        {/* Theme Preferences Section */}
         <section>
           <Card>
             <CardHeader>
@@ -145,7 +140,6 @@ export default function SettingsPage() {
           </Card>
         </section>
 
-        {/* Calendar Preferences Section */}
         <section>
           <Card>
             <CardHeader>
@@ -187,7 +181,6 @@ export default function SettingsPage() {
                 </Select>
               </div>
 
-              {/* Short Date Format Preference */}
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex-1">
                   <label
@@ -229,7 +222,6 @@ export default function SettingsPage() {
                 </Select>
               </div>
 
-              {/* Long Date Format Preference */}
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex-1">
                   <label
@@ -271,7 +263,6 @@ export default function SettingsPage() {
                 </Select>
               </div>
 
-              {/* Full Date Format Preference */}
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex-1">
                   <label

@@ -22,7 +22,7 @@ import { api } from "../../../../convex/_generated/api";
 export default function AdminDashboard() {
   const { user } = useUser();
   const router = useRouter();
-  const dashboardData = useQuery(api.admin.getDashboardData);
+  const dashboardData = useQuery(api.role.admin.getDashboardData);
 
   useEffect(() => {
     if (user && !user.roleNames?.includes("admin")) {

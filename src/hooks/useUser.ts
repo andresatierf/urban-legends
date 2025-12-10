@@ -1,4 +1,7 @@
 import { useQuery } from "convex/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { hasMinimumRole, type RoleName } from "../../common/roles";
 import { api } from "../../convex/_generated/api";
 import type { UserWithRoles } from "../../convex/users";
 
@@ -14,4 +17,20 @@ export function useUser({ shouldThrow }: { shouldThrow?: boolean } = {}) {
     isTournamentManager:
       user?.roleNames?.includes("tournament_manager") ?? false,
   };
+}
+
+export function useUserWithMinimumRole(
+  role: RoleName,
+  target: string = "/dashboard",
+) {
+  const { user } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user && !hasMinimumRole(user, role)) {
+      router.replace(target);
+    }
+  }, [user, router, role, target]);
+
+  return { user };
 }

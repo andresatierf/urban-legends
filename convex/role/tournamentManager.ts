@@ -1,8 +1,9 @@
 import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
-import { query } from "./_generated/server";
-import { extractDateFromISO, nowUTC } from "./lib/dates";
-import { getCurrentUserOrThrow } from "./users";
+import { query } from "../_generated/server";
+import { extractDateFromISO, nowUTC } from "../lib/dates";
+import { enrichWithRelations } from "../lib/helpers";
+import { hasMinimumRole, validateMinimumRole } from "../roles";
+import { getCurrentUserOrThrow } from "../users";
 
 /**
  * Get the count of pending submissions for tournaments assigned to this manager.
@@ -16,23 +17,16 @@ export const getPendingCount = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (
-      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
-    ) {
+    if (!hasMinimumRole(user, "tournament_manager")) {
       return 0;
     }
 
-    // TODO: Filter by assigned tournaments once spec 11 is implemented
-    // For now, show all pending submissions
-
-    // Count pending individual submissions
     const pendingIndividual = await ctx.db
       .query("submissions")
       .withIndex("by_state", (q) => q.eq("state", "pending"))
       .filter((q) => q.eq(q.field("submissionType"), "individual"))
       .collect();
 
-    // Count pending submission groups
     const pendingGroups = await ctx.db
       .query("submissionGroups")
       .withIndex("by_state", (q) => q.eq("state", "pending"))
@@ -50,66 +44,40 @@ export const getDashboardStats = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (
-      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
-    ) {
-      throw new Error("Tournament Manager or Admin access required");
-    }
+    validateMinimumRole(user, "tournament_manager");
 
-    // Get all tournaments (tournament managers can access all)
     const tournaments = await ctx.db.query("tournaments").collect();
 
     const now = extractDateFromISO(nowUTC());
 
-    // Categorize tournaments
     const activeTournaments = tournaments.filter(
       (t) => t.startDate <= now && t.endDate >= now,
     );
     const upcomingTournaments = tournaments.filter((t) => t.startDate > now);
     const endedTournaments = tournaments.filter((t) => t.endDate < now);
 
-    const tournamentIds = tournaments.map((t) => t._id);
-    const teams = await ctx.db
-      .query("teams")
-      .filter((q) =>
-        q.or(...tournamentIds.map((id) => q.eq(q.field("tournamentId"), id))),
-      )
-      .collect();
+    const enrichedTournaments = await enrichWithRelations(ctx, tournaments, {
+      teams: { table: "teams", foreignKeyField: "tournamentId" },
+    });
 
-    const teamsByTournamentId = teams.reduce<
-      Map<Id<"tournaments">, Doc<"teams">[]>
-    >((acc, team) => {
-      acc.set(team.tournamentId, [...(acc.get(team.tournamentId) || []), team]);
-      return acc;
-    }, new Map());
+    const allTeams = enrichedTournaments.flatMap((t) => t.teams);
+    const enrichedTeams = await enrichWithRelations(ctx, allTeams, {
+      submissions: { table: "submissions", foreignKeyField: "teamId" },
+    });
 
-    const teamIds = teams.map((t) => t._id);
-    const submissions = await ctx.db
-      .query("submissions")
-      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("teamId"), id))))
-      .collect();
+    const teamSubmissionsMap = new Map(
+      enrichedTeams.map((t) => [t._id, t.submissions]),
+    );
 
-    const submissionsByTeamId = submissions.reduce<
-      Map<Id<"teams">, Doc<"submissions">[]>
-    >((acc, submission) => {
-      acc.set(submission.teamId, [
-        ...(acc.get(submission.teamId) || []),
-        submission,
-      ]);
-      return acc;
-    }, new Map());
-
-    // Count teams and submissions across all tournaments
     let totalTeams = 0;
     let totalSubmissions = 0;
     let pendingSubmissions = 0;
 
-    for (const tournament of tournaments) {
-      const teams = teamsByTournamentId.get(tournament._id) || [];
-      totalTeams += teams.length;
+    for (const enrichedTournament of enrichedTournaments) {
+      totalTeams += enrichedTournament.teams.length;
 
-      for (const team of teams) {
-        const submissions = submissionsByTeamId.get(team._id) || [];
+      for (const team of enrichedTournament.teams) {
+        const submissions = teamSubmissionsMap.get(team._id) || [];
 
         totalSubmissions += submissions.length;
         pendingSubmissions += submissions.filter(
@@ -148,13 +116,8 @@ export const getRecentActivity = query({
     const user = await getCurrentUserOrThrow(ctx);
     const limit = args.limit || 30;
 
-    if (
-      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
-    ) {
-      throw new Error("Tournament Manager or Admin access required");
-    }
+    validateMinimumRole(user, "tournament_manager");
 
-    // Get all tournaments
     const tournaments = await ctx.db.query("tournaments").collect();
 
     const activities: Array<{
@@ -164,7 +127,6 @@ export const getRecentActivity = query({
       tournamentName?: string;
     }> = [];
 
-    // Get recent teams and submissions for each tournament
     for (const tournament of tournaments) {
       const teams = await ctx.db
         .query("teams")
@@ -182,7 +144,6 @@ export const getRecentActivity = query({
         });
       }
 
-      // Get recent submissions
       for (const team of teams) {
         const submissions = await ctx.db
           .query("submissions")
@@ -204,65 +165,7 @@ export const getRecentActivity = query({
       }
     }
 
-    // Sort by timestamp and limit
     activities.sort((a, b) => b.timestamp - a.timestamp);
     return activities.slice(0, limit);
-  },
-});
-
-export const getSubmissions = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    if (
-      !["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))
-    ) {
-      throw new Error("Tournament Manager or Admin access required");
-    }
-
-    const submissions = await ctx.db.query("submissions").collect();
-    if (submissions.length === 0) return [];
-
-    const userIds = Array.from(new Set(submissions.map((s) => s.userId)));
-    const teamIds = Array.from(new Set(submissions.map((s) => s.teamId)));
-
-    const [users, teams] = await Promise.all([
-      ctx.db
-        .query("users")
-        .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("_id"), id))))
-        .collect(),
-      ctx.db
-        .query("teams")
-        .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))))
-        .collect(),
-    ]);
-
-    const userIdMap = users.reduce<Map<Id<"users">, Doc<"users">>>(
-      (acc, user) => {
-        acc.set(user._id, user);
-        return acc;
-      },
-      new Map(),
-    );
-
-    const teamIdMap = teams.reduce<Map<Id<"teams">, Doc<"teams">>>(
-      (acc, team) => {
-        acc.set(team._id, team);
-        return acc;
-      },
-      new Map(),
-    );
-
-    const submissionsWithUserAndTeam = submissions.map((s) => ({
-      ...s,
-      user: userIdMap.get(s.userId) as Doc<"users">,
-      team: teamIdMap.get(s.teamId) as Doc<"teams">,
-    }));
-
-    return submissionsWithUserAndTeam.toSorted((a, b) => {
-      if (a.date === b.date) return 0;
-      return a.date.localeCompare(b.date);
-    });
   },
 });

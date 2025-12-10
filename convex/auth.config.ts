@@ -8,7 +8,6 @@ if (!clerkJwtIssuerDomain) {
 export default {
   providers: [
     {
-      // original
       // domain: process.env.CONVEX_SITE_URL,
       domain: clerkJwtIssuerDomain,
       applicationID: "convex",

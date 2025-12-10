@@ -17,8 +17,10 @@ import {
 } from "../ui/alert-dialog";
 
 export function SystemActionsPanel() {
-  const runIntegrityCheck = useMutation(api.admin.runIntegrityCheck);
-  const cleanupOrphanedRecords = useMutation(api.admin.cleanupOrphanedRecords);
+  const runIntegrityCheck = useMutation(api.role.admin.runIntegrityCheck);
+  const cleanupOrphanedRecords = useMutation(
+    api.role.admin.cleanupOrphanedRecords,
+  );
 
   const [isCheckingIntegrity, setIsCheckingIntegrity] = useState(false);
   const [isCleaningUp, setIsCleaningUp] = useState(false);

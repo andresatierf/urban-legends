@@ -26,7 +26,6 @@ export default function SubmissionsPage() {
   const { user, isAdmin, isTournamentManager } = useUser();
   const router = useRouter();
 
-  // Mutations for submission actions
   const approve = useMutation(api.submissions.approve);
   const reject = useMutation(api.submissions.reject);
   const remove = useMutation(api.submissions.remove);
@@ -56,7 +55,6 @@ export default function SubmissionsPage() {
   //   (s) => s.state === "rejected",
   // );
 
-  // Fetch user's teams with tournament data
   const userTeams = useQuery(
     api.teams.list,
     user ? { userId: user._id } : "skip",
@@ -70,7 +68,6 @@ export default function SubmissionsPage() {
     );
   }, [tournaments]);
 
-  // Augment teams with tournament data
   const teamsWithTournaments = useMemo(() => {
     if (!userTeams) return [];
     return userTeams
@@ -81,7 +78,6 @@ export default function SubmissionsPage() {
       .filter((team) => team.tournament);
   }, [userTeams, tournamentIdMap]);
 
-  // Set default team selection
   useEffect(() => {
     if (teamsWithTournaments.length > 0 && !selectedTeamId) {
       setSelectedTeamId(teamsWithTournaments[0]._id);
@@ -223,7 +219,6 @@ export default function SubmissionsPage() {
             </Card>
           ) : (
             <div className="space-y-6">
-              {/* Calendar */}
               {selectedTeam?.tournament && selectedTeamId && (
                 <>
                   <SubmissionCalendar
@@ -254,7 +249,6 @@ export default function SubmissionsPage() {
             </Card>
           ) : (
             <div className="space-y-8">
-              {/* Your Submissions */}
               <div className="space-y-4">
                 <h2 className="font-semibold text-2xl">Your Submissions</h2>
                 <SubmissionCardList
@@ -269,7 +263,6 @@ export default function SubmissionsPage() {
                 />
               </div>
 
-              {/* Admin/Manager Sections */}
               {(isAdmin || isTournamentManager) && (
                 <>
                   <div className="space-y-4">
