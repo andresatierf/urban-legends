@@ -7,135 +7,87 @@ tags:
 
 # Documentation Sync Command
 
-Review recent git commits and update project documentation to reflect the current state of the application.
+Review recent commits and update project documentation to match current implementation state.
 
-## Task Overview
+## Process
 
-You need to:
-
-1. **Review Recent Commits**: Analyze the last 10 commits to understand what has been implemented
-2. **Update Documentation**: Sync docs/COMPLETED.md and docs/MISSING.md with actual implementation status
-3. **Organize Specs**: Move completed specs from specs/ to specs/done/ directory
-
-## Step 1: Review Recent Commits
-
-Use the Bash tool to get an overview of recent work:
+### 1. Review Recent Work
 
 ```bash
 git log --oneline -10
-```
-
-Then get more details on the commits:
-
-```bash
 git log -5 --pretty=format:"%h - %s%n%b" --stat
 ```
 
-## Step 2: Analyze Current State
+### 2. Analyze Current State
 
-Read the following files to understand current documentation state:
-
+Read:
 - docs/COMPLETED.md
 - docs/MISSING.md
-- All spec files in specs/ directory (use Glob to find them)
-- All spec files in specs/done/ directory for comparison
+- All specs in specs/ (use Glob)
+- All specs in specs/done/
 
-## Step 3: Cross-Reference Implementation
+### 3. Verify Implementation
 
 For each spec in specs/:
+- Search codebase to verify implementation
+- Check for matching components, mutations, queries, pages
+- Determine status: fully implemented / partially implemented / not started
 
-- Search the codebase to verify if the feature described in the spec has been implemented
-- Check if there are components, mutations, queries, or pages that match the spec
-- Determine completion status: fully implemented, partially implemented, or not started
+### 4. Update COMPLETED.md
 
-## Step 4: Update COMPLETED.md
-
-Update docs/COMPLETED.md to include:
-
-- All features that have been fully implemented (based on commits and code verification)
-- Reference to the spec file for each completed feature
-- Brief description of what was implemented
-- Commit references where applicable
-
-Format:
+Add fully implemented features:
 
 ```markdown
 ## [Feature Name] (spec: XX-feature-name.md)
 
-**Implemented in**: [commit hash(es)]
+**Implemented in**: [commit hash]
 
-- Description of what was implemented
-- Key components/files created
-- Any notes about the implementation
-
----
+- What was implemented
+- Key files created
+- Notes
 ```
 
-## Step 5: Update MISSING.md
+### 5. Update MISSING.md
 
-Update docs/MISSING.md to reflect:
+Update to reflect:
+- Features NOT yet implemented
+- Incomplete specs
+- Gaps and technical debt
 
-- Features that are NOT yet implemented
-- Specs that haven't been completed
-- Any gaps or technical debt identified
+Remove completed items.
 
-Remove items that have been completed.
+### 6. Organize Specs
 
-Format:
+Move fully completed specs to done/:
 
-```markdown
-## [Feature Name] (spec: XX-feature-name.md)
-
-**Status**: Not Started / Partially Implemented
-
-- What's missing
-- Dependencies or blockers
-- Priority level (if determinable)
-
----
+```bash
+git mv specs/16-feature.md specs/done/16-feature.md
 ```
 
-## Step 6: Organize Specs
+Only move 100% complete specs.
 
-For each fully completed spec in specs/:
+### 7. Provide Summary
 
-- Move it to specs/done/ using `git mv`
-- Example: `git mv specs/16-submission-detail-page.md specs/done/16-submission-detail-page.md`
+- Specs moved to done/
+- New features in COMPLETED.md
+- Items removed from MISSING.md
+- Partially complete specs (with %)
+- Recommendations
 
-Only move specs that are 100% complete based on your verification.
+## Tools to Use
 
-## Step 7: Summary
+- **Bash**: git log, git mv
+- **Read**: Spec and doc files
+- **Glob**: Find all specs
+- **Grep**: Search for implementation
+- **Edit/Write**: Update docs
+- **Explore agent**: Complex searches
 
-Provide the user with:
+## Important
 
-- Count of specs moved to done/
-- Count of new features added to COMPLETED.md
-- Count of items removed from MISSING.md
-- Any specs that are partially complete (with percentage estimate if possible)
-- Recommendations for next steps
+- **Be thorough**: Actually verify implementation, don't rely only on commit messages
+- **Be accurate**: Only mark complete if ALL spec requirements met
+- **Use git mv**: Preserve history when moving specs
+- **No commits**: This command only updates docs, doesn't create commits
 
-## Important Notes
-
-- **Be thorough**: Actually search the codebase to verify implementation, don't just rely on commit messages
-- **Be accurate**: Only mark specs as complete if ALL requirements in the spec are implemented
-- **Use Git**: Always use `git mv` to move specs (not regular `mv`) to preserve history
-- **No commits**: This command only updates documentation, it does NOT create git commits
-- **Preserve formatting**: Maintain the existing format and style of COMPLETED.md and MISSING.md
-
-## Tools You Should Use
-
-- **Bash**: For git log and git mv commands
-- **Read**: To read spec files and documentation
-- **Glob**: To find all spec files
-- **Grep**: To search codebase for implementation evidence
-- **Edit** or **Write**: To update documentation files
-- **Task (Explore agent)**: For complex codebase searches to verify implementation
-
-## Success Criteria
-
-- All documentation accurately reflects current implementation state
-- Completed specs are in specs/done/
-- Incomplete specs remain in specs/
-- COMPLETED.md lists all finished features
-- MISSING.md lists remaining work
-- User receives clear summary of changes
+Success means: Documentation accurately reflects current state, completed specs in done/, incomplete specs in specs/.
