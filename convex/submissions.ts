@@ -9,12 +9,23 @@ import {
   toUTCEndOfDayString,
 } from "./lib/dates";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
+import { cumulativeScoring } from "./scoring/methods/cumulative";
+import { fixedPointsScoring } from "./scoring/methods/fixed";
+import { formulaScoring } from "./scoring/methods/formula";
+import { rankedScoring } from "./scoring/methods/ranked";
+import { getScoringMethod, registerScoringMethod } from "./scoring/registry";
 import {
   calculateGroupMetrics,
   upsertSubmissionGroup,
 } from "./submissionGroups";
 import { recalculateTeamPoints } from "./teams";
 import { getCurrentUserOrThrow, getUser, type UserWithRoles } from "./users";
+
+// Register all scoring methods
+registerScoringMethod(fixedPointsScoring);
+registerScoringMethod(formulaScoring);
+registerScoringMethod(rankedScoring);
+registerScoringMethod(cumulativeScoring);
 
 /**
  * Gets the count of active participants in a submission group.
@@ -55,6 +66,9 @@ async function getParticipantCount(
  * (approved, rejected, deleted) to ensure points are correctly calculated
  * and updated for both the submission and its team.
  *
+ * Uses the scoring engine if tournament has a competition type, otherwise
+ * falls back to legacy scoring logic for backward compatibility.
+ *
  * @param ctx - Mutation context
  * @param args - Submission ID and optional previous state
  * @returns The updated points difference (positive = points added, negative = points removed)
@@ -83,82 +97,144 @@ export async function recalculateSubmissionPoints(
   if (!tournament) throw new Error("Tournament not found");
   if (!team) throw new Error("Team not found");
 
-  const scoringConfig = tournament.scoringConfig || {
-    individualPoints: { base: 1, advanced: 1 },
-    teamExercisePoints: { base: 1, advanced: 1 },
-    teamExerciseThreshold: 0.5,
-  };
+  // Only calculate points if submission is approved
+  if (submission.state !== "approved") {
+    await ctx.db.patch(submission._id, {
+      pointsEarned: 0,
+      managedBy: args.managedBy,
+    });
 
-  const tier = submission.tier || "base";
-
-  if (submission.submissionType === "team" && submission.submissionGroupId) {
-    const group = await ctx.db.get(submission.submissionGroupId);
-    if (!group) {
-      throw new Error("Group not found");
+    if (!args.skipTeamRecalculation) {
+      await recalculateTeamPoints(ctx, submission.teamId);
     }
 
-    const groupSubmissions = await ctx.db
-      .query("submissions")
-      .withIndex("by_group", (q) =>
-        q.eq("submissionGroupId", submission.submissionGroupId),
-      )
-      .filter((q) =>
-        q.and(
-          q.neq(q.field("state"), "deleted"),
-          q.neq(q.field("state"), "rejected"),
-        ),
-      )
+    return -oldPoints;
+  }
+
+  // Get competition type if tournament uses one
+  let competitionType: Doc<"competitionTypes"> | null = null;
+  if (tournament.competitionTypeId) {
+    competitionType = await ctx.db.get(tournament.competitionTypeId);
+  }
+
+  let newPoints = 0;
+  let scoringMetadata:
+    | {
+        scoringMethod: string;
+        calculatedAt: string;
+        rawMetrics?: Record<string, number>;
+        scoringVersion?: number;
+      }
+    | undefined;
+
+  if (competitionType) {
+    // Use scoring engine
+    const teamMembers = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
       .collect();
 
-    const metrics = await calculateGroupMetrics(ctx, {
-      groupSubmissions,
-      teamId: submission.teamId,
-      tournamentId: submission.tournamentId,
+    const scoringMethod = getScoringMethod(
+      competitionType.scoringConfig.method,
+    );
+    const result = await scoringMethod.calculate(ctx, {
+      submission,
+      team,
+      tournament,
+      competitionType,
+      teamMembers,
     });
 
-    await ctx.db.patch(submission.submissionGroupId, {
-      state: metrics.groupState,
-      tier: metrics.tier,
-      participantCount: metrics.participantCount,
-      totalTeamMembers: metrics.totalTeamMembers,
-      participationRate: metrics.participationRate,
-      isTeamExercise: metrics.isTeamExercise,
-      pointsEarned: metrics.pointsEarned,
-      managedBy: args.managedBy,
-      updatedAt: nowUTC(),
-    });
-
-    const pointsPerSubmission =
-      metrics.participantCount > 0
-        ? metrics.pointsEarned / metrics.participantCount
-        : 0;
-
-    for (const groupSubmission of groupSubmissions) {
-      await ctx.db.patch(groupSubmission._id, {
-        pointsEarned: pointsPerSubmission,
-        state: metrics.groupState,
-        managedBy: args.managedBy,
-      });
-    }
+    newPoints = result.points;
+    scoringMetadata = {
+      scoringMethod: result.metadata.method,
+      calculatedAt: result.metadata.calculatedAt,
+      rawMetrics: result.metadata.rawMetrics,
+    };
   } else {
-    const newPoints =
-      submission.state === "approved"
-        ? scoringConfig.individualPoints[tier]
-        : 0;
+    // Legacy scoring logic (backward compatibility)
+    const scoringConfig = tournament.scoringConfig || {
+      individualPoints: { base: 1, advanced: 1 },
+      teamExercisePoints: { base: 1, advanced: 1 },
+      teamExerciseThreshold: 0.5,
+    };
 
-    await ctx.db.patch(submission._id, {
-      pointsEarned: newPoints,
-      managedBy: args.managedBy,
-    });
+    const tier = submission.tier || "base";
+
+    if (submission.submissionType === "team" && submission.submissionGroupId) {
+      const group = await ctx.db.get(submission.submissionGroupId);
+      if (!group) {
+        throw new Error("Group not found");
+      }
+
+      const groupSubmissions = await ctx.db
+        .query("submissions")
+        .withIndex("by_group", (q) =>
+          q.eq("submissionGroupId", submission.submissionGroupId),
+        )
+        .filter((q) =>
+          q.and(
+            q.neq(q.field("state"), "deleted"),
+            q.neq(q.field("state"), "rejected"),
+          ),
+        )
+        .collect();
+
+      const metrics = await calculateGroupMetrics(ctx, {
+        groupSubmissions,
+        teamId: submission.teamId,
+        tournamentId: submission.tournamentId,
+      });
+
+      await ctx.db.patch(submission.submissionGroupId, {
+        state: metrics.groupState,
+        tier: metrics.tier,
+        participantCount: metrics.participantCount,
+        totalTeamMembers: metrics.totalTeamMembers,
+        participationRate: metrics.participationRate,
+        isTeamExercise: metrics.isTeamExercise,
+        pointsEarned: metrics.pointsEarned,
+        managedBy: args.managedBy,
+        updatedAt: nowUTC(),
+      });
+
+      const pointsPerSubmission =
+        metrics.participantCount > 0
+          ? metrics.pointsEarned / metrics.participantCount
+          : 0;
+
+      for (const groupSubmission of groupSubmissions) {
+        await ctx.db.patch(groupSubmission._id, {
+          pointsEarned: pointsPerSubmission,
+          state: metrics.groupState,
+          managedBy: args.managedBy,
+        });
+      }
+
+      // Return early since we already updated all group submissions
+      if (!args.skipTeamRecalculation) {
+        await recalculateTeamPoints(ctx, submission.teamId);
+      }
+
+      return pointsPerSubmission - oldPoints;
+    }
+
+    newPoints = scoringConfig.individualPoints[tier];
   }
+
+  await ctx.db.patch(submission._id, {
+    pointsEarned: newPoints,
+    managedBy: args.managedBy,
+    scoringMetadata,
+  });
 
   if (!args.skipTeamRecalculation) {
     await recalculateTeamPoints(ctx, submission.teamId);
   }
 
   const updatedSubmission = await ctx.db.get(args.submissionId);
-  const newPoints = updatedSubmission?.pointsEarned || 0;
-  return newPoints - oldPoints;
+  const finalPoints = updatedSubmission?.pointsEarned || 0;
+  return finalPoints - oldPoints;
 }
 
 export const list = query({
@@ -265,8 +341,13 @@ export const upsert = mutation({
     date: v.string(),
     teamId: v.id("teams"),
     description: v.optional(v.string()),
+    // Legacy fields (for backward compatibility with daily activity tracker)
     tier: v.optional(v.union(v.literal("base"), v.literal("advanced"))),
-    submissionType: v.union(v.literal("individual"), v.literal("team")),
+    submissionType: v.optional(
+      v.union(v.literal("individual"), v.literal("team")),
+    ),
+    // New flexible data field for competition types
+    data: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -347,14 +428,15 @@ export const upsert = mutation({
       }
     }
 
-    const data = {
+    const submissionData = {
       date: toUTCDateString(args.date),
       userId: user._id,
       teamId: args.teamId,
       tournamentId: team.tournamentId,
       description: args.description,
-      tier: args.tier || "base",
+      tier: args.tier,
       submissionType: args.submissionType,
+      data: args.data,
     };
 
     let submissionId: Id<"submissions">;
@@ -372,7 +454,7 @@ export const upsert = mutation({
 
       const typeChanged = submission.submissionType !== args.submissionType;
 
-      await ctx.db.patch(args._id, data);
+      await ctx.db.patch(args._id, submissionData);
       submissionId = args._id;
 
       if (typeChanged) {
@@ -417,7 +499,7 @@ export const upsert = mutation({
       }
     } else {
       submissionId = await ctx.db.insert("submissions", {
-        ...data,
+        ...submissionData,
         state: "pending",
         createdBy: user._id,
         pointsEarned: 0,
