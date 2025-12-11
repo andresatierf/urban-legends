@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Urban Legends is a web-based tournament tracking platform built with Next.js 15, Convex (backend), and Clerk (authentication). The application allows administrators to create and manage tournaments while users can form teams, join tournaments, and submit entries for tournament activities.
 
+The platform supports multiple competition types through a flexible, pluggable architecture. Tournaments can use built-in competition types (daily activity tracker, photo contest, fitness challenge) or custom types with their own submission schemas, scoring methods, and validation rules.
+
 ## Development Commands
 
 ### Running the Application
@@ -59,12 +61,26 @@ bun run format:fix      # Auto-format code
   schema.ts              # Database schema definitions
   tournaments.ts         # Tournament queries & mutations
   teams.ts              # Team management logic
-  submissions.ts        # Submission tracking
+  submissions.ts        # Submission tracking (with scoring engine integration)
   users.ts              # User management & auth helpers
   roles.ts              # Role-based access control
   admin.ts              # Admin-specific operations
   http.ts               # Webhook handlers (Clerk integration)
   auth.config.ts        # Convex auth configuration
+  competitionTypes.ts   # Competition type queries (list, get, getBySlug)
+
+  /competitionTypes/    # Competition type definitions
+    builtins.ts         # Built-in competition types (daily activity, photo contest, fitness)
+    init.ts            # Initialization function for built-in types
+
+  /scoring/             # Pluggable scoring engine
+    engine.ts           # Core scoring interfaces (ScoringMethod, ScoringContext, ScoringResult)
+    registry.ts         # Scoring method registration and lookup
+    /methods/           # Scoring method implementations
+      fixed.ts          # Fixed points per submission (legacy daily activity)
+      formula.ts        # Expression-based scoring (e.g., "distance * 10 + duration * 0.5")
+      ranked.ts         # Position-based scoring (1st=100pts, 2nd=80pts, etc.)
+      cumulative.ts     # Weighted metric summation
 
 /src/
   /app/                  # Next.js App Router
@@ -94,14 +110,26 @@ bun run format:fix      # Auto-format code
 
 Key tables in Convex:
 
+- **competitionTypes**: Defines competition types with submission schemas, scoring methods, and validation rules
+  - Built-in types: `daily-activity-tracker`, `photo-contest`, `fitness-challenge`
+  - Supports versioning (slug + version uniqueness)
+  - Fields: slug, name, description, version, status, submissionSchema, scoringConfig, validationRules, features, uiComponents
 - **tournaments**: Tournament definitions with start/end dates and team size constraints
+  - Optional `competitionTypeId` links to a competition type (null for legacy tournaments)
+  - Legacy tournaments continue using hardcoded daily activity logic
 - **teams**: Teams associated with tournaments
 - **teamMembers**: Junction table linking users to teams with roles (captain/member)
-- **submissions**: Daily activity submissions by teams (with approval states: pending/approved/rejected/deleted)
+- **submissions**: Flexible submissions supporting multiple competition types
+  - Optional `data` field stores structured submission data per competition type schema
+  - Optional `submissionType` (individual/team) and `tier` (base/advanced) for flexible workflows
+  - Optional `scoringMetadata` tracks scoring method, calculation time, and raw metrics
+  - Approval states: pending/approved/rejected/deleted
 - **users**: User profiles synced from Clerk
 - **roles** + **userRoles**: Role-based access control (admin/user)
 
 All tables use auto-generated IDs via Convex. Relationships use typed IDs like `v.id("tournaments")`.
+
+**Backward Compatibility**: Existing tournaments without a `competitionTypeId` continue using the original hardcoded daily activity scoring logic. New tournaments can optionally specify a competition type for flexible scoring.
 
 ### Authentication Flow
 
@@ -142,6 +170,29 @@ if (!user.roles.includes("admin")) {
 **Tournament Status Logic**:
 Tournaments are sorted by status (active > upcoming > ended) in `tournaments.list`. Use date comparison with ISO strings.
 
+**Competition Types**:
+
+```typescript
+// Fetch all active competition types
+const competitionTypes = useQuery(api.competitionTypes.list, { status: "active" });
+
+// Get specific competition type by slug (returns latest version)
+const dailyActivity = useQuery(api.competitionTypes.getBySlug, { slug: "daily-activity-tracker" });
+
+// Get specific version
+const photoContestV1 = useQuery(api.competitionTypes.getBySlug, { slug: "photo-contest", version: 1 });
+```
+
+**Scoring Engine**:
+The scoring engine uses a pluggable architecture with four built-in methods:
+
+- **fixed**: Fixed points per submission (e.g., legacy daily activity with 10pts individual, 25pts team exercise)
+- **formula**: Expression-based scoring (e.g., `"(distance * 10) + (duration * 0.5)"`)
+- **ranked**: Position-based scoring (1st=100pts, 2nd=80pts, 3rd=60pts, etc.)
+- **cumulative**: Weighted sum of multiple metrics (e.g., `distance * 1.0 + calories * 0.1`)
+
+When a submission is created or updated, `recalculateSubmissionPoints` automatically uses the tournament's competition type scoring method. Legacy tournaments without a `competitionTypeId` continue using the original hardcoded logic.
+
 **Form Validation**:
 Forms use TanStack Form with Zod schemas. See existing tournament/team forms for patterns.
 
@@ -173,6 +224,9 @@ NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 - User-side team creation is admin-only currently
 - Submission approval workflow is incomplete
 - Tournament leaderboard UI not yet implemented
+- Frontend UI for creating tournaments with competition types not yet implemented (backend ready)
+- Dynamic form generation based on competition type submission schemas not yet implemented
+- Built-in competition types need to be initialized via `competitionTypes.init.initializeBuiltInTypes` internal mutation
 
 ## Development Notes
 
@@ -183,3 +237,22 @@ NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 - The `cn()` utility (in `src/lib/utils.ts`) combines `clsx` + `tailwind-merge` for optimal class merging
 - Component styling follows Tailwind + CVA (class-variance-authority) patterns
 - UI components are built with Radix UI primitives following shadcn/ui conventions
+
+### Multi-Competition Type Architecture
+
+The platform supports multiple competition types through a pluggable architecture:
+
+**Adding New Scoring Methods**:
+1. Create a new file in `convex/scoring/methods/` implementing the `ScoringMethod` interface
+2. Register it in `convex/submissions.ts` by importing and calling `registerScoringMethod(yourMethod)`
+3. The method will automatically be available for use in competition type configurations
+
+**Creating Built-in Competition Types**:
+1. Define the type in `convex/competitionTypes/builtins.ts` following existing patterns
+2. Add it to the `BUILTIN_COMPETITION_TYPES` array
+3. Run the `initializeBuiltInTypes` internal mutation to create it in the database
+
+**Backward Compatibility**:
+- Legacy tournaments without `competitionTypeId` continue using hardcoded daily activity scoring
+- The `recalculateSubmissionPoints` function in `convex/submissions.ts` handles both paths
+- All scoring methods are registered at module initialization in `submissions.ts`

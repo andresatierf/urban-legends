@@ -242,33 +242,35 @@ export const getStatistics = query({
 
     const enrichedRecent = await Promise.all(
       recentReviews.map(async (item) => {
-        if ("submissionType" in item) {
+        // Check if it's a submission group (has updatedAt field)
+        if ("updatedAt" in item) {
           const [team, tournament] = await Promise.all([
             ctx.db.get(item.teamId),
             ctx.db.get(item.tournamentId),
           ]);
 
           return {
-            type: "individual" as const,
+            type: "group" as const,
             id: item._id,
             state: item.state,
             date: item.date,
+            updatedAt: item.updatedAt,
             team,
             tournament,
           };
         }
 
+        // Otherwise it's an individual submission
         const [team, tournament] = await Promise.all([
           ctx.db.get(item.teamId),
           ctx.db.get(item.tournamentId),
         ]);
 
         return {
-          type: "group" as const,
+          type: "individual" as const,
           id: item._id,
           state: item.state,
           date: item.date,
-          updatedAt: item.updatedAt,
           team,
           tournament,
         };
