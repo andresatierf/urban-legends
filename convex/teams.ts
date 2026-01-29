@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, type QueryCtx, query } from "./_generated/server";
@@ -572,8 +573,38 @@ export const transferCaptaincy = mutation({
       userId: args.newCaptainId,
     });
 
+    const team = await ctx.db.get(args.teamId);
+    const oldCaptain = await ctx.db.get(user._id);
+    const newCaptain = await ctx.db.get(args.newCaptainId);
+
     await ctx.db.patch(currentCaptainMembership._id, { role: "member" });
     await ctx.db.patch(newCaptainMembership._id, { role: "captain" });
+
+    // Notify new captain
+    if (team && newCaptain) {
+      await ctx.scheduler.runAfter(0, internal.notifications.create, {
+        userId: args.newCaptainId,
+        type: "captain_role_transferred_to",
+        title: `You are now captain of ${team.name}`,
+        body: `${oldCaptain?.name || "The previous captain"} transferred captain role to you.`,
+        relatedEntityId: args.teamId,
+        relatedEntityType: "team",
+        actionUrl: `/teams/${args.teamId}`,
+      });
+    }
+
+    // Notify old captain
+    if (team && oldCaptain) {
+      await ctx.scheduler.runAfter(0, internal.notifications.create, {
+        userId: user._id,
+        type: "captain_role_transferred_from",
+        title: `You transferred captain role in ${team.name}`,
+        body: `${newCaptain?.name || "A team member"} is now the captain.`,
+        relatedEntityId: args.teamId,
+        relatedEntityType: "team",
+        actionUrl: `/teams/${args.teamId}`,
+      });
+    }
   },
 });
 

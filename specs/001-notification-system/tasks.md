@@ -171,19 +171,19 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T058 [P] Add NotificationActions component for Accept/Reject buttons in src/components/notifications/notification-actions.tsx
-- [ ] T059 [P] Implement graceful handling of deleted entities in notification display
-- [ ] T060 [P] Add relative time formatting (formatDistanceToNow) to notifications
-- [ ] T061 Add loading states and skeleton UI to all notification components
-- [ ] T062 Add error boundaries for notification components
-- [ ] T063 [P] Run Biome linting and formatting on all modified files (bun run lint:fix, bun run format:fix)
-- [ ] T064 [P] Verify 90-day retention cleanup cron runs correctly
-- [ ] T065 [P] Add missing team deletion trigger if deleteTeam mutation exists in convex/teams.ts
-- [ ] T066 [P] Add missing captain transfer trigger if transferCaptain mutation exists in convex/teams.ts
-- [ ] T067 Test notification system end-to-end per quickstart.md guide
-- [ ] T068 Verify real-time updates work across multiple browser tabs
-- [ ] T069 Performance test: Load 100 notifications and verify <1 second load time
-- [ ] T070 Verify notification delivery latency <3 seconds for all event types
+- [X] T058 [P] Add NotificationActions component for Accept/Reject buttons in src/components/notifications/notification-actions.tsx
+- [X] T059 [P] Implement graceful handling of deleted entities in notification display
+- [X] T060 [P] Add relative time formatting (formatDistanceToNow) to notifications
+- [X] T061 Add loading states and skeleton UI to all notification components
+- [X] T062 Add error boundaries for notification components
+- [X] T063 [P] Run Biome linting and formatting on all modified files (bun run lint:fix, bun run format:fix)
+- [X] T064 [P] Verify 90-day retention cleanup cron runs correctly
+- [X] T065 [P] Add missing team deletion trigger if deleteTeam mutation exists in convex/teams.ts
+- [X] T066 [P] Add missing captain transfer trigger if transferCaptain mutation exists in convex/teams.ts
+- [X] T067 Test notification system end-to-end per quickstart.md guide
+- [X] T068 Verify real-time updates work across multiple browser tabs
+- [X] T069 Performance test: Load 100 notifications and verify <1 second load time
+- [X] T070 Verify notification delivery latency <3 seconds for all event types
 
 ---
 
