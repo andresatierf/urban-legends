@@ -100,10 +100,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T034 [P] [US2] Update NotificationItem component to mark as read onClick in src/components/notifications/notification-item.tsx
-- [ ] T035 [P] [US2] Add "Mark all as read" button to NotificationList in src/components/notifications/notification-list.tsx
-- [ ] T036 [US2] Add visual indicators for read/unread state in NotificationItem (bold text, colored dot)
-- [ ] T037 [US2] Verify unread count updates in real-time across tabs
+- [X] T034 [P] [US2] Update NotificationItem component to mark as read onClick in src/components/notifications/notification-item.tsx
+- [X] T035 [P] [US2] Add "Mark all as read" button to NotificationList in src/components/notifications/notification-list.tsx
+- [X] T036 [US2] Add visual indicators for read/unread state in NotificationItem (bold text, colored dot)
+- [X] T037 [US2] Verify unread count updates in real-time across tabs
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - users can view notifications and manage read/unread status.
 
