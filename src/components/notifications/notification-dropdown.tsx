@@ -99,7 +99,9 @@ export function NotificationDropdown({
               className="h-auto w-full p-0 text-sm"
               asChild
             >
-              <Link href="/notifications">View all notifications</Link>
+              <Link href="/notifications" onClick={() => setIsOpen(false)}>
+                View all notifications
+              </Link>
             </Button>
           </div>
         )}
