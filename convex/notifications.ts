@@ -325,8 +325,8 @@ export const checkTournament24hWarnings = internalMutation({
   args: {},
   handler: async (ctx) => {
     const now = new Date();
-    const windowStart = new Date(now.getTime() + 23 * 60 * 60 * 1000);
-    const windowEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+    const windowStart = new Date(now.getTime() + 23.5 * 60 * 60 * 1000);
+    const windowEnd = new Date(now.getTime() + 24.5 * 60 * 60 * 1000);
 
     const allTournaments = await ctx.db.query("tournaments").collect();
 
@@ -504,8 +504,8 @@ export const checkTournamentEnding24h = internalMutation({
   args: {},
   handler: async (ctx) => {
     const now = new Date();
-    const windowStart = new Date(now.getTime() + 23 * 60 * 60 * 1000);
-    const windowEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+    const windowStart = new Date(now.getTime() + 23.5 * 60 * 60 * 1000);
+    const windowEnd = new Date(now.getTime() + 24.5 * 60 * 60 * 1000);
 
     const allTournaments = await ctx.db.query("tournaments").collect();
 

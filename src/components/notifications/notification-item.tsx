@@ -76,8 +76,10 @@ export function NotificationItem({
     <button
       type="button"
       onClick={handleClick}
+      aria-label={`Notification: ${notification.title}${!notification.isRead ? " (unread)" : ""}`}
+      aria-pressed={!notification.isRead ? "true" : "false"}
       className={cn(
-        "flex w-full flex-col gap-1 rounded-lg border p-3 text-left transition-colors hover:bg-accent",
+        "flex w-full flex-col gap-1 rounded-lg border p-3 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         !notification.isRead && "bg-accent/50 font-semibold",
         hasActions && "cursor-default",
       )}

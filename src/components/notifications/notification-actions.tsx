@@ -75,6 +75,7 @@ export function NotificationActions({
           e.stopPropagation();
         }
       }}
+      aria-label="Notification actions"
     >
       {actions.map((action) => (
         <Button
@@ -84,6 +85,7 @@ export function NotificationActions({
           onClick={() => handleAction(action)}
           disabled={isLoading}
           className="h-7 text-xs"
+          aria-label={`${action.label} notification`}
         >
           {action.action === "accept" && <CheckIcon className="mr-1 h-3 w-3" />}
           {action.action === "reject" && <XIcon className="mr-1 h-3 w-3" />}
