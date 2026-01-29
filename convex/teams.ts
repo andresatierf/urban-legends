@@ -3,6 +3,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, type QueryCtx, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
+import { notifyRemovedFromTeam } from "./notifications/triggers";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
 import { upsertSubmissionGroup } from "./submissionGroups";
 import { recalculateSubmissionPoints } from "./submissions";
@@ -384,6 +385,16 @@ export const removeMember = mutation({
 
     if (member) {
       await ctx.db.delete(member._id);
+
+      // T024: Notify removed user
+      const team = await ctx.db.get(args.teamId);
+      if (team) {
+        await notifyRemovedFromTeam(ctx, {
+          userId: args.userId,
+          teamId: args.teamId,
+          teamName: team.name,
+        });
+      }
     }
   },
 });

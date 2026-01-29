@@ -69,17 +69,17 @@
 
 #### Backend: Event Triggers (can be parallelized by module)
 
-- [ ] T019 [P] [US1] Add team invitation notification trigger in convex/teams.ts `inviteUser` mutation
-- [ ] T020 [P] [US1] Add join request notification trigger in convex/teams.ts `requestToJoin` mutation
-- [ ] T021 [P] [US1] Add join request approved notification trigger in convex/teams.ts `approveJoinRequest` mutation
-- [ ] T022 [P] [US1] Add join request rejected notification trigger in convex/teams.ts `rejectJoinRequest` mutation
-- [ ] T023 [P] [US1] Add member joined notification trigger in convex/teams.ts `acceptInvitation` mutation
-- [ ] T024 [P] [US1] Add member removed notification trigger in convex/teams.ts `removeMember` mutation
-- [ ] T025 [P] [US1] Add submission approved notification trigger in convex/submissions.ts `approve` mutation
-- [ ] T026 [P] [US1] Add submission rejected notification trigger in convex/submissions.ts `reject` mutation
-- [ ] T027 [P] [US1] Add teammate submitted notification trigger in convex/submissions.ts `create` mutation
-- [ ] T028 [P] [US1] Add tournament starting in 24h cron job in convex/notifications.ts `checkTournament24hWarnings`
-- [ ] T029 [P] [US1] Add winner announced notification logic (placeholder for existing leaderboard system)
+- [X] T019 [P] [US1] Add team invitation notification trigger in convex/teamInvitations.ts `inviteMember` mutation
+- [X] T020 [P] [US1] Add join request notification trigger in convex/joinRequests.ts `requestToJoin` mutation
+- [X] T021 [P] [US1] Add join request approved notification trigger in convex/joinRequests.ts `respondToJoinRequest` mutation
+- [X] T022 [P] [US1] Add join request rejected notification trigger in convex/joinRequests.ts `respondToJoinRequest` mutation
+- [X] T023 [P] [US1] Add member joined notification trigger in convex/teamInvitations.ts `respondToInvitation` and convex/joinRequests.ts `respondToJoinRequest` mutations
+- [X] T024 [P] [US1] Add member removed notification trigger in convex/teams.ts `removeMember` mutation
+- [X] T025 [P] [US1] Add submission approved notification trigger in convex/submissions.ts `approve` mutation
+- [X] T026 [P] [US1] Add submission rejected notification trigger in convex/submissions.ts `reject` mutation
+- [X] T027 [P] [US1] Add teammate submitted notification trigger in convex/submissions.ts `upsert` mutation
+- [X] T028 [P] [US1] Add tournament starting in 24h cron job in convex/crons.ts (already implemented)
+- [X] T029 [P] [US1] Add winner announced notification logic in convex/tournaments.ts `determineWinner` mutation
 
 #### Frontend: Notification Display Components
 

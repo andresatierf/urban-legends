@@ -8,6 +8,11 @@ import {
   toUTCDateString,
   toUTCEndOfDayString,
 } from "./lib/dates";
+import {
+  notifySubmissionApproved,
+  notifySubmissionRejected,
+  notifyTeammateSubmitted,
+} from "./notifications/triggers";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
 import {
   calculateGroupMetrics,
@@ -433,6 +438,28 @@ export const upsert = mutation({
       });
     }
 
+    // T027: Notify teammates when someone submits (only for new submissions)
+    if (!args._id) {
+      const teamMembers = await ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+        .collect();
+
+      const teammateIds = teamMembers
+        .map((m) => m.userId)
+        .filter((id) => id !== user._id);
+
+      if (teammateIds.length > 0) {
+        await notifyTeammateSubmitted(ctx, {
+          recipientIds: teammateIds,
+          submissionId,
+          teamId: args.teamId,
+          submitterName: user.name || user.email,
+          description: args.description,
+        });
+      }
+    }
+
     return submissionId;
   },
 });
@@ -683,6 +710,29 @@ export const approve = mutation({
       previousState,
       managedBy: user._id,
     });
+
+    // T025: Notify team members about submission approval
+    const team = await ctx.db.get(submission.teamId);
+    if (team) {
+      const teamMembers = await ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
+        .collect();
+
+      const memberIds = teamMembers.map((m) => m.userId);
+
+      // Get the latest submission data to get points earned
+      const updatedSubmission = await ctx.db.get(args.submissionId);
+      if (updatedSubmission) {
+        await notifySubmissionApproved(ctx, {
+          recipientIds: memberIds,
+          submissionId: args.submissionId,
+          teamName: team.name,
+          description: submission.description,
+          pointsEarned: updatedSubmission.pointsEarned || 0,
+        });
+      }
+    }
   },
 });
 
@@ -716,6 +766,25 @@ export const reject = mutation({
     }
 
     await recalculateTeamPoints(ctx, submission.teamId);
+
+    // T026: Notify team members about submission rejection
+    const team = await ctx.db.get(submission.teamId);
+    if (team) {
+      const teamMembers = await ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
+        .collect();
+
+      const memberIds = teamMembers.map((m) => m.userId);
+
+      await notifySubmissionRejected(ctx, {
+        recipientIds: memberIds,
+        submissionId: args.submissionId,
+        teamName: team.name,
+        description: submission.description,
+        reason: undefined,
+      });
+    }
   },
 });
 

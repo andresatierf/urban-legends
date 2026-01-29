@@ -4,6 +4,7 @@ import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString, toUTCEndOfDayString } from "./lib/dates";
 import { batchGetDocuments, enrichWithRelations } from "./lib/helpers";
+import { notifyTournamentWinner } from "./notifications/triggers";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
 import { getTeams, validateIsTeamMember } from "./teams";
 import { getCurrentUserOrThrow } from "./users";
@@ -518,6 +519,29 @@ export const determineWinner = mutation({
       winnerId: winner._id,
       completedAt: nowUTC(),
     });
+
+    // T029: Notify all tournament participants about winner
+    const allTeamMembers = await Promise.all(
+      teams.map((team) =>
+        ctx.db
+          .query("teamMembers")
+          .withIndex("by_team", (q) => q.eq("teamId", team._id))
+          .collect(),
+      ),
+    );
+
+    const allParticipantIds = Array.from(
+      new Set(allTeamMembers.flat().map((m) => m.userId)),
+    );
+
+    if (allParticipantIds.length > 0) {
+      await notifyTournamentWinner(ctx, {
+        recipientIds: allParticipantIds,
+        tournamentId: args.tournamentId,
+        tournamentName: tournament.name,
+        winnerTeamName: winner.name,
+      });
+    }
 
     return {
       winnerId: winner._id,

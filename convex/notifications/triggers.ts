@@ -321,3 +321,34 @@ export async function notifyRoleRevoked(
     console.error("Failed to create role revoked notification:", error);
   }
 }
+
+/**
+ * Helper function to create tournament winner announcement notification
+ */
+export async function notifyTournamentWinner(
+  ctx: MutationCtx,
+  params: {
+    recipientIds: Id<"users">[];
+    tournamentId: Id<"tournaments">;
+    tournamentName: string;
+    winnerTeamName: string;
+  },
+) {
+  try {
+    await Promise.all(
+      params.recipientIds.map((userId) =>
+        ctx.scheduler.runAfter(0, internal.notifications.create, {
+          userId,
+          type: NOTIFICATION_TYPES.TOURNAMENT_WINNER_ANNOUNCED,
+          title: `${params.tournamentName} has ended!`,
+          body: `${params.winnerTeamName} won the tournament!`,
+          relatedEntityId: params.tournamentId,
+          relatedEntityType: "tournament",
+          actionUrl: `/tournaments/${params.tournamentId}`,
+        }),
+      ),
+    );
+  } catch (error) {
+    console.error("Failed to create tournament winner notification:", error);
+  }
+}

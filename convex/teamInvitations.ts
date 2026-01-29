@@ -3,6 +3,10 @@ import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
 import { enrichWithRelations } from "./lib/helpers";
+import {
+  notifyMemberJoined,
+  notifyTeamInvitation,
+} from "./notifications/triggers";
 import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
@@ -154,6 +158,14 @@ export const inviteMember = mutation({
       createdAt: nowUTC(),
     });
 
+    // T019: Send notification to invited user
+    await notifyTeamInvitation(ctx, {
+      invitedUserId: invitedUser._id,
+      teamId: args.teamId,
+      teamName: team.name,
+      inviterName: user.name || user.email,
+    });
+
     return invitationId;
   },
 });
@@ -238,6 +250,25 @@ export const respondToInvitation = mutation({
         status: "accepted",
         respondedAt: nowUTC(),
       });
+
+      // T023: Notify existing team members that someone joined
+      const teamMembers = await ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) => q.eq("teamId", invitation.teamId))
+        .collect();
+
+      const existingMemberIds = teamMembers
+        .map((m) => m.userId)
+        .filter((id) => id !== user._id);
+
+      if (existingMemberIds.length > 0) {
+        await notifyMemberJoined(ctx, {
+          recipientIds: existingMemberIds,
+          teamId: invitation.teamId,
+          teamName: team.name,
+          newMemberName: user.name || user.email,
+        });
+      }
 
       const otherInvitations = await ctx.db
         .query("teamInvitations")
