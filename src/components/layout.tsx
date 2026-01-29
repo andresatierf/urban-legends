@@ -3,15 +3,13 @@
 import { Toaster } from "sonner";
 import { useUnreadCount } from "@/hooks/use-unread-count";
 import { useUser } from "@/hooks/useUser";
-import type { Id } from "../../convex/_generated/dataModel";
 import { AppSidebar } from "./app-sidebar";
 import { NotificationDropdown } from "./notifications/notification-dropdown";
 import { SidebarProvider, SidebarTrigger } from "./ui/sidebar";
 
 export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { user } = useUser();
-  // Call hook unconditionally, but with a default value when user is undefined
-  const unreadCount = useUnreadCount(user?._id ?? ("" as Id<"users">));
+  const unreadCount = useUnreadCount(user?._id);
 
   return (
     <SidebarProvider>

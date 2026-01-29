@@ -45,7 +45,6 @@ export function NotificationActions({
         // For accept/reject actions, we would call the appropriate mutation
         // This would need to be implemented based on the notification type
         // For now, we'll just mark as read
-        console.log(`Action ${action.action} triggered:`, action.mutationName);
       } else if (action.action === "view") {
         // Navigate to the related page
         if (action.args?.url) {

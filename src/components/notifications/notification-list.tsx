@@ -39,13 +39,13 @@ export function NotificationList({
 
     switch (typeFilter) {
       case "team":
-        return notifType.includes("team_") || notifType.includes("_team");
+        return notifType.startsWith("team_") || notifType.includes("_team");
       case "submission":
-        return notifType.includes("submission_");
+        return notifType.startsWith("submission_");
       case "tournament":
-        return notifType.includes("tournament_");
+        return notifType.startsWith("tournament_");
       case "role":
-        return notifType.includes("role_");
+        return notifType.startsWith("role_");
       case "digest":
         return notifType === "pending_items_digest";
       default:
