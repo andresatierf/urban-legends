@@ -2,6 +2,7 @@
 
 import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
+import { getNotificationRoute } from "@/lib/notification-utils";
 import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -17,11 +18,14 @@ interface ActionButton {
 interface NotificationItemProps {
   notification: {
     _id: Id<"notifications">;
+    type: string;
     title: string;
     body?: string;
     isRead: boolean;
     createdAt: string;
     actionUrl?: string;
+    relatedEntityType?: string;
+    relatedEntityId?: string;
     actionMetadata?: {
       buttons?: ActionButton[];
       [key: string]: unknown;
@@ -52,8 +56,16 @@ export function NotificationItem({
       await markAsRead({ notificationId: notification._id });
     }
 
-    if (notification.actionUrl) {
-      window.location.href = notification.actionUrl;
+    // Generate route using actionUrl or fallback to getNotificationRoute
+    const route = getNotificationRoute(
+      notification.type,
+      notification.relatedEntityType,
+      notification.relatedEntityId,
+      notification.actionUrl,
+    );
+
+    if (route) {
+      window.location.href = route;
     }
 
     onClick?.();
