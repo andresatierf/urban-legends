@@ -39,11 +39,23 @@ export function NotificationList({
 
     switch (typeFilter) {
       case "team":
-        return notifType.startsWith("team_") || notifType.includes("_team");
+        return (
+          notifType.startsWith("team_") ||
+          notifType.startsWith("member_") ||
+          notifType.startsWith("join_") ||
+          notifType.startsWith("captain_") ||
+          notifType.startsWith("removed_")
+        );
       case "submission":
-        return notifType.startsWith("submission_");
+        return (
+          notifType.startsWith("submission_") ||
+          notifType.startsWith("teammate_")
+        );
       case "tournament":
-        return notifType.startsWith("tournament_");
+        return (
+          notifType.startsWith("tournament_") ||
+          notifType.startsWith("assigned_")
+        );
       case "role":
         return notifType.startsWith("role_");
       case "digest":

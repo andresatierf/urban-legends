@@ -29,9 +29,8 @@ export const list = query({
 
     const notificationsQuery = ctx.db
       .query("notifications")
-      .withIndex("by_user_and_deleted", (q) =>
-        q.eq("userId", args.userId).eq("isDeleted", false),
-      );
+      .withIndex("by_user_and_deleted", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.neq(q.field("isDeleted"), true));
 
     // Apply read/unread filter if specified
     const allNotifications = await notificationsQuery.collect();
@@ -96,9 +95,8 @@ export const recent = query({
 
     const notifications = await ctx.db
       .query("notifications")
-      .withIndex("by_user_and_deleted", (q) =>
-        q.eq("userId", args.userId).eq("isDeleted", false),
-      )
+      .withIndex("by_user_and_deleted", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.neq(q.field("isDeleted"), true))
       .collect();
 
     // Sort by createdAt descending
@@ -169,7 +167,8 @@ export const create = internalMutation({
       )
       .first();
 
-    if (existing) {
+    // Only treat non-deleted notifications as candidates for idempotency
+    if (existing && !existing.isDeleted) {
       return existing._id; // Idempotent: return existing
     }
 

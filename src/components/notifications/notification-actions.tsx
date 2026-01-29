@@ -2,7 +2,9 @@
 
 import { useMutation } from "convex/react";
 import { CheckIcon, XIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -26,6 +28,7 @@ export function NotificationActions({
   actions,
   onActionComplete,
 }: NotificationActionsProps) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const markAsRead = useMutation(api.notifications.markAsRead);
 
@@ -48,7 +51,7 @@ export function NotificationActions({
       } else if (action.action === "view") {
         // Navigate to the related page
         if (action.args?.url) {
-          window.location.href = action.args.url as string;
+          router.push(action.args.url as string);
         }
       } else if (action.action === "dismiss") {
         // Just mark as read (already done above)
@@ -57,6 +60,7 @@ export function NotificationActions({
       onActionComplete?.();
     } catch (error) {
       console.error("Failed to handle action:", error);
+      toast.error("Failed to perform action. Please try again.");
     } finally {
       setIsLoading(false);
     }
