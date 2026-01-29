@@ -138,18 +138,18 @@
 
 #### Backend: Role-Specific Triggers
 
-- [ ] T044 [P] [US4] Add submission flagged for review notification trigger in convex/submissions.ts `flagForReview` mutation
-- [ ] T045 [P] [US4] Add tournament manager assigned notification trigger in convex/tournaments.ts `assignManager` mutation
-- [ ] T046 [P] [US4] Add role granted notification trigger in convex/admin.ts `assignRole` mutation
-- [ ] T047 [P] [US4] Add role revoked notification trigger in convex/admin.ts `revokeRole` mutation
-- [ ] T048 [US4] Create daily digest cron job in convex/notifications.ts `sendDailyDigest` with aggregation logic
-- [ ] T049 [US4] Add pending items count logic for digest notifications
+- [ ] T044 [P] [US4] Add submission flagged for review notification trigger in convex/submissions.ts `flagForReview` mutation (SKIPPED: mutation not yet implemented)
+- [ ] T045 [P] [US4] Add tournament manager assigned notification trigger in convex/tournaments.ts `assignManager` mutation (SKIPPED: mutation not yet implemented)
+- [X] T046 [P] [US4] Add role granted notification trigger in convex/role/admin.ts `updateRoles` mutation
+- [X] T047 [P] [US4] Add role revoked notification trigger in convex/role/admin.ts `updateRoles` mutation
+- [X] T048 [US4] Create daily digest cron job in convex/notifications.ts `sendDailyDigest` with aggregation logic
+- [X] T049 [US4] Add pending items count logic for digest notifications
 
 #### Frontend: Role-Specific UI
 
-- [ ] T050 [P] [US4] Add action buttons to NotificationItem for actionable notifications in src/components/notifications/notification-actions.tsx
-- [ ] T051 [US4] Add role-specific filtering in NotificationList (optional enhancement)
-- [ ] T052 [US4] Verify role-specific notifications only visible to authorized users
+- [X] T050 [P] [US4] Add action buttons to NotificationItem for actionable notifications in src/components/notifications/notification-actions.tsx
+- [X] T051 [US4] Add role-specific filtering in NotificationList (optional enhancement)
+- [X] T052 [US4] Verify role-specific notifications only visible to authorized users (verified: backend authorization in queries)
 
 **Checkpoint**: All user stories (US1-US4) should now be independently functional - complete notification system with role-based features.
 
