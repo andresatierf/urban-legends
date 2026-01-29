@@ -1,45 +1,25 @@
 #!/usr/bin/env bash
 # Create git worktree and setup Zellij environment for speckit feature development
-# Usage: ./speckit-worktree.sh <feature-name>
-# Note: Uses speckit branch naming convention: <number>-<feature-name>
+# Usage: ./speckit-worktree.sh <branch-name>
+# Note: Branch name should follow speckit convention (e.g., 001-feature-name)
+#       Branch creation and numbering is handled by speckit's create-new-feature.sh
 
 set -e
 
 if [ $# -eq 0 ]; then
-  echo "Error: Feature name required"
-  echo "Usage: $0 <feature-name>"
+  echo "Error: Branch name required"
+  echo "Usage: $0 <branch-name>"
+  echo "Example: $0 001-user-auth"
   exit 1
 fi
 
-FEATURE_NAME="$1"
+BRANCH_NAME="$1"
 MAIN_REPO_PATH="$PWD"
-
-# Find the highest existing branch number for this feature name
-echo "Checking for existing branches with name: ${FEATURE_NAME}..."
-git fetch --all --quiet 2>/dev/null || true
-
-# Check remote and local branches for the pattern
-HIGHEST_NUM=$(git ls-remote --heads origin 2>/dev/null | grep -oE "refs/heads/[0-9]+-${FEATURE_NAME}\$" | grep -oE "[0-9]+" | sort -n | tail -1)
-LOCAL_NUM=$(git branch | grep -oE "[0-9]+-${FEATURE_NAME}\$" | grep -oE "[0-9]+" | sort -n | tail -1)
-
-# Use the highest number found, or start at 1
-if [ -n "$HIGHEST_NUM" ] && [ -n "$LOCAL_NUM" ]; then
-  BRANCH_NUM=$((HIGHEST_NUM > LOCAL_NUM ? HIGHEST_NUM : LOCAL_NUM))
-elif [ -n "$HIGHEST_NUM" ]; then
-  BRANCH_NUM=$HIGHEST_NUM
-elif [ -n "$LOCAL_NUM" ]; then
-  BRANCH_NUM=$LOCAL_NUM
-else
-  BRANCH_NUM=0
-fi
-
-# Increment for new branch
-BRANCH_NUM=$((BRANCH_NUM + 1))
-BRANCH_NAME="${BRANCH_NUM}-${FEATURE_NAME}"
-WORKTREE_PATH="$PWD/../urban-legends-${BRANCH_NAME}"
+PROJECT_NAME="$(basename "$PWD")"
+WORKTREE_PATH="$PWD/../${PROJECT_NAME}-${BRANCH_NAME}"
 
 echo "=================================="
-echo "Creating worktree for: ${FEATURE_NAME}"
+echo "Creating speckit worktree"
 echo "=================================="
 echo "Branch: ${BRANCH_NAME}"
 echo "Worktree path: ${WORKTREE_PATH}"
@@ -55,9 +35,15 @@ if [ -d "$WORKTREE_PATH" ]; then
     exit 1
   fi
 else
-  # Create worktree with new branch
+  # Create worktree (branch may already exist from speckit)
   echo "Creating git worktree..."
-  git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME"
+  if git show-ref --verify --quiet "refs/heads/$BRANCH_NAME"; then
+    # Branch exists, check it out
+    git worktree add "$WORKTREE_PATH" "$BRANCH_NAME"
+  else
+    # Branch doesn't exist, create it
+    git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME"
+  fi
 
   # Copy .env file to worktree
   if [ -f ".env" ]; then
@@ -89,26 +75,48 @@ echo "=================================="
 echo ""
 
 # Create new Zellij tab named after the feature
-echo "Creating Zellij tab with 3-pane layout..."
-zellij action new-tab --name "${FEATURE_NAME}" --cwd "$WORKTREE_PATH"
+echo "Creating Zellij tab with multi-pane layout for speckit workflow..."
+zellij action new-tab --name "${BRANCH_NAME}" --cwd "$WORKTREE_PATH"
+
+# Pane 1 (current): Editor for spec/plan/tasks
 zellij action write-chars "cd $WORKTREE_PATH"
 zellij action write 10
-
-# Open nvim in the editor pane
 zellij action write-chars "nvim"
 zellij action write 10
 
+# Pane 2: Claude Code session
+zellij action new-pane --direction right --cwd "$WORKTREE_PATH"
+zellij action write-chars "cd $WORKTREE_PATH"
+zellij action write 10
+zellij action write-chars "claude"
+zellij action write 10
+
+# Return focus to editor pane
+zellij action focus-previous-pane
+
 echo ""
 echo "=================================="
-echo "✓ Setup Complete!"
+echo "✓ Speckit Worktree Setup Complete!"
 echo "=================================="
 echo ""
 echo "Worktree: ${WORKTREE_PATH}"
 echo "Branch: ${BRANCH_NAME}"
 echo ""
-echo "Switch to the '${FEATURE_NAME}' Zellij tab to view the running servers."
+echo "Zellij Layout:"
+echo "  - Pane 1: Editor (nvim) - Edit spec.md, plan.md, tasks.md"
+echo "  - Pane 2: Claude Code - Run speckit commands (/speckit.specify, /speckit.plan, etc.)"
+echo ""
+echo "Switch to the '${BRANCH_NAME}' Zellij tab to start working."
+echo ""
+echo "Speckit Workflow:"
+echo "  1. Run '/speckit.specify' to create spec.md"
+echo "  2. Run '/speckit.clarify' to refine the spec"
+echo "  3. Run '/speckit.plan' to create plan.md"
+echo "  4. Run '/speckit.tasks' to generate tasks.md"
+echo "  5. Commit the spec/plan/tasks to the branch"
 echo ""
 echo "To clean up after merging:"
-echo "  1. Close the Zellij tab (or kill the running processes)"
-echo "  2. git worktree remove ../urban-legends-${FEATURE_NAME}"
+echo "  1. Close the Zellij tab"
+echo "  2. git worktree remove ${PROJECT_NAME}-${BRANCH_NAME}"
+echo "  3. git branch -d ${BRANCH_NAME}"
 echo ""

@@ -40,6 +40,33 @@ bun run format:fix      # Auto-format code
 - Use double quotes for JavaScript/TypeScript strings
 - Auto-organize imports when using assist mode
 
+### Git Commits
+
+**CRITICAL**: When asked to commit changes, you MUST use the Skill tool with the "commit" skill:
+
+```
+Use the Skill tool: skill="commit"
+```
+
+Do NOT manually create commit messages or use `git commit` directly. The commit skill will:
+
+- Analyze staged changes automatically
+- Generate properly formatted conventional commit messages
+- Match the repository's existing commit style
+- Use heredoc format correctly
+
+The repository follows this commit format:
+
+```
+<type>(<scope>): <brief description>
+
+<detailed description>
+- Key changes listed
+- Explanation of why changes were made
+```
+
+**Common scopes**: `notifications`, `teams`, `tournaments`, `submissions`, `auth`, `ui`, `backend`, `schema`
+
 ## Architecture Overview
 
 ### Tech Stack
@@ -185,8 +212,10 @@ NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 - UI components are built with Radix UI primitives following shadcn/ui conventions
 
 ## Active Technologies
+
 - TypeScript 5.x with Next.js 15 (React 19), Convex backend + Next.js 15, React 19, Convex (serverless backend), Clerk (authentication), Tailwind CSS, Radix UI, TanStack Form, shadcn/ui patterns (001-notification-system)
 - Convex database with real-time subscriptions (001-notification-system)
 
 ## Recent Changes
+
 - 001-notification-system: Added TypeScript 5.x with Next.js 15 (React 19), Convex backend + Next.js 15, React 19, Convex (serverless backend), Clerk (authentication), Tailwind CSS, Radix UI, TanStack Form, shadcn/ui patterns

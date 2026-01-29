@@ -271,18 +271,33 @@ if [ ${#BRANCH_NAME} -gt $MAX_BRANCH_LENGTH ]; then
     >&2 echo "[specify] Truncated to: $BRANCH_NAME (${#BRANCH_NAME} bytes)"
 fi
 
-if [ "$HAS_GIT" = true ]; then
-    git checkout -b "$BRANCH_NAME"
-else
-    >&2 echo "[specify] Warning: Git repository not detected; skipped branch creation for $BRANCH_NAME"
-fi
-
 FEATURE_DIR="$SPECS_DIR/$BRANCH_NAME"
 mkdir -p "$FEATURE_DIR"
 
 TEMPLATE="$REPO_ROOT/.specify/templates/spec-template.md"
 SPEC_FILE="$FEATURE_DIR/spec.md"
 if [ -f "$TEMPLATE" ]; then cp "$TEMPLATE" "$SPEC_FILE"; else touch "$SPEC_FILE"; fi
+
+if [ "$HAS_GIT" = true ]; then
+    # Check if .claude/scripts/speckit-worktree.sh exists
+    WORKTREE_SCRIPT="$REPO_ROOT/.claude/scripts/speckit-worktree.sh"
+    if [ -f "$WORKTREE_SCRIPT" ]; then
+        >&2 echo "[specify] Creating worktree using speckit-worktree.sh..."
+
+        # Create the branch first
+        git checkout -b "$BRANCH_NAME"
+
+        # Go back to the original branch
+        git checkout -
+
+        # Now create the worktree
+        "$WORKTREE_SCRIPT" "$BRANCH_NAME"
+    else
+        git checkout -b "$BRANCH_NAME"
+    fi
+else
+    >&2 echo "[specify] Warning: Git repository not detected; skipped branch creation for $BRANCH_NAME"
+fi
 
 # Set the SPECIFY_FEATURE environment variable for the current session
 export SPECIFY_FEATURE="$BRANCH_NAME"
