@@ -117,12 +117,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T038 [P] [US3] Create NotificationIndicator component in src/components/notifications/notification-indicator.tsx
-- [ ] T039 [US3] Create NotificationDropdown component with Radix Popover in src/components/notifications/notification-dropdown.tsx
-- [ ] T040 [US3] Integrate NotificationDropdown into app header in src/app/(all)/layout.tsx
-- [ ] T041 [US3] Add real-time badge update logic using useUnreadCount hook
-- [ ] T042 [US3] Add "View all notifications" link in dropdown to full page
-- [ ] T043 [US3] Implement conditional query (skip when dropdown closed) for performance
+- [X] T038 [P] [US3] Create NotificationIndicator component in src/components/notifications/notification-indicator.tsx
+- [X] T039 [US3] Create NotificationDropdown component with Radix Popover in src/components/notifications/notification-dropdown.tsx
+- [X] T040 [US3] Integrate NotificationDropdown into app header in src/components/layout.tsx
+- [X] T041 [US3] Add real-time badge update logic using useUnreadCount hook
+- [X] T042 [US3] Add "View all notifications" link in dropdown to full page
+- [X] T043 [US3] Implement conditional query (skip when dropdown closed) for performance
 
 **Checkpoint**: All core user stories (US1, US2, US3) should now be independently functional - users can view, manage, and quickly access notifications from anywhere.
 
