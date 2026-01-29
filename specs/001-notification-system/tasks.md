@@ -159,11 +159,11 @@
 
 **Purpose**: Automated notifications for tournament lifecycle events
 
-- [ ] T053 [P] Implement `checkTournamentStarted` cron job in convex/notifications.ts
-- [ ] T054 [P] Implement `checkTournamentEnding24h` cron job in convex/notifications.ts
-- [ ] T055 [P] Implement `checkTournamentEnded` cron job in convex/notifications.ts
-- [ ] T056 Verify all cron jobs scheduled correctly in Convex Dashboard
-- [ ] T057 Test tournament notifications fire at correct times (use manual "Run Now" in dashboard)
+- [X] T053 [P] Implement `checkTournamentStarted` cron job in convex/notifications.ts
+- [X] T054 [P] Implement `checkTournamentEnding24h` cron job in convex/notifications.ts
+- [X] T055 [P] Implement `checkTournamentEnded` cron job in convex/notifications.ts
+- [X] T056 Verify all cron jobs scheduled correctly in Convex Dashboard
+- [X] T057 Test tournament notifications fire at correct times (use manual "Run Now" in dashboard)
 
 ---
 
