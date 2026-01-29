@@ -27,10 +27,10 @@
 
 **Purpose**: Project initialization and database schema
 
-- [ ] T001 Add notifications table to Convex schema in convex/schema.ts with indexes
-- [ ] T002 [P] Add notificationPreferences table to Convex schema in convex/schema.ts
-- [ ] T003 [P] Create notification types constants file in convex/notifications/types.ts
-- [ ] T004 Verify schema deployed successfully via Convex Dashboard
+- [X] T001 Add notifications table to Convex schema in convex/schema.ts with indexes
+- [X] T002 [P] Add notificationPreferences table to Convex schema in convex/schema.ts
+- [X] T003 [P] Create notification types constants file in convex/notifications/types.ts
+- [X] T004 Verify schema deployed successfully via Convex Dashboard
 
 ---
 
@@ -40,20 +40,20 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 [P] Create internal mutation `create` in convex/notifications.ts with idempotency
-- [ ] T006 [P] Create query `list` with pagination in convex/notifications.ts
-- [ ] T007 [P] Create query `getUnreadCount` in convex/notifications.ts
-- [ ] T008 [P] Create query `recent` for dropdown in convex/notifications.ts
-- [ ] T009 [P] Create query `get` single notification in convex/notifications.ts
-- [ ] T010 [P] Create mutation `markAsRead` in convex/notifications.ts
-- [ ] T011 [P] Create mutation `markAllAsRead` in convex/notifications.ts
-- [ ] T012 [P] Create mutation `deleteNotification` (soft delete) in convex/notifications.ts
-- [ ] T013 [P] Create internal mutation `cleanupOldNotifications` in convex/notifications.ts
-- [ ] T014 Create notification triggers helper file in convex/notifications/triggers.ts
-- [ ] T015 Setup cron jobs in convex/crons.ts for cleanup and time-based notifications
-- [ ] T016 [P] Create custom hook `useNotifications` in src/hooks/use-notifications.ts
-- [ ] T017 [P] Create custom hook `useUnreadCount` in src/hooks/use-unread-count.ts
-- [ ] T018 [P] Create utility functions in src/lib/notification-utils.ts (formatting, routing)
+- [X] T005 [P] Create internal mutation `create` in convex/notifications.ts with idempotency
+- [X] T006 [P] Create query `list` with pagination in convex/notifications.ts
+- [X] T007 [P] Create query `getUnreadCount` in convex/notifications.ts
+- [X] T008 [P] Create query `recent` for dropdown in convex/notifications.ts
+- [X] T009 [P] Create query `get` single notification in convex/notifications.ts
+- [X] T010 [P] Create mutation `markAsRead` in convex/notifications.ts
+- [X] T011 [P] Create mutation `markAllAsRead` in convex/notifications.ts
+- [X] T012 [P] Create mutation `deleteNotification` (soft delete) in convex/notifications.ts
+- [X] T013 [P] Create internal mutation `cleanupOldNotifications` in convex/notifications.ts
+- [X] T014 Create notification triggers helper file in convex/notifications/triggers.ts
+- [X] T015 Setup cron jobs in convex/crons.ts for cleanup and time-based notifications
+- [X] T016 [P] Create custom hook `useNotifications` in src/hooks/use-notifications.ts
+- [X] T017 [P] Create custom hook `useUnreadCount` in src/hooks/use-unread-count.ts
+- [X] T018 [P] Create utility functions in src/lib/notification-utils.ts (formatting, routing)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -83,10 +83,10 @@
 
 #### Frontend: Notification Display Components
 
-- [ ] T030 [US1] Create NotificationItem component in src/components/notifications/notification-item.tsx
-- [ ] T031 [US1] Create NotificationList component in src/components/notifications/notification-list.tsx
-- [ ] T032 [US1] Create full notifications page in src/app/(all)/notifications/page.tsx
-- [ ] T033 [US1] Add routing and navigation for notifications page
+- [X] T030 [US1] Create NotificationItem component in src/components/notifications/notification-item.tsx
+- [X] T031 [US1] Create NotificationList component in src/components/notifications/notification-list.tsx
+- [X] T032 [US1] Create full notifications page in src/app/(protected)/notifications/page.tsx
+- [X] T033 [US1] Add routing and navigation for notifications page
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can view their notifications on a dedicated page with correct timestamps and sorting.
 

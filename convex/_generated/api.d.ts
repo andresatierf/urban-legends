@@ -14,12 +14,16 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as captain from "../captain.js";
+import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as data from "../data.js";
 import type * as http from "../http.js";
 import type * as joinRequests from "../joinRequests.js";
 import type * as lib_dates from "../lib/dates.js";
 import type * as lib_helpers from "../lib/helpers.js";
+import type * as notifications_triggers from "../notifications/triggers.js";
+import type * as notifications_types from "../notifications/types.js";
+import type * as notifications from "../notifications.js";
 import type * as public_ from "../public.js";
 import type * as role_admin from "../role/admin.js";
 import type * as role_reviewer from "../role/reviewer.js";
@@ -44,12 +48,16 @@ import type * as users from "../users.js";
  */
 declare const fullApi: ApiFromModules<{
   captain: typeof captain;
+  crons: typeof crons;
   dashboard: typeof dashboard;
   data: typeof data;
   http: typeof http;
   joinRequests: typeof joinRequests;
   "lib/dates": typeof lib_dates;
   "lib/helpers": typeof lib_helpers;
+  "notifications/triggers": typeof notifications_triggers;
+  "notifications/types": typeof notifications_types;
+  notifications: typeof notifications;
   public: typeof public_;
   "role/admin": typeof role_admin;
   "role/reviewer": typeof role_reviewer;
