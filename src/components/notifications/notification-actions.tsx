@@ -14,7 +14,7 @@ interface ActionButton {
   action: "accept" | "reject" | "view" | "dismiss";
   mutationName?: string;
   args?: Record<string, unknown>;
-  variant?: "default" | "destructive" | "outline" | "secondary";
+  variant?: "solid" | "outline" | "ghost" | "link";
 }
 
 interface NotificationActionsProps {

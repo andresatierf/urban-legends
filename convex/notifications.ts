@@ -335,22 +335,37 @@ export const checkTournament24hWarnings = internalMutation({
       return startDate >= windowStart && startDate <= windowEnd;
     });
 
+    // Batch fetch all teams and team members to avoid N+1 queries
+    const allTeams = await ctx.db.query("teams").collect();
+    const allTeamMembers = await ctx.db.query("teamMembers").collect();
+
+    // Group teams by tournament ID
+    const teamsByTournamentId = new Map<string, typeof allTeams>();
+    for (const team of allTeams) {
+      const key = team.tournamentId;
+      if (!teamsByTournamentId.has(key)) {
+        teamsByTournamentId.set(key, []);
+      }
+      teamsByTournamentId.get(key)?.push(team);
+    }
+
+    // Group team members by team ID
+    const teamMembersByTeamId = new Map<string, typeof allTeamMembers>();
+    for (const member of allTeamMembers) {
+      const key = member.teamId;
+      if (!teamMembersByTeamId.has(key)) {
+        teamMembersByTeamId.set(key, []);
+      }
+      teamMembersByTeamId.get(key)?.push(member);
+    }
+
     let notificationsSent = 0;
 
     for (const tournament of tournamentsStartingSoon) {
-      const teams = await ctx.db
-        .query("teams")
-        .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
-        .collect();
-
-      const teamMemberPromises = teams.map((team) =>
-        ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect(),
+      const teams = teamsByTournamentId.get(tournament._id) ?? [];
+      const teamMembers = teams.flatMap(
+        (team) => teamMembersByTeamId.get(team._id) ?? [],
       );
-      const teamMembersNested = await Promise.all(teamMemberPromises);
-      const teamMembers = teamMembersNested.flat();
 
       const userIds = Array.from(new Set(teamMembers.map((m) => m.userId)));
 
@@ -412,22 +427,37 @@ export const checkTournamentStarted = internalMutation({
       return startDate >= oneHourAgo && startDate <= now;
     });
 
+    // Batch fetch all teams and team members to avoid N+1 queries
+    const allTeams = await ctx.db.query("teams").collect();
+    const allTeamMembers = await ctx.db.query("teamMembers").collect();
+
+    // Group teams by tournament ID
+    const teamsByTournamentId = new Map<string, typeof allTeams>();
+    for (const team of allTeams) {
+      const key = team.tournamentId;
+      if (!teamsByTournamentId.has(key)) {
+        teamsByTournamentId.set(key, []);
+      }
+      teamsByTournamentId.get(key)?.push(team);
+    }
+
+    // Group team members by team ID
+    const teamMembersByTeamId = new Map<string, typeof allTeamMembers>();
+    for (const member of allTeamMembers) {
+      const key = member.teamId;
+      if (!teamMembersByTeamId.has(key)) {
+        teamMembersByTeamId.set(key, []);
+      }
+      teamMembersByTeamId.get(key)?.push(member);
+    }
+
     let notificationsSent = 0;
 
     for (const tournament of recentlyStartedTournaments) {
-      const teams = await ctx.db
-        .query("teams")
-        .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
-        .collect();
-
-      const teamMemberPromises = teams.map((team) =>
-        ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect(),
+      const teams = teamsByTournamentId.get(tournament._id) ?? [];
+      const teamMembers = teams.flatMap(
+        (team) => teamMembersByTeamId.get(team._id) ?? [],
       );
-      const teamMembersNested = await Promise.all(teamMemberPromises);
-      const teamMembers = teamMembersNested.flat();
 
       const userIds = Array.from(new Set(teamMembers.map((m) => m.userId)));
 
@@ -484,22 +514,37 @@ export const checkTournamentEnding24h = internalMutation({
       return endDate >= windowStart && endDate <= windowEnd;
     });
 
+    // Batch fetch all teams and team members to avoid N+1 queries
+    const allTeams = await ctx.db.query("teams").collect();
+    const allTeamMembers = await ctx.db.query("teamMembers").collect();
+
+    // Group teams by tournament ID
+    const teamsByTournamentId = new Map<string, typeof allTeams>();
+    for (const team of allTeams) {
+      const key = team.tournamentId;
+      if (!teamsByTournamentId.has(key)) {
+        teamsByTournamentId.set(key, []);
+      }
+      teamsByTournamentId.get(key)?.push(team);
+    }
+
+    // Group team members by team ID
+    const teamMembersByTeamId = new Map<string, typeof allTeamMembers>();
+    for (const member of allTeamMembers) {
+      const key = member.teamId;
+      if (!teamMembersByTeamId.has(key)) {
+        teamMembersByTeamId.set(key, []);
+      }
+      teamMembersByTeamId.get(key)?.push(member);
+    }
+
     let notificationsSent = 0;
 
     for (const tournament of tournamentsEndingSoon) {
-      const teams = await ctx.db
-        .query("teams")
-        .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
-        .collect();
-
-      const teamMemberPromises = teams.map((team) =>
-        ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect(),
+      const teams = teamsByTournamentId.get(tournament._id) ?? [];
+      const teamMembers = teams.flatMap(
+        (team) => teamMembersByTeamId.get(team._id) ?? [],
       );
-      const teamMembersNested = await Promise.all(teamMemberPromises);
-      const teamMembers = teamMembersNested.flat();
 
       const userIds = Array.from(new Set(teamMembers.map((m) => m.userId)));
 
@@ -557,22 +602,37 @@ export const checkTournamentEnded = internalMutation({
       return endDate >= oneHourAgo && endDate <= now;
     });
 
+    // Batch fetch all teams and team members to avoid N+1 queries
+    const allTeams = await ctx.db.query("teams").collect();
+    const allTeamMembers = await ctx.db.query("teamMembers").collect();
+
+    // Group teams by tournament ID
+    const teamsByTournamentId = new Map<string, typeof allTeams>();
+    for (const team of allTeams) {
+      const key = team.tournamentId;
+      if (!teamsByTournamentId.has(key)) {
+        teamsByTournamentId.set(key, []);
+      }
+      teamsByTournamentId.get(key)?.push(team);
+    }
+
+    // Group team members by team ID
+    const teamMembersByTeamId = new Map<string, typeof allTeamMembers>();
+    for (const member of allTeamMembers) {
+      const key = member.teamId;
+      if (!teamMembersByTeamId.has(key)) {
+        teamMembersByTeamId.set(key, []);
+      }
+      teamMembersByTeamId.get(key)?.push(member);
+    }
+
     let notificationsSent = 0;
 
     for (const tournament of recentlyEndedTournaments) {
-      const teams = await ctx.db
-        .query("teams")
-        .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
-        .collect();
-
-      const teamMemberPromises = teams.map((team) =>
-        ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect(),
+      const teams = teamsByTournamentId.get(tournament._id) ?? [];
+      const teamMembers = teams.flatMap(
+        (team) => teamMembersByTeamId.get(team._id) ?? [],
       );
-      const teamMembersNested = await Promise.all(teamMemberPromises);
-      const teamMembers = teamMembersNested.flat();
 
       const userIds = Array.from(new Set(teamMembers.map((m) => m.userId)));
 
@@ -632,19 +692,23 @@ export const sendDailyDigest = internalMutation({
       }
     }
 
+    // Query pending submissions once for this digest run
+    const pendingSubmissions = await ctx.db
+      .query("submissions")
+      .withIndex("by_state", (q) => q.eq("state", "pending"))
+      .collect();
+
+    // If there are no pending submissions, skip sending notifications
+    if (pendingSubmissions.length === 0) {
+      console.log("Sent 0 daily digest notifications (no pending submissions)");
+      return { digestsSent: 0 };
+    }
+
     let digestsSent = 0;
 
     // Find users with pending review items
     for (const [userId, roles] of Array.from(userRoleMap.entries())) {
       if (!roles.has("admin") && !roles.has("reviewer")) continue;
-
-      // Count pending submissions
-      const pendingSubmissions = await ctx.db
-        .query("submissions")
-        .withIndex("by_state", (q) => q.eq("state", "pending"))
-        .collect();
-
-      if (pendingSubmissions.length === 0) continue;
 
       // Check if digest already sent today
       const today = new Date().toISOString().split("T")[0];

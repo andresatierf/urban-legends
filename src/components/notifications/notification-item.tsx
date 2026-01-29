@@ -60,7 +60,6 @@ export function NotificationItem({
 
     // Generate route using actionUrl or fallback to getNotificationRoute
     const route = getNotificationRoute(
-      notification.type,
       notification.relatedEntityType,
       notification.relatedEntityId,
       notification.actionUrl,

@@ -17,7 +17,7 @@ crons.daily(
   internal.notifications.cleanupOldNotifications,
 );
 
-// Tournament notifications - run hourly
+// Tournament notifications - run hourly (staggered to distribute load)
 crons.hourly(
   "tournament 24h start warnings",
   { minuteUTC: 0 },
@@ -26,19 +26,19 @@ crons.hourly(
 
 crons.hourly(
   "tournament started notifications",
-  { minuteUTC: 0 },
+  { minuteUTC: 15 },
   internal.notifications.checkTournamentStarted,
 );
 
 crons.hourly(
   "tournament ending 24h warnings",
-  { minuteUTC: 0 },
+  { minuteUTC: 30 },
   internal.notifications.checkTournamentEnding24h,
 );
 
 crons.hourly(
   "tournament ended notifications",
-  { minuteUTC: 0 },
+  { minuteUTC: 45 },
   internal.notifications.checkTournamentEnded,
 );
 

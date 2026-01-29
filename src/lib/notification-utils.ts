@@ -13,10 +13,9 @@ export function formatNotificationTime(timestamp: string): string {
 }
 
 /**
- * Get the routing URL for a notification based on its type and related entity
+ * Get the routing URL for a notification based on related entity
  */
 export function getNotificationRoute(
-  _type: string,
   relatedEntityType?: string,
   relatedEntityId?: string,
   actionUrl?: string,
