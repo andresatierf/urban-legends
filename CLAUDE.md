@@ -183,3 +183,10 @@ NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 - The `cn()` utility (in `src/lib/utils.ts`) combines `clsx` + `tailwind-merge` for optimal class merging
 - Component styling follows Tailwind + CVA (class-variance-authority) patterns
 - UI components are built with Radix UI primitives following shadcn/ui conventions
+
+## Active Technologies
+- TypeScript 5.x with Next.js 15 (React 19), Convex backend + Next.js 15, React 19, Convex (serverless backend), Clerk (authentication), Tailwind CSS, Radix UI, TanStack Form, shadcn/ui patterns (001-notification-system)
+- Convex database with real-time subscriptions (001-notification-system)
+
+## Recent Changes
+- 001-notification-system: Added TypeScript 5.x with Next.js 15 (React 19), Convex backend + Next.js 15, React 19, Convex (serverless backend), Clerk (authentication), Tailwind CSS, Radix UI, TanStack Form, shadcn/ui patterns
