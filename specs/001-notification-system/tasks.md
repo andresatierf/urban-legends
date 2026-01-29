@@ -138,8 +138,8 @@
 
 #### Backend: Role-Specific Triggers
 
-- [ ] T044 [P] [US4] Add submission flagged for review notification trigger in convex/submissions.ts `flagForReview` mutation (SKIPPED: mutation not yet implemented)
-- [ ] T045 [P] [US4] Add tournament manager assigned notification trigger in convex/tournaments.ts `assignManager` mutation (SKIPPED: mutation not yet implemented)
+- [X] T044 [P] [US4] Add submission flagged for review notification trigger in convex/submissions.ts `flagForReview` mutation
+- [X] T045 [P] [US4] Add tournament manager assigned notification trigger in convex/tournaments.ts `assignManager` mutation
 - [X] T046 [P] [US4] Add role granted notification trigger in convex/role/admin.ts `updateRoles` mutation
 - [X] T047 [P] [US4] Add role revoked notification trigger in convex/role/admin.ts `updateRoles` mutation
 - [X] T048 [US4] Create daily digest cron job in convex/notifications.ts `sendDailyDigest` with aggregation logic

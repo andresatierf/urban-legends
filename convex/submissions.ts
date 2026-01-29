@@ -10,6 +10,7 @@ import {
 } from "./lib/dates";
 import {
   notifySubmissionApproved,
+  notifySubmissionFlaggedForReview,
   notifySubmissionRejected,
   notifyTeammateSubmitted,
 } from "./notifications/triggers";
@@ -785,6 +786,59 @@ export const reject = mutation({
         reason: undefined,
       });
     }
+  },
+});
+
+/**
+ * Flag a submission for review by admins/reviewers
+ * T044: Add submission flagged for review notification trigger
+ */
+export const flagForReview = mutation({
+  args: {
+    submissionId: v.id("submissions"),
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    // Any authenticated user can flag a submission for review
+    const submission = await ctx.db.get(args.submissionId);
+    if (!submission) {
+      throw new Error("Submission not found");
+    }
+
+    // Update submission with flag
+    await ctx.db.patch(args.submissionId, {
+      flaggedForReview: true,
+      flaggedBy: user._id,
+      flaggedReason: args.reason,
+    });
+
+    // Notify all admins and reviewers
+    const allUserRoles = await ctx.db.query("userRoles").collect();
+    const reviewerUserIds = new Set<Id<"users">>();
+
+    for (const userRole of allUserRoles) {
+      const role = await ctx.db.get(userRole.roleId);
+      if (role && (role.name === "admin" || role.name === "reviewer")) {
+        reviewerUserIds.add(userRole.userId);
+      }
+    }
+
+    if (reviewerUserIds.size > 0) {
+      const team = await ctx.db.get(submission.teamId);
+      if (team) {
+        await notifySubmissionFlaggedForReview(ctx, {
+          recipientIds: Array.from(reviewerUserIds),
+          submissionId: args.submissionId,
+          teamName: team.name,
+          flaggedBy: user.name,
+          reason: args.reason,
+        });
+      }
+    }
+
+    return { success: true };
   },
 });
 

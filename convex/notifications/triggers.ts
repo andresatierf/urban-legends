@@ -352,3 +352,68 @@ export async function notifyTournamentWinner(
     console.error("Failed to create tournament winner notification:", error);
   }
 }
+
+/**
+ * Helper function to create submission flagged for review notification
+ */
+export async function notifySubmissionFlaggedForReview(
+  ctx: MutationCtx,
+  params: {
+    recipientIds: Id<"users">[];
+    submissionId: Id<"submissions">;
+    teamName: string;
+    flaggedBy: string;
+    reason?: string;
+  },
+) {
+  try {
+    await Promise.all(
+      params.recipientIds.map((userId) =>
+        ctx.scheduler.runAfter(0, internal.notifications.create, {
+          userId,
+          type: NOTIFICATION_TYPES.SUBMISSION_FLAGGED_FOR_REVIEW,
+          title: "Submission flagged for review",
+          body: `${params.flaggedBy} flagged a submission from ${params.teamName} for review${params.reason ? `: ${params.reason}` : ""}`,
+          relatedEntityId: params.submissionId,
+          relatedEntityType: "submission",
+          actionUrl: `/admin/submissions?highlight=${params.submissionId}`,
+        }),
+      ),
+    );
+  } catch (error) {
+    console.error(
+      "Failed to create submission flagged for review notification:",
+      error,
+    );
+  }
+}
+
+/**
+ * Helper function to create tournament manager assigned notification
+ */
+export async function notifyTournamentManagerAssigned(
+  ctx: MutationCtx,
+  params: {
+    managerId: Id<"users">;
+    tournamentId: Id<"tournaments">;
+    tournamentName: string;
+    assignedBy: string;
+  },
+) {
+  try {
+    await ctx.scheduler.runAfter(0, internal.notifications.create, {
+      userId: params.managerId,
+      type: NOTIFICATION_TYPES.ASSIGNED_AS_TOURNAMENT_MANAGER,
+      title: `You've been assigned as tournament manager`,
+      body: `${params.assignedBy} assigned you to manage ${params.tournamentName}`,
+      relatedEntityId: params.tournamentId,
+      relatedEntityType: "tournament",
+      actionUrl: `/tournaments/${params.tournamentId}`,
+    });
+  } catch (error) {
+    console.error(
+      "Failed to create tournament manager assigned notification:",
+      error,
+    );
+  }
+}

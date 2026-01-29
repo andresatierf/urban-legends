@@ -10,6 +10,7 @@ export default defineSchema({
     teamMinSize: v.optional(v.number()),
     teamMaxSize: v.optional(v.number()),
     createdBy: v.id("users"),
+    managerId: v.optional(v.id("users")),
     winnerId: v.optional(v.id("teams")),
     completedAt: v.optional(v.string()),
     scoringConfig: v.object({
@@ -24,7 +25,9 @@ export default defineSchema({
       teamExerciseThreshold: v.number(),
     }),
     maxSubmissionsPerDay: v.optional(v.number()),
-  }).index("by_name", ["name"]),
+  })
+    .index("by_name", ["name"])
+    .index("by_manager", ["managerId"]),
 
   teams: defineTable({
     name: v.string(),
@@ -80,6 +83,9 @@ export default defineSchema({
     ),
     createdBy: v.id("users"),
     managedBy: v.optional(v.id("users")),
+    flaggedForReview: v.optional(v.boolean()),
+    flaggedBy: v.optional(v.id("users")),
+    flaggedReason: v.optional(v.string()),
 
     tier: v.union(v.literal("base"), v.literal("advanced")),
     pointsEarned: v.number(),
@@ -94,7 +100,8 @@ export default defineSchema({
     .index("by_tournament_and_date", ["tournamentId", "date"])
     .index("by_state", ["state"])
     .index("by_user_and_state", ["userId", "state"])
-    .index("by_group", ["submissionGroupId"]),
+    .index("by_group", ["submissionGroupId"])
+    .index("by_flagged", ["flaggedForReview"]),
 
   submissionGroups: defineTable({
     teamId: v.id("teams"),
