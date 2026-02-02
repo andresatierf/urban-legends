@@ -3,6 +3,10 @@ import { internal } from "../_generated/api";
 import { internalMutation, mutation, query } from "../_generated/server";
 import { nowUTC } from "../lib/dates";
 import { detectOrphanedRecords } from "../lib/helpers";
+import {
+  notifyRoleGranted,
+  notifyRoleRevoked,
+} from "../notifications/triggers";
 import { validateMinimumRole } from "../roles";
 import { getCurrentUserOrThrow } from "../users";
 
@@ -136,6 +140,13 @@ export const updateRoles = mutation({
       const userRole = currentUserRoles.find((ur) => ur.roleId === role._id);
       if (userRole) {
         await ctx.db.delete(userRole._id);
+
+        // Notify user of role revocation
+        await notifyRoleRevoked(ctx, {
+          userId: args.userId,
+          roleName: role.name,
+          roleDisplayName: role.displayName || role.name,
+        });
       }
     }
 
@@ -148,6 +159,13 @@ export const updateRoles = mutation({
         roleId: role._id,
         assignedBy: currentUser._id,
         assignedAt: nowUTC(),
+      });
+
+      // Notify user of role grant
+      await notifyRoleGranted(ctx, {
+        userId: args.userId,
+        roleName: role.name,
+        roleDisplayName: role.displayName || role.name,
       });
     }
 

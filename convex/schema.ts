@@ -80,7 +80,6 @@ export default defineSchema({
     ),
     createdBy: v.id("users"),
     managedBy: v.optional(v.id("users")),
-
     tier: v.union(v.literal("base"), v.literal("advanced")),
     pointsEarned: v.number(),
     submissionGroupId: v.optional(v.id("submissionGroups")),
@@ -175,4 +174,37 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_team_and_user", ["teamId", "userId"])
     .index("by_team_and_user_and_status", ["teamId", "userId", "status"]),
+
+  notifications: defineTable({
+    userId: v.id("users"),
+    type: v.string(),
+    title: v.string(),
+    body: v.optional(v.string()),
+    relatedEntityId: v.optional(v.string()),
+    relatedEntityType: v.optional(v.string()),
+    isRead: v.boolean(),
+    isDeleted: v.optional(v.boolean()),
+    createdAt: v.string(),
+    actionUrl: v.optional(v.string()),
+    actionMetadata: v.optional(v.any()),
+  })
+    .index("by_user_and_read", ["userId", "isRead"])
+    .index("by_user_and_deleted", ["userId", "isDeleted"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_user_type_entity", [
+      "userId",
+      "type",
+      "relatedEntityType",
+      "relatedEntityId",
+    ]),
+
+  notificationPreferences: defineTable({
+    userId: v.id("users"),
+    enabledTypes: v.optional(v.array(v.string())),
+    dailyDigestEnabled: v.boolean(),
+    quietHoursStart: v.optional(v.string()),
+    quietHoursEnd: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    updatedAt: v.string(),
+  }).index("by_user", ["userId"]),
 });

@@ -2,6 +2,12 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { nowUTC } from "./lib/dates";
 import { enrichWithRelations } from "./lib/helpers";
+import {
+  notifyJoinRequest,
+  notifyJoinRequestApproved,
+  notifyJoinRequestRejected,
+  notifyMemberJoined,
+} from "./notifications/triggers";
 import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
@@ -116,6 +122,23 @@ export const requestToJoin = mutation({
       createdAt: nowUTC(),
     });
 
+    // T020: Notify team captain about join request
+    const teamMembers = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .collect();
+
+    const captain = teamMembers.find((m) => m.role === "captain");
+    if (captain) {
+      await notifyJoinRequest(ctx, {
+        captainId: captain.userId,
+        teamId: args.teamId,
+        teamName: team.name,
+        requesterName: user.name || user.email,
+        requestId,
+      });
+    }
+
     return requestId;
   },
 });
@@ -189,12 +212,51 @@ export const respondToJoinRequest = mutation({
         respondedAt: nowUTC(),
         respondedBy: user._id,
       });
+
+      // T021: Notify user that their join request was approved
+      await notifyJoinRequestApproved(ctx, {
+        userId: request.userId,
+        teamId: request.teamId,
+        teamName: team.name,
+      });
+
+      // T023: Notify existing team members that someone joined
+      const teamMembers = await ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) => q.eq("teamId", request.teamId))
+        .collect();
+
+      const existingMemberIds = teamMembers
+        .map((m) => m.userId)
+        .filter((id) => id !== request.userId);
+
+      if (existingMemberIds.length > 0) {
+        const requestingUser = await ctx.db.get(request.userId);
+        if (requestingUser) {
+          await notifyMemberJoined(ctx, {
+            recipientIds: existingMemberIds,
+            teamId: request.teamId,
+            teamName: team.name,
+            newMemberName: requestingUser.name || requestingUser.email,
+          });
+        }
+      }
     } else {
       await ctx.db.patch(args.requestId, {
         status: "rejected",
         respondedAt: nowUTC(),
         respondedBy: user._id,
       });
+
+      // T022: Notify user that their join request was rejected
+      const team = await ctx.db.get(request.teamId);
+      if (team) {
+        await notifyJoinRequestRejected(ctx, {
+          userId: request.userId,
+          teamId: request.teamId,
+          teamName: team.name,
+        });
+      }
     }
   },
 });
