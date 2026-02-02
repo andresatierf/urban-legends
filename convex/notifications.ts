@@ -687,15 +687,15 @@ export const sendDailyDigest = internalMutation({
       role: { table: "roles", foreignKey: (ur) => ur.roleId },
     });
 
+    // Build map of user IDs to their role names
     const userRoleMap = new Map<Id<"users">, Set<string>>();
+    for (const { userId, role } of enrichedUserRoles) {
+      if (!role) continue;
 
-    for (const userRole of enrichedUserRoles) {
-      if (!userRoleMap.has(userRole.userId)) {
-        userRoleMap.set(userRole.userId, new Set());
+      if (!userRoleMap.has(userId)) {
+        userRoleMap.set(userId, new Set());
       }
-      if (userRole.role) {
-        userRoleMap.get(userRole.userId)?.add(userRole.role.name);
-      }
+      userRoleMap.get(userId)?.add(role.name);
     }
 
     // Query pending submissions once for this digest run
