@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { enrichWithRelations } from "./lib/helpers";
 import { isValidNotificationType } from "./notifications/types";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -680,15 +681,20 @@ export const sendDailyDigest = internalMutation({
   handler: async (ctx) => {
     // Get all users with admin or reviewer roles
     const allUserRoles = await ctx.db.query("userRoles").collect();
+
+    // Enrich with role information to avoid N+1 queries
+    const enrichedUserRoles = await enrichWithRelations(ctx, allUserRoles, {
+      role: { table: "roles", foreignKey: (ur) => ur.roleId },
+    });
+
     const userRoleMap = new Map<Id<"users">, Set<string>>();
 
-    for (const userRole of allUserRoles) {
+    for (const userRole of enrichedUserRoles) {
       if (!userRoleMap.has(userRole.userId)) {
         userRoleMap.set(userRole.userId, new Set());
       }
-      const role = await ctx.db.get(userRole.roleId);
-      if (role) {
-        userRoleMap.get(userRole.userId)?.add(role.name);
+      if (userRole.role) {
+        userRoleMap.get(userRole.userId)?.add(userRole.role.name);
       }
     }
 
