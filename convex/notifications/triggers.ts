@@ -23,7 +23,7 @@ export async function notifyTeamInvitation(
       body: `${params.inviterName} invited you to join their team`,
       relatedEntityId: params.teamId,
       relatedEntityType: "team",
-      actionUrl: `/teams/${params.teamId}/invitations`,
+      // actionUrl: `/teams/${params.teamId}/invitations`,
     });
   } catch (error) {
     console.error("Failed to create team invitation notification:", error);
@@ -50,7 +50,7 @@ export async function notifyJoinRequest(
       body: "Review and respond to the join request",
       relatedEntityId: params.teamId,
       relatedEntityType: "team",
-      actionUrl: `/teams/${params.teamId}/requests`,
+      // actionUrl: `/teams/${params.teamId}/requests`,
     });
   } catch (error) {
     console.error("Failed to create join request notification:", error);
@@ -80,7 +80,7 @@ export async function notifySubmissionApproved(
           body: `${params.description || "Your submission"} for ${params.teamName} earned ${params.pointsEarned} points`,
           relatedEntityId: params.submissionId,
           relatedEntityType: "submission",
-          actionUrl: `/submissions/${params.submissionId}`,
+          // actionUrl: `/submissions/${params.submissionId}`,
         }),
       ),
     );
@@ -114,7 +114,7 @@ export async function notifySubmissionRejected(
             (params.reason ? `: ${params.reason}` : ""),
           relatedEntityId: params.submissionId,
           relatedEntityType: "submission",
-          actionUrl: `/submissions/${params.submissionId}`,
+          // actionUrl: `/submissions/${params.submissionId}`,
         }),
       ),
     );
@@ -146,7 +146,7 @@ export async function notifyTeammateSubmitted(
           body: params.description || "Check out your team's progress",
           relatedEntityId: params.teamId,
           relatedEntityType: "team",
-          actionUrl: `/teams/${params.teamId}`,
+          // actionUrl: `/teams/${params.teamId}`,
         }),
       ),
     );
@@ -174,7 +174,7 @@ export async function notifyJoinRequestApproved(
       body: "Welcome to the team!",
       relatedEntityId: params.teamId,
       relatedEntityType: "team",
-      actionUrl: `/teams/${params.teamId}`,
+      // actionUrl: `/teams/${params.teamId}`,
     });
   } catch (error) {
     console.error(
@@ -235,7 +235,7 @@ export async function notifyMemberJoined(
           body: "Your team is getting stronger!",
           relatedEntityId: params.teamId,
           relatedEntityType: "team",
-          actionUrl: `/teams/${params.teamId}`,
+          // actionUrl: `/teams/${params.teamId}`,
         }),
       ),
     );
@@ -289,7 +289,7 @@ export async function notifyRoleGranted(
       body: `You have been granted ${params.roleDisplayName} privileges`,
       relatedEntityId: params.roleName,
       relatedEntityType: "role",
-      actionUrl: "/dashboard",
+      // actionUrl: "/dashboard",
     });
   } catch (error) {
     console.error("Failed to create role granted notification:", error);
@@ -315,7 +315,7 @@ export async function notifyRoleRevoked(
       body: `Your ${params.roleDisplayName} privileges have been removed`,
       relatedEntityId: params.roleName,
       relatedEntityType: "role",
-      actionUrl: "/dashboard",
+      // actionUrl: "/dashboard",
     });
   } catch (error) {
     console.error("Failed to create role revoked notification:", error);
@@ -344,7 +344,7 @@ export async function notifyTournamentWinner(
           body: `${params.winnerTeamName} won the tournament!`,
           relatedEntityId: params.tournamentId,
           relatedEntityType: "tournament",
-          actionUrl: `/tournaments/${params.tournamentId}`,
+          // actionUrl: `/tournaments/${params.tournamentId}`,
         }),
       ),
     );
@@ -408,7 +408,7 @@ export async function notifyTournamentManagerAssigned(
       body: `${params.assignedBy} assigned you to manage ${params.tournamentName}`,
       relatedEntityId: params.tournamentId,
       relatedEntityType: "tournament",
-      actionUrl: `/tournaments/${params.tournamentId}`,
+      // actionUrl: `/tournaments/${params.tournamentId}`,
     });
   } catch (error) {
     console.error(
