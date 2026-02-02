@@ -4,10 +4,7 @@ import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString, toUTCEndOfDayString } from "./lib/dates";
 import { batchGetDocuments, enrichWithRelations } from "./lib/helpers";
-import {
-  notifyTournamentManagerAssigned,
-  notifyTournamentWinner,
-} from "./notifications/triggers";
+import { notifyTournamentWinner } from "./notifications/triggers";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
 import { getTeams, validateIsTeamMember } from "./teams";
 import { getCurrentUserOrThrow } from "./users";
@@ -550,74 +547,6 @@ export const determineWinner = mutation({
       winnerId: winner._id,
       winnerName: winner.name,
       points: winner.points,
-    };
-  },
-});
-
-/**
- * Assign a tournament manager to a tournament
- * T045: Add tournament manager assigned notification trigger
- */
-export const assignManager = mutation({
-  args: {
-    tournamentId: v.id("tournaments"),
-    managerId: v.id("users"),
-  },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    // Only admins can assign tournament managers
-    validateMinimumRole(user, "admin", {
-      customMessage: "Only admins can assign tournament managers",
-    });
-
-    const tournament = await ctx.db.get(args.tournamentId);
-    if (!tournament) {
-      throw new Error("Tournament not found");
-    }
-
-    const manager = await ctx.db.get(args.managerId);
-    if (!manager) {
-      throw new Error("Manager user not found");
-    }
-
-    // Check if user has tournament_manager role
-    const allUserRoles = await ctx.db
-      .query("userRoles")
-      .withIndex("by_user", (q) => q.eq("userId", args.managerId))
-      .collect();
-
-    const roles = await Promise.all(
-      allUserRoles.map((ur) => ctx.db.get(ur.roleId)),
-    );
-
-    const hasTournamentManagerRole = roles.some(
-      (role) => role?.name === "tournament_manager",
-    );
-
-    if (!hasTournamentManagerRole) {
-      throw new Error(
-        "User must have tournament_manager role to be assigned as tournament manager",
-      );
-    }
-
-    // Update tournament with manager
-    await ctx.db.patch(args.tournamentId, {
-      managerId: args.managerId,
-    });
-
-    // Notify the assigned manager
-    await notifyTournamentManagerAssigned(ctx, {
-      managerId: args.managerId,
-      tournamentId: args.tournamentId,
-      tournamentName: tournament.name,
-      assignedBy: user.name,
-    });
-
-    return {
-      success: true,
-      managerId: args.managerId,
-      managerName: manager.name,
     };
   },
 });

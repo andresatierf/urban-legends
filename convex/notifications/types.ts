@@ -12,20 +12,18 @@ export const NOTIFICATION_TYPES = {
   CAPTAIN_ROLE_TRANSFERRED_FROM: "captain_role_transferred_from",
   TEAM_DELETED: "team_deleted",
 
-  // Submission Events (5 types)
+  // Submission Events (4 types)
   SUBMISSION_APPROVED: "submission_approved",
   SUBMISSION_REJECTED: "submission_rejected",
   SUBMISSION_GROUP_AUTO_CREATED: "submission_group_auto_created",
   TEAMMATE_SUBMITTED: "teammate_submitted",
-  SUBMISSION_FLAGGED_FOR_REVIEW: "submission_flagged_for_review",
 
-  // Tournament Events (6 types)
+  // Tournament Events (5 types)
   TOURNAMENT_STARTING_24H: "tournament_starting_24h",
   TOURNAMENT_STARTED: "tournament_started",
   TOURNAMENT_ENDING_24H: "tournament_ending_24h",
   TOURNAMENT_ENDED: "tournament_ended",
   TOURNAMENT_WINNER_ANNOUNCED: "tournament_winner_announced",
-  ASSIGNED_AS_TOURNAMENT_MANAGER: "assigned_as_tournament_manager",
 
   // Role/Admin Events (3 types)
   ROLE_GRANTED: "role_granted",
