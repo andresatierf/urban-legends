@@ -1,19 +1,35 @@
 #!/usr/bin/env bash
 # Create git worktree and setup Zellij environment for speckit feature development
-# Usage: ./speckit-worktree.sh <branch-name>
-# Note: Branch name should follow speckit convention (e.g., 001-feature-name)
+# Usage: ./speckit-worktree.sh [branch-name]
+# Note: If no branch name provided, uses current branch
+#       Branch name should follow speckit convention (e.g., 001-feature-name)
 #       Branch creation and numbering is handled by speckit's create-new-feature.sh
 
 set -e
 
+# Use provided branch name or current branch
 if [ $# -eq 0 ]; then
-  echo "Error: Branch name required"
-  echo "Usage: $0 <branch-name>"
-  echo "Example: $0 001-user-auth"
-  exit 1
+  BRANCH_NAME="$(git branch --show-current)"
+
+  if [ -z "$BRANCH_NAME" ]; then
+    echo "Error: Could not determine current branch"
+    echo "Usage: $0 [branch-name]"
+    echo "Example: $0 001-user-auth"
+    exit 1
+  fi
+
+  if [ "$BRANCH_NAME" = "main" ] || [ "$BRANCH_NAME" = "master" ]; then
+    echo "Error: Cannot create worktree for main/master branch"
+    echo "Please switch to a feature branch first or specify a branch name"
+    echo "Usage: $0 [branch-name]"
+    exit 1
+  fi
+
+  echo "Using current branch: ${BRANCH_NAME}"
+else
+  BRANCH_NAME="$1"
 fi
 
-BRANCH_NAME="$1"
 MAIN_REPO_PATH="$PWD"
 PROJECT_NAME="$(basename "$PWD")"
 WORKTREE_PATH="$PWD/../${PROJECT_NAME}-${BRANCH_NAME}"
@@ -23,6 +39,26 @@ echo "Creating speckit worktree"
 echo "=================================="
 echo "Branch: ${BRANCH_NAME}"
 echo "Worktree path: ${WORKTREE_PATH}"
+echo ""
+
+# Checkout main/master branch before creating worktree
+echo "Checking out base branch in main repository..."
+if git show-ref --verify --quiet refs/heads/main; then
+  BASE_BRANCH="main"
+elif git show-ref --verify --quiet refs/heads/master; then
+  BASE_BRANCH="master"
+else
+  echo "Error: Neither 'main' nor 'master' branch found"
+  exit 1
+fi
+
+CURRENT_BRANCH="$(git branch --show-current)"
+if [ "$CURRENT_BRANCH" != "$BASE_BRANCH" ]; then
+  echo "Switching from '${CURRENT_BRANCH}' to '${BASE_BRANCH}'..."
+  git checkout "$BASE_BRANCH"
+else
+  echo "Already on '${BASE_BRANCH}' branch"
+fi
 echo ""
 
 # Check if worktree already exists
@@ -54,6 +90,12 @@ else
     cp .env.local "$WORKTREE_PATH/.env.local"
   else
     echo "⚠️  No .env file found in main repo"
+  fi
+
+  # Copy .claude/settings.local.json file to worktree
+  if [ -f ".claude/settings.local.json" ]; then
+    echo "Copying .calude/settings.local.json file..."
+    cp .claude/settings.local.json "$WORKTREE_PATH/.claude/settings.local.json"
   fi
 
   # Install dependencies
