@@ -31,6 +31,12 @@ export function NotificationActions({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const markAsRead = useMutation(api.notifications.markAsRead);
+  const respondToInvitation = useMutation(
+    api.teamInvitations.respondToInvitation,
+  );
+  const respondToJoinRequest = useMutation(
+    api.joinRequests.respondToJoinRequest,
+  );
 
   if (!actions || actions.length === 0) {
     return null;
@@ -45,9 +51,36 @@ export function NotificationActions({
 
       // Handle different action types
       if (action.action === "accept" || action.action === "reject") {
-        // For accept/reject actions, we would call the appropriate mutation
-        // This would need to be implemented based on the notification type
-        // For now, we'll just mark as read
+        const isAccept = action.action === "accept";
+
+        // Check if this is a team invitation
+        if (action.args?.invitationId) {
+          await respondToInvitation({
+            invitationId: action.args.invitationId as Id<"teamInvitations">,
+            accept: isAccept,
+          });
+
+          toast.success(
+            isAccept
+              ? "Invitation accepted! Welcome to the team."
+              : "Invitation declined.",
+          );
+        }
+        // Check if this is a join request
+        else if (action.args?.requestId) {
+          await respondToJoinRequest({
+            requestId: action.args.requestId as Id<"joinRequests">,
+            approve: isAccept,
+          });
+
+          toast.success(
+            isAccept ? "Join request approved." : "Join request declined.",
+          );
+        } else {
+          toast.error(
+            "Unable to process action. Missing required information.",
+          );
+        }
       } else if (action.action === "view") {
         // Navigate to the related page
         if (action.args?.url) {

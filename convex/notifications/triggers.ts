@@ -13,6 +13,7 @@ export async function notifyTeamInvitation(
     teamId: Id<"teams">;
     teamName: string;
     inviterName: string;
+    invitationId: Id<"teamInvitations">;
   },
 ) {
   try {
@@ -24,6 +25,21 @@ export async function notifyTeamInvitation(
       relatedEntityId: params.teamId,
       relatedEntityType: "team",
       // actionUrl: `/teams/${params.teamId}/invitations`,
+      actionMetadata: {
+        invitationId: params.invitationId,
+        buttons: [
+          {
+            label: "Accept",
+            action: "accept",
+            args: { invitationId: params.invitationId },
+          },
+          {
+            label: "Decline",
+            action: "reject",
+            args: { invitationId: params.invitationId },
+          },
+        ],
+      },
     });
   } catch (error) {
     console.error("Failed to create team invitation notification:", error);
@@ -40,6 +56,7 @@ export async function notifyJoinRequest(
     teamId: Id<"teams">;
     teamName: string;
     requesterName: string;
+    requestId: Id<"joinRequests">;
   },
 ) {
   try {
@@ -51,6 +68,21 @@ export async function notifyJoinRequest(
       relatedEntityId: params.teamId,
       relatedEntityType: "team",
       // actionUrl: `/teams/${params.teamId}/requests`,
+      actionMetadata: {
+        requestId: params.requestId,
+        buttons: [
+          {
+            label: "Approve",
+            action: "accept",
+            args: { requestId: params.requestId },
+          },
+          {
+            label: "Decline",
+            action: "reject",
+            args: { requestId: params.requestId },
+          },
+        ],
+      },
     });
   } catch (error) {
     console.error("Failed to create join request notification:", error);

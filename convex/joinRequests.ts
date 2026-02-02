@@ -135,6 +135,7 @@ export const requestToJoin = mutation({
         teamId: args.teamId,
         teamName: team.name,
         requesterName: user.name || user.email,
+        requestId,
       });
     }
 

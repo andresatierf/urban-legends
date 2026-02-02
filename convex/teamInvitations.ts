@@ -164,6 +164,7 @@ export const inviteMember = mutation({
       teamId: args.teamId,
       teamName: team.name,
       inviterName: user.name || user.email,
+      invitationId,
     });
 
     return invitationId;
