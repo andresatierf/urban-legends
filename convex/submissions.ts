@@ -10,6 +10,7 @@ import {
 } from "./lib/dates";
 import {
   approve as lifecycleApprove,
+  edit as lifecycleEdit,
   reject as lifecycleReject,
   softDelete as lifecycleSoftDelete,
   submit as lifecycleSubmit,
@@ -20,10 +21,7 @@ import {
   notifyTeammateSubmitted,
 } from "./notifications/triggers";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
-import {
-  calculateGroupMetrics,
-  upsertSubmissionGroup,
-} from "./submissionGroups";
+import { calculateGroupMetrics } from "./submissionGroups";
 import { recalculateTeamPoints } from "./teams";
 import { getCurrentUserOrThrow, getUser, type UserWithRoles } from "./users";
 
@@ -301,103 +299,26 @@ export const upsert = mutation({
     let submissionId: Id<"submissions">;
 
     if (args._id) {
-      // EDIT BRANCH — unchanged from pre-#34 behaviour
+      // EDIT BRANCH — routed through lifecycle.edit (#38)
       const submission = await ctx.db.get(args._id);
 
       if (!submission) throw new Error("Submission not found");
       if (submission.createdBy !== user._id) {
         throw new Error("You do not have permission to update this submission");
       }
-      if (submission.state === "approved") {
-        throw new Error("You cannot update an approved submission");
-      }
 
-      const isDateChange = submission.date !== args.date;
-
-      if (tournament.maxSubmissionsPerDay && isDateChange) {
-        const existingSubmissions = await ctx.db
-          .query("submissions")
-          .withIndex("by_user_and_date", (q) =>
-            q.eq("userId", user._id).eq("date", args.date),
-          )
-          .filter((q) =>
-            q.and(
-              q.eq(q.field("tournamentId"), team.tournamentId),
-              q.neq(q.field("state"), "deleted"),
-            ),
-          )
-          .collect();
-
-        if (existingSubmissions.length >= tournament.maxSubmissionsPerDay) {
-          throw new Error(
-            `Daily submission limit reached (${tournament.maxSubmissionsPerDay} per day). You have already submitted ${existingSubmissions.length} time(s) today.`,
-          );
-        }
-      }
-
-      const data = {
-        date: toUTCDateString(args.date),
-        userId: user._id,
-        teamId: args.teamId,
-        tournamentId: team.tournamentId,
-        description: args.description,
-        tier: args.tier || "base",
-        submissionType: args.submissionType,
-      };
-
-      const typeChanged = submission.submissionType !== args.submissionType;
-
-      await ctx.db.patch(args._id, data);
-      submissionId = args._id;
-
-      if (typeChanged) {
-        const duplicateTeamSubmission = await ctx.db
-          .query("submissions")
-          .withIndex("by_team_and_date", (q) =>
-            q.eq("teamId", args.teamId).eq("date", args.date),
-          )
-          .filter((q) =>
-            q.and(
-              q.eq(q.field("userId"), user._id),
-              q.eq(q.field("submissionType"), "team"),
-              q.neq(q.field("state"), "deleted"),
-              q.neq(q.field("_id"), args._id),
-            ),
-          )
-          .first();
-
-        if (duplicateTeamSubmission) {
-          throw new Error(
-            "You have already submitted for this team activity today",
-          );
-        }
-
-        if (args.submissionType === "team") {
-          await upsertSubmissionGroup(ctx, {
-            teamId: args.teamId,
-            tournamentId: team.tournamentId,
-            date: args.date,
-          });
-        } else {
-          if (submission.submissionGroupId) {
-            await ctx.db.patch(submissionId, { submissionGroupId: undefined });
-
-            await upsertSubmissionGroup(ctx, {
-              teamId: args.teamId,
-              tournamentId: team.tournamentId,
-              date: args.date,
-            });
-          }
-        }
-      }
-
-      if (args.submissionType === "team") {
-        await upsertSubmissionGroup(ctx, {
-          teamId: args.teamId,
-          tournamentId: team.tournamentId,
+      await lifecycleEdit(
+        ctx,
+        args._id,
+        {
           date: args.date,
-        });
-      }
+          type: args.submissionType,
+          tier: args.tier,
+          description: args.description,
+        },
+        user._id,
+      );
+      submissionId = args._id;
     } else {
       // CREATE BRANCH — routed through lifecycle.submit (#34)
       submissionId = await lifecycleSubmit(ctx, {

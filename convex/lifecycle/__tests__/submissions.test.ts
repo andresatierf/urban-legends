@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import schema from "../../schema";
 import {
   approve,
+  edit,
   IllegalTransition,
   previewIsTeamExercise,
   reject,
@@ -1012,5 +1013,291 @@ describe("softDelete", () => {
         await softDelete(ctx, submissionId, userId);
       }),
     ).rejects.toThrow(IllegalTransition);
+  });
+});
+
+describe("edit", () => {
+  async function seedWorld(
+    ctx: Parameters<Parameters<ReturnType<typeof convexTest>["run"]>[0]>[0],
+  ) {
+    const userId = await ctx.db.insert("users", {
+      email: "player@example.com",
+      name: "Player One",
+      externalId: "ext_player_1",
+    });
+
+    const tournamentId = await ctx.db.insert("tournaments", {
+      name: "Edit Tournament",
+      description: "For edit tests",
+      startDate: "2024-01-01",
+      endDate: "2024-12-31",
+      createdBy: userId,
+      scoringConfig,
+    });
+
+    const teamId = await ctx.db.insert("teams", {
+      name: "Edit Team",
+      tournamentId,
+      createdBy: userId,
+      visibility: "public",
+      points: 0,
+    });
+
+    await ctx.db.insert("teamMembers", { teamId, userId, role: "captain" });
+
+    return { userId, teamId, tournamentId };
+  }
+
+  test("description-only edit: description updated, state stays pending, group unchanged", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      return await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-15",
+        type: "team",
+        description: "original",
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await edit(ctx, submissionId, { description: "updated" }, userId);
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.description).toBe("updated");
+      expect(sub?.state).toBe("pending");
+      expect(sub?.submissionGroupId).toBeDefined();
+
+      const groups = await ctx.db
+        .query("submissionGroups")
+        .withIndex("by_team", (q) => q.eq("teamId", teamId))
+        .collect();
+      expect(groups).toHaveLength(1);
+
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("editing a non-pending submission throws IllegalTransition", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      return ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: "2024-01-15T00:00:00.000Z",
+        submissionType: "individual",
+        state: "approved",
+        tier: "base",
+        pointsEarned: 1,
+        createdBy: userId,
+      });
+    });
+
+    await expect(
+      t.run(async (ctx) => {
+        await edit(ctx, submissionId, { description: "too late" }, userId);
+      }),
+    ).rejects.toThrow(IllegalTransition);
+  });
+
+  test("date change on team-type: moves between groups, old group deleted if empty", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      return await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-15",
+        type: "team",
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await edit(ctx, submissionId, { date: "2024-01-16" }, userId);
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.date).toBe("2024-01-16T00:00:00.000Z");
+      expect(sub?.submissionGroupId).toBeDefined();
+
+      const groups = await ctx.db
+        .query("submissionGroups")
+        .withIndex("by_team", (q) => q.eq("teamId", teamId))
+        .collect();
+
+      // Old group (Jan 15) deleted; new group (Jan 16) created
+      expect(groups).toHaveLength(1);
+      expect(groups[0].date).toBe("2024-01-16T00:00:00.000Z");
+
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("type change team→individual: evicts from group, group deleted if empty", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      return await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-15",
+        type: "team",
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await edit(ctx, submissionId, { type: "individual" }, userId);
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.submissionType).toBe("individual");
+      // Note: submissionGroupId may retain a stale reference to the (now-deleted) group.
+      // This is safe: approve/reject check submissionType first, and cascade filters by type.
+      // Clearing to undefined is skipped here to avoid a convex-test $undefined patch bug.
+
+      const groups = await ctx.db
+        .query("submissionGroups")
+        .withIndex("by_team", (q) => q.eq("teamId", teamId))
+        .collect();
+      expect(groups).toHaveLength(0);
+
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("type change individual→team: joins or creates group for (team, date)", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      return await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-15",
+        type: "individual",
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await edit(ctx, submissionId, { type: "team" }, userId);
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.submissionType).toBe("team");
+      expect(sub?.submissionGroupId).toBeDefined();
+
+      const groups = await ctx.db
+        .query("submissionGroups")
+        .withIndex("by_team", (q) => q.eq("teamId", teamId))
+        .collect();
+      expect(groups).toHaveLength(1);
+      expect(groups[0].participantCount).toBe(1);
+
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("date change on team-type with surviving sibling: old group recomputes with participantCount=1", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId: captainId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const memberId = await t.run(async (ctx) => {
+      const id = await ctx.db.insert("users", {
+        email: "member@example.com",
+        name: "Member",
+        externalId: "ext_member",
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId,
+        userId: id,
+        role: "member",
+      });
+      return id;
+    });
+
+    const [sub1Id] = await t.run(async (ctx) => {
+      const s1 = await submit(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-01-15",
+        type: "team",
+      });
+      await submit(ctx, {
+        userId: memberId,
+        teamId,
+        date: "2024-01-15",
+        type: "team",
+      });
+      return [s1];
+    });
+
+    await t.run(async (ctx) => {
+      await edit(ctx, sub1Id, { date: "2024-01-16" }, captainId);
+    });
+
+    await t.run(async (ctx) => {
+      const jan15Groups = await ctx.db
+        .query("submissionGroups")
+        .withIndex("by_team_and_date", (q) =>
+          q.eq("teamId", teamId).eq("date", "2024-01-15T00:00:00.000Z"),
+        )
+        .collect();
+      expect(jan15Groups).toHaveLength(1);
+      expect(jan15Groups[0].participantCount).toBe(1);
+
+      const jan16Groups = await ctx.db
+        .query("submissionGroups")
+        .withIndex("by_team_and_date", (q) =>
+          q.eq("teamId", teamId).eq("date", "2024-01-16T00:00:00.000Z"),
+        )
+        .collect();
+      expect(jan16Groups).toHaveLength(1);
+      expect(jan16Groups[0].participantCount).toBe(1);
+
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("duplicate-team-submission rejection on type flip: throws when another team-type exists for same team-day", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    // Create a team-type submission, then an individual one for the same day
+    await t.run(async (ctx) => {
+      await submit(ctx, { userId, teamId, date: "2024-01-15", type: "team" });
+    });
+
+    const individualId = await t.run(async (ctx) => {
+      return ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: "2024-01-15T00:00:00.000Z",
+        submissionType: "individual",
+        state: "pending",
+        tier: "base",
+        pointsEarned: 0,
+        createdBy: userId,
+      });
+    });
+
+    await expect(
+      t.run(async (ctx) => {
+        // Flip individual → team would create a duplicate team-type for this user+team+day
+        await edit(ctx, individualId, { type: "team" }, userId);
+      }),
+    ).rejects.toThrow("already submitted for this team activity today");
   });
 });

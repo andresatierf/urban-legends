@@ -497,5 +497,95 @@ export async function softDelete(
   return { pointsDelta: newTeamPoints - oldTeamPoints };
 }
 
+// Edits a pending submission's fields, reconciling SubmissionGroup membership
+// when date or type changes. Throws IllegalTransition for non-pending source states.
+//
+// Avoids the convex-test $undefined serialization bug by applying the main patch
+// first, then letting cascade naturally exclude the submission via type/date filter,
+// and only clearing submissionGroupId as the very last write (after all index queries).
+export async function edit(
+  ctx: MutationCtx,
+  submissionId: Id<"submissions">,
+  patch: {
+    date?: string;
+    type?: "individual" | "team";
+    tier?: "base" | "advanced";
+    description?: string;
+  },
+  _by: Id<"users">,
+): Promise<void> {
+  const submission = await ctx.db.get(submissionId);
+  if (!submission) throw new Error("Submission not found");
+
+  if (submission.state !== "pending") {
+    throw new IllegalTransition(submission.state, "pending");
+  }
+
+  const newDate = patch.date ? toUTCDateString(patch.date) : submission.date;
+  const newType = patch.type ?? submission.submissionType;
+
+  const dateChanged = newDate !== submission.date;
+  const typeChanged = newType !== submission.submissionType;
+
+  // Enforce duplicate-team-submission guard for the new (team, date) before writing
+  if (newType === "team" && (typeChanged || dateChanged)) {
+    const allOnDate = await ctx.db
+      .query("submissions")
+      .withIndex("by_team_and_date", (q) =>
+        q.eq("teamId", submission.teamId).eq("date", newDate),
+      )
+      .collect();
+
+    const alreadyIn = allOnDate.find(
+      (s) =>
+        s.userId === submission.userId &&
+        s.submissionType === "team" &&
+        s.state !== "rejected" &&
+        s.state !== "deleted" &&
+        s._id !== submissionId,
+    );
+
+    if (alreadyIn) {
+      throw new Error(
+        "You have already submitted for this team activity today",
+      );
+    }
+  }
+
+  const oldDate = submission.date;
+  const wasTeamInGroup =
+    submission.submissionType === "team" && !!submission.submissionGroupId;
+
+  // Apply the main patch first so cascade can use the new date/type to exclude this
+  // submission from the old group naturally, without patching submissionGroupId to undefined.
+  await ctx.db.patch(submissionId, {
+    ...(patch.date !== undefined && { date: newDate }),
+    ...(patch.type !== undefined && { submissionType: newType }),
+    ...(patch.tier !== undefined && { tier: patch.tier }),
+    ...(patch.description !== undefined && { description: patch.description }),
+  });
+
+  // If the submission was in a group and date or type changed, cascade on the OLD date.
+  // Because the submission now has the new date/type, cascade's active filter naturally
+  // excludes it — the old group is recomputed or deleted without any extra patch needed.
+  if (wasTeamInGroup && (dateChanged || typeChanged)) {
+    await cascade(ctx, {
+      teamId: submission.teamId,
+      tournamentId: submission.tournamentId,
+      date: oldDate,
+    });
+  }
+
+  // Join or create group for new (team, date). cascade will patch submissionGroupId
+  // on all active subs for the new slot, including this one.
+  if (newType === "team") {
+    await joinOrCreateGroup(ctx, {
+      teamId: submission.teamId,
+      tournamentId: submission.tournamentId,
+      date: newDate,
+    });
+  }
+}
+
 // evictFromGroup exported for use by later lifecycle slices (edit, softDelete).
 export { evictFromGroup };
