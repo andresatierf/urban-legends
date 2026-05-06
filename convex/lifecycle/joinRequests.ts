@@ -196,7 +196,7 @@ export async function reject(
 }
 
 // Cancels a pending join request (pending → cancelled).
-// Only the creator (createdBy, falling back to userId for legacy rows) may cancel.
+// Only the creator (createdBy) may cancel.
 export async function cancel(
   ctx: MutationCtx,
   requestId: Id<"joinRequests">,
@@ -207,7 +207,7 @@ export async function cancel(
   if (req.status !== "pending")
     throw new IllegalTransition(req.status, "cancelled");
 
-  const owner = req.createdBy ?? req.userId;
+  const owner = req.createdBy;
   if (owner !== by) {
     throw new Error("Only the creator can cancel this join request");
   }
@@ -227,7 +227,6 @@ export async function expire(
   const req = await ctx.db.get(requestId);
   if (!req) throw new Error("Join request not found");
   if (req.status !== "pending") return "noop";
-  if (!req.expiresAt) return "noop";
 
   const now = new Date();
   if (now <= new Date(req.expiresAt)) return "noop";

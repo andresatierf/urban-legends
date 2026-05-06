@@ -143,7 +143,6 @@ export default defineSchema({
     userId: v.id("users"),
     status: v.union(
       v.literal("pending"),
-      v.literal("approved"),
       v.literal("accepted"),
       v.literal("rejected"),
       v.literal("cancelled"),
@@ -153,9 +152,9 @@ export default defineSchema({
     createdAt: v.string(),
     respondedAt: v.optional(v.string()),
     respondedBy: v.optional(v.id("users")),
-    initiator: v.optional(v.union(v.literal("user"), v.literal("team"))),
-    createdBy: v.optional(v.id("users")),
-    expiresAt: v.optional(v.string()),
+    initiator: v.union(v.literal("user"), v.literal("team")),
+    createdBy: v.id("users"),
+    expiresAt: v.string(),
   })
     .index("by_team", ["teamId"])
     .index("by_user", ["userId"])

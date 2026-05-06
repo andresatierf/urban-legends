@@ -24,7 +24,6 @@ export const listJoinRequests = query({
     status: v.optional(
       v.union(
         v.literal("pending"),
-        v.literal("approved"),
         v.literal("accepted"),
         v.literal("rejected"),
         v.literal("cancelled"),

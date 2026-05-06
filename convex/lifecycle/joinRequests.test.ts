@@ -120,6 +120,9 @@ describe("reject then re-request", () => {
         userId: requesterId,
         status: "rejected",
         createdAt: "2024-01-01T00:00:00.000Z",
+        initiator: "user",
+        createdBy: requesterId,
+        expiresAt: "2024-01-08T00:00:00.000Z",
       });
 
       await expect(

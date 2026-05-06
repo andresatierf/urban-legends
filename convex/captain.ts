@@ -26,22 +26,25 @@ export const getPendingActionsCount = query({
       return 0;
     }
 
+    // Filter A: incoming user-direction requests for my captained teams
     const allPending = await ctx.db
       .query("joinRequests")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
       .collect();
+    const incomingCount = allPending.filter(
+      (jr) => teamIdsSet.has(jr.teamId) && jr.initiator === "user",
+    ).length;
 
-    // Filter A: incoming user-direction requests for my captained teams
-    const incomingRequests = allPending.filter(
-      (jr) => teamIdsSet.has(jr.teamId) && jr.initiator !== "team",
-    );
+    // Filter B: outgoing team-direction invitations I created (tighter index)
+    const outgoingPending = await ctx.db
+      .query("joinRequests")
+      .withIndex("by_createdBy_and_status", (q) =>
+        q.eq("createdBy", user._id).eq("status", "pending"),
+      )
+      .filter((q) => q.eq(q.field("initiator"), "team"))
+      .collect();
 
-    // Filter B: outgoing team-direction invitations I created
-    const outgoingInvitations = allPending.filter(
-      (jr) => jr.initiator === "team" && jr.createdBy === user._id,
-    );
-
-    return incomingRequests.length + outgoingInvitations.length;
+    return incomingCount + outgoingPending.length;
   },
 });
 
