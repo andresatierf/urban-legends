@@ -21,6 +21,8 @@ import type * as http from "../http.js";
 import type * as joinRequests from "../joinRequests.js";
 import type * as lib_dates from "../lib/dates.js";
 import type * as lib_helpers from "../lib/helpers.js";
+import type * as lifecycle___tests___invariants from "../lifecycle/__tests__/invariants.js";
+import type * as lifecycle_submissions from "../lifecycle/submissions.js";
 import type * as notifications_triggers from "../notifications/triggers.js";
 import type * as notifications_types from "../notifications/types.js";
 import type * as notifications from "../notifications.js";
@@ -55,6 +57,8 @@ declare const fullApi: ApiFromModules<{
   joinRequests: typeof joinRequests;
   "lib/dates": typeof lib_dates;
   "lib/helpers": typeof lib_helpers;
+  "lifecycle/__tests__/invariants": typeof lifecycle___tests___invariants;
+  "lifecycle/submissions": typeof lifecycle_submissions;
   "notifications/triggers": typeof notifications_triggers;
   "notifications/types": typeof notifications_types;
   notifications: typeof notifications;

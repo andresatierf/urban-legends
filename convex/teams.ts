@@ -1,43 +1,12 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import type { MutationCtx } from "./_generated/server";
 import { mutation, type QueryCtx, query } from "./_generated/server";
-import { nowUTC } from "./lib/dates";
+import { recompute as lifecycleRecompute } from "./lifecycle/submissions";
 import { notifyRemovedFromTeam } from "./notifications/triggers";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
-import { upsertSubmissionGroup } from "./submissionGroups";
-import { recalculateSubmissionPoints } from "./submissions";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow, getUser } from "./users";
-
-/**
- * Internal helper to recalculate and update a team's total points
- * based on all approved submissions.
- *
- * This is the most efficient way to ensure team points are correct,
- * especially after submission state changes.
- */
-export async function recalculateTeamPoints(
-  ctx: MutationCtx,
-  teamId: Id<"teams">,
-): Promise<void> {
-  const approvedSubmissions = await ctx.db
-    .query("submissions")
-    .withIndex("by_team", (q) => q.eq("teamId", teamId))
-    .filter((q) => q.eq(q.field("state"), "approved"))
-    .collect();
-
-  const totalPoints = approvedSubmissions.reduce(
-    (sum, submission) => sum + (submission.pointsEarned || 0),
-    0,
-  );
-
-  await ctx.db.patch(teamId, {
-    points: totalPoints,
-    lastActivityAt: nowUTC(),
-  });
-}
 
 export const list = query({
   args: {
@@ -699,45 +668,6 @@ export async function validateTeamHasSpace(
   return team;
 }
 
-/**
- * ADMIN UTILITY - Manual Execution for Data Fixes
- *
- * Recalculates a team's total points from all approved submissions.
- * Use this utility to fix point calculation inconsistencies caused by:
- * - Data migration issues
- * - Bugs in scoring logic (now fixed)
- * - Manual database modifications
- * - Missing pointsEarned values on submissions
- *
- * **Usage:**
- * 1. Identify a team with incorrect point totals
- * 2. Run this mutation via Convex dashboard with the team ID
- * 3. The function will recalculate all submission points using the
- *    tournament's flexible scoring configuration
- * 4. Team points will be updated to match the sum of all approved submissions
- *
- * **What it does:**
- * - Fetches all approved submissions for the team
- * - For submissions missing pointsEarned, calculates points using:
- *   - Tournament scoring configuration (individual/team, base/advanced)
- *   - Team member participation rate
- *   - Team exercise threshold detection
- * - Updates submissions with calculated pointsEarned values
- * - Recalculates team total from actual submission points
- *
- * **Safety:**
- * - Admin-only access
- * - Recalculates and updates pointsEarned for all approved submissions
- * - Overwrites any existing pointsEarned values with fresh calculations
- * - Atomic operation per submission
- *
- * @param teamId - The ID of the team to recalculate points for
- * @returns Object with totalPoints and count of submissions updated
- *
- * @internal This function is for manual data fixes and maintenance.
- *          Should not be needed in normal operation once all submissions
- *          have proper pointsEarned values.
- */
 export const recalculatePoints = mutation({
   args: {
     teamId: v.id("teams"),
@@ -750,53 +680,19 @@ export const recalculatePoints = mutation({
         "Admin or Tournament Manager access required to recalculate team points",
     });
 
-    const team = await ctx.db.get(args.teamId);
-    if (!team) {
-      throw new Error("Team not found");
-    }
-
-    const allSubmissions = await ctx.db
-      .query("submissions")
-      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
-      .collect();
-
-    const submissionsByDate = new Map<string, typeof allSubmissions>();
-    for (const submission of allSubmissions) {
-      if (submission.submissionType === "team") {
-        const dateSubmissions = submissionsByDate.get(submission.date) || [];
-        dateSubmissions.push(submission);
-        submissionsByDate.set(submission.date, dateSubmissions);
-      }
-    }
-
-    for (const [date, _] of Array.from(submissionsByDate.entries())) {
-      await upsertSubmissionGroup(ctx, {
-        teamId: args.teamId,
-        tournamentId: team.tournamentId,
-        date,
-      });
-    }
-
-    let updatedCount = 0;
-    for (const submission of allSubmissions) {
-      await recalculateSubmissionPoints(ctx, {
-        submissionId: submission._id,
-        previousState: submission.state,
-        managedBy: user._id,
-        skipTeamRecalculation: true,
-      });
-      updatedCount++;
-    }
-
-    await recalculateTeamPoints(ctx, args.teamId);
+    const result = await lifecycleRecompute(
+      ctx,
+      { kind: "team", id: args.teamId },
+      user._id,
+    );
 
     const updatedTeam = await ctx.db.get(args.teamId);
 
     return {
       teamId: args.teamId,
-      points: updatedTeam?.points || 0,
+      points: updatedTeam?.points ?? 0,
       lastActivityAt: updatedTeam?.lastActivityAt,
-      submissionsUpdated: updatedCount,
+      submissionsUpdated: result.submissionsTouched,
     };
   },
 });

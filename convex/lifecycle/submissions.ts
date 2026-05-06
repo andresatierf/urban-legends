@@ -589,3 +589,160 @@ export async function edit(
 
 // evictFromGroup exported for use by later lifecycle slices (edit, softDelete).
 export { evictFromGroup };
+
+// Re-derives pointsEarned for every affected submission and group on a team,
+// then reconciles team.points. Never changes submission state.
+async function recomputeForTeam(
+  ctx: MutationCtx,
+  teamId: Id<"teams">,
+): Promise<{ submissionsTouched: number }> {
+  const team = await ctx.db.get(teamId);
+  if (!team) throw new Error("Team not found");
+  const tournament = await ctx.db.get(team.tournamentId);
+  if (!tournament) throw new Error("Tournament not found");
+  const sc = tournament.scoringConfig;
+
+  const allSubmissions = await ctx.db
+    .query("submissions")
+    .withIndex("by_team", (q) => q.eq("teamId", teamId))
+    .collect();
+
+  let submissionsTouched = 0;
+
+  // Individual submissions: re-derive points directly from current scoring config.
+  for (const sub of allSubmissions.filter(
+    (s) => s.submissionType === "individual",
+  )) {
+    const pts = sub.state === "approved" ? sc.individualPoints[sub.tier] : 0;
+    await ctx.db.patch(sub._id, { pointsEarned: pts });
+    submissionsTouched++;
+  }
+
+  // Team submissions: recompute each (teamId, date) slot.
+  const teamSubs = allSubmissions.filter((s) => s.submissionType === "team");
+  const dates = Array.from(new Set(teamSubs.map((s) => s.date)));
+
+  const teamMembers = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_team", (q) => q.eq("teamId", teamId))
+    .collect();
+  const totalTeamMembers = teamMembers.length;
+
+  for (const date of dates) {
+    const forDate = teamSubs.filter((s) => s.date === date);
+    const active = forDate.filter(
+      (s) => s.state !== "deleted" && s.state !== "rejected",
+    );
+
+    const group = await ctx.db
+      .query("submissionGroups")
+      .withIndex("by_team_and_date", (q) =>
+        q.eq("teamId", teamId).eq("date", date),
+      )
+      .first();
+
+    if (active.length === 0) {
+      if (group) await ctx.db.delete(group._id);
+      for (const sub of forDate) {
+        await ctx.db.patch(sub._id, { pointsEarned: 0 });
+        submissionsTouched++;
+      }
+      continue;
+    }
+
+    const participantCount = active.length;
+    const participationRate =
+      totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
+    const isTeamExercise = participationRate >= sc.teamExerciseThreshold;
+    const tier: "base" | "advanced" = active.some((s) => s.tier === "advanced")
+      ? "advanced"
+      : "base";
+
+    const states = new Set(active.map((s) => s.state));
+    const groupState = (
+      states.size === 1 ? Array.from(states)[0] : "pending"
+    ) as "pending" | "approved" | "rejected" | "deleted";
+
+    const groupPoints =
+      groupState === "approved"
+        ? isTeamExercise
+          ? sc.teamExercisePoints[tier]
+          : sc.individualPoints[tier]
+        : 0;
+
+    if (group) {
+      await ctx.db.patch(group._id, {
+        state: groupState,
+        tier,
+        participantCount,
+        totalTeamMembers,
+        participationRate,
+        isTeamExercise,
+        pointsEarned: groupPoints,
+        updatedAt: nowUTC(),
+      });
+    }
+
+    const pointsPerSub =
+      participantCount > 0 ? groupPoints / participantCount : 0;
+    for (const sub of active) {
+      await ctx.db.patch(sub._id, { pointsEarned: pointsPerSub });
+      submissionsTouched++;
+    }
+
+    for (const sub of forDate.filter(
+      (s) => s.state === "deleted" || s.state === "rejected",
+    )) {
+      await ctx.db.patch(sub._id, { pointsEarned: 0 });
+      submissionsTouched++;
+    }
+  }
+
+  await updateTeamPoints(ctx, teamId);
+  return { submissionsTouched };
+}
+
+// Recomputes pointsEarned for every submission (and group) affected by the
+// given scope, then reconciles team.points for every affected team.
+// Never changes submission state. Idempotent.
+export async function recompute(
+  ctx: MutationCtx,
+  scope:
+    | { kind: "submission"; id: Id<"submissions"> }
+    | { kind: "group"; id: Id<"submissionGroups"> }
+    | { kind: "team"; id: Id<"teams"> }
+    | { kind: "tournament"; id: Id<"tournaments"> },
+  _by: Id<"users">,
+): Promise<{ submissionsTouched: number; teamsTouched: number }> {
+  if (scope.kind === "submission") {
+    const sub = await ctx.db.get(scope.id);
+    if (!sub) throw new Error("Submission not found");
+    const { submissionsTouched } = await recomputeForTeam(ctx, sub.teamId);
+    return { submissionsTouched, teamsTouched: 1 };
+  }
+
+  if (scope.kind === "group") {
+    const group = await ctx.db.get(scope.id);
+    if (!group) throw new Error("Submission group not found");
+    const { submissionsTouched } = await recomputeForTeam(ctx, group.teamId);
+    return { submissionsTouched, teamsTouched: 1 };
+  }
+
+  if (scope.kind === "team") {
+    const { submissionsTouched } = await recomputeForTeam(ctx, scope.id);
+    return { submissionsTouched, teamsTouched: 1 };
+  }
+
+  // tournament scope
+  const teams = await ctx.db
+    .query("teams")
+    .withIndex("by_tournament", (q) => q.eq("tournamentId", scope.id))
+    .collect();
+
+  let totalSubmissions = 0;
+  for (const team of teams) {
+    const { submissionsTouched } = await recomputeForTeam(ctx, team._id);
+    totalSubmissions += submissionsTouched;
+  }
+  return { submissionsTouched: totalSubmissions, teamsTouched: teams.length };
+}

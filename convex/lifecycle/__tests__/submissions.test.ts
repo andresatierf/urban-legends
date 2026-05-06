@@ -6,6 +6,7 @@ import {
   edit,
   IllegalTransition,
   previewIsTeamExercise,
+  recompute,
   reject,
   score,
   softDelete,
@@ -1299,5 +1300,355 @@ describe("edit", () => {
         await edit(ctx, individualId, { type: "team" }, userId);
       }),
     ).rejects.toThrow("already submitted for this team activity today");
+  });
+});
+
+describe("recompute", () => {
+  async function seedWorld(
+    ctx: Parameters<Parameters<ReturnType<typeof convexTest>["run"]>[0]>[0],
+  ) {
+    const userId = await ctx.db.insert("users", {
+      email: "recompute@example.com",
+      name: "Recompute User",
+      externalId: "ext_recompute",
+    });
+    const tournamentId = await ctx.db.insert("tournaments", {
+      name: "Recompute Tournament",
+      description: "For recompute tests",
+      startDate: "2024-01-01",
+      endDate: "2024-12-31",
+      createdBy: userId,
+      scoringConfig,
+    });
+    const teamId = await ctx.db.insert("teams", {
+      name: "Recompute Team",
+      tournamentId,
+      createdBy: userId,
+      visibility: "public",
+      points: 0,
+    });
+    await ctx.db.insert("teamMembers", { teamId, userId, role: "captain" });
+    return { userId, teamId, tournamentId };
+  }
+
+  test("submission scope: retroactive scoring change updates individual submission", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      const id = await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-15",
+        type: "individual",
+        tier: "base",
+      });
+      await approve(ctx, id, userId);
+      return id;
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.pointsEarned).toBe(1);
+    });
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(tournamentId, {
+        scoringConfig: {
+          individualPoints: { base: 5, advanced: 10 },
+          teamExercisePoints: { base: 3, advanced: 4 },
+          teamExerciseThreshold: 0.5,
+        },
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await recompute(ctx, { kind: "submission", id: submissionId }, userId);
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.pointsEarned).toBe(5);
+      expect(sub?.state).toBe("approved");
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("group scope: retroactive scoring change updates approved team group", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const memberId = await t.run(async (ctx) => {
+      const id = await ctx.db.insert("users", {
+        email: "member2@example.com",
+        name: "Member2",
+        externalId: "ext_member2",
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId,
+        userId: id,
+        role: "member",
+      });
+      return id;
+    });
+
+    const sub1Id = await t.run(async (ctx) => {
+      const s1 = await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-15",
+        type: "team",
+      });
+      await submit(ctx, {
+        userId: memberId,
+        teamId,
+        date: "2024-01-15",
+        type: "team",
+      });
+      return s1;
+    });
+
+    const groupId = await t.run(async (ctx) => {
+      await approve(ctx, sub1Id, userId);
+      const sub = await ctx.db.get(sub1Id);
+      if (!sub?.submissionGroupId)
+        throw new Error("Group not found after approval");
+      return sub.submissionGroupId;
+    });
+
+    // Initial: 2/2 members = team exercise, base = 3 points total → 1.5 each
+    await t.run(async (ctx) => {
+      const group = await ctx.db.get(groupId);
+      expect(group?.pointsEarned).toBe(3);
+      const sub = await ctx.db.get(sub1Id);
+      expect(sub?.pointsEarned).toBeCloseTo(1.5, 5);
+    });
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(tournamentId, {
+        scoringConfig: {
+          individualPoints: { base: 1, advanced: 2 },
+          teamExercisePoints: { base: 10, advanced: 20 },
+          teamExerciseThreshold: 0.5,
+        },
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await recompute(ctx, { kind: "group", id: groupId }, userId);
+    });
+
+    await t.run(async (ctx) => {
+      const group = await ctx.db.get(groupId);
+      expect(group?.pointsEarned).toBe(10);
+      const sub = await ctx.db.get(sub1Id);
+      expect(sub?.pointsEarned).toBeCloseTo(5, 5);
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("team scope: recomputes both individual and team submissions", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const [indivId, teamSubId] = await t.run(async (ctx) => {
+      const i = await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-10",
+        type: "individual",
+        tier: "advanced",
+      });
+      const ts = await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-11",
+        type: "team",
+      });
+      return [i, ts];
+    });
+
+    await t.run(async (ctx) => {
+      await approve(ctx, indivId, userId);
+      await approve(ctx, teamSubId, userId);
+    });
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(tournamentId, {
+        scoringConfig: {
+          individualPoints: { base: 7, advanced: 14 },
+          teamExercisePoints: { base: 9, advanced: 18 },
+          teamExerciseThreshold: 0.5,
+        },
+      });
+    });
+
+    const result = await t.run(async (ctx) => {
+      return await recompute(ctx, { kind: "team", id: teamId }, userId);
+    });
+
+    expect(result.teamsTouched).toBe(1);
+    expect(result.submissionsTouched).toBeGreaterThan(0);
+
+    await t.run(async (ctx) => {
+      const indiv = await ctx.db.get(indivId);
+      expect(indiv?.pointsEarned).toBe(14);
+
+      const ts = await ctx.db.get(teamSubId);
+      // 1/1 members = team exercise, base = 9 points, sole sub → 9
+      expect(ts?.pointsEarned).toBe(9);
+
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("tournament scope: recomputes all teams in the tournament", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId: team1Id, tournamentId } = await t.run(seedWorld);
+
+    const [team2Id, sub2Id] = await t.run(async (ctx) => {
+      const user2 = await ctx.db.insert("users", {
+        email: "user2@example.com",
+        name: "User2",
+        externalId: "ext_user2",
+      });
+      const t2 = await ctx.db.insert("teams", {
+        name: "Team 2",
+        tournamentId,
+        createdBy: user2,
+        visibility: "public",
+        points: 0,
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId: t2,
+        userId: user2,
+        role: "captain",
+      });
+      const s = await submit(ctx, {
+        userId: user2,
+        teamId: t2,
+        date: "2024-01-20",
+        type: "individual",
+      });
+      await approve(ctx, s, user2);
+      return [t2, s];
+    });
+
+    const sub1Id = await t.run(async (ctx) => {
+      const s = await submit(ctx, {
+        userId,
+        teamId: team1Id,
+        date: "2024-01-20",
+        type: "individual",
+      });
+      await approve(ctx, s, userId);
+      return s;
+    });
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(tournamentId, {
+        scoringConfig: {
+          individualPoints: { base: 99, advanced: 100 },
+          teamExercisePoints: { base: 3, advanced: 4 },
+          teamExerciseThreshold: 0.5,
+        },
+      });
+    });
+
+    const result = await t.run(async (ctx) => {
+      return await recompute(
+        ctx,
+        { kind: "tournament", id: tournamentId },
+        userId,
+      );
+    });
+
+    expect(result.teamsTouched).toBe(2);
+
+    await t.run(async (ctx) => {
+      const s1 = await ctx.db.get(sub1Id);
+      expect(s1?.pointsEarned).toBe(99);
+      const s2 = await ctx.db.get(sub2Id);
+      expect(s2?.pointsEarned).toBe(99);
+
+      await assertSubmissionInvariant(ctx, { teamId: team1Id, tournamentId });
+      await assertSubmissionInvariant(ctx, { teamId: team2Id, tournamentId });
+    });
+  });
+
+  test("idempotent: two consecutive recompute calls produce identical state", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      const id = await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-15",
+        type: "individual",
+      });
+      await approve(ctx, id, userId);
+      return id;
+    });
+
+    await t.run(async (ctx) => {
+      await recompute(ctx, { kind: "team", id: teamId }, userId);
+    });
+
+    const stateAfterFirst = await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      const team = await ctx.db.get(teamId);
+      return { points: sub?.pointsEarned, teamPoints: team?.points };
+    });
+
+    await t.run(async (ctx) => {
+      await recompute(ctx, { kind: "team", id: teamId }, userId);
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      const team = await ctx.db.get(teamId);
+      expect(sub?.pointsEarned).toBe(stateAfterFirst.points);
+      expect(team?.points).toBe(stateAfterFirst.teamPoints);
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("recompute never changes submission state", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const ids = await t.run(async (ctx) => {
+      const pending = await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-10",
+        type: "individual",
+      });
+      const approved = await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-11",
+        type: "individual",
+      });
+      await approve(ctx, approved, userId);
+      return { pending, approved };
+    });
+
+    await t.run(async (ctx) => {
+      await recompute(ctx, { kind: "team", id: teamId }, userId);
+    });
+
+    await t.run(async (ctx) => {
+      const pendingSub = await ctx.db.get(ids.pending);
+      expect(pendingSub?.state).toBe("pending");
+      expect(pendingSub?.pointsEarned).toBe(0);
+
+      const approvedSub = await ctx.db.get(ids.approved);
+      expect(approvedSub?.state).toBe("approved");
+      expect(approvedSub?.pointsEarned).toBe(1);
+
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
   });
 });
