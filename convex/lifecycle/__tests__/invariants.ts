@@ -25,13 +25,16 @@ export async function assertSubmissionInvariant(
   );
   expect(team?.points).toBeCloseTo(expectedPoints, 5);
 
-  // 2. No orphan groups — every submission group has at least one active submission
+  // 2. No orphan groups — every non-terminal group has at least one active submission
+  //    Terminal groups (rejected/deleted) may have zero active submissions.
   const groups = await ctx.db
     .query("submissionGroups")
     .withIndex("by_team", (q) => q.eq("teamId", teamId))
     .collect();
 
   for (const group of groups) {
+    if (group.state === "rejected" || group.state === "deleted") continue;
+
     // JS-side filter avoids convex-test@0.0.1 q.and() incompatibility
     const allGroupSubs = await ctx.db
       .query("submissions")

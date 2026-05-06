@@ -5,6 +5,7 @@ import {
   approve,
   IllegalTransition,
   previewIsTeamExercise,
+  reject,
   score,
   submit,
 } from "../submissions";
@@ -558,5 +559,217 @@ describe("approve", () => {
         await approve(ctx, submissionId, userId);
       }),
     ).rejects.toThrow(IllegalTransition);
+  });
+});
+
+describe("reject", () => {
+  async function seedWorld(
+    ctx: Parameters<Parameters<ReturnType<typeof convexTest>["run"]>[0]>[0],
+  ) {
+    const userId = await ctx.db.insert("users", {
+      email: "player@example.com",
+      name: "Player One",
+      externalId: "ext_player_1",
+    });
+
+    const tournamentId = await ctx.db.insert("tournaments", {
+      name: "Reject Tournament",
+      description: "For reject tests",
+      startDate: "2024-01-01",
+      endDate: "2024-12-31",
+      createdBy: userId,
+      scoringConfig,
+    });
+
+    const teamId = await ctx.db.insert("teams", {
+      name: "Reject Team",
+      tournamentId,
+      createdBy: userId,
+      visibility: "public",
+      points: 0,
+    });
+
+    await ctx.db.insert("teamMembers", { teamId, userId, role: "captain" });
+
+    return { userId, teamId, tournamentId };
+  }
+
+  test("individual pending submission is rejected: state=rejected, pointsEarned=0, pointsDelta=0", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      return await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-15",
+        type: "individual",
+      });
+    });
+
+    const result = await t.run(async (ctx) => {
+      return await reject(ctx, submissionId, userId);
+    });
+
+    await t.run(async (ctx) => {
+      expect(result.pointsDelta).toBe(0);
+
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.state).toBe("rejected");
+      expect(sub?.pointsEarned).toBe(0);
+
+      const team = await ctx.db.get(teamId);
+      expect(team?.points).toBe(0);
+
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("team-type reject fans out to all non-terminal siblings: group state=rejected, pointsEarned=0", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId: captainId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const memberId = await t.run(async (ctx) => {
+      const id = await ctx.db.insert("users", {
+        email: "member@example.com",
+        name: "Member",
+        externalId: "ext_member",
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId,
+        userId: id,
+        role: "member",
+      });
+      return id;
+    });
+
+    const [sub1Id, sub2Id] = await t.run(async (ctx) => {
+      const s1 = await submit(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-01-15",
+        type: "team",
+      });
+      const s2 = await submit(ctx, {
+        userId: memberId,
+        teamId,
+        date: "2024-01-15",
+        type: "team",
+      });
+      return [s1, s2];
+    });
+
+    const result = await t.run(async (ctx) => {
+      return await reject(ctx, sub1Id, captainId);
+    });
+
+    await t.run(async (ctx) => {
+      expect(result.pointsDelta).toBe(0);
+
+      const s1 = await ctx.db.get(sub1Id);
+      const s2 = await ctx.db.get(sub2Id);
+      expect(s1?.state).toBe("rejected");
+      expect(s2?.state).toBe("rejected");
+      expect(s1?.pointsEarned).toBe(0);
+      expect(s2?.pointsEarned).toBe(0);
+
+      const group = s1?.submissionGroupId
+        ? await ctx.db.get(s1.submissionGroupId)
+        : null;
+      expect(group?.state).toBe("rejected");
+      expect(group?.pointsEarned).toBe(0);
+
+      const team = await ctx.db.get(teamId);
+      expect(team?.points).toBe(0);
+
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("rejecting an already-rejected submission is idempotent: returns pointsDelta: 0, no writes", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      return await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-15",
+        type: "individual",
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await reject(ctx, submissionId, userId);
+    });
+
+    const result = await t.run(async (ctx) => {
+      return await reject(ctx, submissionId, userId);
+    });
+
+    await t.run(async (ctx) => {
+      expect(result.pointsDelta).toBe(0);
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("rejecting a deleted submission throws IllegalTransition", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      return ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: "2024-01-15T00:00:00.000Z",
+        submissionType: "individual",
+        state: "deleted",
+        tier: "base",
+        pointsEarned: 0,
+        createdBy: userId,
+      });
+    });
+
+    await expect(
+      t.run(async (ctx) => {
+        await reject(ctx, submissionId, userId);
+      }),
+    ).rejects.toThrow(IllegalTransition);
+  });
+
+  test("previously approved individual submission can be rejected: removes points from team.points", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      return await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-15",
+        type: "individual",
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await approve(ctx, submissionId, userId);
+    });
+
+    const result = await t.run(async (ctx) => {
+      return await reject(ctx, submissionId, userId);
+    });
+
+    await t.run(async (ctx) => {
+      expect(result.pointsDelta).toBeLessThan(0);
+
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.state).toBe("rejected");
+      expect(sub?.pointsEarned).toBe(0);
+
+      const team = await ctx.db.get(teamId);
+      expect(team?.points).toBe(0);
+
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
   });
 });

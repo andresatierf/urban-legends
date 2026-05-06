@@ -24,10 +24,12 @@ async function transition(
   const from = sub.state;
   if (from === to) return "noop";
 
-  if (from === "rejected" || from === "deleted" || from === "approved") {
+  // rejected and deleted are terminal — no outbound transitions allowed
+  if (from === "rejected" || from === "deleted") {
     throw new IllegalTransition(from, to);
   }
 
+  // approved may move forward to rejected or deleted (e.g. admin correction), but not back
   await ctx.db.patch(submissionId, { state: to, managedBy });
   return "changed";
 }
@@ -398,6 +400,62 @@ export async function approve(
   await updateTeamPoints(ctx, submission.teamId);
   const newTeamPoints = (await ctx.db.get(submission.teamId))?.points ?? 0;
   return { pointsDelta: newTeamPoints - oldTeamPoints, affected };
+}
+
+// Rejects a submission (and its full SubmissionGroup for team-type).
+// Idempotent on already-rejected submissions. Throws IllegalTransition for
+// deleted source state. Handles approved→rejected (removes points from team total).
+export async function reject(
+  ctx: MutationCtx,
+  submissionId: Id<"submissions">,
+  by: Id<"users">,
+): Promise<{ pointsDelta: number }> {
+  const submission = await ctx.db.get(submissionId);
+  if (!submission) throw new Error("Submission not found");
+
+  if (submission.state === "rejected") {
+    return { pointsDelta: 0 };
+  }
+
+  if (submission.state === "deleted") {
+    throw new IllegalTransition("deleted", "rejected");
+  }
+
+  const oldTeamPoints = (await ctx.db.get(submission.teamId))?.points ?? 0;
+
+  if (
+    submission.submissionType === "individual" ||
+    !submission.submissionGroupId
+  ) {
+    await transition(ctx, submissionId, "rejected", by);
+    await ctx.db.patch(submissionId, { pointsEarned: 0 });
+  } else {
+    const groupId = submission.submissionGroupId as Id<"submissionGroups">;
+    const groupSubs = await ctx.db
+      .query("submissions")
+      .withIndex("by_group", (q) => q.eq("submissionGroupId", groupId))
+      .collect();
+
+    const nonTerminal = groupSubs.filter(
+      (s) => s.state !== "rejected" && s.state !== "deleted",
+    );
+
+    for (const sub of nonTerminal) {
+      await transition(ctx, sub._id, "rejected", by);
+      await ctx.db.patch(sub._id, { pointsEarned: 0 });
+    }
+
+    await ctx.db.patch(groupId, {
+      state: "rejected",
+      pointsEarned: 0,
+      managedBy: by,
+      updatedAt: nowUTC(),
+    });
+  }
+
+  await updateTeamPoints(ctx, submission.teamId);
+  const newTeamPoints = (await ctx.db.get(submission.teamId))?.points ?? 0;
+  return { pointsDelta: newTeamPoints - oldTeamPoints };
 }
 
 // evictFromGroup exported for use by later lifecycle slices (edit, softDelete).

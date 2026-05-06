@@ -4,9 +4,11 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { nowUTC, toUTCDateString } from "./lib/dates";
 import { enrichWithRelations } from "./lib/helpers";
-import { approve as lifecycleApprove } from "./lifecycle/submissions";
+import {
+  approve as lifecycleApprove,
+  reject as lifecycleReject,
+} from "./lifecycle/submissions";
 import { hasMinimumRole, validateMinimumRole } from "./roles";
-import { recalculateTeamPoints } from "./teams";
 import { getCurrentUserOrThrow } from "./users";
 
 /**
@@ -221,27 +223,19 @@ export const reject = mutation({
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Submission group not found");
 
-    await ctx.db.patch(args.groupId, {
-      state: "rejected",
-      managedBy: user._id,
-      pointsEarned: 0,
-      updatedAt: nowUTC(),
-    });
-
-    const submissions = await ctx.db
+    // Resolve any non-terminal child and let lifecycle.reject fan out to all siblings
+    const allGroupSubs = await ctx.db
       .query("submissions")
       .withIndex("by_group", (q) => q.eq("submissionGroupId", args.groupId))
       .collect();
 
-    for (const submission of submissions) {
-      await ctx.db.patch(submission._id, {
-        state: "rejected",
-        managedBy: user._id,
-        pointsEarned: 0,
-      });
-    }
+    const child = allGroupSubs.find(
+      (s) => s.state !== "rejected" && s.state !== "deleted",
+    );
 
-    await recalculateTeamPoints(ctx, group.teamId);
+    if (!child) return;
+
+    await lifecycleReject(ctx, child._id, user._id);
   },
 });
 

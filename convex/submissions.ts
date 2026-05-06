@@ -10,6 +10,7 @@ import {
 } from "./lib/dates";
 import {
   approve as lifecycleApprove,
+  reject as lifecycleReject,
   submit as lifecycleSubmit,
 } from "./lifecycle/submissions";
 import {
@@ -678,39 +679,28 @@ export const reject = mutation({
       throw new Error("Submission not found");
     }
 
-    await ctx.db.patch(args.submissionId, {
-      state: "rejected",
-      pointsEarned: 0,
-      managedBy: user._id,
-    });
+    const wasAlreadyRejected = submission.state === "rejected";
+    await lifecycleReject(ctx, args.submissionId, user._id);
 
-    if (submission.submissionType === "team") {
-      await upsertSubmissionGroup(ctx, {
-        teamId: submission.teamId,
-        tournamentId: submission.tournamentId,
-        date: submission.date,
-      });
-    }
+    // T026: Notify team members about submission rejection (only when state changed)
+    if (!wasAlreadyRejected) {
+      const team = await ctx.db.get(submission.teamId);
+      if (team) {
+        const teamMembers = await ctx.db
+          .query("teamMembers")
+          .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
+          .collect();
 
-    await recalculateTeamPoints(ctx, submission.teamId);
+        const memberIds = teamMembers.map((m) => m.userId);
 
-    // T026: Notify team members about submission rejection
-    const team = await ctx.db.get(submission.teamId);
-    if (team) {
-      const teamMembers = await ctx.db
-        .query("teamMembers")
-        .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
-        .collect();
-
-      const memberIds = teamMembers.map((m) => m.userId);
-
-      await notifySubmissionRejected(ctx, {
-        recipientIds: memberIds,
-        submissionId: args.submissionId,
-        teamName: team.name,
-        description: submission.description,
-        reason: undefined,
-      });
+        await notifySubmissionRejected(ctx, {
+          recipientIds: memberIds,
+          submissionId: args.submissionId,
+          teamName: team.name,
+          description: submission.description,
+          reason: undefined,
+        });
+      }
     }
   },
 });
