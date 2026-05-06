@@ -1,60 +1,70 @@
 # ISSUES
 
-Local issue files from `issues/` are provided at start of context. Parse them to understand the open issues.
+The conversation context begins with three pre-loaded blocks:
 
-You will work on the AFK issues only, not the HITL ones.
+1. **Recent commits** — the last few commits on the working branch.
+2. **All currently open issue numbers** — a comma-separated list, used to evaluate blocking.
+3. **Open `ready-for-agent` issues** — every issue labelled `ready-for-agent` that is currently open, with its full body (including any `## Blocked by` section).
 
-You've also been passed a file containing the last few commits. Review these to understand what work has been done.
+Each issue's `## Blocked by` section lists other issue numbers. An issue is **unblocked** iff none of its blockers appear in the open-issue-numbers list — i.e., every blocker has been closed. The body text is the source of truth for blocking; trust it.
 
-If all AFK tasks are complete, output <promise>NO MORE TASKS</promise>.
+You will work on **unblocked** `ready-for-agent` issues only. Skip any issue whose blockers are still open.
+
+If no unblocked `ready-for-agent` issues remain, output `<promise>NO MORE TASKS</promise>`.
 
 # TASK SELECTION
 
-Pick the next task. Prioritize tasks in this order:
+Among unblocked tasks, pick the next one in this priority order:
 
 1. Critical bugfixes
-2. Development infrastructure
-
-Getting development infrastructure like tests and types and dev scripts ready is an important precursor to building features.
-
-1. Tracer bullets for new features
-
-Tracer bullets are small slices of functionality that go through all layers of the system, allowing you to test and validate your approach early. This helps in identifying potential issues and ensures that the overall architecture is sound before investing significant time in development.
-
-TL;DR - build a tiny, end-to-end slice of the feature first, then expand it out.
-
-1. Polish and quick wins
-2. Refactors
+2. Development infrastructure (test framework, types, dev scripts) — precursors that unblock feature work
+3. Tracer-bullet feature slices — thin slices that go through every layer; build the smallest verifiable thing first, then expand
+4. Polish and quick wins
+5. Refactors
 
 # EXPLORATION
 
-Explore the repo.
+Read `CONTEXT.md` and any relevant ADRs in `docs/adr/` for the area you're touching. The issue body is the spec; the code is the current state.
 
 # IMPLEMENTATION
 
-Use /tdd to complete the task.
+Use the `/tdd` skill to drive implementation through red-green-refactor cycles where the issue is testable.
 
 # FEEDBACK LOOPS
 
-Before committing, run the feedback loops:
+Before committing, run:
 
-- `npm run test` to run the tests
-- `npm run typecheck` to run the type checker
+- `bun run typecheck` — must pass
+- `bun run lint` — must pass
+- `bun run format` — must pass
+- `bun run test` — must pass (only meaningful once the test framework lands via the foundation issue)
 
 # COMMIT
 
-Make a git commit. The commit message must:
+Use the `/commit` skill (per `CLAUDE.md`) to generate the commit. The message should:
 
-1. Include key decisions made
-2. Include files changed
-3. Blockers or notes for next iteration
+1. Reference the GitHub issue number being addressed (e.g. `closes #42` or `refs #42`)
+2. Summarize key decisions made
+3. Note any blockers or follow-up needed for the next iteration
 
 # THE ISSUE
 
-If the task is complete, move the issue file to `issues/done/`.
+After committing:
 
-If the task is not complete, add a note to the issue file with what was done.
+- If the task fully satisfies every acceptance criterion in the issue body, close the issue:
+
+  ```
+  gh issue close <number> --comment "Implemented in <commit-sha>. <one-line summary>"
+  ```
+
+- If partial, leave a progress comment so the next iteration can pick up:
+
+  ```
+  gh issue comment <number> --body "Progress: <what was done>. Remaining: <what's left>."
+  ```
+
+Do **not** modify the parent PRD issue or any issue you are not currently working on.
 
 # FINAL RULES
 
-ONLY WORK ON A SINGLE TASK.
+ONLY WORK ON A SINGLE TASK PER ITERATION.
