@@ -2,6 +2,50 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { nowUTC, toUTCDateString } from "../lib/dates";
 
+export class IllegalTransition extends Error {
+  constructor(from: string, to: string) {
+    super(`Illegal state transition: ${from} → ${to}`);
+    this.name = "IllegalTransition";
+  }
+}
+
+// Validates and patches a single submission's state.
+// Returns "noop" if already in the target state (idempotent).
+// Throws IllegalTransition for any forbidden move.
+async function transition(
+  ctx: MutationCtx,
+  submissionId: Id<"submissions">,
+  to: "approved" | "rejected" | "deleted",
+  managedBy: Id<"users">,
+): Promise<"noop" | "changed"> {
+  const sub = await ctx.db.get(submissionId);
+  if (!sub) throw new Error("Submission not found");
+
+  const from = sub.state;
+  if (from === to) return "noop";
+
+  if (from === "rejected" || from === "deleted" || from === "approved") {
+    throw new IllegalTransition(from, to);
+  }
+
+  await ctx.db.patch(submissionId, { state: to, managedBy });
+  return "changed";
+}
+
+// Recomputes team.points as the sum of all approved submission pointsEarned.
+async function updateTeamPoints(
+  ctx: MutationCtx,
+  teamId: Id<"teams">,
+): Promise<void> {
+  const approved = await ctx.db
+    .query("submissions")
+    .withIndex("by_team", (q) => q.eq("teamId", teamId))
+    .filter((q) => q.eq(q.field("state"), "approved"))
+    .collect();
+  const total = approved.reduce((sum, s) => sum + (s.pointsEarned ?? 0), 0);
+  await ctx.db.patch(teamId, { points: total, lastActivityAt: nowUTC() });
+}
+
 export type ScoringConfig = {
   individualPoints: { base: number; advanced: number };
   teamExercisePoints: { base: number; advanced: number };
@@ -261,6 +305,99 @@ export async function submit(
   }
 
   return submissionId;
+}
+
+// Approves a submission (and its full SubmissionGroup for team-type).
+// Idempotent on already-approved submissions. Throws IllegalTransition for
+// terminal source states (rejected/deleted). Memoises team-points recompute.
+export async function approve(
+  ctx: MutationCtx,
+  submissionId: Id<"submissions">,
+  by: Id<"users">,
+): Promise<{ pointsDelta: number; affected: Id<"submissions">[] }> {
+  const submission = await ctx.db.get(submissionId);
+  if (!submission) throw new Error("Submission not found");
+
+  if (submission.state === "approved") {
+    return { pointsDelta: 0, affected: [] };
+  }
+
+  if (submission.state === "rejected" || submission.state === "deleted") {
+    throw new IllegalTransition(submission.state, "approved");
+  }
+
+  const oldTeamPoints = (await ctx.db.get(submission.teamId))?.points ?? 0;
+  const tournament = await ctx.db.get(submission.tournamentId);
+  if (!tournament) throw new Error("Tournament not found");
+  const sc = tournament.scoringConfig;
+  const affected: Id<"submissions">[] = [];
+
+  if (
+    submission.submissionType === "individual" ||
+    !submission.submissionGroupId
+  ) {
+    await transition(ctx, submissionId, "approved", by);
+    const pts = sc.individualPoints[submission.tier ?? "base"];
+    await ctx.db.patch(submissionId, { pointsEarned: pts });
+    affected.push(submissionId);
+  } else {
+    // Team-type: approve every non-terminal sibling in the group
+    const groupId = submission.submissionGroupId as Id<"submissionGroups">;
+    const groupSubs = await ctx.db
+      .query("submissions")
+      .withIndex("by_group", (q) => q.eq("submissionGroupId", groupId))
+      .collect();
+
+    const nonTerminal = groupSubs.filter(
+      (s) => s.state !== "rejected" && s.state !== "deleted",
+    );
+
+    for (const sub of nonTerminal) {
+      const r = await transition(ctx, sub._id, "approved", by);
+      if (r === "changed") affected.push(sub._id);
+    }
+
+    const teamMembers = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
+      .collect();
+
+    const participantCount = nonTerminal.length;
+    const totalTeamMembers = teamMembers.length;
+    const participationRate =
+      totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
+    const isTeamExercise = participationRate >= sc.teamExerciseThreshold;
+    const tier: "base" | "advanced" = nonTerminal.some(
+      (s) => s.tier === "advanced",
+    )
+      ? "advanced"
+      : "base";
+    const groupPoints = isTeamExercise
+      ? sc.teamExercisePoints[tier]
+      : sc.individualPoints[tier];
+
+    await ctx.db.patch(groupId, {
+      state: "approved",
+      tier,
+      participantCount,
+      totalTeamMembers,
+      participationRate,
+      isTeamExercise,
+      pointsEarned: groupPoints,
+      managedBy: by,
+      updatedAt: nowUTC(),
+    });
+
+    const pointsPerSub =
+      participantCount > 0 ? groupPoints / participantCount : 0;
+    for (const sub of nonTerminal) {
+      await ctx.db.patch(sub._id, { pointsEarned: pointsPerSub });
+    }
+  }
+
+  await updateTeamPoints(ctx, submission.teamId);
+  const newTeamPoints = (await ctx.db.get(submission.teamId))?.points ?? 0;
+  return { pointsDelta: newTeamPoints - oldTeamPoints, affected };
 }
 
 // evictFromGroup exported for use by later lifecycle slices (edit, softDelete).

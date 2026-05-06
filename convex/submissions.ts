@@ -8,7 +8,10 @@ import {
   toUTCDateString,
   toUTCEndOfDayString,
 } from "./lib/dates";
-import { submit as lifecycleSubmit } from "./lifecycle/submissions";
+import {
+  approve as lifecycleApprove,
+  submit as lifecycleSubmit,
+} from "./lifecycle/submissions";
 import {
   notifySubmissionApproved,
   notifySubmissionRejected,
@@ -631,73 +634,30 @@ export const approve = mutation({
     });
 
     const submission = await ctx.db.get(args.submissionId);
-    if (!submission) {
-      throw new Error("Submission not found");
-    }
+    if (!submission) throw new Error("Submission not found");
 
-    const previousState = submission.state;
-
-    if (submission.submissionType === "team" && submission.submissionGroupId) {
-      const groupSubmissions = await ctx.db
-        .query("submissions")
-        .withIndex("by_group", (q) =>
-          q.eq("submissionGroupId", submission.submissionGroupId),
-        )
-        .filter((q) =>
-          q.and(
-            q.neq(q.field("state"), "deleted"),
-            q.neq(q.field("state"), "rejected"),
-          ),
-        )
-        .collect();
-
-      for (const groupSubmission of groupSubmissions) {
-        await ctx.db.patch(groupSubmission._id, {
-          state: "approved",
-          managedBy: user._id,
-        });
-      }
-    } else {
-      await ctx.db.patch(args.submissionId, {
-        state: "approved",
-        managedBy: user._id,
-      });
-    }
-
-    if (submission.submissionType === "team") {
-      await upsertSubmissionGroup(ctx, {
-        teamId: submission.teamId,
-        tournamentId: submission.tournamentId,
-        date: submission.date,
-      });
-    }
-
-    await recalculateSubmissionPoints(ctx, {
-      submissionId: args.submissionId,
-      previousState,
-      managedBy: user._id,
-    });
+    const result = await lifecycleApprove(ctx, args.submissionId, user._id);
 
     // T025: Notify team members about submission approval
-    const team = await ctx.db.get(submission.teamId);
-    if (team) {
-      const teamMembers = await ctx.db
-        .query("teamMembers")
-        .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
-        .collect();
+    if (result.affected.length > 0) {
+      const team = await ctx.db.get(submission.teamId);
+      if (team) {
+        const teamMembers = await ctx.db
+          .query("teamMembers")
+          .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
+          .collect();
 
-      const memberIds = teamMembers.map((m) => m.userId);
-
-      // Get the latest submission data to get points earned
-      const updatedSubmission = await ctx.db.get(args.submissionId);
-      if (updatedSubmission) {
-        await notifySubmissionApproved(ctx, {
-          recipientIds: memberIds,
-          submissionId: args.submissionId,
-          teamName: team.name,
-          description: submission.description,
-          pointsEarned: updatedSubmission.pointsEarned || 0,
-        });
+        const memberIds = teamMembers.map((m) => m.userId);
+        const updatedSubmission = await ctx.db.get(args.submissionId);
+        if (updatedSubmission) {
+          await notifySubmissionApproved(ctx, {
+            recipientIds: memberIds,
+            submissionId: args.submissionId,
+            teamName: team.name,
+            description: submission.description,
+            pointsEarned: updatedSubmission.pointsEarned || 0,
+          });
+        }
       }
     }
   },
