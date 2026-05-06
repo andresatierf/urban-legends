@@ -292,3 +292,153 @@ export async function hasSomeReviewAccess(
     .first();
   return anyTournamentRole !== null;
 }
+
+// ── Team rules ───────────────────────────────────────────────────────────────
+
+type TeamFacts = {
+  isCaptain: boolean;
+  isMember: boolean;
+  systemRoles: SystemRoleName[];
+  tournamentRoles: TournamentRoleName[];
+  memberCount: number;
+};
+
+export type TeamSubject = { teamId: Id<"teams"> };
+
+export type TeamRule = {
+  check(
+    ctx: QueryCtx,
+    userId: Id<"users">,
+    subject: TeamSubject,
+  ): Promise<boolean>;
+  require(
+    ctx: QueryCtx,
+    userId: Id<"users">,
+    subject: TeamSubject,
+  ): Promise<void>;
+};
+
+async function loadTeamFacts(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  teamId: Id<"teams">,
+): Promise<TeamFacts> {
+  const team = await ctx.db.get(teamId);
+  if (!team) throw new Error("Team not found");
+
+  const [systemRoles, tournamentRoles, membership, members] = await Promise.all(
+    [
+      loadSystemRoles(ctx, userId),
+      loadTournamentRoles(ctx, userId, team.tournamentId),
+      ctx.db
+        .query("teamMembers")
+        .withIndex("by_team_and_user", (q) =>
+          q.eq("teamId", teamId).eq("userId", userId),
+        )
+        .first(),
+      ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) => q.eq("teamId", teamId))
+        .collect(),
+    ],
+  );
+
+  return {
+    isCaptain: membership?.role === "captain",
+    isMember: !!membership,
+    systemRoles,
+    tournamentRoles,
+    memberCount: members.length,
+  };
+}
+
+function teamRule(
+  name: string,
+  decide: (facts: TeamFacts) => boolean,
+): TeamRule {
+  return {
+    async check(ctx, userId, subject) {
+      const facts = await loadTeamFacts(ctx, userId, subject.teamId);
+      return decide(facts);
+    },
+    async require(ctx, userId, subject) {
+      const allowed = await this.check(ctx, userId, subject);
+      if (!allowed) throw new IllegalAccess(name);
+    },
+  };
+}
+
+export const canViewTeam: TeamRule = teamRule("canViewTeam", () => true);
+
+export const canEditTeam: TeamRule = teamRule(
+  "canEditTeam",
+  (facts) =>
+    isAdminOrDev(facts.systemRoles) ||
+    facts.tournamentRoles.includes("tournament_manager") ||
+    facts.isCaptain,
+);
+
+export const canDeleteTeam: TeamRule = teamRule(
+  "canDeleteTeam",
+  (facts) =>
+    isAdminOrDev(facts.systemRoles) ||
+    facts.tournamentRoles.includes("tournament_manager") ||
+    facts.isCaptain,
+);
+
+export const canInviteToTeam: TeamRule = teamRule(
+  "canInviteToTeam",
+  (facts) =>
+    isAdminOrDev(facts.systemRoles) ||
+    facts.tournamentRoles.includes("tournament_manager") ||
+    facts.isCaptain,
+);
+
+export const canLeaveTeam: TeamRule = teamRule("canLeaveTeam", (facts) => {
+  if (!facts.isMember) return false;
+  if (!facts.isCaptain) return true;
+  return facts.memberCount === 1;
+});
+
+export const canTransferCaptaincy: TeamRule = teamRule(
+  "canTransferCaptaincy",
+  (facts) => facts.isCaptain && facts.memberCount > 1,
+);
+
+export const canManageTeamMembers: TeamRule = teamRule(
+  "canManageTeamMembers",
+  (facts) =>
+    isAdminOrDev(facts.systemRoles) ||
+    facts.tournamentRoles.includes("tournament_manager") ||
+    facts.isCaptain,
+);
+
+// ── computeTeamPermissions ───────────────────────────────────────────────────
+
+export async function computeTeamPermissions(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  teamId: Id<"teams">,
+): Promise<{
+  canView: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  canInvite: boolean;
+  canLeave: boolean;
+  canTransferCaptaincy: boolean;
+  canManageMembers: boolean;
+}> {
+  const facts = await loadTeamFacts(ctx, userId, teamId);
+  const isPrivileged =
+    isAdminOrDev(facts.systemRoles) ||
+    facts.tournamentRoles.includes("tournament_manager");
+  return {
+    canView: true,
+    canEdit: isPrivileged || facts.isCaptain,
+    canDelete: isPrivileged || facts.isCaptain,
+    canInvite: isPrivileged || facts.isCaptain,
+    canLeave: facts.isMember && (!facts.isCaptain || facts.memberCount === 1),
+    canTransferCaptaincy: facts.isCaptain && facts.memberCount > 1,
+    canManageMembers: isPrivileged || facts.isCaptain,
+  };
+}

@@ -2,9 +2,14 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, type QueryCtx, query } from "./_generated/server";
+import {
+  canDeleteTeam,
+  canEditTeam,
+  canManageTeamMembers,
+  computeTeamPermissions,
+} from "./authority/core";
 import { recompute as lifecycleRecompute } from "./lifecycle/submissions";
 import { notifyRemovedFromTeam } from "./notifications/triggers";
-import { hasMinimumRole, validateMinimumRole } from "./roles";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow, getUser } from "./users";
 
@@ -189,17 +194,11 @@ export const getDetails = query({
     const approvalRate =
       totalSubmissions > 0 ? approvedSubmissions.length / totalSubmissions : 0;
 
-    const isAdmin = hasMinimumRole(user, "admin");
-    const isCaptain = userMembership?.role === "captain";
-    const isMember = Boolean(userMembership);
-
-    const canEdit = isAdmin || isCaptain;
-    const canDelete = isAdmin || isCaptain;
-    const canInvite = isAdmin || isCaptain;
-    const canLeave =
-      (isMember && !isCaptain) || (isCaptain && members.length === 1);
-    const canTransferCaptaincy = isCaptain && members.length > 1;
-    const canManageMembers = isAdmin || isCaptain;
+    const permissions = await computeTeamPermissions(
+      ctx,
+      user._id,
+      args.teamId,
+    );
 
     return {
       team,
@@ -218,12 +217,12 @@ export const getDetails = query({
         submissionCount: totalSubmissions,
         approvalRate,
       },
-      canEdit,
-      canDelete,
-      canInvite,
-      canLeave,
-      canTransferCaptaincy,
-      canManageMembers,
+      canEdit: permissions.canEdit,
+      canDelete: permissions.canDelete,
+      canInvite: permissions.canInvite,
+      canLeave: permissions.canLeave,
+      canTransferCaptaincy: permissions.canTransferCaptaincy,
+      canManageMembers: permissions.canManageMembers,
     };
   },
 });
@@ -233,13 +232,7 @@ export const removeUserTeam = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!hasMinimumRole(user, "tournament_manager")) {
-      await validateIsTeamMember(ctx, {
-        teamId: args.teamId,
-        userId: user._id,
-        captain: true,
-      });
-    }
+    await canDeleteTeam.require(ctx, user._id, { teamId: args.teamId });
 
     const submissions = await ctx.db
       .query("submissions")
@@ -336,11 +329,7 @@ export const removeMember = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    await validateIsTeamMember(ctx, {
-      teamId: args.teamId,
-      userId: user._id,
-      captain: true,
-    });
+    await canManageTeamMembers.require(ctx, user._id, { teamId: args.teamId });
     await validateIsTeamMember(ctx, {
       teamId: args.teamId,
       userId: args.userId,
@@ -415,14 +404,8 @@ export const upsertUserTeam = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!hasMinimumRole(user, "admin")) {
-      if (args._id) {
-        await validateIsTeamMember(ctx, {
-          teamId: args._id,
-          userId: user._id,
-          captain: true,
-        });
-      }
+    if (args._id) {
+      await canEditTeam.require(ctx, user._id, { teamId: args._id });
     }
 
     const data = {
@@ -675,10 +658,7 @@ export const recalculatePoints = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateMinimumRole(user, "tournament_manager", {
-      customMessage:
-        "Admin or Tournament Manager access required to recalculate team points",
-    });
+    await canManageTeamMembers.require(ctx, user._id, { teamId: args.teamId });
 
     const result = await lifecycleRecompute(
       ctx,
