@@ -16,8 +16,8 @@ export async function assertSubmissionInvariant(
   const approvedSubmissions = await ctx.db
     .query("submissions")
     .withIndex("by_team", (q) => q.eq("teamId", teamId))
-    .filter((q) => q.eq(q.field("state"), "approved"))
-    .collect();
+    .collect()
+    .then((subs) => subs.filter((s) => s.state === "approved"));
 
   const expectedPoints = approvedSubmissions.reduce(
     (sum, s) => sum + (s.pointsEarned ?? 0),
@@ -32,31 +32,28 @@ export async function assertSubmissionInvariant(
     .collect();
 
   for (const group of groups) {
-    const activeSubmissions = await ctx.db
+    // JS-side filter avoids convex-test@0.0.1 q.and() incompatibility
+    const allGroupSubs = await ctx.db
       .query("submissions")
       .withIndex("by_group", (q) => q.eq("submissionGroupId", group._id))
-      .filter((q) =>
-        q.and(
-          q.neq(q.field("state"), "deleted"),
-          q.neq(q.field("state"), "rejected"),
-        ),
-      )
       .collect();
+
+    const activeSubmissions = allGroupSubs.filter(
+      (s) => s.state !== "deleted" && s.state !== "rejected",
+    );
     expect(activeSubmissions.length).toBeGreaterThan(0);
   }
 
   // 3. Group state == join of children states
   for (const group of groups) {
-    const activeSubmissions = await ctx.db
+    const allGroupSubs = await ctx.db
       .query("submissions")
       .withIndex("by_group", (q) => q.eq("submissionGroupId", group._id))
-      .filter((q) =>
-        q.and(
-          q.neq(q.field("state"), "deleted"),
-          q.neq(q.field("state"), "rejected"),
-        ),
-      )
       .collect();
+
+    const activeSubmissions = allGroupSubs.filter(
+      (s) => s.state !== "deleted" && s.state !== "rejected",
+    );
 
     if (activeSubmissions.length > 0) {
       const states = new Set(activeSubmissions.map((s) => s.state));
