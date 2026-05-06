@@ -6,8 +6,8 @@ import {
   canCreateJoinRequest,
   canRejectJoinRequest,
 } from "./authority/core";
-import { nowUTC } from "./lib/dates";
 import { enrichWithRelations } from "./lib/helpers";
+import { accept, cancel, reject, request } from "./lifecycle/joinRequests";
 import {
   notifyJoinRequest,
   notifyJoinRequestApproved,
@@ -25,8 +25,10 @@ export const listJoinRequests = query({
       v.union(
         v.literal("pending"),
         v.literal("approved"),
+        v.literal("accepted"),
         v.literal("rejected"),
         v.literal("cancelled"),
+        v.literal("expired"),
       ),
     ),
   },
@@ -55,14 +57,14 @@ export const getUserJoinRequest = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const request = await ctx.db
+    const req = await ctx.db
       .query("joinRequests")
       .withIndex("by_team_and_user", (q) =>
         q.eq("teamId", args.teamId).eq("userId", user._id),
       )
       .first();
 
-    return request;
+    return req;
   },
 });
 
@@ -81,50 +83,18 @@ export const requestToJoin = mutation({
     }
 
     await canCreateJoinRequest.require(ctx, user._id, { teamId: args.teamId });
+
     await validateUserNotInTournamentTeam(ctx, {
       userId: user._id,
       tournamentId: team.tournamentId,
     });
 
-    const pendingRequest = await ctx.db
-      .query("joinRequests")
-      .withIndex("by_team_and_user_and_status", (q) =>
-        q
-          .eq("teamId", args.teamId)
-          .eq("userId", user._id)
-          .eq("status", "pending"),
-      )
-      .first();
-
-    if (pendingRequest) {
-      throw new Error("You already have a pending join request for this team");
-    }
-
-    const rejectedRequest = await ctx.db
-      .query("joinRequests")
-      .withIndex("by_team_and_user_and_status", (q) =>
-        q
-          .eq("teamId", args.teamId)
-          .eq("userId", user._id)
-          .eq("status", "rejected"),
-      )
-      .first();
-
-    if (rejectedRequest) {
-      throw new Error(
-        "Your join request was rejected. You cannot request to join this team again",
-      );
-    }
-
-    const requestId = await ctx.db.insert("joinRequests", {
+    const requestId = await request(ctx, {
       teamId: args.teamId,
       userId: user._id,
-      status: "pending",
       message: args.message,
-      createdAt: nowUTC(),
     });
 
-    // T020: Notify team captain about join request
     const teamMembers = await ctx.db
       .query("teamMembers")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
@@ -152,23 +122,11 @@ export const cancelJoinRequest = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const request = await ctx.db.get(args.requestId);
-    if (!request) {
-      throw new Error("Join request not found");
-    }
-
     await canCancelJoinRequest.require(ctx, user._id, {
       requestId: args.requestId,
     });
 
-    if (request.status !== "pending") {
-      throw new Error("Join request is not pending");
-    }
-
-    await ctx.db.patch(args.requestId, {
-      status: "cancelled",
-      respondedAt: nowUTC(),
-    });
+    await cancel(ctx, args.requestId, user._id);
   },
 });
 
@@ -180,86 +138,63 @@ export const respondToJoinRequest = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const request = await ctx.db.get(args.requestId);
-    if (!request) {
+    const req = await ctx.db.get(args.requestId);
+    if (!req) {
       throw new Error("Join request not found");
-    }
-
-    if (request.status !== "pending") {
-      throw new Error("Join request is not pending");
     }
 
     if (args.approve) {
       await canApproveJoinRequest.require(ctx, user._id, {
         requestId: args.requestId,
       });
-    } else {
-      await canRejectJoinRequest.require(ctx, user._id, {
-        requestId: args.requestId,
-      });
-    }
 
-    if (args.approve) {
-      const team = await validateTeamHasSpace(ctx, { teamId: request.teamId });
+      const team = await validateTeamHasSpace(ctx, { teamId: req.teamId });
 
       await validateUserNotInTournamentTeam(ctx, {
-        userId: request.userId,
+        userId: req.userId,
         tournamentId: team.tournamentId,
       });
 
-      await ctx.db.insert("teamMembers", {
-        teamId: request.teamId,
-        userId: request.userId,
-        role: "member",
-      });
+      await accept(ctx, args.requestId, user._id);
 
-      await ctx.db.patch(args.requestId, {
-        status: "approved",
-        respondedAt: nowUTC(),
-        respondedBy: user._id,
-      });
-
-      // T021: Notify user that their join request was approved
       await notifyJoinRequestApproved(ctx, {
-        userId: request.userId,
-        teamId: request.teamId,
+        userId: req.userId,
+        teamId: req.teamId,
         teamName: team.name,
       });
 
-      // T023: Notify existing team members that someone joined
       const teamMembers = await ctx.db
         .query("teamMembers")
-        .withIndex("by_team", (q) => q.eq("teamId", request.teamId))
+        .withIndex("by_team", (q) => q.eq("teamId", req.teamId))
         .collect();
 
       const existingMemberIds = teamMembers
         .map((m) => m.userId)
-        .filter((id) => id !== request.userId);
+        .filter((id) => id !== req.userId);
 
       if (existingMemberIds.length > 0) {
-        const requestingUser = await ctx.db.get(request.userId);
+        const requestingUser = await ctx.db.get(req.userId);
         if (requestingUser) {
           await notifyMemberJoined(ctx, {
             recipientIds: existingMemberIds,
-            teamId: request.teamId,
+            teamId: req.teamId,
             teamName: team.name,
             newMemberName: requestingUser.name || requestingUser.email,
           });
         }
       }
     } else {
-      await ctx.db.patch(args.requestId, {
-        status: "rejected",
-        respondedAt: nowUTC(),
-        respondedBy: user._id,
+      await canRejectJoinRequest.require(ctx, user._id, {
+        requestId: args.requestId,
       });
 
-      // T022: Notify user that their join request was rejected
-      const team = await ctx.db.get(request.teamId);
+      await reject(ctx, args.requestId, user._id);
+
+      const team = await ctx.db.get(req.teamId);
       if (team) {
         await notifyJoinRequestRejected(ctx, {
-          userId: request.userId,
-          teamId: request.teamId,
+          userId: req.userId,
+          teamId: req.teamId,
           teamName: team.name,
         });
       }

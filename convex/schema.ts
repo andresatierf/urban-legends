@@ -171,13 +171,18 @@ export default defineSchema({
     status: v.union(
       v.literal("pending"),
       v.literal("approved"),
+      v.literal("accepted"),
       v.literal("rejected"),
       v.literal("cancelled"),
+      v.literal("expired"),
     ),
     message: v.optional(v.string()),
     createdAt: v.string(),
     respondedAt: v.optional(v.string()),
     respondedBy: v.optional(v.id("users")),
+    initiator: v.optional(v.union(v.literal("user"), v.literal("team"))),
+    createdBy: v.optional(v.id("users")),
+    expiresAt: v.optional(v.string()),
   })
     .index("by_team", ["teamId"])
     .index("by_user", ["userId"])
