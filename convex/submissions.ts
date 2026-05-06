@@ -11,6 +11,7 @@ import {
 import {
   approve as lifecycleApprove,
   reject as lifecycleReject,
+  softDelete as lifecycleSoftDelete,
   submit as lifecycleSubmit,
 } from "./lifecycle/submissions";
 import {
@@ -593,34 +594,7 @@ export const remove = mutation({
       throw new Error("You do not have permission to remove this submission");
     }
 
-    if (submission.state === "deleted") {
-      throw new Error("Submission already deleted");
-    }
-
-    if (submission.state === "rejected") {
-      throw new Error("Cannot remove a rejected submission");
-    }
-
-    const previousState = submission.state;
-
-    await ctx.db.patch(args.submissionId, {
-      state: "deleted",
-      managedBy: user._id,
-    });
-
-    if (submission.submissionType === "team") {
-      await upsertSubmissionGroup(ctx, {
-        teamId: submission.teamId,
-        tournamentId: submission.tournamentId,
-        date: submission.date,
-      });
-    }
-
-    await recalculateSubmissionPoints(ctx, {
-      submissionId: args.submissionId,
-      previousState,
-      managedBy: user._id,
-    });
+    await lifecycleSoftDelete(ctx, args.submissionId, user._id);
   },
 });
 

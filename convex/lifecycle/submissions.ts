@@ -458,5 +458,44 @@ export async function reject(
   return { pointsDelta: newTeamPoints - oldTeamPoints };
 }
 
+// Soft-deletes a single submission (and cascades group metrics for team-type).
+// Only the target row transitions to deleted — siblings are not touched.
+// Idempotent on already-deleted; throws IllegalTransition for rejected source state.
+export async function softDelete(
+  ctx: MutationCtx,
+  submissionId: Id<"submissions">,
+  by: Id<"users">,
+): Promise<{ pointsDelta: number }> {
+  const submission = await ctx.db.get(submissionId);
+  if (!submission) throw new Error("Submission not found");
+
+  if (submission.state === "deleted") {
+    return { pointsDelta: 0 };
+  }
+
+  if (submission.state === "rejected") {
+    throw new IllegalTransition("rejected", "deleted");
+  }
+
+  const oldTeamPoints = (await ctx.db.get(submission.teamId))?.points ?? 0;
+
+  await transition(ctx, submissionId, "deleted", by);
+  await ctx.db.patch(submissionId, { pointsEarned: 0 });
+
+  if (submission.submissionType === "team") {
+    // Cascade recomputes group metrics excluding the now-deleted submission.
+    // The active filter in cascade excludes deleted state, so no eviction needed.
+    await cascade(ctx, {
+      teamId: submission.teamId,
+      tournamentId: submission.tournamentId,
+      date: submission.date,
+    });
+  }
+
+  await updateTeamPoints(ctx, submission.teamId);
+  const newTeamPoints = (await ctx.db.get(submission.teamId))?.points ?? 0;
+  return { pointsDelta: newTeamPoints - oldTeamPoints };
+}
+
 // evictFromGroup exported for use by later lifecycle slices (edit, softDelete).
 export { evictFromGroup };
