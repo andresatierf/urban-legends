@@ -1,21 +1,22 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import {
+  canApproveSubmission,
+  canRejectSubmission,
+  hasSomeReviewAccess,
+  requireAdmin,
+} from "./authority/core";
 import { enrichWithRelations } from "./lib/helpers";
 import {
   approve as lifecycleApprove,
   reject as lifecycleReject,
 } from "./lifecycle/submissions";
-import { hasMinimumRole, validateMinimumRole } from "./roles";
 import { getCurrentUserOrThrow } from "./users";
 
 export const approve = mutation({
   args: { groupId: v.id("submissionGroups") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-
-    validateMinimumRole(user, "reviewer", {
-      customMessage: "You do not have permission to approve submissions",
-    });
 
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Submission group not found");
@@ -32,6 +33,11 @@ export const approve = mutation({
 
     if (!child) return;
 
+    // Authority check against the resolved child (includes tournament context)
+    await canApproveSubmission.require(ctx, user._id, {
+      submissionId: child._id,
+    });
+
     await lifecycleApprove(ctx, child._id, user._id);
   },
 });
@@ -40,9 +46,6 @@ export const reject = mutation({
   args: { groupId: v.id("submissionGroups") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateMinimumRole(user, "reviewer", {
-      customMessage: "You do not have permission to reject submissions",
-    });
 
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Submission group not found");
@@ -58,6 +61,10 @@ export const reject = mutation({
     );
 
     if (!child) return;
+
+    await canRejectSubmission.require(ctx, user._id, {
+      submissionId: child._id,
+    });
 
     await lifecycleReject(ctx, child._id, user._id);
   },
@@ -80,7 +87,7 @@ export const list = query({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateMinimumRole(user, "admin");
+    await requireAdmin(ctx, user._id);
 
     let query = ctx.db.query("submissionGroups");
 
@@ -124,7 +131,6 @@ export const getWithSubmissions = query({
     const group = await ctx.db.get(args.groupId);
     if (!group) return null;
 
-    const isAdmin = hasMinimumRole(currentUser, "admin");
     const membership = await ctx.db
       .query("teamMembers")
       .withIndex("by_team_and_user", (q) =>
@@ -132,7 +138,9 @@ export const getWithSubmissions = query({
       )
       .first();
 
-    if (!isAdmin && !membership) {
+    const isSomeReviewer = await hasSomeReviewAccess(ctx, currentUser._id);
+
+    if (!isSomeReviewer && !membership) {
       throw new Error("You do not have permission to view this group");
     }
 
@@ -161,7 +169,7 @@ export const getPendingCount = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const hasAccess = hasMinimumRole(user, "reviewer");
+    const hasAccess = await hasSomeReviewAccess(ctx, user._id);
 
     if (!hasAccess) return 0;
 

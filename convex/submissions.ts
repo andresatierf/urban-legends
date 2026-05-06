@@ -2,6 +2,13 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import {
+  canApproveSubmission,
+  canDeleteSubmission,
+  canRejectSubmission,
+  canViewSubmission,
+  computeSubmissionPermissions,
+} from "./authority/core";
+import {
   extractDateFromISO,
   toUTCDateString,
   toUTCEndOfDayString,
@@ -20,7 +27,6 @@ import {
   notifySubmissionRejected,
   notifyTeammateSubmitted,
 } from "./notifications/triggers";
-import { hasMinimumRole, validateMinimumRole } from "./roles";
 import { getCurrentUserOrThrow, getUser, type UserWithRoles } from "./users";
 
 export const list = query({
@@ -111,11 +117,11 @@ export const get = query({
     const user = await getCurrentUserOrThrow(ctx);
 
     const submission = await ctx.db.get(args.submissionId);
-
     if (!submission) throw new Error("Submission not found");
 
-    if (submission.userId !== user._id)
-      throw new Error("You are not the owner of this submission");
+    await canViewSubmission.require(ctx, user._id, {
+      submissionId: args.submissionId,
+    });
 
     return submission;
   },
@@ -244,27 +250,19 @@ export const getDetails = query({
   args: { submissionId: v.id("submissions") },
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
-    const isAdmin = hasMinimumRole(currentUser, "admin");
-    const isTournamentManager = hasMinimumRole(
-      currentUser,
-      "tournament_manager",
-    );
 
     const submission = await ctx.db.get(args.submissionId);
     if (!submission) {
       throw new Error("Submission not found");
     }
 
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", submission.teamId).eq("userId", currentUser._id),
-      )
-      .first();
+    const permissions = await computeSubmissionPermissions(
+      ctx,
+      currentUser._id,
+      args.submissionId,
+    );
 
-    const isOwner = submission.userId === currentUser._id;
-    const isTeamMember = !!membership;
-    if (!isOwner && !isTeamMember && !isAdmin && !isTournamentManager) {
+    if (!permissions.canView) {
       throw new Error("You do not have permission to view this submission");
     }
 
@@ -337,16 +335,6 @@ export const getDetails = query({
       threshold: tournament.scoringConfig.teamExerciseThreshold,
     });
 
-    const canEdit = isOwner && submission.state !== "approved";
-    const canApprove =
-      (isAdmin || isTournamentManager) && submission.state === "pending";
-    const canReject =
-      (isAdmin || isTournamentManager) && submission.state === "pending";
-    const canDelete =
-      (isAdmin || isOwner || isTournamentManager) &&
-      submission.state !== "deleted" &&
-      submission.state !== "rejected";
-
     return {
       submission,
       team,
@@ -355,10 +343,10 @@ export const getDetails = query({
       teammates,
       managedByUser,
       isTeamExercise,
-      canEdit,
-      canApprove,
-      canReject,
-      canDelete,
+      canEdit: permissions.canEdit,
+      canApprove: permissions.canApprove,
+      canReject: permissions.canReject,
+      canDelete: permissions.canDelete,
     };
   },
 });
@@ -367,17 +355,10 @@ export const remove = mutation({
   args: { submissionId: v.id("submissions") },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-    const isAdmin = hasMinimumRole(user, "admin");
-    const isTournamentManager = hasMinimumRole(user, "tournament_manager");
 
-    const submission = await ctx.db.get(args.submissionId);
-    if (!submission) {
-      throw new Error("Submission not found");
-    }
-
-    if (!isAdmin && !isTournamentManager && submission.userId !== user._id) {
-      throw new Error("You do not have permission to remove this submission");
-    }
+    await canDeleteSubmission.require(ctx, user._id, {
+      submissionId: args.submissionId,
+    });
 
     await lifecycleSoftDelete(ctx, args.submissionId, user._id);
   },
@@ -388,9 +369,8 @@ export const approve = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateMinimumRole(user, "reviewer", {
-      customMessage:
-        "You do not have permission to approve submissions for this tournament.",
+    await canApproveSubmission.require(ctx, user._id, {
+      submissionId: args.submissionId,
     });
 
     const submission = await ctx.db.get(args.submissionId);
@@ -428,9 +408,8 @@ export const reject = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateMinimumRole(user, "reviewer", {
-      customMessage:
-        "You do not have permission to reject submissions for this tournament.",
+    await canRejectSubmission.require(ctx, user._id, {
+      submissionId: args.submissionId,
     });
 
     const submission = await ctx.db.get(args.submissionId);
@@ -781,14 +760,9 @@ export const recalculatePoints = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const isAdmin = hasMinimumRole(user, "admin");
-    const isTournamentManager = hasMinimumRole(user, "tournament_manager");
-
-    if (!isAdmin && !isTournamentManager) {
-      throw new Error(
-        "Admin or Tournament Manager access required to recalculate submission points",
-      );
-    }
+    await canApproveSubmission.require(ctx, user._id, {
+      submissionId: args.submissionId,
+    });
 
     const result = await lifecycleRecompute(
       ctx,

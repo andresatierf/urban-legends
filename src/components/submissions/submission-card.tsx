@@ -34,7 +34,7 @@ export function SubmissionCard({
 }: SubmissionCardProps) {
   const isAdmin =
     currentUser.roleNames.includes("admin") ||
-    currentUser.roleNames.includes("tournament_manager");
+    currentUser.roleNames.includes("dev");
   const isOwner = submission.userId === currentUser._id;
 
   return (

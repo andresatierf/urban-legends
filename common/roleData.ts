@@ -10,11 +10,13 @@ export interface RoleDefinition {
   hierarchy: number;
 }
 
-/**
- * System roles with hierarchy.
- * Lower hierarchy number = higher privilege.
- */
-export const rolesToCreate = [
+/** System roles — stored in `userRoles`, grant platform-wide authority. */
+export type SystemRoleName = "dev" | "admin" | "organizer";
+
+/** Tournament roles — stored in `tournamentRoles`, scoped to a single Tournament. */
+export type TournamentRoleName = "tournament_manager" | "reviewer";
+
+const systemRoles = [
   {
     name: "dev" as const,
     displayName: "Developer",
@@ -30,31 +32,29 @@ export const rolesToCreate = [
     hierarchy: 1,
   },
   {
+    name: "organizer" as const,
+    displayName: "Organizer",
+    description:
+      "Can create new tournaments. Does not grant management authority over created tournaments.",
+    hierarchy: 2,
+  },
+] satisfies RoleDefinition[];
+
+const tournamentRoles = [
+  {
     name: "tournament_manager" as const,
     displayName: "Tournament Manager",
     description:
-      "Can create and manage tournaments, approve submissions, and view analytics for their tournaments",
-    hierarchy: 2,
+      "Can manage a specific tournament, approve submissions, and view analytics for that tournament",
+    hierarchy: 3,
   },
   {
     name: "reviewer" as const,
     displayName: "Reviewer",
     description:
-      "Can review and approve/reject submissions across all tournaments, moderate content, and handle disputes",
-    hierarchy: 3,
-  },
-  {
-    name: "player" as const,
-    displayName: "Player",
-    description:
-      "Basic user access - can join teams and participate in tournaments",
+      "Can review and approve/reject submissions for a specific tournament",
     hierarchy: 4,
   },
-  {
-    name: "viewer" as const,
-    displayName: "Viewer",
-    description:
-      "Read-only access to tournament statistics, leaderboards, and analytics",
-    hierarchy: 5,
-  },
 ] satisfies RoleDefinition[];
+
+export const rolesToCreate = [...systemRoles, ...tournamentRoles];

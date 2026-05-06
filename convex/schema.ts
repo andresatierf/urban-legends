@@ -55,6 +55,16 @@ export default defineSchema({
     hierarchy: v.number(),
   }).index("by_name", ["name"]),
 
+  tournamentRoles: defineTable({
+    userId: v.id("users"),
+    tournamentId: v.id("tournaments"),
+    role: v.union(v.literal("tournament_manager"), v.literal("reviewer")),
+  })
+    .index("by_user", ["userId"])
+    .index("by_tournament", ["tournamentId"])
+    .index("by_user_and_tournament", ["userId", "tournamentId"])
+    .index("by_user_tournament_role", ["userId", "tournamentId", "role"]),
+
   userRoles: defineTable({
     userId: v.id("users"),
     roleId: v.id("roles"),
