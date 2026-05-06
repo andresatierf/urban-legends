@@ -1,7 +1,7 @@
 import { useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { hasMinimumRole, type RoleName } from "../../common/roles";
+import type { RoleName } from "../../common/roles";
 import { api } from "../../convex/_generated/api";
 import type { UserWithRoles } from "../../convex/users";
 
@@ -16,6 +16,7 @@ export function useUser({ shouldThrow }: { shouldThrow?: boolean } = {}) {
       : UserWithRoles,
     isDev: roleNames.includes("dev"),
     isAdmin: roleNames.includes("admin"),
+    isReviewer: roleNames.includes("reviewer"),
     isTournamentManager: roleNames.includes("tournament_manager"),
     canCreateTournament:
       roleNames.includes("admin") ||
@@ -32,7 +33,7 @@ export function useUserWithMinimumRole(
   const router = useRouter();
 
   useEffect(() => {
-    if (user && !hasMinimumRole(user, role)) {
+    if (user && !user.roleNames.includes(role)) {
       router.replace(target);
     }
   }, [user, router, role, target]);

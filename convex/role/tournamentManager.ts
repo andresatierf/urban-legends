@@ -1,8 +1,11 @@
 import { v } from "convex/values";
 import { query } from "../_generated/server";
+import {
+  hasSomeTournamentManagerAccess,
+  IllegalAccess,
+} from "../authority/core";
 import { extractDateFromISO, nowUTC } from "../lib/dates";
 import { enrichWithRelations } from "../lib/helpers";
-import { hasMinimumRole, validateMinimumRole } from "../roles";
 import { getCurrentUserOrThrow } from "../users";
 
 /**
@@ -17,7 +20,7 @@ export const getPendingCount = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!hasMinimumRole(user, "tournament_manager")) {
+    if (!(await hasSomeTournamentManagerAccess(ctx, user._id))) {
       return 0;
     }
 
@@ -44,7 +47,8 @@ export const getDashboardStats = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateMinimumRole(user, "tournament_manager");
+    if (!(await hasSomeTournamentManagerAccess(ctx, user._id)))
+      throw new IllegalAccess("tournament_manager");
 
     const tournaments = await ctx.db.query("tournaments").collect();
 
@@ -116,7 +120,8 @@ export const getRecentActivity = query({
     const user = await getCurrentUserOrThrow(ctx);
     const limit = args.limit || 30;
 
-    validateMinimumRole(user, "tournament_manager");
+    if (!(await hasSomeTournamentManagerAccess(ctx, user._id)))
+      throw new IllegalAccess("tournament_manager");
 
     const tournaments = await ctx.db.query("tournaments").collect();
 

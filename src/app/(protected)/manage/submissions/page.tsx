@@ -11,11 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { convertToReviewItems } from "@/dto/reviewer";
 import { useUser } from "@/hooks/useUser";
 import { tryMutate } from "@/lib/utils";
-import { hasMinimumRole } from "../../../../../common/roles";
 import { api } from "../../../../../convex/_generated/api";
 
 export default function TournamentManagerSubmissions() {
-  const { user } = useUser();
+  const { user, isTournamentManager } = useUser();
 
   const data = useQuery(
     api.role.reviewer.getPendingSubmissions,
@@ -64,7 +63,7 @@ export default function TournamentManagerSubmissions() {
     });
   };
 
-  if (user && !hasMinimumRole(user, "tournament_manager")) {
+  if (user && !isTournamentManager) {
     redirect("/dashboard");
   }
 

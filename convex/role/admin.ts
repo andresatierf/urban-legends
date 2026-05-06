@@ -1,13 +1,13 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation, mutation, query } from "../_generated/server";
+import { requireAdmin } from "../authority/core";
 import { nowUTC } from "../lib/dates";
 import { detectOrphanedRecords } from "../lib/helpers";
 import {
   notifyRoleGranted,
   notifyRoleRevoked,
 } from "../notifications/triggers";
-import { validateMinimumRole } from "../roles";
 import { getCurrentUserOrThrow } from "../users";
 
 /**
@@ -80,7 +80,7 @@ export const updateRoles = mutation({
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUserOrThrow(ctx);
 
-    validateMinimumRole(currentUser, "admin");
+    await requireAdmin(ctx, currentUser._id);
 
     const targetUser = await ctx.db.get(args.userId);
     if (!targetUser) {
@@ -210,7 +210,7 @@ export const getAllPendingCount = query({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateMinimumRole(user, "admin");
+    await requireAdmin(ctx, user._id);
 
     const pendingIndividual = await ctx.db
       .query("submissions")
@@ -235,7 +235,7 @@ export const getDashboardData = query({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateMinimumRole(user, "admin");
+    await requireAdmin(ctx, user._id);
 
     const [users, tournaments, teams, submissions] = await Promise.all([
       ctx.db.query("users").collect(),
@@ -310,7 +310,7 @@ export const getSystemHealth = query({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateMinimumRole(user, "admin");
+    await requireAdmin(ctx, user._id);
 
     const [tournaments, teams, submissions, users, teamMembers] =
       await Promise.all([
@@ -383,7 +383,7 @@ export const runIntegrityCheck = mutation({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateMinimumRole(user, "admin");
+    await requireAdmin(ctx, user._id);
 
     const { orphanedTeams, orphanedSubmissions, orphanedTeamMembers } =
       await detectOrphanedRecords(ctx);
@@ -420,7 +420,7 @@ export const cleanupOrphanedRecords = mutation({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
-    validateMinimumRole(user, "admin");
+    await requireAdmin(ctx, user._id);
 
     const { orphanedTeams, orphanedSubmissions, orphanedTeamMembers } =
       await detectOrphanedRecords(ctx);

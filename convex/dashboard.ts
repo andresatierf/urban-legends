@@ -1,9 +1,9 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import { isGlobalAdminOrDev } from "./authority/core";
 import { nowUTC } from "./lib/dates";
 import { batchGetDocuments, enrichWithRelations, toMap } from "./lib/helpers";
-import { hasMinimumRole } from "./roles";
 import { getCurrentUserOrThrow } from "./users";
 
 export const getUserDashboardData = query({
@@ -77,7 +77,7 @@ export const getAdminDashboardData = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!hasMinimumRole(user, "admin")) {
+    if (!(await isGlobalAdminOrDev(ctx, user._id))) {
       return null;
     }
 

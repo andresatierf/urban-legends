@@ -1,8 +1,8 @@
 import { v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { query } from "../_generated/server";
+import { hasSomeReviewAccess, IllegalAccess } from "../authority/core";
 import { batchGetDocuments, toIdMap } from "../lib/helpers";
-import { hasMinimumRole, validateMinimumRole } from "../roles";
 import { getCurrentUserOrThrow } from "../users";
 
 /**
@@ -14,7 +14,7 @@ export const getPendingCount = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!hasMinimumRole(user, "reviewer")) {
+    if (!(await hasSomeReviewAccess(ctx, user._id))) {
       return 0;
     }
 
@@ -47,7 +47,8 @@ export const getPendingSubmissions = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateMinimumRole(user, "reviewer");
+    if (!(await hasSomeReviewAccess(ctx, user._id)))
+      throw new IllegalAccess("reviewer");
 
     const limit = args.limit ?? 20;
     const offset = args.offset ?? 0;
@@ -200,7 +201,8 @@ export const getStatistics = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateMinimumRole(user, "reviewer");
+    if (!(await hasSomeReviewAccess(ctx, user._id)))
+      throw new IllegalAccess("reviewer");
 
     const reviewedSubmissions = await ctx.db
       .query("submissions")

@@ -2,6 +2,7 @@
 
 import type { Doc } from "@/../convex/_generated/dataModel";
 import type { UserWithRoles } from "@/../convex/users";
+import { useUser } from "@/hooks/useUser";
 import { SubmissionCardActions } from "./submission-card-actions";
 import { SubmissionCardDetails } from "./submission-card-details";
 import { SubmissionCardImage } from "./submission-card-image";
@@ -32,9 +33,7 @@ export function SubmissionCard({
   onEdit,
   onDelete,
 }: SubmissionCardProps) {
-  const isAdmin =
-    currentUser.roleNames.includes("admin") ||
-    currentUser.roleNames.includes("dev");
+  const { isAdmin } = useUser();
   const isOwner = submission.userId === currentUser._id;
 
   return (

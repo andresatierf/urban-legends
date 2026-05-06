@@ -293,6 +293,28 @@ export async function hasSomeReviewAccess(
   return anyTournamentRole !== null;
 }
 
+export async function isGlobalAdminOrDev(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+): Promise<boolean> {
+  const systemRoles = await loadSystemRoles(ctx, userId);
+  return isAdminOrDev(systemRoles);
+}
+
+export async function hasSomeTournamentManagerAccess(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+): Promise<boolean> {
+  const systemRoles = await loadSystemRoles(ctx, userId);
+  if (isAdminOrDev(systemRoles)) return true;
+  const anyManagerRole = await ctx.db
+    .query("tournamentRoles")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .filter((q) => q.eq(q.field("role"), "tournament_manager"))
+    .first();
+  return anyManagerRole !== null;
+}
+
 // ── Team rules ───────────────────────────────────────────────────────────────
 
 type TeamFacts = {

@@ -19,20 +19,16 @@ import { cn } from "@/lib/utils";
 import { api } from "../../../../../convex/_generated/api";
 
 export default function ReviewStatistics() {
-  const { user } = useUser();
+  const { user, isAdmin, isReviewer, isTournamentManager } = useUser();
   const { format } = useFormattedDate();
   const router = useRouter();
 
   // Permission check (client-side navigation)
   useEffect(() => {
-    if (
-      user &&
-      !user.roleNames.includes("reviewer") &&
-      !user.roleNames.includes("admin")
-    ) {
+    if (user && !isAdmin && !isReviewer && !isTournamentManager) {
       router.replace("/dashboard");
     }
-  }, [user, router]);
+  }, [user, isAdmin, isReviewer, isTournamentManager, router]);
 
   // Query
   const statistics = useQuery(api.role.reviewer.getStatistics);
