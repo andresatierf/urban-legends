@@ -121,7 +121,7 @@ export function UpsertSubmissionFormDialog({
             </DialogTrigger>
           )
         )}
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {submission ? "Edit Submission" : "Create Submission"}

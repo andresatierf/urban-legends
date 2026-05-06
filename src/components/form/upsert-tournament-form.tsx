@@ -133,7 +133,7 @@ export function UpsertTournamentFormDialog({
             </DialogTrigger>
           )
         )}
-        <DialogContent>
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {tournament ? "Edit Tournament" : "Create Tournament"}

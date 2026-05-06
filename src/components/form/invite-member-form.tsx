@@ -129,7 +129,7 @@ export function InviteMemberFormDialog({
             </DialogTrigger>
           )
         )}
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Invite Team Member</DialogTitle>
             <DialogDescription>

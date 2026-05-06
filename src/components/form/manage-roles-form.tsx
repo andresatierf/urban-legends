@@ -104,7 +104,7 @@ export function ManageRolesFormDialog({
             </DialogTrigger>
           )
         )}
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Manage Roles for {userName}</DialogTitle>
             <DialogDescription>

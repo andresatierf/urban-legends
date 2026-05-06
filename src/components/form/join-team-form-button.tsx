@@ -147,7 +147,7 @@ export function JoinTeamFormButton({
             Request to Join
           </Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Request to Join {team.name}</DialogTitle>
             <DialogDescription>

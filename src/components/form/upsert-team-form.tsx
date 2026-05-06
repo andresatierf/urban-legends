@@ -119,7 +119,7 @@ export function UpsertTeamFormDialog({
             </DialogTrigger>
           )
         )}
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {team ? "Update Team" : "Create Team"}

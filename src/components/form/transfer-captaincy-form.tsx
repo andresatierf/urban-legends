@@ -97,7 +97,7 @@ export function TransferCaptaincyFormDialog({
         }}
       >
         {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Transfer Captaincy</DialogTitle>
             <DialogDescription>
