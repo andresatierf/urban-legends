@@ -219,3 +219,17 @@ NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 ## Recent Changes
 
 - 001-notification-system: Added TypeScript 5.x with Next.js 15 (React 19), Convex backend + Next.js 15, React 19, Convex (serverless backend), Clerk (authentication), Tailwind CSS, Radix UI, TanStack Form, shadcn/ui patterns
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues at `andresatierf/urban-legends` (uses the `gh` CLI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical triage roles using the default label strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
