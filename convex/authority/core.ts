@@ -413,6 +413,137 @@ export const canManageTeamMembers: TeamRule = teamRule(
     facts.isCaptain,
 );
 
+// ── Tournament rules ─────────────────────────────────────────────────────────
+
+type TournamentFacts = {
+  systemRoles: SystemRoleName[];
+  tournamentRoles: TournamentRoleName[];
+};
+
+export type TournamentSubject = { tournamentId: Id<"tournaments"> };
+
+export type TournamentRule = {
+  check(
+    ctx: QueryCtx,
+    userId: Id<"users">,
+    subject: TournamentSubject,
+  ): Promise<boolean>;
+  require(
+    ctx: QueryCtx,
+    userId: Id<"users">,
+    subject: TournamentSubject,
+  ): Promise<void>;
+};
+
+async function loadTournamentFacts(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  tournamentId: Id<"tournaments">,
+): Promise<TournamentFacts> {
+  const [systemRoles, tournamentRoles] = await Promise.all([
+    loadSystemRoles(ctx, userId),
+    loadTournamentRoles(ctx, userId, tournamentId),
+  ]);
+  return { systemRoles, tournamentRoles };
+}
+
+function tournamentRule(
+  name: string,
+  decide: (facts: TournamentFacts) => boolean,
+): TournamentRule {
+  return {
+    async check(ctx, userId, subject) {
+      const facts = await loadTournamentFacts(
+        ctx,
+        userId,
+        subject.tournamentId,
+      );
+      return decide(facts);
+    },
+    async require(ctx, userId, subject) {
+      const allowed = await this.check(ctx, userId, subject);
+      if (!allowed) throw new IllegalAccess(name);
+    },
+  };
+}
+
+export const canViewTournament: TournamentRule = tournamentRule(
+  "canViewTournament",
+  () => true,
+);
+
+export const canEditTournament: TournamentRule = tournamentRule(
+  "canEditTournament",
+  (facts) =>
+    isAdminOrDev(facts.systemRoles) ||
+    facts.tournamentRoles.includes("tournament_manager"),
+);
+
+export const canDeleteTournament: TournamentRule = tournamentRule(
+  "canDeleteTournament",
+  (facts) => isAdminOrDev(facts.systemRoles),
+);
+
+export const canGrantTournamentRole: TournamentRule = tournamentRule(
+  "canGrantTournamentRole",
+  (facts) => isAdminOrDev(facts.systemRoles),
+);
+
+export const canRevokeTournamentRole: TournamentRule = tournamentRule(
+  "canRevokeTournamentRole",
+  (facts) => isAdminOrDev(facts.systemRoles),
+);
+
+// canCreateTournament has no tournament context (create time), so it stands alone.
+export const canCreateTournament = {
+  async check(ctx: QueryCtx, userId: Id<"users">): Promise<boolean> {
+    const systemRoles = await loadSystemRoles(ctx, userId);
+    return isAdminOrDev(systemRoles) || systemRoles.includes("organizer");
+  },
+  async require(ctx: QueryCtx, userId: Id<"users">): Promise<void> {
+    const allowed = await this.check(ctx, userId);
+    if (!allowed) throw new IllegalAccess("canCreateTournament");
+  },
+};
+
+export async function onTournamentCreated(
+  ctx: MutationCtx,
+  {
+    tournamentId,
+    creatorId,
+  }: { tournamentId: Id<"tournaments">; creatorId: Id<"users"> },
+): Promise<void> {
+  await grantTournamentRole(ctx, {
+    userId: creatorId,
+    tournamentId,
+    role: "tournament_manager",
+  });
+}
+
+// ── computeTournamentPermissions ─────────────────────────────────────────────
+
+export async function computeTournamentPermissions(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  tournamentId: Id<"tournaments">,
+): Promise<{
+  canView: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  canGrantRole: boolean;
+  canRevokeRole: boolean;
+}> {
+  const facts = await loadTournamentFacts(ctx, userId, tournamentId);
+  const isAdmin = isAdminOrDev(facts.systemRoles);
+  return {
+    canView: true,
+    canEdit: isAdmin || facts.tournamentRoles.includes("tournament_manager"),
+    canDelete: isAdmin,
+    canGrantRole: isAdmin,
+    canRevokeRole: isAdmin,
+  };
+}
+
 // ── computeTeamPermissions ───────────────────────────────────────────────────
 
 export async function computeTeamPermissions(

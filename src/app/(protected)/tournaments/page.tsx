@@ -15,7 +15,7 @@ import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
 export default function TournamentsPage() {
-  const { user, isAdmin } = useUser();
+  const { user, canCreateTournament: canCreate } = useUser();
 
   const userTournamentsRaw = useQuery(api.tournaments.list, {
     userId: user?._id,
@@ -38,7 +38,7 @@ export default function TournamentsPage() {
     return (
       <>
         <SectionHeader as="h1" title="Tournaments">
-          {isAdmin && <UpsertTournamentFormDialog />}
+          {canCreate && <UpsertTournamentFormDialog />}
         </SectionHeader>
         <CardGrid data={Array.from({ length: 6 })}>
           {(_, i) => <TournamentCardSkeleton key={i} />}
@@ -50,7 +50,7 @@ export default function TournamentsPage() {
   return (
     <>
       <SectionHeader as="h1" title="Tournaments">
-        {isAdmin && <UpsertTournamentFormDialog />}
+        {canCreate && <UpsertTournamentFormDialog />}
       </SectionHeader>
 
       {allTournaments && allTournaments.length !== 0 && (

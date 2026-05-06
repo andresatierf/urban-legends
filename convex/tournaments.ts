@@ -2,11 +2,17 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+import {
+  canCreateTournament,
+  canEditTournament,
+  canInviteToTeam,
+  computeTournamentPermissions,
+  onTournamentCreated,
+} from "./authority/core";
 import { nowUTC, toUTCDateString, toUTCEndOfDayString } from "./lib/dates";
 import { batchGetDocuments, enrichWithRelations } from "./lib/helpers";
 import { notifyTournamentWinner } from "./notifications/triggers";
-import { hasMinimumRole, validateMinimumRole } from "./roles";
-import { getTeams, validateIsTeamMember } from "./teams";
+import { getTeams } from "./teams";
 import { getCurrentUserOrThrow } from "./users";
 
 export const list = query({
@@ -163,8 +169,13 @@ export const getDetails = query({
       status = "ended";
     }
 
-    const canEdit = hasMinimumRole(user, "tournament_manager");
-    const canDelete = hasMinimumRole(user, "admin");
+    const tournamentPerms = await computeTournamentPermissions(
+      ctx,
+      user._id,
+      args.tournamentId,
+    );
+    const canEdit = tournamentPerms.canEdit;
+    const canDelete = tournamentPerms.canDelete;
     const canViewLeaderboard = true;
 
     const totalTeams = teams.length;
@@ -224,7 +235,13 @@ export const upsert = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateMinimumRole(user, "tournament_manager");
+    if (args._id) {
+      await canEditTournament.require(ctx, user._id, {
+        tournamentId: args._id,
+      });
+    } else {
+      await canCreateTournament.require(ctx, user._id);
+    }
 
     const defaultScoringConfig = {
       individualPoints: { base: 1, advanced: 1 },
@@ -253,7 +270,12 @@ export const upsert = mutation({
       return args._id;
     }
 
-    return await ctx.db.insert("tournaments", { ...data, createdBy: user._id });
+    const tournamentId = await ctx.db.insert("tournaments", {
+      ...data,
+      createdBy: user._id,
+    });
+    await onTournamentCreated(ctx, { tournamentId, creatorId: user._id });
+    return tournamentId;
   },
 });
 
@@ -264,13 +286,7 @@ export const getAvailableUsersForTeam = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!hasMinimumRole(user, "tournament_manager")) {
-      await validateIsTeamMember(ctx, {
-        teamId: args.teamId,
-        userId: user._id,
-        captain: true,
-      });
-    }
+    await canInviteToTeam.require(ctx, user._id, { teamId: args.teamId });
 
     const team = await ctx.db.get(args.teamId);
     if (!team) throw new Error("Team not found");
@@ -475,7 +491,9 @@ export const determineWinner = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    validateMinimumRole(user, "tournament_manager");
+    await canEditTournament.require(ctx, user._id, {
+      tournamentId: args.tournamentId,
+    });
 
     const tournament = await ctx.db.get(args.tournamentId);
     if (!tournament) {

@@ -8,14 +8,19 @@ import type { UserWithRoles } from "../../convex/users";
 export function useUser({ shouldThrow }: { shouldThrow?: boolean } = {}) {
   const user = useQuery(api.users.current, { throw: shouldThrow !== false });
 
+  const roleNames = user?.roleNames ?? [];
+
   return {
     user: user as typeof shouldThrow extends false
       ? UserWithRoles | null
       : UserWithRoles,
-    isDev: user?.roleNames?.includes("dev") ?? false,
-    isAdmin: user?.roleNames?.includes("admin") ?? false,
-    isTournamentManager:
-      user?.roleNames?.includes("tournament_manager") ?? false,
+    isDev: roleNames.includes("dev"),
+    isAdmin: roleNames.includes("admin"),
+    isTournamentManager: roleNames.includes("tournament_manager"),
+    canCreateTournament:
+      roleNames.includes("admin") ||
+      roleNames.includes("dev") ||
+      roleNames.includes("organizer"),
   };
 }
 
