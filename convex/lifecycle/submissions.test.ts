@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
-import schema from "../../schema";
+import schema from "../schema";
+import { assertSubmissionInvariant } from "./invariants.test";
 import {
   approve,
   edit,
@@ -11,8 +12,7 @@ import {
   score,
   softDelete,
   submit,
-} from "../submissions";
-import { assertSubmissionInvariant } from "./invariants";
+} from "./submissions";
 
 // convex-test@0.0.1 accesses tableDefinition.documentType which was renamed to
 // .validator in convex@1.25. Disabling schema validation is the minimal workaround.

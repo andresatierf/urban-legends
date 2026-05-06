@@ -81,6 +81,10 @@ When an **Organizer** creates a **Tournament**, the **Authority** module grants 
 > **Dev:** "If a **User** is a **Captain** of one team and a regular **TeamMember** of another, are they considered a **Player** in both **Tournaments**?"
 > **Domain expert:** "Yes — **Player** is per-**Tournament**, derived from any **TeamMember** record in that **Tournament**."
 
+## Testing conventions
+
+Convex test files live alongside their source file in the same directory — not in a `__tests__/` subdirectory. A module at `convex/foo/bar.ts` is tested by `convex/foo/bar.test.ts`. Test helpers shared within a module (e.g. `invariants.ts`) follow the same rule. The `vitest.config.ts` glob `convex/**/*.test.ts` picks up files at any depth, so no config change is needed when adding tests.
+
 ## Flagged ambiguities
 
 - The legacy roles `player` and `viewer` were stored in `userRoles` but expressed nothing the system needed: `player` is now derived from **TeamMember**; `viewer` is the absence of any role and was deleted. Legacy rows of either type are deleted on migration.

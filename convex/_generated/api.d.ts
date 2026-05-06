@@ -13,6 +13,8 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as authority_core from "../authority/core.js";
+import type * as authority_index from "../authority/index.js";
 import type * as captain from "../captain.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
@@ -21,8 +23,8 @@ import type * as http from "../http.js";
 import type * as joinRequests from "../joinRequests.js";
 import type * as lib_dates from "../lib/dates.js";
 import type * as lib_helpers from "../lib/helpers.js";
-import type * as lifecycle___tests___invariants from "../lifecycle/__tests__/invariants.js";
 import type * as lifecycle_submissions from "../lifecycle/submissions.js";
+import type * as migrations from "../migrations.js";
 import type * as notifications_triggers from "../notifications/triggers.js";
 import type * as notifications_types from "../notifications/types.js";
 import type * as notifications from "../notifications.js";
@@ -49,6 +51,8 @@ import type * as users from "../users.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "authority/core": typeof authority_core;
+  "authority/index": typeof authority_index;
   captain: typeof captain;
   crons: typeof crons;
   dashboard: typeof dashboard;
@@ -57,8 +61,8 @@ declare const fullApi: ApiFromModules<{
   joinRequests: typeof joinRequests;
   "lib/dates": typeof lib_dates;
   "lib/helpers": typeof lib_helpers;
-  "lifecycle/__tests__/invariants": typeof lifecycle___tests___invariants;
   "lifecycle/submissions": typeof lifecycle_submissions;
+  migrations: typeof migrations;
   "notifications/triggers": typeof notifications_triggers;
   "notifications/types": typeof notifications_types;
   notifications: typeof notifications;

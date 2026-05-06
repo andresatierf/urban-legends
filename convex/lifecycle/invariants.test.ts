@@ -1,6 +1,10 @@
-import { expect } from "vitest";
-import type { Id } from "../../_generated/dataModel";
-import type { MutationCtx } from "../../_generated/server";
+import { expect, test } from "vitest";
+import type { Id } from "../_generated/dataModel";
+import type { MutationCtx } from "../_generated/server";
+
+// Helper module exposed via .test.ts so Convex skips bundling it.
+// Real coverage lives in submissions.test.ts.
+test("module loads", () => {});
 
 export async function assertSubmissionInvariant(
   ctx: MutationCtx,

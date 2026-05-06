@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
-import type { Id } from "../../_generated/dataModel";
-import schema from "../../schema";
+import type { Id } from "../_generated/dataModel";
+import schema from "../schema";
 import {
   canApproveSubmission,
   canDeleteSubmission,
@@ -9,7 +9,7 @@ import {
   canRejectSubmission,
   canViewSubmission,
   computeSubmissionPermissions,
-} from "../core";
+} from "./core";
 
 // convex-test@0.0.1 accesses tableDefinition.documentType which was renamed to
 // .validator in convex@1.25. Disabling schema validation is the minimal workaround.
