@@ -1,31 +1,32 @@
 import { cva, type VariantProps } from "class-variance-authority";
+import { Slot } from "radix-ui";
+import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  cn(
-    "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 font-semibold text-xs transition-colors",
-    "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-    "[&_svg:not([class*='size-'])]:size-3 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-  ),
+  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-4xl border border-transparent px-2 py-0.5 font-medium text-xs transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
   {
     variants: {
       variant: {
-        default:
-          "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
+        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
-        outline: "text-foreground",
+          "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
+        outline:
+          "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
+        ghost:
+          "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
+        link: "text-primary underline-offset-4 hover:underline",
         approved:
-          "border-transparent bg-badge-approved-bg text-badge-approved-text shadow hover:bg-badge-approved-bg/80",
+          "bg-badge-approved-bg text-badge-approved-text [a]:hover:bg-badge-approved-bg/80",
         pending:
-          "border-transparent bg-badge-pending-bg text-badge-pending-text shadow hover:bg-badge-pending-bg/80",
+          "bg-badge-pending-bg text-badge-pending-text [a]:hover:bg-badge-pending-bg/80",
         rejected:
-          "border-transparent bg-badge-rejected-bg text-badge-rejected-text shadow hover:bg-badge-rejected-bg/80",
+          "bg-badge-rejected-bg text-badge-rejected-text [a]:hover:bg-badge-rejected-bg/80",
         deleted:
-          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
+          "bg-destructive/10 text-destructive [a]:hover:bg-destructive/20",
       },
     },
     defaultVariants: {
@@ -34,12 +35,25 @@ const badgeVariants = cva(
   },
 );
 
-export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+export type BadgeProps = React.ComponentProps<"span"> &
+  VariantProps<typeof badgeVariants> & { asChild?: boolean };
 
-export function Badge({ className, variant, ...props }: BadgeProps) {
+function Badge({
+  className,
+  variant = "default",
+  asChild = false,
+  ...props
+}: BadgeProps) {
+  const Comp = asChild ? Slot.Root : "span";
+
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <Comp
+      data-slot="badge"
+      data-variant={variant}
+      className={cn(badgeVariants({ variant }), className)}
+      {...props}
+    />
   );
 }
+
+export { Badge, badgeVariants };

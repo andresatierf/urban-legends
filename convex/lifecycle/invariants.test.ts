@@ -6,6 +6,7 @@ import type { MutationCtx } from "../_generated/server";
 // Real coverage lives in submissions.test.ts.
 test("module loads", () => {});
 
+// biome-ignore lint/suspicious/noExportsInTest: this file doubles as a helper module — see comment above.
 export async function assertSubmissionInvariant(
   ctx: MutationCtx,
   {

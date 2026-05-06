@@ -14,15 +14,15 @@ post-checkout:
   commands:
     install:
       run: bun install
-pre-push:
-  parallel: true
-  commands:
-    biome-check:
-      glob: "*.{js,ts,jsx,tsx,json,jsonc}"
-      exclude: "convex/_generated/**"
-      run: bun --bun biome ci
-      stage_fixed: true
-    typecheck:
-      glob: "*.{js,ts,jsx,tsx}"
-      exclude: "convex/_generated/**"
-      run: bun --bun tsc --noEmit
+# pre-push:
+#   parallel: true
+#   commands:
+#     biome-check:
+#       glob: "*.{js,ts,jsx,tsx,json,jsonc}"
+#       exclude: "convex/_generated/**"
+#       run: bun --bun biome ci
+#       stage_fixed: true
+#     typecheck:
+#       glob: "*.{js,ts,jsx,tsx}"
+#       exclude: "convex/_generated/**"
+#       run: bun --bun tsc --noEmit

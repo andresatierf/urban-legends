@@ -1,7 +1,13 @@
 import { useStore } from "@tanstack/react-form";
 import { useCallback } from "react";
 import { useFieldContext } from "@/hooks/form-context";
-import { Combobox } from "../../ui/combobox";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "../../ui/combobox";
 import { Field, FieldError, FieldLabel } from "../../ui/field";
 
 export type ComboboxFieldProps<T> = {
@@ -27,7 +33,8 @@ export function ComboboxField<T extends string>({
   ]);
 
   const handleOnChange = useCallback(
-    (value: T) => {
+    (value: T | null) => {
+      if (value === null) return;
       field.handleChange(value);
       onChange?.(value);
     },
@@ -38,14 +45,26 @@ export function ComboboxField<T extends string>({
     <Field data-invalid={isInvalid}>
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Combobox
-        id={field.name}
-        name={field.name}
+        items={options}
         value={field.state.value}
-        setValue={handleOnChange}
-        options={options}
-        noSelectionText={placeholder}
-        aria-invalid={isInvalid}
-      />
+        onValueChange={handleOnChange}
+      >
+        <ComboboxInput
+          id={field.name}
+          name={field.name}
+          placeholder={placeholder}
+          aria-invalid={isInvalid}
+        />
+        <ComboboxContent>
+          <ComboboxList>
+            {options.map((option) => (
+              <ComboboxItem key={option.value} value={option.value}>
+                {option.label}
+              </ComboboxItem>
+            ))}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
       {children}
       {isInvalid && <FieldError errors={errors} />}
     </Field>
