@@ -27,6 +27,10 @@ An activity entry made by a **User** for their **Team** on a given date, in one 
 **SubmissionGroup**:
 The aggregation of all **Submissions** by one **Team** on one date — used to compute team-exercise rollups.
 
+**JoinRequest**:
+An outstanding intent for a **User** to become a **TeamMember** of a **Team**. Created by either `request` (User-initiated) or `invite` (Team-initiated); both produce the same row shape, distinguished by an `initiator` field. Resolved by `accept` (recipient — produces a **TeamMember**), `reject` (recipient), `cancel` (initiator), or `expire` (timeout).
+_Avoid_: invitation, application, membership offer (these described the two halves separately before unification).
+
 ### Roles & authorization
 
 Roles split on **two axes**: where they're stored, and the kind of authority they grant.
@@ -60,12 +64,19 @@ The **Authority** module composes three independent axes:
 
 When an **Organizer** creates a **Tournament**, the **Authority** module grants them `tournament_manager` of that **Tournament** as a side effect of creation.
 
+### JoinRequest rules
+
+1. **Symmetric lockout**: a `rejected` **JoinRequest** blocks any future **JoinRequest** for the same (User, Team) pair, regardless of `initiator`. Captains who reject and change their mind, or Users who reject and change their mind, do not get a second attempt — the rule is intentionally strict to keep the relationship terminal.
+2. **Expiry**: every **JoinRequest** carries a required `expiresAt` of 7 days from creation, in either direction. A `pending` row past its `expiresAt` is `expired` on next observation.
+3. **Cascade on accept**: when a **JoinRequest** is `accepted` and produces a **TeamMember** in **Tournament** T, all *other* pending **JoinRequests** for the same **User** in any **Team** of T are `cancelled` — a User cannot be a **TeamMember** of two **Teams** in the same **Tournament**.
+
 ## Relationships
 
 - A **Tournament** has many **Teams**.
 - A **Team** has many **TeamMembers**, exactly one of whom is its **Captain**.
 - A **Team** has many **Submissions**; each **Submission** belongs to exactly one **Team** and one **User**.
 - **Submissions** by one **Team** on one date are aggregated into a **SubmissionGroup**.
+- A **JoinRequest** links a **User** to a **Team**; on `accept` it produces a **TeamMember**.
 - A **User** may have any number of **System roles** and any number of **Tournament roles** (the latter scoped per **Tournament**).
 - A **User** is a **Player** of a **Tournament** iff they have a **TeamMember** in any of its **Teams**.
 - The **Authority** module decides every permission question by reading **System roles**, **Tournament roles**, and **TeamMember** state.
