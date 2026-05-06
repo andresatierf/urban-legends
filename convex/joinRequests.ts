@@ -1,5 +1,11 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import {
+  canApproveJoinRequest,
+  canCancelJoinRequest,
+  canCreateJoinRequest,
+  canRejectJoinRequest,
+} from "./authority/core";
 import { nowUTC } from "./lib/dates";
 import { enrichWithRelations } from "./lib/helpers";
 import {
@@ -8,7 +14,7 @@ import {
   notifyJoinRequestRejected,
   notifyMemberJoined,
 } from "./notifications/triggers";
-import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
+import { validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -74,11 +80,7 @@ export const requestToJoin = mutation({
       throw new Error("Cannot request to join a private team");
     }
 
-    await validateIsTeamMember(ctx, {
-      teamId: args.teamId,
-      userId: user._id,
-      invert: true,
-    });
+    await canCreateJoinRequest.require(ctx, user._id, { teamId: args.teamId });
     await validateUserNotInTournamentTeam(ctx, {
       userId: user._id,
       tournamentId: team.tournamentId,
@@ -155,9 +157,9 @@ export const cancelJoinRequest = mutation({
       throw new Error("Join request not found");
     }
 
-    if (request.userId !== user._id) {
-      throw new Error("You can only cancel your own join requests");
-    }
+    await canCancelJoinRequest.require(ctx, user._id, {
+      requestId: args.requestId,
+    });
 
     if (request.status !== "pending") {
       throw new Error("Join request is not pending");
@@ -187,11 +189,15 @@ export const respondToJoinRequest = mutation({
       throw new Error("Join request is not pending");
     }
 
-    await validateIsTeamMember(ctx, {
-      teamId: request.teamId,
-      userId: user._id,
-      captain: true,
-    });
+    if (args.approve) {
+      await canApproveJoinRequest.require(ctx, user._id, {
+        requestId: args.requestId,
+      });
+    } else {
+      await canRejectJoinRequest.require(ctx, user._id, {
+        requestId: args.requestId,
+      });
+    }
 
     if (args.approve) {
       const team = await validateTeamHasSpace(ctx, { teamId: request.teamId });

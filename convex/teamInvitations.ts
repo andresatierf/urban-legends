@@ -1,13 +1,18 @@
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
+import {
+  canCancelInvitation,
+  canInviteToTeam,
+  canRespondToInvitation,
+} from "./authority/core";
 import { nowUTC } from "./lib/dates";
 import { enrichWithRelations } from "./lib/helpers";
 import {
   notifyMemberJoined,
   notifyTeamInvitation,
 } from "./notifications/triggers";
-import { validateIsTeamMember, validateTeamHasSpace } from "./teams";
+import { validateTeamHasSpace } from "./teams";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -111,11 +116,7 @@ export const inviteMember = mutation({
 
     const team = await validateTeamHasSpace(ctx, { teamId: args.teamId });
 
-    await validateIsTeamMember(ctx, {
-      userId: user._id,
-      teamId: args.teamId,
-      captain: true,
-    });
+    await canInviteToTeam.require(ctx, user._id, { teamId: args.teamId });
 
     const invitedUser = await ctx.db
       .query("users")
@@ -187,10 +188,8 @@ export const cancelInvitation = mutation({
       throw new Error("Invitation is not pending");
     }
 
-    await validateIsTeamMember(ctx, {
-      teamId: invitation.teamId,
-      userId: user._id,
-      captain: true,
+    await canCancelInvitation.require(ctx, user._id, {
+      invitationId: args.invitationId,
     });
 
     await ctx.db.patch(args.invitationId, {
@@ -213,9 +212,9 @@ export const respondToInvitation = mutation({
       throw new Error("Invitation not found");
     }
 
-    if (invitation.invitedUserId !== user._id) {
-      throw new Error("This invitation is not for you");
-    }
+    await canRespondToInvitation.require(ctx, user._id, {
+      invitationId: args.invitationId,
+    });
 
     if (invitation.status !== "pending") {
       throw new Error("Invitation is not pending");
