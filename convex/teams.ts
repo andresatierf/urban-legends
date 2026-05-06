@@ -239,11 +239,6 @@ export const removeUserTeam = mutation({
       .filter((q) => q.eq(q.field("teamId"), args.teamId))
       .collect();
 
-    const invitations = await ctx.db
-      .query("teamInvitations")
-      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
-      .collect();
-
     const joinRequests = await ctx.db
       .query("joinRequests")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
@@ -257,7 +252,6 @@ export const removeUserTeam = mutation({
     await Promise.all(
       [
         submissions.map(({ _id }) => ctx.db.delete(_id)),
-        invitations.map(({ _id }) => ctx.db.delete(_id)),
         joinRequests.map(({ _id }) => ctx.db.delete(_id)),
         teamMembers.map(({ _id }) => ctx.db.delete(_id)),
       ].flat(),

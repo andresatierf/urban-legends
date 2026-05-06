@@ -1,4 +1,5 @@
 import { internalMutation } from "./_generated/server";
+import { nowUTC } from "./lib/dates";
 
 // Deletes legacy role rows from userRoles:
 // - player and viewer: expressed nothing the system needed; player is now derived
@@ -39,5 +40,78 @@ export const deleteLegacyRoleAssignments = internalMutation({
     await Promise.all(toDelete.map((ur) => ctx.db.delete(ur._id)));
 
     return { deleted: toDelete.length };
+  },
+});
+
+// Backfills teamInvitations into joinRequests and patches existing joinRequests rows.
+// Run once before dropping the teamInvitations table from schema.
+// Delete this mutation after running, consistent with the prior cleanup pattern.
+export const unifyJoinRequestsAndInvitations = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // biome-ignore lint/suspicious/noExplicitAny: migration queries table dropped from schema
+    const invitations = await ctx.db.query("teamInvitations" as any).collect();
+    let backfilled = 0;
+    for (const inv of invitations) {
+      const expiresAt =
+        inv.expiresAt ??
+        (() => {
+          const d = new Date(inv.createdAt);
+          d.setDate(d.getDate() + 7);
+          return d.toISOString();
+        })();
+
+      const status =
+        inv.status === "accepted"
+          ? "accepted"
+          : inv.status === "rejected"
+            ? "rejected"
+            : inv.status === "cancelled"
+              ? "cancelled"
+              : inv.status === "expired"
+                ? "expired"
+                : "pending";
+
+      await ctx.db.insert("joinRequests", {
+        teamId: inv.teamId,
+        userId: inv.invitedUserId,
+        status,
+        createdAt: inv.createdAt,
+        respondedAt: inv.respondedAt,
+        initiator: "team",
+        createdBy: inv.invitedBy,
+        expiresAt,
+      });
+      backfilled++;
+    }
+
+    const requests = await ctx.db.query("joinRequests").collect();
+    let patched = 0;
+    const now = nowUTC();
+    for (const req of requests) {
+      if (req.initiator !== undefined) continue;
+
+      const expiresAt =
+        req.expiresAt ??
+        (() => {
+          const d = new Date(req.createdAt);
+          d.setDate(d.getDate() + 7);
+          return d.toISOString();
+        })();
+
+      const status = req.status === "approved" ? "accepted" : req.status;
+
+      await ctx.db.patch(req._id, {
+        initiator: "user",
+        createdBy: req.userId,
+        expiresAt,
+        status,
+        respondedAt:
+          req.respondedAt ?? (status !== "pending" ? now : undefined),
+      });
+      patched++;
+    }
+
+    return { backfilled, patched };
   },
 });

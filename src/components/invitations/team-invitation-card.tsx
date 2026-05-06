@@ -8,7 +8,7 @@ import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 
 type TeamInvitationCardProps = {
-  invitation: Doc<"teamInvitations"> & {
+  invitation: Doc<"joinRequests"> & {
     team: Doc<"teams"> | null;
     tournament: Doc<"tournaments"> | null;
     invitedByUser: Doc<"users"> | null;
@@ -27,7 +27,8 @@ export function TeamInvitationCard({
   className,
 }: TeamInvitationCardProps) {
   const { format } = useFormattedDate();
-  const isExpired = new Date(invitation.expiresAt) < new Date();
+  const isExpired =
+    !!invitation.expiresAt && new Date(invitation.expiresAt) < new Date();
 
   return (
     <Card className={className}>
@@ -55,7 +56,9 @@ export function TeamInvitationCard({
               <Calendar className="h-3 w-3" />
               {invitation.respondedAt
                 ? `${capitalize(invitation.status)} ${format(invitation.respondedAt, "short")}`
-                : `Expires ${format(invitation.expiresAt, "short")}`}
+                : invitation.expiresAt
+                  ? `Expires ${format(invitation.expiresAt, "short")}`
+                  : null}
             </span>
           </div>
         </div>

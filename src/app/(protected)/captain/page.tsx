@@ -81,9 +81,7 @@ export default function CaptainDashboard() {
     setProcessingId(null);
   };
 
-  const handleCancelInvitation = async (
-    invitationId: Id<"teamInvitations">,
-  ) => {
+  const handleCancelInvitation = async (invitationId: Id<"joinRequests">) => {
     setProcessingId(invitationId);
     await tryMutate({
       fn: () => cancelInvitation({ invitationId }),
@@ -218,7 +216,7 @@ export default function CaptainDashboard() {
                     <div>
                       <p className="font-medium text-sm">
                         {invitation.invitedUser?.name ||
-                          invitation.invitedEmail}
+                          invitation.invitedUser?.email}
                       </p>
                       <p className="text-muted-foreground text-xs">
                         Invited to {invitation.team?.name || "Unknown Team"} •

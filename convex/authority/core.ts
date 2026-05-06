@@ -566,97 +566,12 @@ export async function computeTournamentPermissions(
   };
 }
 
-// ── Invitation rules ─────────────────────────────────────────────────────────
-
-type InvitationFacts = {
-  isInvitee: boolean;
-  isCaptain: boolean;
-  systemRoles: SystemRoleName[];
-  tournamentRoles: TournamentRoleName[];
-};
-
-export type InvitationSubject = { invitationId: Id<"teamInvitations"> };
-
-export type InvitationRule = {
-  check(
-    ctx: QueryCtx,
-    userId: Id<"users">,
-    subject: InvitationSubject,
-  ): Promise<boolean>;
-  require(
-    ctx: QueryCtx,
-    userId: Id<"users">,
-    subject: InvitationSubject,
-  ): Promise<void>;
-};
-
-async function loadInvitationFacts(
-  ctx: QueryCtx,
-  userId: Id<"users">,
-  invitationId: Id<"teamInvitations">,
-): Promise<InvitationFacts> {
-  const invitation = await ctx.db.get(invitationId);
-  if (!invitation) throw new Error("Invitation not found");
-
-  const team = await ctx.db.get(invitation.teamId);
-  if (!team) throw new Error("Team not found");
-
-  const [systemRoles, tournamentRoles, membership] = await Promise.all([
-    loadSystemRoles(ctx, userId),
-    loadTournamentRoles(ctx, userId, team.tournamentId),
-    ctx.db
-      .query("teamMembers")
-      .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", invitation.teamId).eq("userId", userId),
-      )
-      .first(),
-  ]);
-
-  return {
-    isInvitee: invitation.invitedUserId === userId,
-    isCaptain: membership?.role === "captain",
-    systemRoles,
-    tournamentRoles,
-  };
-}
-
-function invitationRule(
-  name: string,
-  decide: (facts: InvitationFacts) => boolean,
-): InvitationRule {
-  return {
-    async check(ctx, userId, subject) {
-      const facts = await loadInvitationFacts(
-        ctx,
-        userId,
-        subject.invitationId,
-      );
-      return decide(facts);
-    },
-    async require(ctx, userId, subject) {
-      const allowed = await this.check(ctx, userId, subject);
-      if (!allowed) throw new IllegalAccess(name);
-    },
-  };
-}
-
-export const canCancelInvitation: InvitationRule = invitationRule(
-  "canCancelInvitation",
-  (facts) =>
-    isAdminOrDev(facts.systemRoles) ||
-    facts.tournamentRoles.includes("tournament_manager") ||
-    facts.isCaptain,
-);
-
-export const canRespondToInvitation: InvitationRule = invitationRule(
-  "canRespondToInvitation",
-  (facts) => facts.isInvitee,
-);
-
 // ── Join request rules ────────────────────────────────────────────────────────
 
 type JoinRequestFacts = {
   isRequester: boolean;
+  isCreator: boolean;
+  initiator: "user" | "team" | undefined;
   isCaptain: boolean;
   systemRoles: SystemRoleName[];
   tournamentRoles: TournamentRoleName[];
@@ -701,6 +616,8 @@ async function loadJoinRequestFacts(
 
   return {
     isRequester: request.userId === userId,
+    isCreator: (request.createdBy ?? request.userId) === userId,
+    initiator: request.initiator,
     isCaptain: membership?.role === "captain",
     systemRoles,
     tournamentRoles,
@@ -723,25 +640,42 @@ function joinRequestRule(
   };
 }
 
+// canCancelJoinRequest: only the original creator may cancel.
+// For user-direction, createdBy === userId (the requester).
+// For team-direction, createdBy === the inviting captain.
 export const canCancelJoinRequest: JoinRequestRule = joinRequestRule(
   "canCancelJoinRequest",
-  (facts) => facts.isRequester,
+  (facts) => facts.isCreator,
 );
 
-export const canApproveJoinRequest: JoinRequestRule = joinRequestRule(
-  "canApproveJoinRequest",
-  (facts) =>
-    isAdminOrDev(facts.systemRoles) ||
-    facts.tournamentRoles.includes("tournament_manager") ||
-    facts.isCaptain,
+// canAcceptJoinRequest: branches on initiator.
+// User-direction → captain/admin/tournament_manager may accept.
+// Team-direction → only the prospect (userId) may accept.
+export const canAcceptJoinRequest: JoinRequestRule = joinRequestRule(
+  "canAcceptJoinRequest",
+  (facts) => {
+    if (facts.initiator === "team") return facts.isRequester;
+    return (
+      isAdminOrDev(facts.systemRoles) ||
+      facts.tournamentRoles.includes("tournament_manager") ||
+      facts.isCaptain
+    );
+  },
 );
 
+// canRejectJoinRequest: mirrors canAcceptJoinRequest branching.
+// User-direction → captain/admin/tournament_manager may reject.
+// Team-direction → only the prospect (userId) may reject.
 export const canRejectJoinRequest: JoinRequestRule = joinRequestRule(
   "canRejectJoinRequest",
-  (facts) =>
-    isAdminOrDev(facts.systemRoles) ||
-    facts.tournamentRoles.includes("tournament_manager") ||
-    facts.isCaptain,
+  (facts) => {
+    if (facts.initiator === "team") return facts.isRequester;
+    return (
+      isAdminOrDev(facts.systemRoles) ||
+      facts.tournamentRoles.includes("tournament_manager") ||
+      facts.isCaptain
+    );
+  },
 );
 
 // canCreateJoinRequest reuses TeamSubject: user must not already be a member.

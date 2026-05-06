@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import {
-  canApproveJoinRequest,
+  canAcceptJoinRequest,
   canCancelJoinRequest,
   canCreateJoinRequest,
   canRejectJoinRequest,
@@ -144,7 +144,7 @@ export const respondToJoinRequest = mutation({
     }
 
     if (args.approve) {
-      await canApproveJoinRequest.require(ctx, user._id, {
+      await canAcceptJoinRequest.require(ctx, user._id, {
         requestId: args.requestId,
       });
 

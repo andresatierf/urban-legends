@@ -1,9 +1,16 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import type { Id } from "../_generated/dataModel";
-import { canApproveJoinRequest } from "../authority/core";
+import { canAcceptJoinRequest } from "../authority/core";
 import schema from "../schema";
-import { accept, cancel, expire, reject, request } from "./joinRequests";
+import {
+  accept,
+  cancel,
+  expire,
+  invite,
+  reject,
+  request,
+} from "./joinRequests";
 
 // convex-test@0.0.1 accesses tableDefinition.documentType which was renamed to
 // .validator in convex@1.25. Disabling schema validation is the minimal workaround.
@@ -222,10 +229,197 @@ describe("expire", () => {
   });
 });
 
-// ── authority: only captain can accept ───────────────────────────────────────
+// ── invite then accept ───────────────────────────────────────────────────────
 
-describe("only captain can accept", () => {
-  test("member cannot accept via authority rule", async () => {
+describe("invite then accept (Team-direction)", () => {
+  test("produces a TeamMember row", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { captainId, teamId } = await seedWorld(ctx);
+      const prospectId = await makeUser(ctx, "prospect");
+
+      const requestId = await invite(ctx, {
+        teamId,
+        userId: prospectId,
+        createdBy: captainId,
+      });
+
+      await accept(ctx, requestId, prospectId);
+
+      const member = await ctx.db
+        .query("teamMembers")
+        .withIndex("by_team_and_user", (q) =>
+          q.eq("teamId", teamId).eq("userId", prospectId),
+        )
+        .first();
+
+      expect(member).toBeTruthy();
+      expect(member?.role).toBe("member");
+    });
+  });
+
+  test("transitions status to accepted", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { captainId, teamId } = await seedWorld(ctx);
+      const prospectId = await makeUser(ctx, "prospect");
+
+      const requestId = await invite(ctx, {
+        teamId,
+        userId: prospectId,
+        createdBy: captainId,
+      });
+
+      await accept(ctx, requestId, prospectId);
+
+      const req = await ctx.db.get(requestId);
+      expect(req?.status).toBe("accepted");
+      expect(req?.initiator).toBe("team");
+      expect(req?.respondedBy).toBe(prospectId);
+    });
+  });
+});
+
+// ── symmetric lockout ────────────────────────────────────────────────────────
+
+describe("symmetric lockout", () => {
+  test("reject user-direction request → re-invite to same (user, team) is blocked", async () => {
+    // Uses separate t.run() calls: convex-test@0.0.1 does not reflect ctx.db.patch()
+    // results in ctx.db.query().collect() within the same transaction.
+    const t = convexTest(schemaForTest);
+    const { captainId, teamId } = await t.run(async (ctx) => seedWorld(ctx));
+    const prospectId = await t.run(async (ctx) => makeUser(ctx, "prospect"));
+
+    const requestId = await t.run(async (ctx) =>
+      request(ctx, { teamId, userId: prospectId }),
+    );
+    await t.run(async (ctx) => reject(ctx, requestId, captainId));
+
+    await t.run(async (ctx) => {
+      await expect(
+        invite(ctx, { teamId, userId: prospectId, createdBy: captainId }),
+      ).rejects.toThrow();
+    });
+  });
+
+  test("reject team-direction invite → re-request by same user is blocked", async () => {
+    // Uses separate t.run() calls for the same convex-test@0.0.1 reason.
+    const t = convexTest(schemaForTest);
+    const { captainId, teamId } = await t.run(async (ctx) => seedWorld(ctx));
+    const prospectId = await t.run(async (ctx) => makeUser(ctx, "prospect"));
+
+    const inviteId = await t.run(async (ctx) =>
+      invite(ctx, { teamId, userId: prospectId, createdBy: captainId }),
+    );
+    await t.run(async (ctx) => reject(ctx, inviteId, prospectId));
+
+    await t.run(async (ctx) => {
+      await expect(
+        request(ctx, { teamId, userId: prospectId }),
+      ).rejects.toThrow();
+    });
+  });
+
+  test("invite blocked when pending request already exists", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { captainId, teamId } = await seedWorld(ctx);
+      const prospectId = await makeUser(ctx, "prospect");
+
+      await request(ctx, { teamId, userId: prospectId });
+
+      await expect(
+        invite(ctx, { teamId, userId: prospectId, createdBy: captainId }),
+      ).rejects.toThrow();
+    });
+  });
+});
+
+// ── cascade crosses initiator boundary ───────────────────────────────────────
+
+describe("cascade crosses initiator boundary", () => {
+  test("accept user-direction cancels team-direction sibling in same tournament", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { captainId, tournamentId, teamId } = await seedWorld(ctx);
+      const prospectId = await makeUser(ctx, "prospect");
+
+      const otherCaptainId = await makeUser(ctx, "otherCaptain");
+      const otherTeamId = await ctx.db.insert("teams", {
+        name: "Team Beta",
+        tournamentId,
+        createdBy: otherCaptainId,
+        visibility: "public",
+        points: 0,
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId: otherTeamId,
+        userId: otherCaptainId,
+        role: "captain",
+      });
+
+      // User requests Team Alpha; Team Beta invites same user
+      const reqAlpha = await request(ctx, { teamId, userId: prospectId });
+      const inviteBeta = await invite(ctx, {
+        teamId: otherTeamId,
+        userId: prospectId,
+        createdBy: otherCaptainId,
+      });
+
+      // Captain of Alpha accepts
+      await accept(ctx, reqAlpha, captainId);
+
+      // Team Beta's invite in same tournament should be cancelled
+      const betaRow = await ctx.db.get(inviteBeta);
+      expect(betaRow?.status).toBe("cancelled");
+    });
+  });
+
+  test("accept team-direction cancels user-direction sibling in same tournament", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { captainId, tournamentId, teamId } = await seedWorld(ctx);
+      const prospectId = await makeUser(ctx, "prospect");
+
+      const otherCaptainId = await makeUser(ctx, "otherCaptain");
+      const otherTeamId = await ctx.db.insert("teams", {
+        name: "Team Beta",
+        tournamentId,
+        createdBy: otherCaptainId,
+        visibility: "public",
+        points: 0,
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId: otherTeamId,
+        userId: otherCaptainId,
+        role: "captain",
+      });
+
+      // Team Alpha invites prospect; prospect also requests Team Beta
+      const inviteAlpha = await invite(ctx, {
+        teamId,
+        userId: prospectId,
+        createdBy: captainId,
+      });
+      const reqBeta = await request(ctx, {
+        teamId: otherTeamId,
+        userId: prospectId,
+      });
+
+      // Prospect accepts Alpha's invite
+      await accept(ctx, inviteAlpha, prospectId);
+
+      // Beta request in same tournament should be cancelled
+      const betaRow = await ctx.db.get(reqBeta);
+      expect(betaRow?.status).toBe("cancelled");
+    });
+  });
+});
+
+// ── authority: branching on initiator ────────────────────────────────────────
+
+describe("canAcceptJoinRequest authority branching", () => {
+  test("user-direction: captain can accept, prospect cannot", async () => {
     const t = convexTest(schemaForTest);
     await t.run(async (ctx) => {
       const { captainId, teamId } = await seedWorld(ctx);
@@ -239,33 +433,39 @@ describe("only captain can accept", () => {
 
       const requestId = await request(ctx, { teamId, userId: requesterId });
 
-      const memberCanApprove = await canApproveJoinRequest.check(
-        ctx,
-        memberId,
-        {
-          requestId,
-        },
-      );
-      expect(memberCanApprove).toBe(false);
+      expect(
+        await canAcceptJoinRequest.check(ctx, captainId, { requestId }),
+      ).toBe(true);
 
-      const captainCanApprove = await canApproveJoinRequest.check(
-        ctx,
-        captainId,
-        {
-          requestId,
-        },
-      );
-      expect(captainCanApprove).toBe(true);
+      expect(
+        await canAcceptJoinRequest.check(ctx, requesterId, { requestId }),
+      ).toBe(false);
 
-      await accept(ctx, requestId, captainId);
+      expect(
+        await canAcceptJoinRequest.check(ctx, memberId, { requestId }),
+      ).toBe(false);
+    });
+  });
 
-      const member = await ctx.db
-        .query("teamMembers")
-        .withIndex("by_team_and_user", (q) =>
-          q.eq("teamId", teamId).eq("userId", requesterId),
-        )
-        .first();
-      expect(member).toBeTruthy();
+  test("team-direction: prospect can accept, captain cannot", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { captainId, teamId } = await seedWorld(ctx);
+      const prospectId = await makeUser(ctx, "prospect");
+
+      const requestId = await invite(ctx, {
+        teamId,
+        userId: prospectId,
+        createdBy: captainId,
+      });
+
+      expect(
+        await canAcceptJoinRequest.check(ctx, prospectId, { requestId }),
+      ).toBe(true);
+
+      expect(
+        await canAcceptJoinRequest.check(ctx, captainId, { requestId }),
+      ).toBe(false);
     });
   });
 });

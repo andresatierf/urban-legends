@@ -138,33 +138,6 @@ export default defineSchema({
     .index("by_external_id", ["externalId"])
     .index("by_email", ["email"]),
 
-  teamInvitations: defineTable({
-    teamId: v.id("teams"),
-    invitedUserId: v.id("users"),
-    invitedEmail: v.string(),
-    invitedBy: v.id("users"),
-    status: v.union(
-      v.literal("pending"),
-      v.literal("accepted"),
-      v.literal("rejected"),
-      v.literal("cancelled"),
-      v.literal("expired"),
-    ),
-    expiresAt: v.string(),
-    createdAt: v.string(),
-    respondedAt: v.optional(v.string()),
-  })
-    .index("by_team", ["teamId"])
-    .index("by_user", ["invitedUserId"])
-    .index("by_email", ["invitedEmail"])
-    .index("by_status", ["status"])
-    .index("by_user_and_status", ["invitedUserId", "status"])
-    .index("by_team_and_user_and_status", [
-      "teamId",
-      "invitedUserId",
-      "status",
-    ]),
-
   joinRequests: defineTable({
     teamId: v.id("teams"),
     userId: v.id("users"),
@@ -188,7 +161,9 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
     .index("by_team_and_user", ["teamId", "userId"])
-    .index("by_team_and_user_and_status", ["teamId", "userId", "status"]),
+    .index("by_team_and_user_and_status", ["teamId", "userId", "status"])
+    .index("by_user_and_status", ["userId", "status"])
+    .index("by_createdBy_and_status", ["createdBy", "status"]),
 
   notifications: defineTable({
     userId: v.id("users"),

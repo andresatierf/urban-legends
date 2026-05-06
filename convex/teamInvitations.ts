@@ -1,14 +1,21 @@
+// Thin pass-through shell — delegates to the joinRequests lifecycle module.
+// Public query/mutation names are preserved so the frontend keeps working.
+// IDs are now joinRequests IDs; frontend migration is a follow-up PRD.
+
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import {
-  canCancelInvitation,
+  canAcceptJoinRequest,
+  canCancelJoinRequest,
   canInviteToTeam,
-  canRespondToInvitation,
+  canRejectJoinRequest,
 } from "./authority/core";
-import { nowUTC } from "./lib/dates";
 import { enrichWithRelations } from "./lib/helpers";
+import { accept, cancel, invite, reject } from "./lifecycle/joinRequests";
 import {
+  notifyJoinRequestApproved,
+  notifyJoinRequestRejected,
   notifyMemberJoined,
   notifyTeamInvitation,
 } from "./notifications/triggers";
@@ -32,26 +39,21 @@ export const listTeamInvitations = query({
   handler: async (ctx, args) => {
     await getCurrentUserOrThrow(ctx);
 
-    let invitationsQuery = ctx.db
-      .query("teamInvitations")
-      .withIndex("by_team", (q) => q.eq("teamId", args.teamId));
+    let requests = await ctx.db
+      .query("joinRequests")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .collect();
 
+    requests = requests.filter((r) => r.initiator === "team");
     if (args.status) {
-      invitationsQuery = invitationsQuery.filter((q) =>
-        q.eq(q.field("status"), args.status),
-      );
+      requests = requests.filter((r) => r.status === args.status);
     }
 
-    const invitations = await invitationsQuery.collect();
-
-    return await enrichWithRelations(ctx, invitations, {
-      invitedUser: {
-        table: "users",
-        foreignKey: (inv) => inv.invitedUserId,
-      },
+    return await enrichWithRelations(ctx, requests, {
+      invitedUser: { table: "users", foreignKey: (r) => r.userId },
       invitedByUser: {
         table: "users",
-        foreignKey: (inv) => inv.invitedBy,
+        foreignKey: (r) => r.createdBy ?? r.userId,
       },
     });
   },
@@ -72,34 +74,29 @@ export const listUserInvitations = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    let invitationsQuery = ctx.db
-      .query("teamInvitations")
-      .withIndex("by_user", (q) => q.eq("invitedUserId", user._id));
+    let requests = await ctx.db
+      .query("joinRequests")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
 
+    requests = requests.filter((r) => r.initiator === "team");
     if (args.status) {
-      invitationsQuery = invitationsQuery.filter((q) =>
-        q.eq(q.field("status"), args.status),
-      );
+      requests = requests.filter((r) => r.status === args.status);
     }
 
-    const invitations = await invitationsQuery.collect();
-
-    const enriched = await enrichWithRelations(ctx, invitations, {
-      team: {
-        table: "teams",
-        foreignKey: (inv) => inv.teamId,
-      },
+    const enriched = await enrichWithRelations(ctx, requests, {
+      team: { table: "teams", foreignKey: (r) => r.teamId },
       invitedByUser: {
         table: "users",
-        foreignKey: (inv) => inv.invitedBy,
+        foreignKey: (r) => r.createdBy ?? r.userId,
       },
     });
 
     return await Promise.all(
-      enriched.map(async (inv) => ({
-        ...inv,
-        tournament: inv.team
-          ? await ctx.db.get((inv.team as Doc<"teams">).tournamentId)
+      enriched.map(async (req) => ({
+        ...req,
+        tournament: req.team
+          ? await ctx.db.get((req.team as Doc<"teams">).tournamentId)
           : null,
       })),
     );
@@ -123,175 +120,112 @@ export const inviteMember = mutation({
       .withIndex("by_email", (q) => q.eq("email", args.email))
       .first();
 
-    if (!invitedUser) {
-      throw new Error("User not found with this email");
-    }
+    if (!invitedUser) throw new Error("User not found with this email");
 
     await validateUserNotInTournamentTeam(ctx, {
       userId: invitedUser._id,
       tournamentId: team.tournamentId,
     });
 
-    const existingInvitation = await ctx.db
-      .query("teamInvitations")
-      .withIndex("by_team_and_user_and_status", (q) =>
-        q
-          .eq("teamId", args.teamId)
-          .eq("invitedUserId", invitedUser._id)
-          .eq("status", "pending"),
-      )
-      .first();
-
-    if (existingInvitation) {
-      throw new Error("User already has a pending invitation to this team");
-    }
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-
-    const invitationId = await ctx.db.insert("teamInvitations", {
+    const requestId = await invite(ctx, {
       teamId: args.teamId,
-      invitedUserId: invitedUser._id,
-      invitedEmail: args.email,
-      invitedBy: user._id,
-      status: "pending",
-      expiresAt: expiresAt.toISOString(),
-      createdAt: nowUTC(),
+      userId: invitedUser._id,
+      createdBy: user._id,
     });
 
-    // T019: Send notification to invited user
     await notifyTeamInvitation(ctx, {
       invitedUserId: invitedUser._id,
       teamId: args.teamId,
       teamName: team.name,
       inviterName: user.name || user.email,
-      invitationId,
+      invitationId: requestId,
     });
 
-    return invitationId;
+    return requestId;
   },
 });
 
 export const cancelInvitation = mutation({
   args: {
-    invitationId: v.id("teamInvitations"),
+    invitationId: v.id("joinRequests"),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const invitation = await ctx.db.get(args.invitationId);
-    if (!invitation) {
-      throw new Error("Invitation not found");
-    }
-
-    if (invitation.status !== "pending") {
-      throw new Error("Invitation is not pending");
-    }
-
-    await canCancelInvitation.require(ctx, user._id, {
-      invitationId: args.invitationId,
+    await canCancelJoinRequest.require(ctx, user._id, {
+      requestId: args.invitationId,
     });
 
-    await ctx.db.patch(args.invitationId, {
-      status: "cancelled",
-      respondedAt: nowUTC(),
-    });
+    await cancel(ctx, args.invitationId, user._id);
   },
 });
 
 export const respondToInvitation = mutation({
   args: {
-    invitationId: v.id("teamInvitations"),
+    invitationId: v.id("joinRequests"),
     accept: v.boolean(),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const invitation = await ctx.db.get(args.invitationId);
-    if (!invitation) {
-      throw new Error("Invitation not found");
-    }
-
-    await canRespondToInvitation.require(ctx, user._id, {
-      invitationId: args.invitationId,
-    });
-
-    if (invitation.status !== "pending") {
-      throw new Error("Invitation is not pending");
-    }
-
-    const now = new Date();
-    const expiresAt = new Date(invitation.expiresAt);
-    if (now > expiresAt) {
-      await ctx.db.patch(args.invitationId, {
-        status: "expired",
-        respondedAt: now.toISOString(),
-      });
-      throw new Error("Invitation has expired");
-    }
+    const req = await ctx.db.get(args.invitationId);
+    if (!req) throw new Error("Invitation not found");
 
     if (args.accept) {
-      const team = await validateTeamHasSpace(ctx, {
-        teamId: invitation.teamId,
+      await canAcceptJoinRequest.require(ctx, user._id, {
+        requestId: args.invitationId,
       });
 
+      const team = await validateTeamHasSpace(ctx, { teamId: req.teamId });
+
       await validateUserNotInTournamentTeam(ctx, {
-        userId: user._id,
+        userId: req.userId,
         tournamentId: team.tournamentId,
       });
 
-      await ctx.db.insert("teamMembers", {
-        teamId: invitation.teamId,
-        userId: user._id,
-        role: "member",
+      await accept(ctx, args.invitationId, user._id);
+
+      await notifyJoinRequestApproved(ctx, {
+        userId: req.userId,
+        teamId: req.teamId,
+        teamName: team.name,
       });
 
-      await ctx.db.patch(args.invitationId, {
-        status: "accepted",
-        respondedAt: nowUTC(),
-      });
-
-      // T023: Notify existing team members that someone joined
       const teamMembers = await ctx.db
         .query("teamMembers")
-        .withIndex("by_team", (q) => q.eq("teamId", invitation.teamId))
+        .withIndex("by_team", (q) => q.eq("teamId", req.teamId))
         .collect();
 
       const existingMemberIds = teamMembers
         .map((m) => m.userId)
-        .filter((id) => id !== user._id);
+        .filter((id) => id !== req.userId);
 
       if (existingMemberIds.length > 0) {
-        await notifyMemberJoined(ctx, {
-          recipientIds: existingMemberIds,
-          teamId: invitation.teamId,
-          teamName: team.name,
-          newMemberName: user.name || user.email,
-        });
-      }
-
-      const otherInvitations = await ctx.db
-        .query("teamInvitations")
-        .withIndex("by_user_and_status", (q) =>
-          q.eq("invitedUserId", user._id).eq("status", "pending"),
-        )
-        .filter((q) => q.neq(q.field("_id"), args.invitationId))
-        .collect();
-
-      for (const inv of otherInvitations) {
-        const invTeam = await ctx.db.get(inv.teamId);
-        if (invTeam && invTeam.tournamentId === team.tournamentId) {
-          await ctx.db.patch(inv._id, {
-            status: "cancelled",
-            respondedAt: nowUTC(),
+        const newMember = await ctx.db.get(req.userId);
+        if (newMember) {
+          await notifyMemberJoined(ctx, {
+            recipientIds: existingMemberIds,
+            teamId: req.teamId,
+            teamName: team.name,
+            newMemberName: newMember.name || newMember.email,
           });
         }
       }
     } else {
-      await ctx.db.patch(args.invitationId, {
-        status: "rejected",
-        respondedAt: nowUTC(),
+      await canRejectJoinRequest.require(ctx, user._id, {
+        requestId: args.invitationId,
       });
+
+      await reject(ctx, args.invitationId, user._id);
+
+      const team = await ctx.db.get(req.teamId);
+      if (team) {
+        await notifyJoinRequestRejected(ctx, {
+          userId: req.userId,
+          teamId: req.teamId,
+          teamName: team.name,
+        });
+      }
     }
   },
 });

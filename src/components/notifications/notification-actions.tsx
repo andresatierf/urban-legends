@@ -56,7 +56,7 @@ export function NotificationActions({
         // Check if this is a team invitation
         if (action.args?.invitationId) {
           await respondToInvitation({
-            invitationId: action.args.invitationId as Id<"teamInvitations">,
+            invitationId: action.args.invitationId as Id<"joinRequests">,
             accept: isAccept,
           });
 

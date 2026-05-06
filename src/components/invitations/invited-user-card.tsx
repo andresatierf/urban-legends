@@ -7,7 +7,7 @@ import { Card, CardContent } from "../ui/card";
 import { getStatusBadge } from "./utils";
 
 type InvitedUserCardProps = {
-  invitation: Doc<"teamInvitations"> & {
+  invitation: Doc<"joinRequests"> & {
     invitedUser: Doc<"users"> | null;
     invitedByUser: Doc<"users"> | null;
   };
@@ -25,7 +25,8 @@ export function InvitedUserCard({
   className,
 }: InvitedUserCardProps) {
   const { format } = useFormattedDate();
-  const isExpired = new Date(invitation.expiresAt) < new Date();
+  const isExpired =
+    !!invitation.expiresAt && new Date(invitation.expiresAt) < new Date();
 
   return (
     <Card className={className}>
@@ -37,7 +38,7 @@ export function InvitedUserCard({
           </div>
           <div className="mt-1 flex items-center gap-1 text-muted-foreground text-sm">
             <Mail className="h-3 w-3" />
-            {invitation.invitedEmail}
+            {invitation.invitedUser?.email}
           </div>
           <div className="mt-1 flex flex-col items-start text-muted-foreground text-xs">
             <span className="flex items-center gap-1">
@@ -49,7 +50,9 @@ export function InvitedUserCard({
               <Calendar className="h-3 w-3" />
               {invitation.respondedAt
                 ? `${capitalize(invitation.status)} ${format(invitation.respondedAt, "short")}`
-                : `Expires ${format(invitation.expiresAt, "short")}`}
+                : invitation.expiresAt
+                  ? `Expires ${format(invitation.expiresAt, "short")}`
+                  : null}
             </span>
           </div>
         </div>

@@ -13,7 +13,7 @@ export async function notifyTeamInvitation(
     teamId: Id<"teams">;
     teamName: string;
     inviterName: string;
-    invitationId: Id<"teamInvitations">;
+    invitationId: Id<"joinRequests">;
   },
 ) {
   try {

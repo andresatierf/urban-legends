@@ -21,8 +21,9 @@ type Props = {
 };
 
 export function InvitedUsersList({ teamId, canCancel }: Props) {
-  const [processingId, setProcessingId] =
-    useState<Id<"teamInvitations"> | null>(null);
+  const [processingId, setProcessingId] = useState<Id<"joinRequests"> | null>(
+    null,
+  );
 
   const invitations = useQuery(api.teamInvitations.listTeamInvitations, {
     teamId,
@@ -47,9 +48,7 @@ export function InvitedUsersList({ teamId, canCancel }: Props) {
     (inv) => inv.status !== "pending",
   );
 
-  const handleCancelInvitation = async (
-    invitationId: Id<"teamInvitations">,
-  ) => {
+  const handleCancelInvitation = async (invitationId: Id<"joinRequests">) => {
     setProcessingId(invitationId);
     await tryMutate({
       fn: () => cancelInvitation({ invitationId }),

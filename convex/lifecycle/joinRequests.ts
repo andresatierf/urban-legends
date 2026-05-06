@@ -40,6 +40,16 @@ async function cascade(
   }
 }
 
+// Returns all rows for (teamId, userId) pair — used for lockout and duplicate checks.
+async function existingForPair(
+  ctx: MutationCtx,
+  teamId: Id<"teams">,
+  userId: Id<"users">,
+) {
+  const all = await ctx.db.query("joinRequests").collect();
+  return all.filter((r) => r.teamId === teamId && r.userId === userId);
+}
+
 // Creates a User-direction join request.
 // Caller is responsible for checking team capacity, visibility, and tournament membership.
 // This function enforces the lockout (rejected row blocks re-request) and duplicate-pending guard.
@@ -51,19 +61,15 @@ export async function request(
     message?: string;
   },
 ): Promise<Id<"joinRequests">> {
-  // Uses JS-side filtering to stay compatible with convex-test@0.0.1.
-  const allRequests = await ctx.db.query("joinRequests").collect();
-  const existingForUser = allRequests.filter(
-    (r) => r.teamId === args.teamId && r.userId === args.userId,
-  );
+  const existing = await existingForPair(ctx, args.teamId, args.userId);
 
-  if (existingForUser.some((r) => r.status === "rejected")) {
+  if (existing.some((r) => r.status === "rejected")) {
     throw new Error(
       "Your join request was rejected. You cannot request to join this team again",
     );
   }
 
-  if (existingForUser.some((r) => r.status === "pending")) {
+  if (existing.some((r) => r.status === "pending")) {
     throw new Error("You already have a pending join request for this team");
   }
 
@@ -79,6 +85,48 @@ export async function request(
     createdAt: now,
     initiator: "user",
     createdBy: args.userId,
+    expiresAt: expiresAt.toISOString(),
+  });
+}
+
+// Creates a Team-direction join request (invitation).
+// Symmetric lockout: a rejected row for (user, team) blocks re-invite.
+// Caller is responsible for checking team capacity and tournament membership.
+export async function invite(
+  ctx: MutationCtx,
+  args: {
+    teamId: Id<"teams">;
+    userId: Id<"users">;
+    createdBy: Id<"users">;
+    message?: string;
+  },
+): Promise<Id<"joinRequests">> {
+  const existing = await existingForPair(ctx, args.teamId, args.userId);
+
+  if (existing.some((r) => r.status === "rejected")) {
+    throw new Error(
+      "This user cannot be invited — they were previously rejected from this team",
+    );
+  }
+
+  if (existing.some((r) => r.status === "pending")) {
+    throw new Error(
+      "This user already has a pending request or invitation for this team",
+    );
+  }
+
+  const now = nowUTC();
+  const expiresAt = new Date(now);
+  expiresAt.setDate(expiresAt.getDate() + 7);
+
+  return ctx.db.insert("joinRequests", {
+    teamId: args.teamId,
+    userId: args.userId,
+    status: "pending",
+    message: args.message,
+    createdAt: now,
+    initiator: "team",
+    createdBy: args.createdBy,
     expiresAt: expiresAt.toISOString(),
   });
 }

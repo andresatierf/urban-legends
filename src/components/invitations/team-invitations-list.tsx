@@ -20,8 +20,9 @@ export function TeamInvitationsList({
 }: {
   pendingOnly?: boolean;
 }) {
-  const [processingId, setProcessingId] =
-    useState<Id<"teamInvitations"> | null>(null);
+  const [processingId, setProcessingId] = useState<Id<"joinRequests"> | null>(
+    null,
+  );
 
   const invitations = useQuery(api.teamInvitations.listUserInvitations, {});
   const respondToInvitation = useMutation(
@@ -46,7 +47,7 @@ export function TeamInvitationsList({
     (inv) => inv.status !== "pending",
   );
 
-  const handleAccept = async (invitationId: Id<"teamInvitations">) => {
+  const handleAccept = async (invitationId: Id<"joinRequests">) => {
     setProcessingId(invitationId);
 
     await tryMutate({
@@ -57,7 +58,7 @@ export function TeamInvitationsList({
     });
   };
 
-  const handleReject = async (invitationId: Id<"teamInvitations">) => {
+  const handleReject = async (invitationId: Id<"joinRequests">) => {
     setProcessingId(invitationId);
 
     await tryMutate({

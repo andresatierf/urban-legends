@@ -26,25 +26,22 @@ export const getPendingActionsCount = query({
       return 0;
     }
 
-    const joinRequests = await ctx.db
+    const allPending = await ctx.db
       .query("joinRequests")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
       .collect();
 
-    const relevantJoinRequests = joinRequests.filter((jr) =>
-      teamIdsSet.has(jr.teamId),
+    // Filter A: incoming user-direction requests for my captained teams
+    const incomingRequests = allPending.filter(
+      (jr) => teamIdsSet.has(jr.teamId) && jr.initiator !== "team",
     );
 
-    const allPendingInvitations = await ctx.db
-      .query("teamInvitations")
-      .withIndex("by_status", (q) => q.eq("status", "pending"))
-      .collect();
-
-    const invitations = allPendingInvitations.filter(
-      (inv) => inv.invitedBy === user._id,
+    // Filter B: outgoing team-direction invitations I created
+    const outgoingInvitations = allPending.filter(
+      (jr) => jr.initiator === "team" && jr.createdBy === user._id,
     );
 
-    return relevantJoinRequests.length + invitations.length;
+    return incomingRequests.length + outgoingInvitations.length;
   },
 });
 
@@ -151,13 +148,13 @@ export const getDashboardData = query({
       },
     );
 
-    const allPendingInvitations = await ctx.db
-      .query("teamInvitations")
+    const allPendingJR = await ctx.db
+      .query("joinRequests")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
       .collect();
 
-    const relevantInvitations = allPendingInvitations.filter(
-      (inv) => inv.invitedBy === user._id,
+    const relevantInvitations = allPendingJR.filter(
+      (jr) => jr.initiator === "team" && jr.createdBy === user._id,
     );
 
     const enrichedInvitations = await enrichWithRelations(
@@ -166,7 +163,7 @@ export const getDashboardData = query({
       {
         invitedUser: {
           table: "users",
-          foreignKey: (inv) => inv.invitedUserId,
+          foreignKey: (inv) => inv.userId,
         },
         team: {
           table: "teams",

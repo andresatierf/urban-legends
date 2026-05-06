@@ -57,12 +57,13 @@ export const getUserDashboardData = query({
       (s) => s.state === "pending",
     );
 
-    const invitations = await ctx.db
-      .query("teamInvitations")
+    const allPendingForUser = await ctx.db
+      .query("joinRequests")
       .withIndex("by_user_and_status", (q) =>
-        q.eq("invitedUserId", user._id).eq("status", "pending"),
+        q.eq("userId", user._id).eq("status", "pending"),
       )
       .collect();
+    const invitations = allPendingForUser.filter((r) => r.initiator === "team");
 
     return {
       teams: validTeams,
