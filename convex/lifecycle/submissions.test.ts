@@ -1104,6 +1104,131 @@ describe("softDelete", () => {
       }),
     ).rejects.toThrow(IllegalTransition);
   });
+
+  test("soft-delete with evidence: propagates storage error (confirms releaseUploads is called)", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    // convex-test@0.0.1 throws when ctx.storage.delete is called with a fake ID.
+    // The error propagating confirms that releaseUploads is invoked by softDelete.
+    const storageId = "fake_storage_softdelete_55" as unknown as Id<"_storage">;
+
+    const submissionId = await t.run(async (ctx) => {
+      return ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: "2024-01-26",
+        submissionType: "individual",
+        state: "pending",
+        tier: "base",
+        pointsEarned: 0,
+        createdBy: userId,
+        evidenceStorageIds: [storageId],
+      });
+    });
+
+    await expect(
+      t.run(async (ctx) => {
+        await softDelete(ctx, submissionId, userId);
+      }),
+    ).rejects.toThrow();
+  });
+
+  test("reject preserves evidenceStorageIds unchanged", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const storageId = "fake_storage_reject_55" as unknown as Id<"_storage">;
+
+    const submissionId = await t.run(async (ctx) => {
+      return ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: "2024-01-27",
+        submissionType: "individual",
+        state: "pending",
+        tier: "base",
+        pointsEarned: 0,
+        createdBy: userId,
+        evidenceStorageIds: [storageId],
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await reject(ctx, submissionId, userId);
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.state).toBe("rejected");
+      // reject must not touch evidenceStorageIds — audit trail preserved for appeals
+      expect(sub?.evidenceStorageIds).toEqual([storageId]);
+    });
+  });
+
+  test("idempotent soft-delete: second call on already-deleted submission is noop on evidence", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      return await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-28",
+        type: "individual",
+      });
+    });
+
+    // First soft-delete: no evidence, so releaseUploads is a no-op and the call succeeds
+    await t.run(async (ctx) => {
+      await softDelete(ctx, submissionId, userId);
+    });
+
+    // Second soft-delete: returns early before calling releaseUploads
+    const result = await t.run(async (ctx) => {
+      return await softDelete(ctx, submissionId, userId);
+    });
+
+    await t.run(async (ctx) => {
+      expect(result.pointsDelta).toBe(0);
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.state).toBe("deleted");
+      expect(sub?.evidenceStorageIds).toEqual([]);
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("soft-delete with no evidence: evidenceStorageIds is set to []", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    // Insert without evidenceStorageIds so the field starts as undefined
+    const submissionId = await t.run(async (ctx) => {
+      return ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: "2024-01-25",
+        submissionType: "individual",
+        state: "pending",
+        tier: "base",
+        pointsEarned: 0,
+        createdBy: userId,
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await softDelete(ctx, submissionId, userId);
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.state).toBe("deleted");
+      expect(sub?.evidenceStorageIds).toEqual([]);
+    });
+  });
 });
 
 describe("edit", () => {

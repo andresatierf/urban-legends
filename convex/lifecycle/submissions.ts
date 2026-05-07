@@ -1,6 +1,6 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
-import { claimUploads } from "../evidenceStorage";
+import { claimUploads, releaseUploads } from "../evidenceStorage";
 import { nowUTC, toUTCDateString } from "../lib/dates";
 
 export class IllegalTransition extends Error {
@@ -497,7 +497,8 @@ export async function softDelete(
   const oldTeamPoints = (await ctx.db.get(submission.teamId))?.points ?? 0;
 
   await transition(ctx, submissionId, "deleted", by);
-  await ctx.db.patch(submissionId, { pointsEarned: 0 });
+  await releaseUploads(ctx, submission.evidenceStorageIds ?? []);
+  await ctx.db.patch(submissionId, { pointsEarned: 0, evidenceStorageIds: [] });
 
   if (submission.submissionType === "team") {
     // Cascade recomputes group metrics excluding the now-deleted submission.
