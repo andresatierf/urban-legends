@@ -140,7 +140,9 @@ export const getDetails = query({
     const teamsWithMembers = enrichedTeams.map((enrichedTeam) => {
       const { teamMembers, ...team } = enrichedTeam;
       const memberDetails = teamMembers
-        .map((member) => member.user)
+        .map((member) =>
+          member.user ? { ...member.user, memberRole: member.role } : null,
+        )
         .filter((u): u is NonNullable<typeof u> => u !== null);
 
       return {

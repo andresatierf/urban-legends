@@ -14,10 +14,10 @@ import type { Id } from "../../../../convex/_generated/dataModel";
 
 export default function TeamsPage() {
   const { user } = useUser();
-  const userTeams = useQuery(api.teams.list, { userId: user?._id }) || [];
-  const allTeams = useQuery(api.teams.list, {}) || [];
+  const userTeams = useQuery(api.teams.listWithMembers, { userId: user?._id });
+  const allTeams = useQuery(api.teams.listWithMembers, {});
 
-  const tournamentIds = allTeams.map((t) => t.tournamentId);
+  const tournamentIds = (allTeams ?? []).map((t) => t.tournamentId);
   const tournaments = useQuery(
     api.tournaments.list,
     tournamentIds.length > 0 ? { tournamentIds } : "skip",
@@ -31,28 +31,10 @@ export default function TeamsPage() {
       }, {})
     : {};
 
-  const teamMembers = useQuery(
-    api.teams.listMembers,
-    allTeams.length > 0 ? { teamIds: allTeams.map((t) => t._id) } : "skip",
-  );
-
-  const teamMemberCounts = teamMembers
-    ? allTeams.reduce(
-        (acc, team) => {
-          const members = teamMembers.filter((m) => m.teamId === team._id);
-          acc[team._id] = members;
-          return acc;
-        },
-        {} as Record<string, typeof teamMembers>,
-      )
-    : {};
-
   if (userTeams === undefined) {
     return (
       <>
-        <SectionHeader as="h1" title="Teams">
-          {/* {isAdmin && <UpsertTournamentFormDialog />} */}
-        </SectionHeader>
+        <SectionHeader as="h1" title="Teams" />
         <CardGrid data={Array.from({ length: 6 })}>
           {() => <TeamCardSkeleton />}
         </CardGrid>
@@ -74,31 +56,33 @@ export default function TeamsPage() {
       {allTeams && allTeams.length !== 0 && (
         <>
           <SectionHeader title="Your teams" />
-          <CardGrid data={userTeams} empty={<JoinTeamCard />}>
+          <CardGrid data={userTeams ?? []} empty={<JoinTeamCard />}>
             {(team) => (
               <TeamCard
                 key={team._id}
                 team={team}
                 tournament={tournamentMap?.[team.tournamentId]}
-                memberCount={teamMemberCounts?.[team._id]?.length || 0}
+                memberCount={team.members.length}
                 isUserMember={true}
                 isUserInTeam={true}
+                members={team.members}
               />
             )}
           </CardGrid>
         </>
       )}
 
-      <SectionHeader title="All teams"></SectionHeader>
-      <CardGrid data={allTeams} empty={<JoinTeamCard first />}>
+      <SectionHeader title="All teams" />
+      <CardGrid data={allTeams ?? []} empty={<JoinTeamCard first />}>
         {(team) => (
           <TeamCard
             key={team._id}
             team={team}
             tournament={tournamentMap?.[team.tournamentId]}
-            memberCount={teamMemberCounts?.[team._id]?.length || 0}
+            memberCount={team.members.length}
             isUserMember={true}
             isUserInTeam={true}
+            members={team.members}
           />
         )}
       </CardGrid>

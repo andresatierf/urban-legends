@@ -8,6 +8,7 @@ import {
   canManageTeamMembers,
   computeTeamPermissions,
 } from "./authority/core";
+import { enrichWithRelations } from "./lib/helpers";
 import { recompute as lifecycleRecompute } from "./lifecycle/submissions";
 import { notifyRemovedFromTeam } from "./notifications/triggers";
 import { validateUserNotInTournamentTeam } from "./tournaments";
@@ -75,6 +76,63 @@ export const listMembers = query({
     );
 
     return teamMembersPerTeam.flat();
+  },
+});
+
+export const listWithMembers = query({
+  args: {
+    userId: v.optional(v.id("users")),
+    tournamentId: v.optional(v.id("tournaments")),
+  },
+  handler: async (ctx, args) => {
+    await getCurrentUserOrThrow(ctx);
+
+    let teams: Doc<"teams">[];
+
+    if (!args.userId && !args.tournamentId) {
+      teams = await ctx.db.query("teams").collect();
+    } else {
+      let q = ctx.db.query("teams");
+
+      if (args.userId) {
+        const memberships = await ctx.db
+          .query("teamMembers")
+          .withIndex("by_user", (q) =>
+            q.eq("userId", args.userId as typeof args.userId),
+          )
+          .collect();
+        const teamIds = memberships.map((m) => m.teamId);
+        q = q.filter((q) =>
+          q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))),
+        );
+      }
+
+      if (args.tournamentId) {
+        q = q.filter((q) => q.eq(q.field("tournamentId"), args.tournamentId));
+      }
+
+      teams = await q.collect();
+    }
+
+    if (teams.length === 0) return [];
+
+    const enriched = await enrichWithRelations(ctx, teams, {
+      teamMembers: {
+        table: "teamMembers",
+        foreignKeyField: "teamId",
+        enrich: {
+          user: { table: "users", foreignKey: (m) => m.userId },
+        },
+      },
+    });
+
+    return enriched.map((enrichedTeam) => {
+      const { teamMembers, ...team } = enrichedTeam;
+      const members = teamMembers
+        .map((m) => (m.user ? { ...m.user, memberRole: m.role } : null))
+        .filter((m): m is NonNullable<typeof m> => m !== null);
+      return { ...team, members };
+    });
   },
 });
 

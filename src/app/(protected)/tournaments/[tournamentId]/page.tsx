@@ -55,7 +55,7 @@ export default function TournamentDetailsPage({ params }: Props) {
       {data &&
         data.teams.length !== 0 &&
         (data.userTeam ? (
-          <Card variant="info">
+          <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20">
             <CardHeader>
               <CardTitle>Your Team</CardTitle>
               <CardDescription>
@@ -94,6 +94,7 @@ export default function TournamentDetailsPage({ params }: Props) {
               memberCount={team.memberCount}
               isUserMember={data.userTeam?._id === team._id}
               isUserInTeam={!!data.userTeam}
+              members={team.members}
             />
           )}
         </CardGrid>
