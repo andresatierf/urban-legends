@@ -1,6 +1,11 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import { action, type MutationCtx, mutation } from "./_generated/server";
+import {
+  action,
+  internalMutation,
+  type MutationCtx,
+  mutation,
+} from "./_generated/server";
 import { nowUTC } from "./lib/dates";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -45,6 +50,33 @@ export async function releaseUploads(
     await ctx.storage.delete(storageId);
   }
 }
+
+// Testable seam for the daily orphan sweep. Deletes storage blobs and
+// pendingUploads rows whose createdAt is strictly older than the given cutoff.
+// Tests pass an explicit cutoff; the daily cron calls sweepOrphansCron which
+// computes olderThan = now - 24h.
+export async function sweepOrphans(
+  ctx: MutationCtx,
+  olderThan: string,
+): Promise<void> {
+  const staleRows = await ctx.db
+    .query("pendingUploads")
+    .withIndex("by_createdAt", (q) => q.lt("createdAt", olderThan))
+    .collect();
+  for (const row of staleRows) {
+    await ctx.storage.delete(row.storageId);
+    await ctx.db.delete(row._id);
+  }
+}
+
+// Daily cron entry point — computes the 24-hour cutoff and calls sweepOrphans.
+export const sweepOrphansCron = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const olderThan = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    await sweepOrphans(ctx, olderThan);
+  },
+});
 
 // Generates a Convex storage upload URL.
 // The storageId is only available in the upload response body — call

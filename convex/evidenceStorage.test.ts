@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import type { Id } from "./_generated/dataModel";
-import { claimUploads, releaseUploads } from "./evidenceStorage";
+import { claimUploads, releaseUploads, sweepOrphans } from "./evidenceStorage";
 import schema from "./schema";
 
 // convex-test@0.0.1 schema validation workaround (see submissions.test.ts)
@@ -150,6 +150,72 @@ describe("releaseUploads", () => {
     await expect(
       t.run(async (ctx) => {
         await releaseUploads(ctx, []);
+      }),
+    ).resolves.not.toThrow();
+  });
+});
+
+describe("sweepOrphans", () => {
+  test("propagates storage error for rows older than cutoff (confirms sweep was attempted)", async () => {
+    const t = convexTest(schemaForTest);
+    const olderThan = new Date(Date.now() - 1000).toISOString();
+
+    await t.run(async (ctx) => {
+      const userId = await seedUser(ctx, "sweep1");
+      const storageId = "fake_storage_sweep_1" as unknown as Id<"_storage">;
+      const twoDaysAgo = new Date(
+        Date.now() - 2 * 24 * 60 * 60 * 1000,
+      ).toISOString();
+      await ctx.db.insert("pendingUploads", {
+        storageId,
+        userId,
+        createdAt: twoDaysAgo,
+      });
+    });
+
+    // Row is older than the cutoff — sweep tries to delete the blob.
+    // ctx.storage.delete throws for fake IDs; error must propagate.
+    await expect(
+      t.run(async (ctx) => {
+        await sweepOrphans(ctx, olderThan);
+      }),
+    ).rejects.toThrow();
+  });
+
+  test("skips rows newer than the cutoff", async () => {
+    const t = convexTest(schemaForTest);
+    const twoDaysAgo = new Date(
+      Date.now() - 2 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    await t.run(async (ctx) => {
+      const userId = await seedUser(ctx, "sweep2");
+      const storageId = "fake_storage_sweep_2" as unknown as Id<"_storage">;
+      await ctx.db.insert("pendingUploads", {
+        storageId,
+        userId,
+        createdAt: new Date().toISOString(),
+      });
+    });
+
+    // Cutoff is 2 days ago; row was just created — must be preserved.
+    await t.run(async (ctx) => {
+      await sweepOrphans(ctx, twoDaysAgo);
+    });
+
+    await t.run(async (ctx) => {
+      const rows = await ctx.db.query("pendingUploads").collect();
+      expect(rows).toHaveLength(1);
+    });
+  });
+
+  test("is a no-op when no rows match the cutoff (idempotent second run)", async () => {
+    const t = convexTest(schemaForTest);
+    const veryOldCutoff = "2020-01-01T00:00:00.000Z";
+
+    await expect(
+      t.run(async (ctx) => {
+        await sweepOrphans(ctx, veryOldCutoff);
       }),
     ).resolves.not.toThrow();
   });
