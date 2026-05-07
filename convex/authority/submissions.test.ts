@@ -45,7 +45,7 @@ async function seedWorld(ctx: Ctx) {
     name: "Team Alpha",
     tournamentId,
     createdBy: ownerId,
-    visibility: "public",
+    joinPolicy: "open",
     points: 0,
   });
 

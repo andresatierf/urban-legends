@@ -451,7 +451,7 @@ export const upsertUserTeam = mutation({
     _id: v.optional(v.id("teams")),
     name: v.string(),
     tournamentId: v.id("tournaments"),
-    visibility: v.union(v.literal("public"), v.literal("private")),
+    joinPolicy: v.union(v.literal("open"), v.literal("closed")),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -463,7 +463,7 @@ export const upsertUserTeam = mutation({
     const data = {
       name: args.name,
       tournamentId: args.tournamentId,
-      visibility: args.visibility,
+      joinPolicy: args.joinPolicy,
     };
 
     if (args._id) {

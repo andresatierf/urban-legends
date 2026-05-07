@@ -5,21 +5,21 @@ export const getStatusBadge = (status: string) => {
   switch (status) {
     case "pending":
       return (
-        <Badge variant="pending">
+        <Badge variant="outline">
           <Clock className="h-3 w-3" />
           Pending
         </Badge>
       );
     case "accepted":
       return (
-        <Badge variant="approved">
+        <Badge variant="default">
           <Check className="h-3 w-3" />
           Accepted
         </Badge>
       );
     case "rejected":
       return (
-        <Badge variant="rejected">
+        <Badge variant="destructive">
           <X className="h-3 w-3" />
           Declined
         </Badge>

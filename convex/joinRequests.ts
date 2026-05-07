@@ -77,8 +77,8 @@ export const requestToJoin = mutation({
 
     const team = await validateTeamHasSpace(ctx, { teamId: args.teamId });
 
-    if (team.visibility !== "public") {
-      throw new Error("Cannot request to join a private team");
+    if (team.joinPolicy !== "open") {
+      throw new Error("Cannot request to join a closed team");
     }
 
     await canCreateJoinRequest.require(ctx, user._id, { teamId: args.teamId });

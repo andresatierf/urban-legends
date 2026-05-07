@@ -51,7 +51,7 @@ async function existingForPair(
 }
 
 // Creates a User-direction join request.
-// Caller is responsible for checking team capacity, visibility, and tournament membership.
+// Caller is responsible for checking team capacity, join policy, and tournament membership.
 // This function enforces the lockout (rejected row blocks re-request) and duplicate-pending guard.
 export async function request(
   ctx: MutationCtx,

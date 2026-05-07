@@ -58,7 +58,7 @@ async function makeTeam(
     name,
     tournamentId,
     createdBy: creatorId,
-    visibility: "public",
+    joinPolicy: "open",
     points: 42,
   });
 }

@@ -11,7 +11,11 @@ A scoring competition with a start date, end date, scoring rules, and team-size 
 _Avoid_: Event, contest, league.
 
 **Team**:
-A group of users participating together in exactly one **Tournament**.
+A group of users participating together in exactly one **Tournament**. Carries a **JoinPolicy** that gates user-initiated **JoinRequests**.
+
+**JoinPolicy**:
+A **Team** attribute with values `open` or `closed`, controlling whether a **User** may initiate a **JoinRequest** (`initiator: "user"`). `open` permits user-initiated requests; `closed` rejects them. Captain-initiated invites (`initiator: "team"`) are unaffected by **JoinPolicy** in either state. **JoinPolicy** does *not* hide a Team from listings or hide its roster — it is purely an authorisation gate on one side of the **JoinRequest** model.
+_Avoid_: visibility, public/private (these terms imply concealment, which **JoinPolicy** does not provide).
 
 **TeamMember**:
 The relationship of a **User** to a **Team**, carrying their team-internal role (`captain` or `member`).

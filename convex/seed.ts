@@ -54,7 +54,7 @@ export const seedTournamentAndTeams = internalMutation({
         name: teamData.name,
         tournamentId,
         createdBy: captainUser._id,
-        visibility: "public",
+        joinPolicy: "open",
         points: 0,
       });
 
@@ -145,7 +145,7 @@ export const seedTournamentAndTeams2026 = internalMutation({
         name: teamData.name,
         tournamentId,
         createdBy: captainUser._id,
-        visibility: "public",
+        joinPolicy: "open",
         points: 0,
       });
 
@@ -236,7 +236,7 @@ export const seedTournamentAndCaptains = internalMutation({
         name: teamData.name,
         tournamentId,
         createdBy: captainUser._id,
-        visibility: "public",
+        joinPolicy: "open",
         points: 0,
       });
 
@@ -321,7 +321,7 @@ type TeamSeedMode = "full" | "captainsOnly" | "partial";
 interface AddTeamsOptions {
   tournamentId: Id<"tournaments">;
   mode: TeamSeedMode;
-  visibility?: "public" | "private" | "mixed";
+  joinPolicy?: "open" | "closed" | "mixed";
   pointSpread?: boolean;
 }
 
@@ -346,12 +346,12 @@ async function addTeamsToTournament(
       email: teamData.captain.email,
     });
 
-    const visibility =
-      options.visibility === "mixed"
+    const joinPolicy =
+      options.joinPolicy === "mixed"
         ? i % 2 === 0
-          ? "public"
-          : "private"
-        : (options.visibility ?? "public");
+          ? "open"
+          : "closed"
+        : (options.joinPolicy ?? "open");
 
     const points = options.pointSpread ? (teamsData.length - i) * 50 : 0;
 
@@ -359,7 +359,7 @@ async function addTeamsToTournament(
       name: teamData.name,
       tournamentId: options.tournamentId,
       createdBy: captainUser._id,
-      visibility,
+      joinPolicy,
       points,
     });
 
@@ -468,7 +468,7 @@ export const seedUpcomingTournament = internalMutation({
     const teams = await addTeamsToTournament(ctx, {
       tournamentId,
       mode: "full",
-      visibility: "public",
+      joinPolicy: "open",
     });
 
     return {
@@ -522,7 +522,7 @@ export const seedEndedTournament = internalMutation({
     const teams = await addTeamsToTournament(ctx, {
       tournamentId,
       mode: "full",
-      visibility: "public",
+      joinPolicy: "open",
       pointSpread: true,
     });
 
@@ -608,7 +608,7 @@ export const seedActiveWithSubmissions = internalMutation({
     const teams = await addTeamsToTournament(ctx, {
       tournamentId,
       mode: "full",
-      visibility: "public",
+      joinPolicy: "open",
       pointSpread: true,
     });
 
@@ -688,8 +688,8 @@ export const seedActiveWithSubmissions = internalMutation({
 
 /**
  * Seed mutation: an active tournament showcasing team variety — alternating
- * public/private visibility and rotating between full / partial / captain-only
- * membership. Useful for testing the team-browse list, visibility filters,
+ * open/closed join policy and rotating between full / partial / captain-only
+ * membership. Useful for testing the team-browse list, join-policy filtering,
  * and joinability gating.
  */
 export const seedMixedTeams = internalMutation({
@@ -710,7 +710,7 @@ export const seedMixedTeams = internalMutation({
 
     const tournamentId = await ctx.db.insert("tournaments", {
       name: tournamentName,
-      description: "Active tournament with mixed team visibility and sizes",
+      description: "Active tournament with mixed team join policies and sizes",
       startDate: new Date("2026-04-15").toISOString(),
       endDate: new Date("2026-09-15").toISOString(),
       teamMinSize: 3,
@@ -733,14 +733,14 @@ export const seedMixedTeams = internalMutation({
         email: teamData.captain.email,
       });
 
-      const visibility = i % 2 === 0 ? "public" : "private";
+      const joinPolicy = i % 2 === 0 ? "open" : "closed";
       const mode = modeCycle[i % modeCycle.length];
 
       const teamId = await ctx.db.insert("teams", {
         name: teamData.name,
         tournamentId,
         createdBy: captainUser._id,
-        visibility,
+        joinPolicy,
         points: 0,
       });
 
@@ -1236,7 +1236,7 @@ async function runSeedTournament2024(ctx: MutationCtx) {
   const teams = await addTeamsToTournament(ctx, {
     tournamentId,
     mode: "full",
-    visibility: "public",
+    joinPolicy: "open",
   });
   return { tournamentId, teamsCreated: teams.length };
 }
@@ -1259,7 +1259,7 @@ async function runSeedTournament2026(ctx: MutationCtx) {
   const teams = await addTeamsToTournament(ctx, {
     tournamentId,
     mode: "full",
-    visibility: "public",
+    joinPolicy: "open",
   });
   return { tournamentId, teamsCreated: teams.length };
 }
@@ -1282,7 +1282,7 @@ async function runSeedCaptainsCup(ctx: MutationCtx) {
   const teams = await addTeamsToTournament(ctx, {
     tournamentId,
     mode: "captainsOnly",
-    visibility: "public",
+    joinPolicy: "open",
   });
   return { tournamentId, teamsCreated: teams.length };
 }
@@ -1305,7 +1305,7 @@ async function runSeedUpcoming(ctx: MutationCtx) {
   const teams = await addTeamsToTournament(ctx, {
     tournamentId,
     mode: "full",
-    visibility: "public",
+    joinPolicy: "open",
   });
   return { tournamentId, teamsCreated: teams.length };
 }
@@ -1330,7 +1330,7 @@ async function runSeedEnded(ctx: MutationCtx) {
   const teams = await addTeamsToTournament(ctx, {
     tournamentId,
     mode: "full",
-    visibility: "public",
+    joinPolicy: "open",
     pointSpread: true,
   });
   const sampleDates = [
@@ -1386,7 +1386,7 @@ async function runSeedActiveWithSubmissions(ctx: MutationCtx) {
   const teams = await addTeamsToTournament(ctx, {
     tournamentId,
     mode: "full",
-    visibility: "public",
+    joinPolicy: "open",
     pointSpread: true,
   });
   const submissionPlan: Array<{
@@ -1461,7 +1461,7 @@ async function runSeedActiveWithSubmissions(ctx: MutationCtx) {
 async function runSeedMixedTeams(ctx: MutationCtx) {
   const tournamentId = await ctx.db.insert("tournaments", {
     name: "Urban Legends Mixed Mayhem 2026",
-    description: "Active tournament with mixed team visibility and sizes",
+    description: "Active tournament with mixed team join policies and sizes",
     startDate: new Date("2026-04-15").toISOString(),
     endDate: new Date("2026-09-15").toISOString(),
     teamMinSize: 3,
@@ -1481,13 +1481,13 @@ async function runSeedMixedTeams(ctx: MutationCtx) {
       name: teamData.captain.name,
       email: teamData.captain.email,
     });
-    const visibility = i % 2 === 0 ? "public" : "private";
+    const joinPolicy = i % 2 === 0 ? "open" : "closed";
     const mode = modeCycle[i % modeCycle.length];
     const teamId = await ctx.db.insert("teams", {
       name: teamData.name,
       tournamentId,
       createdBy: captainUser._id,
-      visibility,
+      joinPolicy,
       points: 0,
     });
     await ctx.db.insert("teamMembers", {

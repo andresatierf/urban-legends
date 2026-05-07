@@ -121,7 +121,7 @@ describe("invariant contract (smoke test)", () => {
         name: "Test Team",
         tournamentId,
         createdBy: userId,
-        visibility: "public",
+        joinPolicy: "open",
         points: 0,
       });
 
@@ -157,7 +157,7 @@ describe("submit", () => {
       name: "Lifecycle Team",
       tournamentId,
       createdBy: userId,
-      visibility: "public",
+      joinPolicy: "open",
       points: 0,
     });
 
@@ -301,7 +301,7 @@ describe("submit", () => {
         name: "Limited Team",
         tournamentId,
         createdBy: userId,
-        visibility: "public",
+        joinPolicy: "open",
         points: 0,
       });
       await ctx.db.insert("teamMembers", { teamId, userId, role: "captain" });
@@ -458,7 +458,7 @@ describe("approve", () => {
       name: "Approve Team",
       tournamentId,
       createdBy: userId,
-      visibility: "public",
+      joinPolicy: "open",
       points: 0,
     });
 
@@ -677,7 +677,7 @@ describe("reject", () => {
       name: "Reject Team",
       tournamentId,
       createdBy: userId,
-      visibility: "public",
+      joinPolicy: "open",
       points: 0,
     });
 
@@ -889,7 +889,7 @@ describe("softDelete", () => {
       name: "SoftDelete Team",
       tournamentId,
       createdBy: userId,
-      visibility: "public",
+      joinPolicy: "open",
       points: 0,
     });
 
@@ -1254,7 +1254,7 @@ describe("edit", () => {
       name: "Edit Team",
       tournamentId,
       createdBy: userId,
-      visibility: "public",
+      joinPolicy: "open",
       points: 0,
     });
 
@@ -1798,7 +1798,7 @@ describe("recompute", () => {
       name: "Recompute Team",
       tournamentId,
       createdBy: userId,
-      visibility: "public",
+      joinPolicy: "open",
       points: 0,
     });
     await ctx.db.insert("teamMembers", { teamId, userId, role: "captain" });
@@ -1990,7 +1990,7 @@ describe("recompute", () => {
         name: "Team 2",
         tournamentId,
         createdBy: user2,
-        visibility: "public",
+        joinPolicy: "open",
         points: 0,
       });
       await ctx.db.insert("teamMembers", {

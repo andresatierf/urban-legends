@@ -50,7 +50,7 @@ async function seedWorld(ctx: Ctx) {
     name: "Team Alpha",
     tournamentId,
     createdBy: captainId,
-    visibility: "public",
+    joinPolicy: "open",
     points: 0,
   });
 
@@ -352,7 +352,7 @@ describe("cascade crosses initiator boundary", () => {
         name: "Team Beta",
         tournamentId,
         createdBy: otherCaptainId,
-        visibility: "public",
+        joinPolicy: "open",
         points: 0,
       });
       await ctx.db.insert("teamMembers", {
@@ -389,7 +389,7 @@ describe("cascade crosses initiator boundary", () => {
         name: "Team Beta",
         tournamentId,
         createdBy: otherCaptainId,
-        visibility: "public",
+        joinPolicy: "open",
         points: 0,
       });
       await ctx.db.insert("teamMembers", {
@@ -488,7 +488,7 @@ describe("accept cascades siblings", () => {
         name: "Team Beta",
         tournamentId,
         createdBy: otherCaptainId,
-        visibility: "public",
+        joinPolicy: "open",
         points: 0,
       });
       await ctx.db.insert("teamMembers", {
@@ -510,7 +510,7 @@ describe("accept cascades siblings", () => {
         name: "Team Gamma",
         tournamentId: otherTournamentId,
         createdBy: captainId,
-        visibility: "public",
+        joinPolicy: "open",
         points: 0,
       });
       await ctx.db.insert("teamMembers", {

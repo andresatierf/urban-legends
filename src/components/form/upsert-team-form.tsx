@@ -29,7 +29,7 @@ const formSchema = z.object({
     (val) => typeof val === "string" && val.length >= 1,
   ),
   name: z.string().min(1, "Team name is required"),
-  visibility: z.enum(["public", "private"]),
+  joinPolicy: z.enum(["open", "closed"]),
 });
 
 type Props = {
@@ -76,7 +76,7 @@ export function UpsertTeamFormDialog({
     defaultValues: {
       tournamentId: tournamentId || team?.tournamentId || "",
       name: team?.name || "",
-      visibility: team?.visibility || "public",
+      joinPolicy: team?.joinPolicy || "open",
     } as z.input<typeof formSchema>,
     validators: {
       onChange: formSchema,
@@ -151,17 +151,17 @@ export function UpsertTeamFormDialog({
                 />
               )}
             </form.AppField>
-            <form.AppField name="visibility">
+            <form.AppField name="joinPolicy">
               {(field) => (
                 <field.SelectField
-                  label="Visibility"
-                  placeholder="Select visibility"
+                  label="Join Policy"
+                  placeholder="Select join policy"
                   options={[
                     {
-                      value: "public",
-                      label: "Public - Anyone can request to join",
+                      value: "open",
+                      label: "Open - Anyone can request to join",
                     },
-                    { value: "private", label: "Private - Invitation only" },
+                    { value: "closed", label: "Closed - Invitation only" },
                   ]}
                 />
               )}

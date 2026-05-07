@@ -36,7 +36,7 @@ async function seedWorld(
     name: "Test Team",
     tournamentId,
     createdBy: userId,
-    visibility: "public",
+    joinPolicy: "open",
     points: 0,
   });
 

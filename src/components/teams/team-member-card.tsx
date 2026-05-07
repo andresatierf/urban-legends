@@ -26,9 +26,7 @@ export function TeamMemberCard({
               <User className="h-4 w-4" />
               {member.name}
             </CardTitle>
-            <Badge
-              variant={memberRole === "captain" ? "approved" : "secondary"}
-            >
+            <Badge variant={memberRole === "captain" ? "default" : "secondary"}>
               {memberRole === "captain" && <Crown className="h-3 w-3" />}
               {memberRole}
             </Badge>

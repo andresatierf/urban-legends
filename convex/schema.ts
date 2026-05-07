@@ -30,7 +30,7 @@ export default defineSchema({
     name: v.string(),
     tournamentId: v.id("tournaments"),
     createdBy: v.id("users"),
-    visibility: v.union(v.literal("public"), v.literal("private")),
+    joinPolicy: v.union(v.literal("open"), v.literal("closed")),
     maxMembers: v.optional(v.number()),
     points: v.number(),
     lastActivityAt: v.optional(v.string()),

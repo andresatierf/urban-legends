@@ -87,7 +87,7 @@ export default function TeamDetailsPage({ params }: Props) {
 
       <SectionHeader title="Invites and Requests" />
       <InvitedUsersList teamId={teamId} canCancel={isCaptain} />
-      {data.team.visibility !== "private" && (
+      {data.team.joinPolicy !== "closed" && (
         <JoinRequestsList teamId={teamId} />
       )}
     </>

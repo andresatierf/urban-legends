@@ -48,7 +48,7 @@ export function JoinTeamFormButton({
   const cancelRequest = useMutation(api.joinRequests.cancelJoinRequest);
 
   const isFull = team.maxMembers && currentMemberCount >= team.maxMembers;
-  const isPrivate = team.visibility === "private";
+  const isClosed = team.joinPolicy === "closed";
   const hasPendingRequest = joinRequest?.status === "pending";
 
   const form = useAppForm({
@@ -108,11 +108,11 @@ export function JoinTeamFormButton({
     );
   }
 
-  // Private teams can't be joined via request
-  if (isPrivate) {
+  // Closed teams can't be joined via request
+  if (isClosed) {
     return (
       <Button variant="outline" disabled>
-        Private Team
+        Closed
       </Button>
     );
   }

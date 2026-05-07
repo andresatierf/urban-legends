@@ -52,8 +52,7 @@ export function TeamCard({
 
   const isFull = team.maxMembers && memberCount >= team.maxMembers;
 
-  const showRoster =
-    team.visibility === "public" && members && members.length > 0;
+  const showRoster = members && members.length > 0;
 
   const sortedMembers = showRoster
     ? [...members].sort((a, b) =>
@@ -71,9 +70,9 @@ export function TeamCard({
           <div className="flex items-center gap-2">
             <CardTitle>{team.name}</CardTitle>
             <Badge
-              variant={team.visibility === "public" ? "default" : "secondary"}
+              variant={team.joinPolicy === "open" ? "default" : "secondary"}
             >
-              {team.visibility}
+              {team.joinPolicy === "open" ? "Open" : "Closed"}
             </Badge>
             {isFull && <Badge variant="destructive">Full</Badge>}
           </div>
