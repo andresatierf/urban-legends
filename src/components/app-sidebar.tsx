@@ -5,16 +5,13 @@ import type { FunctionReference } from "convex/server";
 import {
   Activity,
   BarChart3,
-  Briefcase,
   Calendar,
-  CheckSquare,
   ClipboardList,
   Code2,
   FileCheck,
   FileText,
   Layers,
   LayoutDashboard,
-  LineChart,
   type LucideIcon,
   PlusCircle,
   Shield,
@@ -45,7 +42,6 @@ import { useActiveRoute } from "@/hooks/useActiveRoute";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../convex/_generated/api";
 import { InviteMemberFormDialog } from "./form/invite-member-form";
-import { UpsertTournamentFormDialog } from "./form/upsert-tournament-form";
 import { LoggedUserCard } from "./logged-user-card";
 import { useSubmissionDialog } from "./submission-dialog-context";
 
@@ -68,7 +64,6 @@ type SidebarItem = {
 function useSidebarItems(
   openSubmissionDialog: () => void,
   setInviteMemberDialogOpen: (state: boolean) => void,
-  setCreateTournamentDialogOpen: (state: boolean) => void,
 ) {
   const t = useTranslations("sidebar.items");
   const tTooltip = useTranslations("sidebar.tooltip");
@@ -172,18 +167,6 @@ function useSidebarItems(
         roles: ["tournament_manager", "admin"], // Admins also have manager access
         items: [
           {
-            title: t("tournamentManager.dashboard"),
-            href: "/tournament-manager",
-            icon: Briefcase,
-            exact: true,
-          },
-          {
-            title: t("tournamentManager.tournaments"),
-            href: "/tournament-manager/tournaments",
-            icon: Calendar,
-            condition: () => false,
-          },
-          {
             title: t("tournamentManager.submissions"),
             href: "/manage/submissions",
             icon: Calendar,
@@ -192,29 +175,6 @@ function useSidebarItems(
               color: "secondary",
               tooltip: tTooltip("pendingSubmissions"),
             },
-          },
-          {
-            title: t("tournamentManager.approvals"),
-            href: "/tournament-manager/approvals",
-            icon: CheckSquare,
-            badge: {
-              query: api.role.tournamentManager.getPendingCount,
-              color: "secondary",
-              tooltip: tTooltip("pendingSubmissions"),
-            },
-            condition: () => false,
-          },
-          {
-            title: t("tournamentManager.analytics"),
-            href: "/tournament-manager/analytics",
-            icon: LineChart,
-            condition: () => false,
-          },
-          {
-            title: t("tournamentManager.createTournament"),
-            onClick: () => setCreateTournamentDialogOpen(true),
-            icon: PlusCircle,
-            condition: () => false,
           },
         ],
       },
@@ -303,13 +263,7 @@ function useSidebarItems(
         ],
       },
     ],
-    [
-      t,
-      tTooltip,
-      openSubmissionDialog,
-      setInviteMemberDialogOpen,
-      setCreateTournamentDialogOpen,
-    ],
+    [t, tTooltip, openSubmissionDialog, setInviteMemberDialogOpen],
   );
 
   return { items: sidebar };
@@ -321,8 +275,6 @@ export function AppSidebar() {
   const { openSubmissionDialog } = useSubmissionDialog();
 
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
-  const [createTournamentDialogOpen, setCreateTournamentDialogOpen] =
-    useState(false);
 
   // Get captain teams count for conditional rendering
   const captainedTeamsCount = useQuery(api.captain.getCaptainedTeamsCount) ?? 0;
@@ -330,7 +282,6 @@ export function AppSidebar() {
   const { items: sidebarItems } = useSidebarItems(
     openSubmissionDialog,
     setInviteMemberDialogOpen,
-    setCreateTournamentDialogOpen,
   );
 
   const context = { captainedTeamsCount };
@@ -343,16 +294,10 @@ export function AppSidebar() {
           renderItem(item, user, user?.roleNames || [], context, isActive),
         )}
         {user && (
-          <>
-            <InviteMemberFormDialog
-              open={inviteMemberDialogOpen}
-              onOpenChange={setInviteMemberDialogOpen}
-            />
-            <UpsertTournamentFormDialog
-              open={createTournamentDialogOpen}
-              onOpenChange={setCreateTournamentDialogOpen}
-            />
-          </>
+          <InviteMemberFormDialog
+            open={inviteMemberDialogOpen}
+            onOpenChange={setInviteMemberDialogOpen}
+          />
         )}
       </SidebarContent>
       <SidebarSeparator />

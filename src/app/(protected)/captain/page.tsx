@@ -1,14 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import {
-  CheckCircle,
-  Loader2,
-  Shield,
-  Trophy,
-  Users,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle, Loader2, Shield, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -22,7 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CardGrid } from "@/components/ui/card-grid";
 import { tryMutate } from "@/lib/utils";
 import { api } from "../../../../convex/_generated/api";
 
@@ -59,7 +51,7 @@ export default function CaptainDashboard() {
     );
   }
 
-  const { teams, joinRequests, invitations } = dashboardData;
+  const { joinRequests, invitations } = dashboardData;
 
   const handleApproveRequest = async (requestId: Id<"joinRequests">) => {
     setProcessingId(requestId);
@@ -96,47 +88,9 @@ export default function CaptainDashboard() {
       <SectionHeader
         as="h1"
         title="Team Captain Dashboard"
-        description={`Manage your ${teams.length} ${teams.length === 1 ? "team" : "teams"}`}
+        description="Manage your team roster and pending requests"
         Icon={Shield}
       />
-
-      <SectionHeader title="Your Teams" />
-      <CardGrid
-        data={teams}
-        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
-      >
-        {(teamData) => (
-          <Card key={teamData.team._id}>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>{teamData.team.name}</span>
-                <Link href={`/teams/${teamData.team._id}`}>
-                  <Button size="sm" variant="ghost">
-                    Manage
-                  </Button>
-                </Link>
-              </CardTitle>
-              <CardDescription>
-                {teamData.tournament?.name || "Unknown Tournament"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Trophy className="h-4 w-4 text-muted-foreground" />
-                <span>{teamData.points} points</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span>{teamData.membersCount} members</span>
-              </div>
-              <div className="text-muted-foreground text-sm">
-                {teamData.approvedCount}/{teamData.submissionsCount} submissions
-                approved
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </CardGrid>
 
       {(joinRequests.length > 0 || invitations.length > 0) && (
         <>
@@ -250,10 +204,7 @@ export default function CaptainDashboard() {
         </CardHeader>
         <CardContent className="flex gap-2">
           <Link href="/captain/comparison">
-            <Button variant="outline">
-              <Trophy className="mr-2 h-4 w-4" />
-              Compare Teams
-            </Button>
+            <Button variant="outline">Compare Teams</Button>
           </Link>
         </CardContent>
       </Card>

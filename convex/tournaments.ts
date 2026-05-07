@@ -7,6 +7,7 @@ import {
   canEditTournament,
   canInviteToTeam,
   computeTournamentPermissions,
+  isGlobalAdminOrDev,
   onTournamentCreated,
 } from "./authority/core";
 import { nowUTC, toUTCDateString, toUTCEndOfDayString } from "./lib/dates";
@@ -640,6 +641,195 @@ export const getStatistics = query({
         : null,
       highestScoringDay,
       participationRate,
+    };
+  },
+});
+
+// ── listWithAuthority ────────────────────────────────────────────────────────
+
+type AuthorityInfo = {
+  canManage: boolean;
+  canReview: boolean;
+  pendingReviewCount: number;
+  team?: {
+    _id: Id<"teams">;
+    name: string;
+    points: number;
+    isCaptain: boolean;
+    approvedSubmissions: number;
+    totalSubmissions: number;
+  };
+};
+
+export type TournamentWithAuthority = Doc<"tournaments"> & {
+  teamCount: number;
+  authority: AuthorityInfo;
+};
+
+function sortTournamentsByStatus<
+  T extends { startDate: string; endDate: string },
+>(list: T[], nowIso: string): T[] {
+  const statusRank = (t: T): number => {
+    if (t.startDate <= nowIso && t.endDate >= nowIso) return 0; // active
+    if (t.startDate > nowIso) return 1; // upcoming
+    return 2; // ended
+  };
+  return [...list].sort((a, b) => {
+    const ra = statusRank(a);
+    const rb = statusRank(b);
+    if (ra !== rb) return ra - rb;
+    // Ended tournaments: most recently ended first
+    if (ra === 2) return b.endDate.localeCompare(a.endDate);
+    // Active + upcoming: soonest start first
+    return a.startDate.localeCompare(b.startDate);
+  });
+}
+
+export const listWithAuthority = query({
+  args: {
+    includeEnded: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    const includeEnded = args.includeEnded ?? false;
+
+    const isAdminDev = await isGlobalAdminOrDev(ctx, user._id);
+
+    // Batch-load all tournament roles for this user
+    const userTournamentRoles = await ctx.db
+      .query("tournamentRoles")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    // Map: tournamentId → roles[]
+    const tournamentRoleMap = new Map<
+      Id<"tournaments">,
+      Array<"tournament_manager" | "reviewer">
+    >();
+    for (const tr of userTournamentRoles) {
+      const existing = tournamentRoleMap.get(tr.tournamentId) ?? [];
+      tournamentRoleMap.set(tr.tournamentId, [...existing, tr.role]);
+    }
+
+    // Batch-load user's team memberships, then resolve the team docs
+    const userTeamMembers = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    const userTeams = (
+      await Promise.all(
+        userTeamMembers.map(async (tm) => {
+          const team = await ctx.db.get(tm.teamId);
+          return team ? { team, membership: tm } : null;
+        }),
+      )
+    ).filter(
+      (t): t is { team: Doc<"teams">; membership: Doc<"teamMembers"> } =>
+        t !== null,
+    );
+
+    // Map: tournamentId → { team, membership } (one team per tournament per user)
+    const teamByTournamentId = new Map<
+      Id<"tournaments">,
+      { team: Doc<"teams">; membership: Doc<"teamMembers"> }
+    >();
+    for (const { team, membership } of userTeams) {
+      teamByTournamentId.set(team.tournamentId, { team, membership });
+    }
+
+    const nowIso = nowUTC();
+    let allTournaments = await ctx.db.query("tournaments").collect();
+    if (!includeEnded) {
+      allTournaments = allTournaments.filter((t) => t.endDate >= nowIso);
+    }
+
+    // Batch-load team counts to avoid N+1 queries
+    const allTeams = await ctx.db.query("teams").collect();
+    const teamCountMap = new Map<Id<"tournaments">, number>();
+    for (const team of allTeams) {
+      teamCountMap.set(
+        team.tournamentId,
+        (teamCountMap.get(team.tournamentId) ?? 0) + 1,
+      );
+    }
+
+    const yours: TournamentWithAuthority[] = [];
+    const discover: TournamentWithAuthority[] = [];
+
+    for (const tournament of allTournaments) {
+      const tournamentRoles = tournamentRoleMap.get(tournament._id) ?? [];
+      const userTeamData = teamByTournamentId.get(tournament._id);
+
+      // Authority derived from system roles, tournament roles, and team membership
+      const canManage =
+        isAdminDev || tournamentRoles.includes("tournament_manager");
+      const canReview =
+        isAdminDev ||
+        tournamentRoles.includes("reviewer") ||
+        tournamentRoles.includes("tournament_manager");
+
+      let pendingReviewCount = 0;
+      if (canReview) {
+        const pendingRows = await ctx.db
+          .query("submissions")
+          .withIndex("by_tournament_and_date", (q) =>
+            q.eq("tournamentId", tournament._id),
+          )
+          .filter((q) => q.eq(q.field("state"), "pending"))
+          .collect();
+        pendingReviewCount = pendingRows.length;
+      }
+
+      let team: AuthorityInfo["team"];
+      if (userTeamData) {
+        const { team: teamDoc, membership } = userTeamData;
+        const teamSubmissions = await ctx.db
+          .query("submissions")
+          .withIndex("by_team", (q) => q.eq("teamId", teamDoc._id))
+          .collect();
+        const approvedCount = teamSubmissions.filter(
+          (s) => s.state === "approved",
+        ).length;
+        team = {
+          _id: teamDoc._id,
+          name: teamDoc.name,
+          points: teamDoc.points,
+          isCaptain: membership.role === "captain",
+          approvedSubmissions: approvedCount,
+          totalSubmissions: teamSubmissions.length,
+        };
+      }
+
+      const authority: AuthorityInfo = {
+        canManage,
+        canReview,
+        pendingReviewCount,
+        team,
+      };
+
+      // Partition rule: direct relationship = tournamentRoles row OR teamMembership.
+      // System role override does NOT place a tournament in Yours.
+      const hasDirectRelationship =
+        tournamentRoles.length > 0 || !!userTeamData;
+
+      const teamCount = teamCountMap.get(tournament._id) ?? 0;
+      const item: TournamentWithAuthority = {
+        ...tournament,
+        teamCount,
+        authority,
+      };
+
+      if (hasDirectRelationship) {
+        yours.push(item);
+      } else {
+        discover.push(item);
+      }
+    }
+
+    return {
+      yours: sortTournamentsByStatus(yours, nowIso),
+      discover: sortTournamentsByStatus(discover, nowIso),
     };
   },
 });

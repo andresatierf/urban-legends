@@ -1,83 +1,95 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { useMemo } from "react";
+import { useState } from "react";
 import { UpsertTournamentFormDialog } from "@/components/form/upsert-tournament-form";
 import { SectionHeader } from "@/components/section-header";
-import { JoinTournamentCard } from "@/components/tournaments/join-tournament-card";
 import {
-  TournamentCard,
-  TournamentCardSkeleton,
-} from "@/components/tournaments/tournament-card";
+  TournamentWithAuthorityCard,
+  TournamentWithAuthorityCardSkeleton,
+} from "@/components/tournaments/tournament-with-authority-card";
+import { Button } from "@/components/ui/button";
 import { CardGrid } from "@/components/ui/card-grid";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../../../convex/_generated/api";
-import type { Id } from "../../../../convex/_generated/dataModel";
 
 export default function TournamentsPage() {
-  const { user, canCreateTournament: canCreate } = useUser();
+  const { canCreateTournament: canCreate } = useUser();
+  const [includeEnded, setIncludeEnded] = useState(false);
 
-  const userTournamentsRaw = useQuery(api.tournaments.list, {
-    userId: user?._id,
-  });
-  const allTournamentsRaw = useQuery(api.tournaments.list, {});
+  const data = useQuery(api.tournaments.listWithAuthority, { includeEnded });
 
-  const userTournaments = userTournamentsRaw || [];
-  const allTournaments = allTournamentsRaw || [];
-
-  const teams = useQuery(api.teams.list, {}) || [];
-  const teamCount = useMemo(() => {
-    return teams.reduce<Map<Id<"tournaments">, number>>((acc, team) => {
-      if (!acc.has(team.tournamentId)) acc.set(team.tournamentId, 0);
-      acc.set(team.tournamentId, (acc.get(team.tournamentId) ?? 0) + 1);
-      return acc;
-    }, new Map());
-  }, [teams]);
-
-  if (userTournamentsRaw === undefined) {
+  if (data === undefined) {
     return (
       <>
         <SectionHeader as="h1" title="Tournaments">
           {canCreate && <UpsertTournamentFormDialog />}
         </SectionHeader>
         <CardGrid data={Array.from({ length: 6 })}>
-          {(_, i) => <TournamentCardSkeleton key={i} />}
+          {(_, i) => <TournamentWithAuthorityCardSkeleton key={i} />}
         </CardGrid>
       </>
     );
   }
 
+  const { yours, discover } = data;
+  const hasYours = yours.length > 0;
+  const hasDiscover = discover.length > 0;
+  const isEmpty = !hasYours && !hasDiscover;
+
   return (
     <>
       <SectionHeader as="h1" title="Tournaments">
-        {canCreate && <UpsertTournamentFormDialog />}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIncludeEnded((v) => !v)}
+          >
+            {includeEnded ? "Hide past tournaments" : "Show past tournaments"}
+          </Button>
+          {canCreate && <UpsertTournamentFormDialog />}
+        </div>
       </SectionHeader>
 
-      {allTournaments && allTournaments.length !== 0 && (
+      {isEmpty && (
+        <div className="rounded-lg border border-dashed p-12 text-center">
+          <p className="text-muted-foreground">No tournaments yet</p>
+          {canCreate && (
+            <div className="mt-4">
+              <UpsertTournamentFormDialog />
+            </div>
+          )}
+        </div>
+      )}
+
+      {hasYours && (
         <>
-          <SectionHeader title="Your Tournaments" />
-          <CardGrid data={userTournaments} empty={<JoinTournamentCard />}>
+          {hasDiscover && <SectionHeader title="Your Tournaments" />}
+          <CardGrid data={yours}>
             {(tournament) => (
-              <TournamentCard
+              <TournamentWithAuthorityCard
                 key={tournament._id}
                 tournament={tournament}
-                teamCount={teamCount.get(tournament?._id) ?? 0}
               />
             )}
           </CardGrid>
         </>
       )}
 
-      <SectionHeader title="All Tournaments" />
-      <CardGrid data={allTournaments} empty=<JoinTournamentCard first />>
-        {(tournament) => (
-          <TournamentCard
-            key={tournament._id}
-            tournament={tournament}
-            teamCount={teamCount.get(tournament._id) ?? 0}
-          />
-        )}
-      </CardGrid>
+      {hasDiscover && (
+        <>
+          {hasYours && <SectionHeader title="Discover Tournaments" />}
+          <CardGrid data={discover}>
+            {(tournament) => (
+              <TournamentWithAuthorityCard
+                key={tournament._id}
+                tournament={tournament}
+              />
+            )}
+          </CardGrid>
+        </>
+      )}
     </>
   );
 }
