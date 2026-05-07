@@ -1,6 +1,7 @@
 "use client";
 
 import { cva } from "class-variance-authority";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { toUTCDateString } from "../../../convex/lib/dates";
@@ -54,6 +55,8 @@ interface CalendarDateCellProps {
     state: "pending" | "approved" | "rejected" | "deleted";
     description?: string;
     pointsEarned?: number;
+    thumbnailUrl?: string | null;
+    evidenceCount?: number;
   };
   isToday: boolean;
   isDisabled: boolean;
@@ -128,7 +131,7 @@ export function CalendarDateCell({
       onClick={handleClick}
       disabled={isDisabled || isOutsideTournament}
       className={cn(
-        "flex h-16 w-full flex-col items-center justify-center rounded-md p-2 text-center font-medium text-sm",
+        "relative flex h-16 w-full flex-col items-center justify-center rounded-md p-2 text-center font-medium text-sm",
         cellStyles({
           isToday,
           isDisabled,
@@ -141,6 +144,22 @@ export function CalendarDateCell({
       aria-pressed={!!submission}
       tabIndex={isDisabled || isOutsideTournament ? -1 : 0}
     >
+      {submission?.thumbnailUrl && (
+        <div className="absolute top-1 right-1 h-5 w-5 overflow-hidden rounded-sm">
+          <Image
+            src={submission.thumbnailUrl}
+            alt=""
+            fill
+            sizes="20px"
+            className="object-cover"
+          />
+          {(submission.evidenceCount ?? 0) > 1 && (
+            <span className="absolute inset-0 flex items-center justify-center rounded-sm bg-black/60 font-bold text-[8px] text-white">
+              +{(submission.evidenceCount ?? 0) - 1}
+            </span>
+          )}
+        </div>
+      )}
       <div className="flex items-center gap-1">
         <span className="font-semibold">{dayNumber}</span>
         {getStateIndicator()}

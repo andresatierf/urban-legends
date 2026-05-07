@@ -10,6 +10,8 @@ interface SubmissionCardListProps {
     Doc<"submissions"> & {
       team: Doc<"teams">;
       user: Doc<"users">;
+      thumbnailUrl?: string | null;
+      evidenceCount?: number;
     }
   >;
   currentUser: UserWithRoles;
@@ -41,7 +43,8 @@ export function SubmissionCardList({
         <SubmissionCard
           key={submission._id}
           submission={submission}
-          images={[]}
+          thumbnailUrl={submission.thumbnailUrl}
+          evidenceCount={submission.evidenceCount}
           currentUser={currentUser}
           onApprove={onApprove ? () => onApprove(submission._id) : undefined}
           onReject={onReject ? () => onReject(submission._id) : undefined}

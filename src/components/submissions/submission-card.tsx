@@ -1,22 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import type { Doc } from "@/../convex/_generated/dataModel";
 import type { UserWithRoles } from "@/../convex/users";
 import { useUser } from "@/hooks/useUser";
 import { SubmissionCardActions } from "./submission-card-actions";
 import { SubmissionCardDetails } from "./submission-card-details";
-import { SubmissionCardImage } from "./submission-card-image";
 
 interface SubmissionCardProps {
   submission: Doc<"submissions"> & {
     team: Doc<"teams">;
     user: Doc<"users">;
   };
-  images: Array<{
-    _id: string;
-    url: string;
-    filename: string;
-  }>;
+  thumbnailUrl?: string | null;
+  evidenceCount?: number;
   currentUser: UserWithRoles;
   onApprove?: () => void;
   onReject?: () => void;
@@ -26,7 +23,8 @@ interface SubmissionCardProps {
 
 export function SubmissionCard({
   submission,
-  images,
+  thumbnailUrl,
+  evidenceCount = 0,
   currentUser,
   onApprove,
   onReject,
@@ -38,9 +36,22 @@ export function SubmissionCard({
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-shadow hover:shadow-md md:flex-row">
-      <div className="w-full shrink-0 md:w-64">
-        <SubmissionCardImage images={images} />
-      </div>
+      {thumbnailUrl && (
+        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md">
+          <Image
+            src={thumbnailUrl}
+            alt="Evidence thumbnail"
+            fill
+            className="object-cover"
+            sizes="64px"
+          />
+          {evidenceCount > 1 && (
+            <span className="absolute right-0 bottom-0 rounded-tl bg-black/70 px-1 font-bold text-[10px] text-white">
+              +{evidenceCount - 1}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-1 flex-col gap-4">
         <SubmissionCardDetails

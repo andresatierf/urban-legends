@@ -104,7 +104,17 @@ export const list = query({
 
     const submissions = await query.collect();
 
-    return submissions.toSorted((a, b) => {
+    const withThumbnails = await Promise.all(
+      submissions.map(async (sub) => {
+        const storageIds = sub.evidenceStorageIds ?? [];
+        const thumbnailUrl = storageIds[0]
+          ? await ctx.storage.getUrl(storageIds[0])
+          : null;
+        return { ...sub, thumbnailUrl, evidenceCount: storageIds.length };
+      }),
+    );
+
+    return withThumbnails.toSorted((a, b) => {
       if (a.date === b.date) return 0;
       return a.date.localeCompare(b.date);
     });
@@ -521,29 +531,39 @@ export const getMonthSubmissions = query({
       )
       .collect();
 
-    return submissions.reduce(
-      (acc, sub) => {
+    const result: Record<
+      string,
+      {
+        _id: Id<"submissions">;
+        state: "pending" | "approved" | "rejected" | "deleted";
+        description: string | undefined;
+        pointsEarned: number;
+        userId: Id<"users">;
+        thumbnailUrl: string | null;
+        evidenceCount: number;
+      }
+    > = {};
+
+    await Promise.all(
+      submissions.map(async (sub) => {
         const dateKey = extractDateFromISO(sub.date);
-        acc[dateKey] = {
+        const storageIds = sub.evidenceStorageIds ?? [];
+        const thumbnailUrl = storageIds[0]
+          ? await ctx.storage.getUrl(storageIds[0])
+          : null;
+        result[dateKey] = {
           _id: sub._id,
           state: sub.state,
           description: sub.description,
           pointsEarned: sub.pointsEarned || 0,
           userId: sub.userId,
+          thumbnailUrl,
+          evidenceCount: storageIds.length,
         };
-        return acc;
-      },
-      {} as Record<
-        string,
-        {
-          _id: Id<"submissions">;
-          state: "pending" | "approved" | "rejected" | "deleted";
-          description: string | undefined;
-          pointsEarned: number;
-          userId: Id<"users">;
-        }
-      >,
+      }),
     );
+
+    return result;
   },
 });
 
