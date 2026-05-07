@@ -1,11 +1,9 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { Calendar, Palette } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { SectionHeader } from "@/components/section-header";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -102,44 +100,12 @@ export default function SettingsPage() {
   return (
     <>
       <SectionHeader as="h1" title="Settings">
-        <ThemeSwitcher />
         <Button variant="outline" onClick={() => signOut()}>
           Sign out
         </Button>
       </SectionHeader>
 
       <div className="space-y-8">
-        <section>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-semibold text-lg">
-                <Palette className="h-5 w-5 text-muted-foreground" />
-                Theme Preferences
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex-1">
-                  <div className="block font-medium text-sm">Color scheme</div>
-                  <p className="mt-1 text-muted-foreground text-sm">
-                    Choose how the site looks to you
-                  </p>
-                </div>
-                <ThemeToggle />
-              </div>
-              <Card variant="info" className="rounded-md">
-                <CardContent>
-                  <p className="text-sm">
-                    <strong>Note:</strong> Your theme preference is saved
-                    locally and will persist across sessions. System mode
-                    automatically adjusts based on your device settings.
-                  </p>
-                </CardContent>
-              </Card>
-            </CardContent>
-          </Card>
-        </section>
-
         <section>
           <Card>
             <CardHeader>
@@ -304,7 +270,7 @@ export default function SettingsPage() {
                 </Select>
               </div>
 
-              <Card variant="info" className="rounded-md">
+              <Card className="rounded-md">
                 <CardContent>
                   <p className="text-sm">
                     <strong>Note:</strong> Short formats use compact numeric

@@ -14,7 +14,7 @@ interface ActionButton {
   action: "accept" | "reject" | "view" | "dismiss";
   mutationName?: string;
   args?: Record<string, unknown>;
-  variant?: "solid" | "outline" | "ghost" | "link";
+  variant?: "default" | "outline" | "ghost" | "link";
 }
 
 interface NotificationActionsProps {
@@ -131,12 +131,12 @@ export function NotificationActions({
 
 function getActionVariant(
   action: string,
-): "solid" | "outline" | "ghost" | "link" {
+): "default" | "outline" | "ghost" | "link" {
   switch (action) {
     case "accept":
-      return "solid";
+      return "default";
     case "reject":
-      return "solid";
+      return "default";
     case "view":
       return "outline";
     case "dismiss":

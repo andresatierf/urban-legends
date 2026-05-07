@@ -7,6 +7,7 @@ import { AppSidebar } from "./app-sidebar";
 import { FloatingSidebarActions } from "./floating-sidebar-actions";
 import { NotificationDropdown } from "./notifications/notification-dropdown";
 import { SubmissionDialogProvider } from "./submission-dialog-context";
+import { ThemeSwitcher } from "./theme-switcher";
 import { SidebarProvider } from "./ui/sidebar";
 
 export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -18,11 +19,12 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
       <SidebarProvider>
         <AppSidebar />
         <FloatingSidebarActions />
-        {user && (
-          <div className="pointer-events-auto fixed top-2 right-2 z-50">
+        <div className="pointer-events-auto fixed top-2 right-2 z-50 flex items-center gap-1">
+          <ThemeSwitcher />
+          {user && (
             <NotificationDropdown userId={user._id} unreadCount={unreadCount} />
-          </div>
-        )}
+          )}
+        </div>
         <div className="flex min-h-screen w-full flex-col items-center bg-muted/30">
           <main className="mt-8 flex w-full max-w-5xl flex-1 flex-col gap-4 p-4">
             {children}
