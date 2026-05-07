@@ -3,7 +3,12 @@
 import { useQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import { Badge } from "./badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./tooltip";
 
 interface SidebarBadgeProps {
   query: FunctionReference<"query">;
@@ -34,9 +39,11 @@ export function SidebarBadge({
   if (!tooltip) return InnerBadge;
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{InnerBadge}</TooltipTrigger>
-      <TooltipContent>{tooltip}</TooltipContent>
-    </Tooltip>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>{InnerBadge}</TooltipTrigger>
+        <TooltipContent>{tooltip}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
