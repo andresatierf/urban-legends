@@ -23,7 +23,7 @@ export function ThemeSwitcher() {
           <CurrentIcon className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-auto min-w-44">
         {(
           Object.entries(THEME_OPTIONS) as [
             keyof typeof THEME_OPTIONS,
