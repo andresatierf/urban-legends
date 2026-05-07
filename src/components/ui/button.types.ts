@@ -26,17 +26,8 @@ export const BUTTON_SIZES = {
   ICON_LG: "icon-lg",
 } as const;
 
-export const BUTTON_SHAPES = {
-  DEFAULT: "default",
-  ROUNDED: "rounded",
-  SQUARED: "squared",
-  PILL: "pill",
-} as const;
-
 export type ButtonVariantValues =
   (typeof BUTTON_VARIANTS)[keyof typeof BUTTON_VARIANTS];
 export type ButtonColorValues =
   (typeof BUTTON_COLORS)[keyof typeof BUTTON_COLORS];
 export type ButtonSizeValues = (typeof BUTTON_SIZES)[keyof typeof BUTTON_SIZES];
-export type ButtonShapeValues =
-  (typeof BUTTON_SHAPES)[keyof typeof BUTTON_SHAPES];
