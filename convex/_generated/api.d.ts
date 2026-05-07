@@ -19,6 +19,7 @@ import type * as captain from "../captain.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as data from "../data.js";
+import type * as evidenceStorage from "../evidenceStorage.js";
 import type * as http from "../http.js";
 import type * as joinRequests from "../joinRequests.js";
 import type * as lib_dates from "../lib/dates.js";
@@ -58,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   dashboard: typeof dashboard;
   data: typeof data;
+  evidenceStorage: typeof evidenceStorage;
   http: typeof http;
   joinRequests: typeof joinRequests;
   "lib/dates": typeof lib_dates;

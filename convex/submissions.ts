@@ -135,6 +135,7 @@ export const upsert = mutation({
     description: v.optional(v.string()),
     tier: v.optional(v.union(v.literal("base"), v.literal("advanced"))),
     submissionType: v.union(v.literal("individual"), v.literal("team")),
+    evidenceStorageIds: v.optional(v.array(v.id("_storage"))),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -187,6 +188,7 @@ export const upsert = mutation({
         type: args.submissionType,
         tier: args.tier,
         description: args.description,
+        evidenceStorageIds: args.evidenceStorageIds,
       });
     }
 
@@ -335,6 +337,21 @@ export const getDetails = query({
       threshold: tournament.scoringConfig.teamExerciseThreshold,
     });
 
+    const evidenceResolved = await Promise.all(
+      (submission.evidenceStorageIds ?? []).map(async (storageId, idx) => {
+        const url = await ctx.storage.getUrl(storageId);
+        if (!url) return null;
+        return {
+          _id: storageId as string,
+          url,
+          filename: `evidence-${idx + 1}.jpg`,
+        };
+      }),
+    );
+    const evidence = evidenceResolved.filter(
+      (e): e is NonNullable<typeof e> => e !== null,
+    );
+
     return {
       submission,
       team,
@@ -343,6 +360,7 @@ export const getDetails = query({
       teammates,
       managedByUser,
       isTeamExercise,
+      evidence,
       canEdit: permissions.canEdit,
       canApprove: permissions.canApprove,
       canReject: permissions.canReject,

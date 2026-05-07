@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
 import { z } from "zod";
+import { EvidenceUploader } from "@/components/submissions/evidence-uploader";
 import { Button } from "@/components/ui/button";
 import { useAppForm } from "@/hooks/form";
 import { useUser } from "@/hooks/useUser";
@@ -55,6 +56,8 @@ export function UpsertSubmissionFormDialog({
   const formId = useId();
   const router = useRouter();
   const [internalOpen, setInternalOpen] = useState(false);
+  const [evidenceStorageId, setEvidenceStorageId] =
+    useState<Id<"_storage"> | null>(null);
 
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
@@ -82,11 +85,20 @@ export function UpsertSubmissionFormDialog({
     },
     onSubmit: async ({ value }) => {
       await tryMutate({
-        fn: () => upsertSubmission({ ...value, _id: submission?._id }),
+        fn: () =>
+          upsertSubmission({
+            ...value,
+            _id: submission?._id,
+            evidenceStorageIds:
+              !submission && evidenceStorageId
+                ? [evidenceStorageId]
+                : undefined,
+          }),
         onSuccess: () => {
           router.push("/submissions");
           setOpen(false);
           form.reset();
+          setEvidenceStorageId(null);
         },
         successToast: `Submission ${submission ? "updated" : "created"} successfully!`,
         defaultFailureToast: `Failed to ${submission ? "update" : "create"} submission`,
@@ -100,6 +112,7 @@ export function UpsertSubmissionFormDialog({
       onOpenChange={(newOpen) => {
         setOpen(newOpen);
         form.reset();
+        setEvidenceStorageId(null);
       }}
     >
       <form
@@ -184,6 +197,12 @@ export function UpsertSubmissionFormDialog({
                 />
               )}
             </form.AppField>
+            {!submission && (
+              <EvidenceUploader
+                currentStorageId={evidenceStorageId}
+                onStorageIdChange={setEvidenceStorageId}
+              />
+            )}
           </FieldGroup>
 
           <form.Subscribe

@@ -24,6 +24,10 @@ _Avoid_: Team leader, team admin (the latter conflicts with the system **Admin**
 **Submission**:
 An activity entry made by a **User** for their **Team** on a given date, in one of `pending`, `approved`, `rejected`, `deleted` states. May be `individual` or `team` typed.
 
+**Evidence**:
+An image file attached to a **Submission**, required (1–5 per Submission) for review. Stored in Convex storage; re-encoded client-side before upload to drop EXIF metadata as a side effect of the canvas round-trip.
+_Avoid_: photo, attachment, proof.
+
 **SubmissionGroup**:
 The aggregation of all **Submissions** by one **Team** on one date — used to compute team-exercise rollups.
 

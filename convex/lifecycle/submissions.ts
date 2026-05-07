@@ -1,5 +1,6 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import { claimUploads } from "../evidenceStorage";
 import { nowUTC, toUTCDateString } from "../lib/dates";
 
 export class IllegalTransition extends Error {
@@ -222,6 +223,7 @@ export async function submit(
     type: "individual" | "team";
     tier?: "base" | "advanced";
     description?: string;
+    evidenceStorageIds?: Id<"_storage">[];
   },
 ): Promise<Id<"submissions">> {
   const team = await ctx.db.get(args.teamId);
@@ -296,7 +298,13 @@ export async function submit(
     createdBy: args.userId,
     pointsEarned: 0,
     submissionGroupId: undefined,
+    evidenceStorageIds: args.evidenceStorageIds ?? [],
   });
+
+  const evidenceIds = args.evidenceStorageIds ?? [];
+  if (evidenceIds.length > 0) {
+    await claimUploads(ctx, args.userId, evidenceIds);
+  }
 
   if (args.type === "team") {
     await joinOrCreateGroup(ctx, {

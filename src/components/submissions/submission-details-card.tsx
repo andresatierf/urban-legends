@@ -14,6 +14,7 @@ import { api } from "../../../convex/_generated/api";
 import { UpsertSubmissionFormDialog } from "../form/upsert-submission-form";
 import { Button } from "../ui/button";
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
+import { SubmissionImageGallery } from "./display/submission-image-gallery";
 
 interface SubmissionDetailsCardProps {
   data?: FunctionReturnType<typeof api.submissions.getDetails>;
@@ -221,6 +222,11 @@ export function SubmissionDetailsCard({
         onOpenChange={setEditDialogOpen}
         submission={data.submission}
       />
+      {data.evidence.length > 0 && (
+        <div className="mb-4">
+          <SubmissionImageGallery images={data.evidence} layout="grid" />
+        </div>
+      )}
       <DetailsCard
         title={format(data.submission.date, "full")}
         description={data.submission.description || "No description provided."}

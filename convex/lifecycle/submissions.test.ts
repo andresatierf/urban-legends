@@ -1,5 +1,6 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
+import type { Id } from "../_generated/dataModel";
 import schema from "../schema";
 import { assertSubmissionInvariant } from "./invariants.test";
 import {
@@ -343,6 +344,44 @@ describe("submit", () => {
     ).rejects.toThrow(
       "You have already submitted for this team activity today",
     );
+  });
+
+  test("submit with evidenceStorageIds stores the IDs and claims the pending row", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    // schemaValidation is disabled — use a fake storage ID cast to the expected type
+    const storageId = "fake_storage_evidence_1" as unknown as Id<"_storage">;
+
+    // Pre-insert a pendingUploads row so claimUploads can find and delete it
+    await t.run(async (ctx) => {
+      await ctx.db.insert("pendingUploads", {
+        storageId,
+        userId,
+        createdAt: new Date().toISOString(),
+      });
+    });
+
+    const submissionId = await t.run(async (ctx) => {
+      return submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-20",
+        type: "individual",
+        evidenceStorageIds: [storageId],
+      });
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.evidenceStorageIds).toEqual([storageId]);
+
+      // pendingUploads row was claimed (deleted)
+      const pending = await ctx.db.query("pendingUploads").collect();
+      expect(pending).toHaveLength(0);
+
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
   });
 });
 

@@ -93,6 +93,7 @@ export default defineSchema({
     tier: v.union(v.literal("base"), v.literal("advanced")),
     pointsEarned: v.number(),
     submissionGroupId: v.optional(v.id("submissionGroups")),
+    evidenceStorageIds: v.optional(v.array(v.id("_storage"))),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_date", ["userId", "date"])
@@ -163,6 +164,14 @@ export default defineSchema({
     .index("by_team_and_user_and_status", ["teamId", "userId", "status"])
     .index("by_user_and_status", ["userId", "status"])
     .index("by_createdBy_and_status", ["createdBy", "status"]),
+
+  pendingUploads: defineTable({
+    storageId: v.id("_storage"),
+    userId: v.id("users"),
+    createdAt: v.string(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_createdAt", ["createdAt"]),
 
   notifications: defineTable({
     userId: v.id("users"),
