@@ -17,7 +17,7 @@ export function SectionHeader({
   children,
 }: Props) {
   return (
-    <div className="flex items-start justify-between">
+    <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
         {Icon && (
           <Icon
