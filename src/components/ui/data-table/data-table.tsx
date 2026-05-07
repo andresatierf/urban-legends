@@ -123,12 +123,12 @@ export function DataTable<TData, TValue>({
       )}
       <Card className="overflow-hidden">
         <Table className="w-full border-collapse text-left">
-          <TableCaption className="m-0 flex-1 bg-gray-50 py-2 text-muted-foreground text-sm">
+          <TableCaption className="m-0 flex-1 bg-muted py-2 text-muted-foreground text-sm">
             {table.options.enableRowSelection
               ? `${table.getFilteredSelectedRowModel().rows.length} of ${table.getFilteredRowModel().rows.length} row(s) selected`
               : `${data.length} rows`}
           </TableCaption>
-          <TableHeader className="bg-gray-50 text-gray-600 text-sm uppercase">
+          <TableHeader className="bg-muted text-muted-foreground text-sm uppercase">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -192,7 +192,7 @@ function InnerTableRow<TData>({ row, className }: InnerTableRowProps<TData>) {
     <TableRow
       key={row.id}
       data-state={row.getIsSelected() && "selected"}
-      className={cn("border-t transition hover:bg-gray-50", className)}
+      className={cn("border-t transition hover:bg-muted/50", className)}
     >
       {row.getVisibleCells().map((cell) => (
         <TableCell key={cell.id} className="p-3">
