@@ -150,8 +150,8 @@ export const upsert = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // CREATE branch requires at least one Evidence image; edit branch ignores count here
-    // (edit-branch evidence patching is handled in issue #54)
+    // CREATE branch requires at least one Evidence image; edit branch length
+    // validation happens inside lifecycle.edit when evidenceStorageIds is provided.
     if (!args._id) {
       const evidenceIds = args.evidenceStorageIds ?? [];
       if (evidenceIds.length === 0) {
@@ -197,6 +197,7 @@ export const upsert = mutation({
           type: args.submissionType,
           tier: args.tier,
           description: args.description,
+          evidenceStorageIds: args.evidenceStorageIds,
         },
         user._id,
       );

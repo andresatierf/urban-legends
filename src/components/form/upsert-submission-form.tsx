@@ -58,12 +58,29 @@ export function UpsertSubmissionFormDialog({
   const [internalOpen, setInternalOpen] = useState(false);
   const [evidenceStorageIds, setEvidenceStorageIds] = useState<
     Id<"_storage">[]
-  >([]);
+  >(() => submission?.evidenceStorageIds ?? []);
+  const [uploaderKey, setUploaderKey] = useState(0);
 
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
 
   const upsertSubmission = useMutation(api.submissions.upsert);
+
+  const submissionDetails = useQuery(
+    api.submissions.getDetails,
+    submission ? { submissionId: submission._id } : "skip",
+  );
+
+  const initialEvidenceItems = useMemo<
+    { storageId: Id<"_storage">; previewUrl: string }[]
+  >(
+    () =>
+      submissionDetails?.evidence.map((e) => ({
+        storageId: e._id as unknown as Id<"_storage">,
+        previewUrl: e.url,
+      })) ?? [],
+    [submissionDetails],
+  );
 
   const teams = useQuery(api.teams.list, user ? { userId: user._id } : "skip");
   const teamOptions = useMemo(
@@ -90,7 +107,7 @@ export function UpsertSubmissionFormDialog({
           upsertSubmission({
             ...value,
             _id: submission?._id,
-            evidenceStorageIds: !submission ? evidenceStorageIds : undefined,
+            evidenceStorageIds,
           }),
         onSuccess: () => {
           router.push("/submissions");
@@ -110,7 +127,8 @@ export function UpsertSubmissionFormDialog({
       onOpenChange={(newOpen) => {
         setOpen(newOpen);
         form.reset();
-        setEvidenceStorageIds([]);
+        setEvidenceStorageIds(submission?.evidenceStorageIds ?? []);
+        setUploaderKey((k) => k + 1);
       }}
     >
       <form
@@ -195,12 +213,12 @@ export function UpsertSubmissionFormDialog({
                 />
               )}
             </form.AppField>
-            {!submission && (
-              <EvidenceUploader
-                storageIds={evidenceStorageIds}
-                onStorageIdsChange={setEvidenceStorageIds}
-              />
-            )}
+            <EvidenceUploader
+              key={uploaderKey}
+              storageIds={evidenceStorageIds}
+              onStorageIdsChange={setEvidenceStorageIds}
+              initialItems={submission ? initialEvidenceItems : undefined}
+            />
           </FieldGroup>
 
           <form.Subscribe
@@ -211,8 +229,11 @@ export function UpsertSubmissionFormDialog({
             ]}
           >
             {([isPristine, canSubmit, isSubmitting]) => {
-              const missingEvidence =
-                !submission && evidenceStorageIds.length === 0;
+              const missingEvidence = evidenceStorageIds.length === 0;
+              const initialIds = submission?.evidenceStorageIds ?? [];
+              const evidenceChanged =
+                JSON.stringify([...evidenceStorageIds].sort()) !==
+                JSON.stringify([...initialIds].sort());
               return (
                 <DialogFooter>
                   {isDev && (
@@ -247,7 +268,7 @@ export function UpsertSubmissionFormDialog({
                     form={formId}
                     disabled={
                       isSubmitting ||
-                      isPristine ||
+                      (!evidenceChanged && isPristine) ||
                       !canSubmit ||
                       missingEvidence
                     }

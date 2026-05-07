@@ -529,14 +529,30 @@ export async function edit(
     type?: "individual" | "team";
     tier?: "base" | "advanced";
     description?: string;
+    evidenceStorageIds?: Id<"_storage">[];
   },
-  _by: Id<"users">,
+  by: Id<"users">,
 ): Promise<void> {
   const submission = await ctx.db.get(submissionId);
   if (!submission) throw new Error("Submission not found");
 
   if (submission.state !== "pending") {
     throw new IllegalTransition(submission.state, "pending");
+  }
+
+  if (patch.evidenceStorageIds !== undefined) {
+    const newIds = patch.evidenceStorageIds;
+    if (newIds.length === 0) {
+      throw new Error("A Submission requires at least 1 Evidence image");
+    }
+    if (newIds.length > 5) {
+      throw new Error("A Submission allows a maximum 5 Evidence images");
+    }
+    const currentIds = submission.evidenceStorageIds ?? [];
+    const added = newIds.filter((id) => !currentIds.includes(id));
+    const removed = currentIds.filter((id) => !newIds.includes(id));
+    if (added.length > 0) await claimUploads(ctx, by, added);
+    if (removed.length > 0) await releaseUploads(ctx, removed);
   }
 
   const newDate = patch.date ? toUTCDateString(patch.date) : submission.date;
@@ -581,6 +597,9 @@ export async function edit(
     ...(patch.type !== undefined && { submissionType: newType }),
     ...(patch.tier !== undefined && { tier: patch.tier }),
     ...(patch.description !== undefined && { description: patch.description }),
+    ...(patch.evidenceStorageIds !== undefined && {
+      evidenceStorageIds: patch.evidenceStorageIds,
+    }),
   });
 
   // If the submission was in a group and date or type changed, cascade on the OLD date.

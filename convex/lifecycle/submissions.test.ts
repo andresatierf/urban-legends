@@ -1515,6 +1515,266 @@ describe("edit", () => {
       }),
     ).rejects.toThrow("already submitted for this team activity today");
   });
+
+  test("evidence pure-add: new IDs are claimed and persisted", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const storageIdA = "fake_storage_edit_add_A" as unknown as Id<"_storage">;
+    const storageIdB = "fake_storage_edit_add_B" as unknown as Id<"_storage">;
+    const storageIdC = "fake_storage_edit_add_C" as unknown as Id<"_storage">;
+
+    const submissionId = await t.run(async (ctx) => {
+      return ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: "2024-02-01T00:00:00.000Z",
+        submissionType: "individual",
+        state: "pending",
+        tier: "base",
+        pointsEarned: 0,
+        createdBy: userId,
+        evidenceStorageIds: [storageIdA, storageIdB],
+      });
+    });
+
+    // Pre-insert a pendingUploads row for the new upload C
+    await t.run(async (ctx) => {
+      await ctx.db.insert("pendingUploads", {
+        storageId: storageIdC,
+        userId,
+        createdAt: new Date().toISOString(),
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await edit(
+        ctx,
+        submissionId,
+        { evidenceStorageIds: [storageIdA, storageIdB, storageIdC] },
+        userId,
+      );
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.evidenceStorageIds).toEqual([
+        storageIdA,
+        storageIdB,
+        storageIdC,
+      ]);
+      // pendingUploads row for C was claimed (deleted)
+      const pending = await ctx.db.query("pendingUploads").collect();
+      expect(pending).toHaveLength(0);
+    });
+  });
+
+  test("evidence pure-remove: removed IDs trigger storage error (confirming releaseUploads called)", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const storageIdA = "fake_storage_edit_rm_A" as unknown as Id<"_storage">;
+    const storageIdB = "fake_storage_edit_rm_B" as unknown as Id<"_storage">;
+
+    const submissionId = await t.run(async (ctx) => {
+      return ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: "2024-02-02T00:00:00.000Z",
+        submissionType: "individual",
+        state: "pending",
+        tier: "base",
+        pointsEarned: 0,
+        createdBy: userId,
+        evidenceStorageIds: [storageIdA, storageIdB],
+      });
+    });
+
+    // convex-test throws when ctx.storage.delete is called with a fake ID — confirms releaseUploads fires
+    await expect(
+      t.run(async (ctx) => {
+        await edit(
+          ctx,
+          submissionId,
+          { evidenceStorageIds: [storageIdA] },
+          userId,
+        );
+      }),
+    ).rejects.toThrow();
+  });
+
+  test("evidence mixed add/remove: claims additions and releases removals", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const storageIdA = "fake_storage_edit_mix_A" as unknown as Id<"_storage">;
+    const storageIdB = "fake_storage_edit_mix_B" as unknown as Id<"_storage">;
+    const storageIdC = "fake_storage_edit_mix_C" as unknown as Id<"_storage">;
+
+    const submissionId = await t.run(async (ctx) => {
+      return ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: "2024-02-03T00:00:00.000Z",
+        submissionType: "individual",
+        state: "pending",
+        tier: "base",
+        pointsEarned: 0,
+        createdBy: userId,
+        evidenceStorageIds: [storageIdA, storageIdB],
+      });
+    });
+
+    // Pre-insert pendingUploads row for C (the addition)
+    await t.run(async (ctx) => {
+      await ctx.db.insert("pendingUploads", {
+        storageId: storageIdC,
+        userId,
+        createdAt: new Date().toISOString(),
+      });
+    });
+
+    // storageIdB is removed and storageIdC is added — convex-test throws on storage.delete(B)
+    await expect(
+      t.run(async (ctx) => {
+        await edit(
+          ctx,
+          submissionId,
+          { evidenceStorageIds: [storageIdA, storageIdC] },
+          userId,
+        );
+      }),
+    ).rejects.toThrow();
+  });
+
+  test("evidence add with foreign storageId rejects: claimUploads throws on ownership mismatch", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const storageIdA = "fake_storage_edit_fgn_A" as unknown as Id<"_storage">;
+    const storageIdForeign =
+      "fake_storage_edit_fgn_X" as unknown as Id<"_storage">;
+
+    const otherUserId = await t.run(async (ctx) =>
+      ctx.db.insert("users", {
+        email: "other@example.com",
+        name: "Other",
+        externalId: "ext_other_edit",
+      }),
+    );
+
+    const submissionId = await t.run(async (ctx) => {
+      return ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: "2024-02-04T00:00:00.000Z",
+        submissionType: "individual",
+        state: "pending",
+        tier: "base",
+        pointsEarned: 0,
+        createdBy: userId,
+        evidenceStorageIds: [storageIdA],
+      });
+    });
+
+    // Pre-insert pendingUploads row owned by a DIFFERENT user
+    await t.run(async (ctx) => {
+      await ctx.db.insert("pendingUploads", {
+        storageId: storageIdForeign,
+        userId: otherUserId,
+        createdAt: new Date().toISOString(),
+      });
+    });
+
+    await expect(
+      t.run(async (ctx) => {
+        await edit(
+          ctx,
+          submissionId,
+          { evidenceStorageIds: [storageIdA, storageIdForeign] },
+          userId,
+        );
+      }),
+    ).rejects.toThrow("does not belong to the current user");
+  });
+
+  test("evidence post-patch length 0 rejects", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const storageIdA = "fake_storage_edit_len0" as unknown as Id<"_storage">;
+
+    const submissionId = await t.run(async (ctx) => {
+      return ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: "2024-02-05T00:00:00.000Z",
+        submissionType: "individual",
+        state: "pending",
+        tier: "base",
+        pointsEarned: 0,
+        createdBy: userId,
+        evidenceStorageIds: [storageIdA],
+      });
+    });
+
+    await expect(
+      t.run(async (ctx) => {
+        await edit(ctx, submissionId, { evidenceStorageIds: [] }, userId);
+      }),
+    ).rejects.toThrow("at least 1 Evidence image");
+  });
+
+  test("evidence post-patch length 6 rejects", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const existing = Array.from(
+      { length: 5 },
+      (_, i) => `fake_storage_edit_len6_${i}` as unknown as Id<"_storage">,
+    );
+    const extra = "fake_storage_edit_len6_extra" as unknown as Id<"_storage">;
+
+    const submissionId = await t.run(async (ctx) => {
+      return ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: "2024-02-06T00:00:00.000Z",
+        submissionType: "individual",
+        state: "pending",
+        tier: "base",
+        pointsEarned: 0,
+        createdBy: userId,
+        evidenceStorageIds: existing,
+      });
+    });
+
+    // Pre-insert pendingUploads row for extra
+    await t.run(async (ctx) => {
+      await ctx.db.insert("pendingUploads", {
+        storageId: extra,
+        userId,
+        createdAt: new Date().toISOString(),
+      });
+    });
+
+    await expect(
+      t.run(async (ctx) => {
+        await edit(
+          ctx,
+          submissionId,
+          { evidenceStorageIds: [...existing, extra] },
+          userId,
+        );
+      }),
+    ).rejects.toThrow("maximum 5 Evidence images");
+  });
 });
 
 describe("recompute", () => {

@@ -20,13 +20,17 @@ type PreviewItem = {
 interface EvidenceUploaderProps {
   onStorageIdsChange: (storageIds: Id<"_storage">[]) => void;
   storageIds?: Id<"_storage">[];
+  initialItems?: PreviewItem[];
 }
 
 export function EvidenceUploader({
   onStorageIdsChange,
   storageIds: _storageIds,
+  initialItems,
 }: EvidenceUploaderProps) {
-  const [previews, setPreviews] = useState<PreviewItem[]>([]);
+  const [previews, setPreviews] = useState<PreviewItem[]>(
+    () => initialItems ?? [],
+  );
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
