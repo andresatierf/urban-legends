@@ -1,8 +1,10 @@
 // Client-side image processing: canvas downscale + JPEG re-encode.
 // Drops EXIF metadata as a side effect of the canvas round-trip — no
 // separate EXIF-strip pass is needed.
-// HEIC/HEIF: throws with a clear error pointing to issue #56.
-// Library used: native canvas API (no external library required for JPEG/PNG/WebP/GIF).
+// HEIC/HEIF: decoded via heic2any (dynamically imported to keep the default
+// bundle lean), then handed to the same canvas pipeline as every other format.
+// Library used for JPEG/PNG/WebP/GIF: native canvas API.
+// Library used for HEIC/HEIF: heic2any@0.0.4 (https://github.com/alexcorvi/heic2any).
 
 export interface ProcessOptions {
   maxDim?: number;
@@ -16,9 +18,17 @@ export async function processForUpload(
   const { maxDim = 2000, quality = 0.85 } = opts;
 
   if (file.type === "image/heic" || file.type === "image/heif") {
-    throw new Error(
-      "HEIC/HEIF images are not yet supported. Please convert to JPEG before uploading. (Support coming in a future update — see issue #56.)",
-    );
+    const { default: heic2any } = await import("heic2any");
+    const decoded = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 1,
+    });
+    const decodedBlob = Array.isArray(decoded) ? decoded[0] : decoded;
+    const decodedFile = new File([decodedBlob], file.name, {
+      type: "image/jpeg",
+    });
+    return processForUpload(decodedFile, opts);
   }
 
   return new Promise((resolve, reject) => {
