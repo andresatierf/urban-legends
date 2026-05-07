@@ -346,6 +346,56 @@ describe("submit", () => {
     );
   });
 
+  test("rejects when evidenceStorageIds is an empty array", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId } = await t.run(seedWorld);
+
+    await expect(
+      t.run(async (ctx) => {
+        await submit(ctx, {
+          userId,
+          teamId,
+          date: "2024-01-20",
+          type: "individual",
+          evidenceStorageIds: [],
+        });
+      }),
+    ).rejects.toThrow("at least 1 Evidence image");
+  });
+
+  test("rejects when evidenceStorageIds has more than 5 items", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId } = await t.run(seedWorld);
+
+    const sixIds = Array.from(
+      { length: 6 },
+      (_, i) => `fake_over5_${i}` as unknown as Id<"_storage">,
+    );
+
+    // Pre-insert all 6 pendingUploads rows so the length check fires (not a claim error)
+    await t.run(async (ctx) => {
+      for (const storageId of sixIds) {
+        await ctx.db.insert("pendingUploads", {
+          storageId,
+          userId,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    });
+
+    await expect(
+      t.run(async (ctx) => {
+        await submit(ctx, {
+          userId,
+          teamId,
+          date: "2024-01-20",
+          type: "individual",
+          evidenceStorageIds: sixIds,
+        });
+      }),
+    ).rejects.toThrow("maximum 5 Evidence images");
+  });
+
   test("submit with evidenceStorageIds stores the IDs and claims the pending row", async () => {
     const t = convexTest(schemaForTest);
     const { userId, teamId, tournamentId } = await t.run(seedWorld);

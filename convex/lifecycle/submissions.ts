@@ -226,6 +226,15 @@ export async function submit(
     evidenceStorageIds?: Id<"_storage">[];
   },
 ): Promise<Id<"submissions">> {
+  if (args.evidenceStorageIds !== undefined) {
+    if (args.evidenceStorageIds.length === 0) {
+      throw new Error("A Submission requires at least 1 Evidence image");
+    }
+    if (args.evidenceStorageIds.length > 5) {
+      throw new Error("A Submission allows a maximum 5 Evidence images");
+    }
+  }
+
   const team = await ctx.db.get(args.teamId);
   if (!team) throw new Error("Team not found");
 

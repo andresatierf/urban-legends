@@ -6,7 +6,7 @@ import { getCurrentUserOrThrow } from "./users";
 
 // Deletes the pendingUploads rows for the given storage IDs.
 // Called from lifecycle/submissions within a mutation context.
-// Ownership check deferred to slice #2 (#53) — for now, claim whatever is passed.
+// Throws if any storage ID is not in pendingUploads or is owned by a different user.
 export async function claimUploads(
   ctx: MutationCtx,
   userId: Id<"users">,
@@ -15,10 +15,15 @@ export async function claimUploads(
   for (const storageId of storageIds) {
     const row = await ctx.db
       .query("pendingUploads")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter((q) => q.eq(q.field("storageId"), storageId))
       .first();
-    if (row) await ctx.db.delete(row._id);
+    if (!row) {
+      throw new Error("Evidence upload not found or already claimed");
+    }
+    if (row.userId !== userId) {
+      throw new Error("Evidence upload does not belong to the current user");
+    }
+    await ctx.db.delete(row._id);
   }
 }
 

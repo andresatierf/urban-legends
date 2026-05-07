@@ -56,8 +56,9 @@ export function UpsertSubmissionFormDialog({
   const formId = useId();
   const router = useRouter();
   const [internalOpen, setInternalOpen] = useState(false);
-  const [evidenceStorageId, setEvidenceStorageId] =
-    useState<Id<"_storage"> | null>(null);
+  const [evidenceStorageIds, setEvidenceStorageIds] = useState<
+    Id<"_storage">[]
+  >([]);
 
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
@@ -89,16 +90,13 @@ export function UpsertSubmissionFormDialog({
           upsertSubmission({
             ...value,
             _id: submission?._id,
-            evidenceStorageIds:
-              !submission && evidenceStorageId
-                ? [evidenceStorageId]
-                : undefined,
+            evidenceStorageIds: !submission ? evidenceStorageIds : undefined,
           }),
         onSuccess: () => {
           router.push("/submissions");
           setOpen(false);
           form.reset();
-          setEvidenceStorageId(null);
+          setEvidenceStorageIds([]);
         },
         successToast: `Submission ${submission ? "updated" : "created"} successfully!`,
         defaultFailureToast: `Failed to ${submission ? "update" : "create"} submission`,
@@ -112,7 +110,7 @@ export function UpsertSubmissionFormDialog({
       onOpenChange={(newOpen) => {
         setOpen(newOpen);
         form.reset();
-        setEvidenceStorageId(null);
+        setEvidenceStorageIds([]);
       }}
     >
       <form
@@ -199,8 +197,8 @@ export function UpsertSubmissionFormDialog({
             </form.AppField>
             {!submission && (
               <EvidenceUploader
-                currentStorageId={evidenceStorageId}
-                onStorageIdChange={setEvidenceStorageId}
+                storageIds={evidenceStorageIds}
+                onStorageIdsChange={setEvidenceStorageIds}
               />
             )}
           </FieldGroup>
@@ -212,44 +210,53 @@ export function UpsertSubmissionFormDialog({
               state.isSubmitting,
             ]}
           >
-            {([isPristine, canSubmit, isSubmitting]) => (
-              <DialogFooter>
-                {isDev && (
+            {([isPristine, canSubmit, isSubmitting]) => {
+              const missingEvidence =
+                !submission && evidenceStorageIds.length === 0;
+              return (
+                <DialogFooter>
+                  {isDev && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => toastFormValues(form.state.values)}
+                    >
+                      Check values
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => toastFormValues(form.state.values)}
+                    onClick={() => form.reset()}
+                    disabled={isPristine || isSubmitting}
+                    className="mr-auto"
                   >
-                    Check values
+                    Reset
                   </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => form.reset()}
-                  disabled={isPristine || isSubmitting}
-                  className="mr-auto"
-                >
-                  Reset
-                </Button>
-                <DialogClose asChild>
+                  <DialogClose asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                  </DialogClose>
                   <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isSubmitting}
+                    type="submit"
+                    form={formId}
+                    disabled={
+                      isSubmitting ||
+                      isPristine ||
+                      !canSubmit ||
+                      missingEvidence
+                    }
                   >
-                    Cancel
+                    Submit
                   </Button>
-                </DialogClose>
-                <Button
-                  type="submit"
-                  form={formId}
-                  disabled={isSubmitting || isPristine || !canSubmit}
-                >
-                  Submit
-                </Button>
-              </DialogFooter>
-            )}
+                </DialogFooter>
+              );
+            }}
           </form.Subscribe>
         </DialogContent>
       </form>

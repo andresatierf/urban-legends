@@ -46,7 +46,7 @@ describe("claimUploads", () => {
     });
   });
 
-  test("is a no-op when no matching pendingUploads row exists", async () => {
+  test("throws when storage ID is not in pendingUploads", async () => {
     const t = convexTest(schemaForTest);
     const userId = await t.run(async (ctx) => seedUser(ctx, "2"));
 
@@ -56,10 +56,10 @@ describe("claimUploads", () => {
           "nonexistent" as unknown as Id<"_storage">,
         ]);
       }),
-    ).resolves.not.toThrow();
+    ).rejects.toThrow();
   });
 
-  test("does not delete rows belonging to a different user", async () => {
+  test("throws when storage ID belongs to a different user", async () => {
     const t = convexTest(schemaForTest);
 
     const { userId1, storageId } = await t.run(async (ctx) => {
@@ -75,14 +75,41 @@ describe("claimUploads", () => {
       return { userId1, storageId };
     });
 
-    // Claim as userId1 — should not delete userId2's row
+    // Claim as userId1 — must reject because the row is owned by userId2
+    await expect(
+      t.run(async (ctx) => {
+        await claimUploads(ctx, userId1, [storageId]);
+      }),
+    ).rejects.toThrow();
+  });
+
+  test("claims all rows when multiple storage IDs are owned by the same user", async () => {
+    const t = convexTest(schemaForTest);
+
+    const { userId, storageIds } = await t.run(async (ctx) => {
+      const userId = await seedUser(ctx, "4multi");
+      const storageIds = [
+        "fake_storage_multi_1" as unknown as Id<"_storage">,
+        "fake_storage_multi_2" as unknown as Id<"_storage">,
+        "fake_storage_multi_3" as unknown as Id<"_storage">,
+      ];
+      for (const storageId of storageIds) {
+        await ctx.db.insert("pendingUploads", {
+          storageId,
+          userId,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      return { userId, storageIds };
+    });
+
     await t.run(async (ctx) => {
-      await claimUploads(ctx, userId1, [storageId]);
+      await claimUploads(ctx, userId, storageIds);
     });
 
     await t.run(async (ctx) => {
       const rows = await ctx.db.query("pendingUploads").collect();
-      expect(rows).toHaveLength(1);
+      expect(rows).toHaveLength(0);
     });
   });
 });

@@ -140,6 +140,18 @@ export const upsert = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
+    // CREATE branch requires at least one Evidence image; edit branch ignores count here
+    // (edit-branch evidence patching is handled in issue #54)
+    if (!args._id) {
+      const evidenceIds = args.evidenceStorageIds ?? [];
+      if (evidenceIds.length === 0) {
+        throw new Error("A Submission requires at least 1 Evidence image");
+      }
+      if (evidenceIds.length > 5) {
+        throw new Error("A Submission allows a maximum 5 Evidence images");
+      }
+    }
+
     const [membership, team] = await Promise.all([
       ctx.db
         .query("teamMembers")
