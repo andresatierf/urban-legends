@@ -1,16 +1,16 @@
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 import type { UserWithRoles } from "../../../../convex/users";
 
-/**
- * Image metadata for submission attachments
- * @future This will be populated when image storage is implemented
- */
-export interface SubmissionImage {
+export interface EvidenceImage {
   _id: string;
   url: string;
-  filename: string;
-  submissionId: Id<"submissions">;
-  uploadedAt: string;
+  filename?: string;
+}
+
+export interface SubmitterEvidence {
+  userId: string;
+  submitterName: string;
+  evidence: EvidenceImage[];
 }
 
 /**
@@ -22,7 +22,7 @@ export interface SubmissionWithContext {
   team: Doc<"teams">;
   tournament: Doc<"tournaments">;
   submitter: UserWithRoles;
-  images: SubmissionImage[];
+  evidence: EvidenceImage[];
   teammates?: UserWithRoles[];
   managedBy?: UserWithRoles;
 }
@@ -37,7 +37,7 @@ export interface GroupWithContext {
   tournament: Doc<"tournaments">;
   submissions: Array<Doc<"submissions">>;
   submitters: UserWithRoles[];
-  images: SubmissionImage[];
+  submitterEvidence: SubmitterEvidence[];
   managedBy?: UserWithRoles;
 }
 

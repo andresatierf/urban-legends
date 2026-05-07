@@ -16,10 +16,10 @@ import {
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { cn, tryMutate } from "@/lib/utils";
 import type { Doc } from "../../../../convex/_generated/dataModel";
-import { SubmissionImageGallery } from "../display/submission-image-gallery";
+import { EvidenceGallery } from "../display/evidence-gallery";
 import { SubmissionMetadata } from "../display/submission-metadata";
 import { GroupParticipantsList } from "./group-participants-list";
-import type { ReviewItem, SubmissionImage } from "./types";
+import type { EvidenceImage, ReviewItem, SubmitterEvidence } from "./types";
 
 interface SubmissionReviewCardProps {
   item: ReviewItem;
@@ -92,7 +92,7 @@ export function SubmissionReviewCard({
   };
 
   if (item.type === "individual") {
-    const { submission, team, tournament, submitter, images } = item.data;
+    const { submission, team, tournament, submitter, evidence } = item.data;
     const isPending = submission.state === "pending";
     const canApprove = isPending && !!onApprove;
     const canReject = isPending && !!onReject;
@@ -121,7 +121,7 @@ export function SubmissionReviewCard({
         variant={variant}
         team={team}
         tournament={tournament}
-        images={images}
+        evidence={evidence}
         badges={badges}
         showActions={showActions}
         canApprove={canApprove}
@@ -143,7 +143,7 @@ export function SubmissionReviewCard({
   }
 
   // Group rendering
-  const { group, team, tournament, submitters, images } = item.data;
+  const { group, team, tournament, submitters, submitterEvidence } = item.data;
   const isPending = group.state === "pending";
   const canApprove = isPending && !!onApprove;
   const canReject = isPending && !!onReject;
@@ -172,7 +172,6 @@ export function SubmissionReviewCard({
       variant={variant}
       team={team}
       tournament={tournament}
-      images={images}
       badges={badges}
       isTeamActivity
       showActions={showActions}
@@ -189,6 +188,7 @@ export function SubmissionReviewCard({
         totalMembers={group.totalTeamMembers}
         isTeamExercise={group.isTeamExercise}
         participationRate={group.participationRate}
+        submitterEvidence={submitterEvidence}
       />
 
       {variant === "detailed" && group.date && (
@@ -204,7 +204,8 @@ type InnerSubmissionReviewCardProps = {
   variant: "compact" | "detailed";
   team: Doc<"teams">;
   tournament: Doc<"tournaments">;
-  images: Array<SubmissionImage>;
+  evidence?: EvidenceImage[];
+  submitterEvidence?: SubmitterEvidence[];
   badges: {
     condition?: boolean;
     content: string;
@@ -226,7 +227,7 @@ function InnerSubmissionReviewCard({
   variant,
   team,
   tournament,
-  images,
+  evidence,
   badges,
   isTeamActivity,
   showActions,
@@ -238,6 +239,8 @@ function InnerSubmissionReviewCard({
   isRejecting,
   children,
 }: InnerSubmissionReviewCardProps) {
+  const hasEvidence = evidence && evidence.length > 0;
+
   return (
     <Card>
       <CardHeader
@@ -268,8 +271,14 @@ function InnerSubmissionReviewCard({
       </CardHeader>
 
       <CardContent className="space-y-3">
-        {variant === "detailed" && (
-          <SubmissionImageGallery images={images} className="mb-4" />
+        {/* Individual submissions: show Evidence gallery in both compact and detailed */}
+        {!isTeamActivity && hasEvidence && (
+          <EvidenceGallery
+            images={evidence}
+            layout={variant === "detailed" ? "grid" : "single"}
+            maxDisplay={variant === "compact" ? 3 : 4}
+            className={variant === "detailed" ? "mb-4" : undefined}
+          />
         )}
 
         {children}

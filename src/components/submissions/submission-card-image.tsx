@@ -1,5 +1,5 @@
 /**
- * @deprecated Use SubmissionImageGallery from display/submission-image-gallery instead
+ * @deprecated Use EvidenceGallery from display/evidence-gallery instead
  * This file is kept for backward compatibility
  */
-export { SubmissionImageGallery as SubmissionCardImage } from "./display/submission-image-gallery";
+export { EvidenceGallery as SubmissionCardImage } from "./display/evidence-gallery";

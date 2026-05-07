@@ -123,28 +123,48 @@ export const getPendingSubmissions = query({
     const tournamentMap = toIdMap(tournaments);
     const userMap = toIdMap(users);
 
-    const enrichedIndividual = individualSubmissions
-      .map((submission) => {
-        const team = teamMap.get(submission.teamId);
-        const tournament = tournamentMap.get(submission.tournamentId);
-        const submitter = userMap.get(submission.userId);
+    const enrichedIndividual = (
+      await Promise.all(
+        individualSubmissions.map(async (submission) => {
+          const team = teamMap.get(submission.teamId);
+          const tournament = tournamentMap.get(submission.tournamentId);
+          const submitter = userMap.get(submission.userId);
 
-        if (!team || !tournament || !submitter) {
-          return null;
-        }
+          if (!team || !tournament || !submitter) {
+            return null;
+          }
 
-        return {
-          type: "individual" as const,
-          id: submission._id,
-          submission,
-          team,
-          tournament,
-          submitter,
-          date: submission.date,
-          createdAt: submission.date,
-        };
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== null);
+          const evidenceResolved = await Promise.all(
+            (submission.evidenceStorageIds ?? []).map(
+              async (storageId, idx) => {
+                const url = await ctx.storage.getUrl(storageId);
+                if (!url) return null;
+                return {
+                  _id: storageId as string,
+                  url,
+                  filename: `evidence-${idx + 1}.jpg`,
+                };
+              },
+            ),
+          );
+          const evidence = evidenceResolved.filter(
+            (e): e is NonNullable<typeof e> => e !== null,
+          );
+
+          return {
+            type: "individual" as const,
+            id: submission._id,
+            submission,
+            team,
+            tournament,
+            submitter,
+            evidence,
+            date: submission.date,
+            createdAt: submission.date,
+          };
+        }),
+      )
+    ).filter((item): item is NonNullable<typeof item> => item !== null);
 
     const enrichedGroups = (
       await Promise.all(
@@ -164,6 +184,30 @@ export const getPendingSubmissions = query({
           const userIds = groupSubmissions.map((s) => s.userId);
           const submitters = await batchGetDocuments(ctx, "users", userIds);
 
+          const submitterEvidence = await Promise.all(
+            groupSubmissions.map(async (sub) => {
+              const submitter = submitters.find((u) => u._id === sub.userId);
+              const evidenceResolved = await Promise.all(
+                (sub.evidenceStorageIds ?? []).map(async (storageId, idx) => {
+                  const url = await ctx.storage.getUrl(storageId);
+                  if (!url) return null;
+                  return {
+                    _id: storageId as string,
+                    url,
+                    filename: `evidence-${idx + 1}.jpg`,
+                  };
+                }),
+              );
+              return {
+                userId: sub.userId as string,
+                submitterName: submitter?.name ?? "Unknown",
+                evidence: evidenceResolved.filter(
+                  (e): e is NonNullable<typeof e> => e !== null,
+                ),
+              };
+            }),
+          );
+
           return {
             type: "group" as const,
             id: group._id,
@@ -172,6 +216,7 @@ export const getPendingSubmissions = query({
             tournament,
             submissions: groupSubmissions,
             submitters,
+            submitterEvidence,
             date: group.date,
             createdAt: group.createdAt,
           };

@@ -23,8 +23,7 @@ export function convertToReviewItems(
           team: item.team,
           tournament: item.tournament,
           submitter: toUserWithRoles(item.submitter),
-          // Placeholders for features not yet implemented:
-          images: [], // Will be populated when image storage is implemented
+          evidence: item.evidence,
         },
       };
     } else {
@@ -37,9 +36,7 @@ export function convertToReviewItems(
           tournament: item.tournament,
           submissions: item.submissions,
           submitters: item.submitters.map(toUserWithRoles),
-          // Placeholder for image storage feature:
-          // TODO: Aggregate images from all submissions in the group when image upload is implemented
-          images: [],
+          submitterEvidence: item.submitterEvidence,
         },
       };
     }
