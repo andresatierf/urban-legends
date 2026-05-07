@@ -31,17 +31,7 @@ export function TournamentWithAuthorityCard({ tournament }: Props) {
       <CardContent className="flex h-full flex-col gap-3">
         {/* Header: name + status */}
         <div className="flex flex-wrap items-center gap-2">
-          <CardTitle>
-            <Button
-              variant="link"
-              className="h-min cursor-pointer p-0 font-semibold text-base leading-none tracking-tight"
-              asChild
-            >
-              <Link href={`/tournaments/${tournament._id}`}>
-                <span className="text-wrap">{tournament.name}</span>
-              </Link>
-            </Button>
-          </CardTitle>
+          <CardTitle>{tournament.name}</CardTitle>
           {getStatusBadge(tournament)}
         </div>
 

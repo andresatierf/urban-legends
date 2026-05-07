@@ -22,17 +22,7 @@ export function TournamentCard({ tournament, teamCount }: Props) {
       <CardContent className="flex h-full xs:flex-row flex-col items-center justify-between gap-4">
         <div className="flex h-full flex-1 flex-col justify-between xs:self-auto self-start">
           <div className="flex flex-wrap items-center gap-2">
-            <CardTitle>
-              <Button
-                variant="link"
-                className="h-min cursor-pointer p-0 font-semibold text-base leading-none tracking-tight"
-                asChild
-              >
-                <Link href={`/tournaments/${tournament._id}`}>
-                  <span className="text-wrap">{tournament.name}</span>
-                </Link>
-              </Button>
-            </CardTitle>
+            <CardTitle>{tournament.name}</CardTitle>
             {getStatusBadge(tournament)}
           </div>
           <CardDescription className="mt-2">

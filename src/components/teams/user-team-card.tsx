@@ -26,15 +26,7 @@ export function UserTeamCard({
       <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
         <div className="flex flex-1 flex-col justify-between self-start">
           <div className="flex items-center gap-2">
-            <CardTitle>
-              <Button
-                variant="link"
-                className="h-min cursor-pointer p-0 font-semibold text-base leading-none tracking-tight"
-                asChild
-              >
-                <Link href={`/teams/${team._id}`}>{team.name}</Link>
-              </Button>
-            </CardTitle>
+            <CardTitle>{team.name}</CardTitle>
             {userRole === "captain" && <Badge variant="outline">Captain</Badge>}
           </div>
           <CardDescription className="space-y-1">
