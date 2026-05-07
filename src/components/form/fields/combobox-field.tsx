@@ -45,7 +45,7 @@ export function ComboboxField<T extends string>({
     <Field data-invalid={isInvalid}>
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Combobox
-        items={options}
+        items={options.map((o) => o.value)}
         value={field.state.value}
         onValueChange={handleOnChange}
       >
