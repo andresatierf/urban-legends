@@ -190,11 +190,11 @@ export function SubmissionCalendar({
 
   if (!tournament) {
     return (
-      <Card variant="dashed">
+      <div className="rounded-lg border border-dashed">
         <CardContent className="flex h-64 items-center justify-center">
           <p className="text-muted-foreground">Loading calendar...</p>
         </CardContent>
-      </Card>
+      </div>
     );
   }
 

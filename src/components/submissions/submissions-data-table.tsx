@@ -46,7 +46,21 @@ export function SubmissionsDataTable<T, V>({
         header: "State",
         cell: (props) => {
           const state = props.getValue() as Doc<"submissions">["state"];
-          return <Badge variant={state}>{state}</Badge>;
+          return (
+            <Badge
+              variant={
+                state === "approved"
+                  ? "default"
+                  : state === "rejected"
+                    ? "destructive"
+                    : state === "deleted"
+                      ? "secondary"
+                      : "outline"
+              }
+            >
+              {state}
+            </Badge>
+          );
         },
       },
       { accessorKey: "team.name", header: "Team" },
@@ -69,8 +83,7 @@ export function SubmissionsDataTable<T, V>({
               {submission.state === "pending" && isAdmin && (
                 <>
                   <Button
-                    variant="solid"
-                    color="green"
+                    variant="default"
                     size="icon"
                     onClick={async (e) => {
                       e.preventDefault();
@@ -83,13 +96,12 @@ export function SubmissionsDataTable<T, V>({
                         defaultFailureToast: "Failed to approve submission",
                       });
                     }}
-                    className="z-10"
+                    className="z-10 bg-green-600 hover:bg-green-700"
                   >
                     <Check />
                   </Button>
                   <Button
-                    variant="solid"
-                    color="orange"
+                    variant="default"
                     size="icon"
                     onClick={async (e) => {
                       e.preventDefault();
@@ -102,26 +114,19 @@ export function SubmissionsDataTable<T, V>({
                         defaultFailureToast: "Failed to reject submission",
                       });
                     }}
-                    className="z-10"
+                    className="z-10 bg-orange-500 hover:bg-orange-600"
                   >
                     <X />
                   </Button>
                 </>
               )}
-              <Button
-                variant="solid"
-                color="secondary"
-                size="icon"
-                className="z-10"
-                asChild
-              >
+              <Button variant="outline" size="icon" className="z-10" asChild>
                 <Link href={`/submissions/${submission._id}/edit`}>
                   <Pencil />
                 </Link>
               </Button>
               <Button
-                variant="solid"
-                color="destructive"
+                variant="destructive"
                 size="icon"
                 onClick={async (e) => {
                   e.preventDefault();

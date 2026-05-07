@@ -7,6 +7,8 @@ import {
   canRejectSubmission,
   canViewSubmission,
   computeSubmissionPermissions,
+  hasSomeReviewAccess,
+  hasSomeTournamentManagerAccess,
 } from "./authority/core";
 import {
   extractDateFromISO,
@@ -826,5 +828,43 @@ export const recalculatePoints = mutation({
       submissionsTouched: result.submissionsTouched,
       message: `Points recalculated. ${result.submissionsTouched} submission(s) updated.`,
     };
+  },
+});
+
+// ── getAuthority ──────────────────────────────────────────────────────────────
+
+export const getAuthority = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    const [canReview, canManage, teamMembership] = await Promise.all([
+      hasSomeReviewAccess(ctx, user._id),
+      hasSomeTournamentManagerAccess(ctx, user._id),
+      ctx.db
+        .query("teamMembers")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .first(),
+    ]);
+
+    const isPlayer = teamMembership !== null;
+
+    let pendingReviewCount = 0;
+    if (canReview) {
+      const [pendingIndividual, pendingGroups] = await Promise.all([
+        ctx.db
+          .query("submissions")
+          .withIndex("by_state", (q) => q.eq("state", "pending"))
+          .filter((q) => q.eq(q.field("submissionType"), "individual"))
+          .collect(),
+        ctx.db
+          .query("submissionGroups")
+          .withIndex("by_state", (q) => q.eq("state", "pending"))
+          .collect(),
+      ]);
+      pendingReviewCount = pendingIndividual.length + pendingGroups.length;
+    }
+
+    return { canReview, canManage, isPlayer, pendingReviewCount };
   },
 });

@@ -40,7 +40,7 @@ export function SubmissionCardActions({
       {canApprove && (
         <Button
           size="sm"
-          variant="solid"
+          variant="default"
           className="bg-green-600 hover:bg-green-700"
           onClick={onApprove}
         >
@@ -51,7 +51,7 @@ export function SubmissionCardActions({
       {canReject && (
         <Button
           size="sm"
-          variant="solid"
+          variant="default"
           className="bg-red-600 hover:bg-red-700"
           onClick={onReject}
         >

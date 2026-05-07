@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import {
@@ -106,7 +106,7 @@ export function SubmissionReviewList({
 
       {/* Empty state */}
       {filteredAndSortedItems.length === 0 && (
-        <Card variant="dashed">
+        <div className="rounded-lg border border-dashed">
           <CardContent>
             <Empty className="gap-3 p-6! text-muted-foreground">
               <EmptyTitle>{emptyMessage}</EmptyTitle>
@@ -115,7 +115,7 @@ export function SubmissionReviewList({
               )}
             </Empty>
           </CardContent>
-        </Card>
+        </div>
       )}
 
       {/* Submissions list */}

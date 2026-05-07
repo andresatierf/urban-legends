@@ -33,7 +33,17 @@ export function SubmissionCardDetails({
   return (
     <div className="flex-1 space-y-3">
       <div className="flex flex-wrap gap-2">
-        <Badge variant={submission.state}>
+        <Badge
+          variant={
+            submission.state === "approved"
+              ? "default"
+              : submission.state === "rejected"
+                ? "destructive"
+                : submission.state === "deleted"
+                  ? "secondary"
+                  : "outline"
+          }
+        >
           {submission.state.charAt(0).toUpperCase() + submission.state.slice(1)}
         </Badge>
         {submission.tier && (

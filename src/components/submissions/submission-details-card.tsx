@@ -82,7 +82,19 @@ export function SubmissionDetailsCard({
       {
         key: "Status",
         value: (
-          <Badge variant={data.submission.state}>{data.submission.state}</Badge>
+          <Badge
+            variant={
+              data.submission.state === "approved"
+                ? "default"
+                : data.submission.state === "rejected"
+                  ? "destructive"
+                  : data.submission.state === "deleted"
+                    ? "secondary"
+                    : "outline"
+            }
+          >
+            {data.submission.state}
+          </Badge>
         ),
       },
       {

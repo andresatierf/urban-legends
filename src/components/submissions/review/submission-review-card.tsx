@@ -103,7 +103,17 @@ export function SubmissionReviewCard({
       variant?: BadgeProps["variant"];
       className?: string;
     }> = [
-      { content: capitalize(submission.state), variant: submission.state },
+      {
+        content: capitalize(submission.state),
+        variant:
+          submission.state === "approved"
+            ? "default"
+            : submission.state === "rejected"
+              ? "destructive"
+              : submission.state === "deleted"
+                ? "secondary"
+                : "outline",
+      } as const,
       {
         content: "Individual",
         className: "bg-blue-100 text-blue-800 hover:bg-blue-100",
@@ -154,7 +164,17 @@ export function SubmissionReviewCard({
     variant?: BadgeProps["variant"];
     className?: string;
   }[] = [
-    { content: capitalize(group.state), variant: group.state },
+    {
+      content: capitalize(group.state),
+      variant:
+        group.state === "approved"
+          ? "default"
+          : group.state === "rejected"
+            ? "destructive"
+            : group.state === "deleted"
+              ? "secondary"
+              : "outline",
+    } as const,
     {
       content: "Team Activity",
       className: "bg-green-100 text-green-800 hover:bg-green-100",

@@ -5,11 +5,8 @@ import type { FunctionReference } from "convex/server";
 import {
   Activity,
   BarChart3,
-  Calendar,
   ClipboardList,
   Code2,
-  FileCheck,
-  FileText,
   Layers,
   LayoutDashboard,
   type LucideIcon,
@@ -96,8 +93,12 @@ function useSidebarItems(
           {
             title: t("user.submissions"),
             href: "/submissions",
-            roles: ["player"],
             icon: ClipboardList,
+            badge: {
+              query: api.role.reviewer.getPendingCount,
+              color: "secondary",
+              tooltip: tTooltip("pendingSubmissions"),
+            },
           },
           {
             title: t("user.newSubmission"),
@@ -121,36 +122,10 @@ function useSidebarItems(
             exact: true,
           },
           {
-            title: t("admin.tournaments"),
-            href: "/admin/tournaments",
-            icon: Trophy,
-            roles: ["admin", "tournament_manager"], // Allow tournament_manager
-          },
-          {
             title: t("admin.users"),
             href: "/users",
             icon: UserCog,
             roles: ["admin"], // Admin-only
-          },
-          {
-            title: t("admin.submissions"),
-            href: "/manage/submissions",
-            icon: FileText,
-            badge: {
-              query: api.role.admin.getAllPendingCount,
-              color: "secondary",
-            },
-            roles: ["admin", "tournament_manager"], // Allow tournament_manager
-          },
-          {
-            title: t("admin.submissionGroups"),
-            href: "/admin/submission-groups",
-            icon: Layers,
-            badge: {
-              query: api.submissionGroups.getPendingCount,
-              color: "secondary",
-            },
-            roles: ["admin", "tournament_manager"], // Allow tournament_manager
           },
           {
             title: t("admin.system"),
@@ -161,39 +136,11 @@ function useSidebarItems(
         ],
       },
 
-      // ===== TOURNAMENT MANAGER SECTION (Conditional: Has 'tournament_manager' role) =====
-      {
-        title: t("tournamentManager.group"),
-        roles: ["tournament_manager", "admin"], // Admins also have manager access
-        items: [
-          {
-            title: t("tournamentManager.submissions"),
-            href: "/manage/submissions",
-            icon: Calendar,
-            badge: {
-              query: api.role.tournamentManager.getPendingCount,
-              color: "secondary",
-              tooltip: tTooltip("pendingSubmissions"),
-            },
-          },
-        ],
-      },
-
       // ===== REVIEWER SECTION (Conditional: Has 'reviewer' role) =====
       {
         title: t("reviewer.group"),
         roles: ["reviewer", "admin"], // Admins also have review access
         items: [
-          {
-            title: t("reviewer.queue"),
-            href: "/reviewer",
-            icon: FileCheck,
-            badge: {
-              query: api.role.reviewer.getPendingCount,
-              color: "secondary",
-            },
-            exact: true,
-          },
           {
             title: t("reviewer.statistics"),
             href: "/reviewer/statistics",
