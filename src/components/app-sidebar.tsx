@@ -45,9 +45,9 @@ import { useActiveRoute } from "@/hooks/useActiveRoute";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../convex/_generated/api";
 import { InviteMemberFormDialog } from "./form/invite-member-form";
-import { UpsertSubmissionFormDialog } from "./form/upsert-submission-form";
 import { UpsertTournamentFormDialog } from "./form/upsert-tournament-form";
 import { LoggedUserCard } from "./logged-user-card";
+import { useSubmissionDialog } from "./submission-dialog-context";
 
 type SidebarItem = {
   title: string;
@@ -66,7 +66,7 @@ type SidebarItem = {
 );
 
 function useSidebarItems(
-  setSubmissionFormOpen: (state: boolean) => void,
+  openSubmissionDialog: () => void,
   setInviteMemberDialogOpen: (state: boolean) => void,
   setCreateTournamentDialogOpen: (state: boolean) => void,
 ) {
@@ -107,7 +107,7 @@ function useSidebarItems(
           {
             title: t("user.newSubmission"),
             roles: ["player"],
-            onClick: () => setSubmissionFormOpen(true),
+            onClick: openSubmissionDialog,
             icon: PlusCircle,
           },
         ],
@@ -306,7 +306,7 @@ function useSidebarItems(
     [
       t,
       tTooltip,
-      setSubmissionFormOpen,
+      openSubmissionDialog,
       setInviteMemberDialogOpen,
       setCreateTournamentDialogOpen,
     ],
@@ -318,8 +318,8 @@ function useSidebarItems(
 export function AppSidebar() {
   const { user } = useUser({ shouldThrow: false });
   const { isActive } = useActiveRoute();
+  const { openSubmissionDialog } = useSubmissionDialog();
 
-  const [submissionFormOpen, setSubmissionFormOpen] = useState(false);
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
   const [createTournamentDialogOpen, setCreateTournamentDialogOpen] =
     useState(false);
@@ -328,7 +328,7 @@ export function AppSidebar() {
   const captainedTeamsCount = useQuery(api.captain.getCaptainedTeamsCount) ?? 0;
 
   const { items: sidebarItems } = useSidebarItems(
-    setSubmissionFormOpen,
+    openSubmissionDialog,
     setInviteMemberDialogOpen,
     setCreateTournamentDialogOpen,
   );
@@ -336,7 +336,7 @@ export function AppSidebar() {
   const context = { captainedTeamsCount };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="offcanvas">
       <SidebarHeader className="h-10" />
       <SidebarContent>
         {sidebarItems.map((item) =>
@@ -344,10 +344,6 @@ export function AppSidebar() {
         )}
         {user && (
           <>
-            <UpsertSubmissionFormDialog
-              open={submissionFormOpen}
-              onOpenChange={setSubmissionFormOpen}
-            />
             <InviteMemberFormDialog
               open={inviteMemberDialogOpen}
               onOpenChange={setInviteMemberDialogOpen}
