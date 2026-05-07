@@ -12,15 +12,15 @@ stream_text='select(.type == "assistant").message.content[]? | select(.type == "
 # jq filter to extract final result
 final_result='select(.type == "result").result // empty'
 
-# jq filter that formats one issue as readable markdown
-format_issue='.[] | "## Issue #\(.number): \(.title)\nLabels: \(.labels | map(.name) | join(", "))\n\n\(.body)\n\n---\n"'
+# jq filter that formats one issue (with comments) as readable markdown
+format_issue='.[] | "## Issue #\(.number): \(.title)\nLabels: \(.labels | map(.name) | join(", "))\n\n\(.body)\n\n" + (if (.comments | length) > 0 then "### Comments\n\n" + (.comments | map("**@\(.author.login)** (\(.createdAt)):\n\n\(.body)") | join("\n\n---\n\n")) + "\n\n" else "" end) + "---\n"'
 
 for ((i = 1; i <= $1; i++)); do
   tmpfile=$(mktemp)
   trap "rm -f $tmpfile" EXIT
 
   commits=$(git log -n 5 --format="%H%n%ad%n%B---" --date=short 2>/dev/null || echo "No commits found")
-  ready_issues=$(gh issue list --state open --label "ready-for-agent" --limit 200 --json number,title,body,labels --jq "$format_issue" 2>/dev/null || echo "No ready-for-agent issues found")
+  ready_issues=$(gh issue list --state open --label "ready-for-agent" --limit 200 --json number,title,body,labels,comments --jq "$format_issue" 2>/dev/null || echo "No ready-for-agent issues found")
   open_numbers=$(gh issue list --state open --limit 200 --json number --jq '[.[].number | tostring] | join(", ")' 2>/dev/null || echo "")
   prompt=$(cat ralph/prompt.md)
 
