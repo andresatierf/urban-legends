@@ -1,5 +1,6 @@
 "use client";
 
+import type { VariantProps } from "class-variance-authority";
 import { useMutation, useQuery } from "convex/react";
 import { Loader2, UserPlus } from "lucide-react";
 import { useId, useState } from "react";
@@ -10,7 +11,7 @@ import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
-import { Button } from "../ui/button";
+import { Button, buttonVariants } from "../ui/button";
 import {
   Dialog,
   DialogClose,
@@ -33,6 +34,8 @@ type Props = {
   currentMemberCount: number;
   isUserInTeam: boolean;
   isUserMember: boolean;
+  size?: VariantProps<typeof buttonVariants>["size"];
+  variant?: VariantProps<typeof buttonVariants>["variant"];
 };
 
 export function JoinTeamFormButton({
@@ -41,6 +44,8 @@ export function JoinTeamFormButton({
   currentMemberCount,
   isUserInTeam,
   isUserMember,
+  size,
+  variant,
 }: Props) {
   const formId = useId();
   const [open, setOpen] = useState(false);
@@ -86,7 +91,7 @@ export function JoinTeamFormButton({
   // Pending request - show cancel option
   if (hasPendingRequest) {
     return (
-      <Button variant="outline" onClick={handleCancelRequest}>
+      <Button variant="outline" size={size} onClick={handleCancelRequest}>
         Cancel Request
       </Button>
     );
@@ -95,7 +100,7 @@ export function JoinTeamFormButton({
   // Don't show button if user is already a member
   if (isUserMember) {
     return (
-      <Button variant="outline" disabled>
+      <Button variant="outline" size={size} disabled>
         Already Joined
       </Button>
     );
@@ -104,7 +109,7 @@ export function JoinTeamFormButton({
   // User already in a team
   if (isUserInTeam) {
     return (
-      <Button variant="outline" disabled>
+      <Button variant="outline" size={size} disabled>
         Already in a Team
       </Button>
     );
@@ -113,7 +118,7 @@ export function JoinTeamFormButton({
   // Closed teams can't be joined via request
   if (isClosed) {
     return (
-      <Button variant="outline" disabled>
+      <Button variant="outline" size={size} disabled>
         Closed
       </Button>
     );
@@ -122,7 +127,7 @@ export function JoinTeamFormButton({
   // Team is full
   if (isFull) {
     return (
-      <Button variant="outline" disabled>
+      <Button variant="outline" size={size} disabled>
         Team Full
       </Button>
     );
@@ -144,7 +149,7 @@ export function JoinTeamFormButton({
         }}
       >
         <DialogTrigger asChild>
-          <Button>
+          <Button size={size} variant={variant}>
             <UserPlus />
             Request to Join
           </Button>

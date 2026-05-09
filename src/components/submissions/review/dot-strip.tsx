@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+
 import type { EvidenceImage } from "./types";
 
 interface DotStripProps {
@@ -28,7 +29,7 @@ export function DotStrip({
               onClick={() => onSelect(idx)}
               aria-label={`Show image ${idx + 1} of ${evidence.length}`}
               aria-pressed={isActive}
-              className="grid h-4 w-5 place-items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="focus-visible:ring-ring grid h-4 w-5 place-items-center focus-visible:ring-2 focus-visible:outline-none"
             >
               <span
                 className={cn(
