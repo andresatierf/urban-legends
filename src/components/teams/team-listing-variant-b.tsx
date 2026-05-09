@@ -26,11 +26,13 @@ import { Button } from "@/components/ui/button";
 import {
   type DemoTeam,
   DEMO_OTHER_TEAMS,
-  DEMO_TEAMS,
   DEMO_USER_TEAMS,
+  filterTeams,
+  getCaptain,
   getInitials,
   getTournament,
   isFull,
+  sortMembersCapFirst,
 } from "./team-listing-fixtures";
 
 const MAX_AVATARS = 3;
@@ -38,12 +40,10 @@ const MAX_AVATARS = 3;
 function TeamRow({ team, isMember }: { team: DemoTeam; isMember: boolean }) {
   const tournament = getTournament(team.tournamentId);
   const full = isFull(team);
-  const captain = team.members.find((m) => m.memberRole === "captain");
-  const sortedMembers = [...team.members].sort((a, b) =>
-    a.memberRole === "captain" ? -1 : b.memberRole === "captain" ? 1 : 0,
-  );
-  const visibleMembers = sortedMembers.slice(0, MAX_AVATARS);
-  const overflow = sortedMembers.length - visibleMembers.length;
+  const captain = getCaptain(team);
+  const sorted = sortMembersCapFirst(team.members);
+  const visibleMembers = sorted.slice(0, MAX_AVATARS);
+  const overflow = sorted.length - visibleMembers.length;
 
   return (
     <div className="border-border hover:bg-muted/40 flex items-center gap-3 border-b px-3 py-2 transition-colors last:border-b-0">
@@ -148,16 +148,6 @@ function CollapsibleSection({
       </button>
       {open && <div>{children}</div>}
     </div>
-  );
-}
-
-function filterTeams(teams: DemoTeam[], query: string): DemoTeam[] {
-  if (!query) return teams;
-  const q = query.toLowerCase();
-  return teams.filter(
-    (t) =>
-      t.name.toLowerCase().includes(q) ||
-      getTournament(t.tournamentId)?.name.toLowerCase().includes(q),
   );
 }
 

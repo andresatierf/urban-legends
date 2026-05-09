@@ -31,15 +31,16 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import {
-  type DemoMember,
   type DemoTeam,
-  DEMO_OTHER_TEAMS,
   DEMO_TEAMS,
   DEMO_USER_TEAMS,
+  filterTeams,
+  getCaptain,
   getInitials,
   getTournament,
   getTournamentStatus,
   isFull,
+  sortMembersCapFirst,
 } from "./team-listing-fixtures";
 
 const MAX_AVATARS = 5;
@@ -53,12 +54,10 @@ function VariantATeamCard({
 }) {
   const tournament = getTournament(team.tournamentId);
   const full = isFull(team);
-  const captain = team.members.find((m) => m.memberRole === "captain");
-  const sortedMembers = [...team.members].sort((a, b) =>
-    a.memberRole === "captain" ? -1 : b.memberRole === "captain" ? 1 : 0,
-  );
-  const visibleMembers = sortedMembers.slice(0, MAX_AVATARS);
-  const overflow = sortedMembers.length - visibleMembers.length;
+  const captain = getCaptain(team);
+  const sorted = sortMembersCapFirst(team.members);
+  const visibleMembers = sorted.slice(0, MAX_AVATARS);
+  const overflow = sorted.length - visibleMembers.length;
 
   return (
     <Card>
@@ -174,16 +173,6 @@ function TeamSearch({
         className="border-border bg-background placeholder:text-muted-foreground focus:ring-ring h-7 w-full rounded-md border py-1 pr-2.5 pl-8 text-xs outline-none focus:ring-1"
       />
     </div>
-  );
-}
-
-function filterTeams(teams: DemoTeam[], query: string): DemoTeam[] {
-  if (!query) return teams;
-  const q = query.toLowerCase();
-  return teams.filter(
-    (t) =>
-      t.name.toLowerCase().includes(q) ||
-      getTournament(t.tournamentId)?.name.toLowerCase().includes(q),
   );
 }
 

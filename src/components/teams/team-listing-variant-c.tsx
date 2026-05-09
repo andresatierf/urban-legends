@@ -34,22 +34,21 @@ import {
   type DemoTournament,
   DEMO_TEAMS,
   DEMO_TOURNAMENTS,
+  getCaptain,
   getInitials,
-  getTeamsByTournament,
   getTournamentStatus,
   isFull,
+  sortMembersCapFirst,
 } from "./team-listing-fixtures";
 
 const MAX_AVATARS = 4;
 
 function TournamentColumnCard({ team }: { team: DemoTeam }) {
   const full = isFull(team);
-  const captain = team.members.find((m) => m.memberRole === "captain");
-  const sortedMembers = [...team.members].sort((a, b) =>
-    a.memberRole === "captain" ? -1 : b.memberRole === "captain" ? 1 : 0,
-  );
-  const visibleMembers = sortedMembers.slice(0, MAX_AVATARS);
-  const overflow = sortedMembers.length - visibleMembers.length;
+  const captain = getCaptain(team);
+  const sorted = sortMembersCapFirst(team.members);
+  const visibleMembers = sorted.slice(0, MAX_AVATARS);
+  const overflow = sorted.length - visibleMembers.length;
 
   return (
     <Card size="sm" className={team.isUserTeam ? "ring-primary/30 ring-2" : ""}>

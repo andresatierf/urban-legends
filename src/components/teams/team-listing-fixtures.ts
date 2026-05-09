@@ -211,10 +211,6 @@ export function getTournament(id: string): DemoTournament | undefined {
   return TOURNAMENTS.find((t) => t._id === id);
 }
 
-export function getTeamsByTournament(tournamentId: string): DemoTeam[] {
-  return TEAMS.filter((t) => t.tournamentId === tournamentId);
-}
-
 export function isFull(team: DemoTeam): boolean {
   return team.maxMembers != null && team.members.length >= team.maxMembers;
 }
@@ -235,4 +231,24 @@ export function getInitials(name: string): string {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+}
+
+export function getCaptain(team: DemoTeam): DemoMember | undefined {
+  return team.members.find((m) => m.memberRole === "captain");
+}
+
+export function sortMembersCapFirst(members: DemoMember[]): DemoMember[] {
+  return [...members].sort((a, b) =>
+    a.memberRole === "captain" ? -1 : b.memberRole === "captain" ? 1 : 0,
+  );
+}
+
+export function filterTeams(teams: DemoTeam[], query: string): DemoTeam[] {
+  if (!query) return teams;
+  const q = query.toLowerCase();
+  return teams.filter(
+    (t) =>
+      t.name.toLowerCase().includes(q) ||
+      getTournament(t.tournamentId)?.name.toLowerCase().includes(q),
+  );
 }
