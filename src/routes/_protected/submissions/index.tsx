@@ -261,7 +261,6 @@ function SubmissionsPage() {
                 onApprove={handleApprove}
                 onReject={handleReject}
                 showFilters={true}
-                variant="detailed"
                 emptyMessage="No submissions to display"
               />
             </TabsContent>
@@ -271,7 +270,6 @@ function SubmissionsPage() {
                 onApprove={handleApprove}
                 onReject={handleReject}
                 showFilters={true}
-                variant="detailed"
                 emptyMessage="No pending submissions"
               />
             </TabsContent>
@@ -281,7 +279,6 @@ function SubmissionsPage() {
                 onApprove={handleApprove}
                 onReject={handleReject}
                 showFilters={true}
-                variant="detailed"
                 emptyMessage="No resolved submissions"
               />
             </TabsContent>
@@ -298,7 +295,6 @@ function SubmissionsPage() {
             Icon={FileCheck}
           />
           <SubmissionReviewList
-            variant="detailed"
             items={reviewItems}
             onApprove={handleApprove}
             onReject={handleReject}
