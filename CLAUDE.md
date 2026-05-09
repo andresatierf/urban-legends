@@ -42,19 +42,6 @@ bun run format:fix      # Auto-format code (oxfmt)
 
 ### Git Commits
 
-**CRITICAL**: When asked to commit changes, you MUST use the Skill tool with the "commit" skill:
-
-```
-Use the Skill tool: skill="commit"
-```
-
-Do NOT manually create commit messages or use `git commit` directly. The commit skill will:
-
-- Analyze staged changes automatically
-- Generate properly formatted conventional commit messages
-- Match the repository's existing commit style
-- Use heredoc format correctly
-
 The repository follows this commit format:
 
 ```
