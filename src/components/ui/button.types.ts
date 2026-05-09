@@ -1,7 +1,9 @@
 export const BUTTON_VARIANTS = {
-  SOLID: "solid",
+  DEFAULT: "default",
   OUTLINE: "outline",
+  SECONDARY: "secondary",
   GHOST: "ghost",
+  DESTRUCTIVE: "destructive",
   LINK: "link",
 } as const;
 
@@ -17,12 +19,12 @@ export const BUTTON_COLORS = {
 
 export const BUTTON_SIZES = {
   DEFAULT: "default",
+  XS: "xs",
   SM: "sm",
-  MD: "md",
   LG: "lg",
   ICON: "icon",
+  ICON_XS: "icon-xs",
   ICON_SM: "icon-sm",
-  ICON_MD: "icon-md",
   ICON_LG: "icon-lg",
 } as const;
 

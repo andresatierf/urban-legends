@@ -10,7 +10,7 @@ import { UpsertTournamentFormDialog } from "../form/upsert-tournament-form";
 
 export function AdminQuickActions() {
   return (
-    <Card variant="admin">
+    <Card>
       <CardHeader>
         <CardTitle className="text-foreground text-xl font-semibold">
           Quick Actions

@@ -73,7 +73,7 @@ export function PublicLeaderboardCard({
               {totalTeams} team{totalTeams === 1 ? "" : "s"} competing
             </CardDescription>
           </div>
-          <Badge variant="approved">Live</Badge>
+          <Badge variant="default">Live</Badge>
         </div>
       </CardHeader>
       <CardContent>

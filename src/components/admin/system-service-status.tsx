@@ -17,7 +17,7 @@ export function SystemServiceStatus({ services }: SystemServiceStatusProps) {
   const getStatusBadge = (status: string) => {
     if (status === "healthy") {
       return (
-        <Badge variant="approved" className="gap-1">
+        <Badge variant="default" className="gap-1">
           <CheckCircle className="h-3 w-3" />
           Healthy
         </Badge>

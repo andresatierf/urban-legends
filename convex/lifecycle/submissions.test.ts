@@ -215,7 +215,7 @@ describe("submit", () => {
       expect(sub?.state).toBe("pending");
       expect(sub?.submissionGroupId).toBeDefined();
 
-      const group = await ctx.db.get(sub?.submissionGroupId!);
+      const group = await ctx.db.get(sub!.submissionGroupId!);
       expect(group).not.toBeNull();
       expect(group?.state).toBe("pending");
       expect(group?.participantCount).toBe(1);

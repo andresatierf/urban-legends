@@ -166,7 +166,7 @@ function FilterButtons({
       {filters.map((filter) => (
         <Button
           key={filter.value}
-          variant={currentFilter === filter.value ? "solid" : "ghost"}
+          variant={currentFilter === filter.value ? "default" : "ghost"}
           size="sm"
           onClick={() => onFilterChange(filter.value)}
           className="h-7 text-xs"

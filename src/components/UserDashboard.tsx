@@ -99,7 +99,7 @@ export function UserDashboard(_props: UserDashboardProps) {
       />
 
       {isAdmin && adminStats && (
-        <Card variant="admin">
+        <Card>
           <CardHeader className="flex flex-row gap-2 p-6 pb-0">
             <SvgIcon variant="purple" className="p-0">
               <path
@@ -148,7 +148,7 @@ export function UserDashboard(_props: UserDashboardProps) {
             </p>
             <div className="flex flex-wrap gap-2">
               <CardAction>
-                <Button variant="solid" color="purple" asChild>
+                <Button variant="default" color="purple" asChild>
                   <Link to="/admin">Admin Dashboard</Link>
                 </Button>
               </CardAction>

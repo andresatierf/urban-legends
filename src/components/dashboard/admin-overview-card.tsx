@@ -38,7 +38,7 @@ interface AdminOverviewCardProps {
 
 export function AdminOverviewCard({ stats }: AdminOverviewCardProps) {
   return (
-    <Card variant="admin">
+    <Card>
       <CardHeader className="flex flex-row gap-2 p-6 pb-0">
         <SvgIcon variant="purple" className="p-0">
           <path
@@ -85,7 +85,7 @@ export function AdminOverviewCard({ stats }: AdminOverviewCardProps) {
         <p className="pb-2 text-sm font-medium text-gray-700">Admin Actions</p>
         <div className="flex flex-wrap gap-2">
           <CardAction>
-            <Button variant="solid" color="purple" asChild>
+            <Button variant="default" color="purple" asChild>
               <Link to="/admin">Admin Dashboard</Link>
             </Button>
           </CardAction>

@@ -50,7 +50,7 @@ export function AdminPendingActionsPanel({
           <div className="flex items-center gap-2">
             <Badge
               variant={
-                pendingActions.pendingSubmissions > 0 ? "pending" : "outline"
+                pendingActions.pendingSubmissions > 0 ? "secondary" : "outline"
               }
             >
               {pendingActions.pendingSubmissions}
@@ -73,7 +73,9 @@ export function AdminPendingActionsPanel({
           </div>
           <div className="flex items-center gap-2">
             <Badge
-              variant={pendingActions.joinRequests > 0 ? "pending" : "outline"}
+              variant={
+                pendingActions.joinRequests > 0 ? "secondary" : "outline"
+              }
             >
               {pendingActions.joinRequests}
             </Badge>

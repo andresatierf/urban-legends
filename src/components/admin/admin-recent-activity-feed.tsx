@@ -39,19 +39,11 @@ export function AdminRecentActivityFeed({
 
   const getStateBadgeVariant = (
     state: string,
-  ):
-    | "approved"
-    | "rejected"
-    | "pending"
-    | "deleted"
-    | "outline"
-    | "default"
-    | "secondary"
-    | "destructive" => {
-    if (state === "approved") return "approved";
-    if (state === "rejected") return "rejected";
-    if (state === "pending") return "pending";
-    if (state === "deleted") return "deleted";
+  ): "outline" | "default" | "secondary" | "destructive" => {
+    if (state === "approved") return "default";
+    if (state === "rejected") return "destructive";
+    if (state === "pending") return "secondary";
+    if (state === "deleted") return "outline";
     return "outline";
   };
 
