@@ -39,15 +39,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
+import { getInitials } from "../users/utils";
 
 function StatusBadge({ status }: { status: "active" | "upcoming" | "ended" }) {
   switch (status) {
@@ -122,6 +114,12 @@ function TeamRankRow({
 }) {
   const barWidth = maxPoints > 0 ? (team.points / maxPoints) * 100 : 0;
 
+  const podiumColors: Record<number, string> = {
+    1: "text-podium-gold",
+    2: "text-podium-silver",
+    3: "text-podium-bronze",
+  };
+
   return (
     <TableRow
       className={isUserTeam ? "bg-blue-50/50 dark:bg-blue-950/20" : undefined}
@@ -129,13 +127,7 @@ function TeamRankRow({
       <TableCell className="w-12 text-center">
         {rank <= 3 ? (
           <div
-            className={`flex items-center justify-center gap-0.5 font-bold ${
-              rank === 1
-                ? "text-podium-gold"
-                : rank === 2
-                  ? "text-podium-silver"
-                  : "text-podium-bronze"
-            }`}
+            className={`flex items-center justify-center gap-0.5 font-bold ${podiumColors[rank]}`}
           >
             <Trophy className="h-3.5 w-3.5" />
             {rank}

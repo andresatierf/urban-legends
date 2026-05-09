@@ -53,7 +53,7 @@ export type DemoTournament = {
 export type DemoTournamentDetails = {
   tournament: DemoTournament;
   teams: DemoTeam[];
-  userTeam: (DemoTeam & { memberCount: number }) | null;
+  userTeam: DemoTeam | null;
   status: "active" | "upcoming" | "ended";
   canEdit: boolean;
   canDelete: boolean;
@@ -282,9 +282,7 @@ const totalParticipants = TEAMS.reduce((s, t) => s + t.memberCount, 0);
 export const DEMO_ACTIVE: DemoTournamentDetails = {
   tournament: TOURNAMENT,
   teams: TEAMS,
-  userTeam: USER_TEAM
-    ? { ...USER_TEAM, memberCount: USER_TEAM.memberCount }
-    : null,
+  userTeam: USER_TEAM,
   status: "active",
   canEdit: true,
   canDelete: false,
@@ -332,9 +330,7 @@ export const DEMO_ENDED: DemoTournamentDetails = {
     completedAt: "2026-02-10T23:59:59Z",
   },
   teams: TEAMS,
-  userTeam: USER_TEAM
-    ? { ...USER_TEAM, memberCount: USER_TEAM.memberCount }
-    : null,
+  userTeam: USER_TEAM,
   status: "ended",
   canEdit: false,
   canDelete: false,

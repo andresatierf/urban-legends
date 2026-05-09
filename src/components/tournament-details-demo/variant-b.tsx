@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { useFormattedDate } from "@/hooks/useFormattedDate";
+import { cn } from "@/lib/utils";
 
 import { SectionHeader } from "../section-header";
 import type { DemoTournamentDetails } from "../tournament-details-demo-fixtures";
@@ -26,15 +27,7 @@ import { Card, CardContent, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
 import { Separator } from "../ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
+import { getInitials } from "../users/utils";
 
 function StatusBadge({ status }: { status: "active" | "upcoming" | "ended" }) {
   const colors = {
@@ -47,7 +40,10 @@ function StatusBadge({ status }: { status: "active" | "upcoming" | "ended" }) {
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${colors[status]}`}
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
+        colors[status],
+      )}
     >
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>

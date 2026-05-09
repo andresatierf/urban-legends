@@ -33,15 +33,7 @@ import {
 } from "../ui/card";
 import { Progress } from "../ui/progress";
 import { Separator } from "../ui/separator";
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
+import { getInitials } from "../users/utils";
 
 function StatusBadge({ status }: { status: "active" | "upcoming" | "ended" }) {
   switch (status) {
