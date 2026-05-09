@@ -1,5 +1,5 @@
+import { Link } from "@tanstack/react-router";
 import { Trophy, Users } from "lucide-react";
-import Link from "next/link";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -33,7 +33,8 @@ export function UserTeamCard({
             <div className="mt-2 flex items-center gap-2 text-muted-foreground text-sm">
               <Trophy className="h-4 w-4" />
               <Link
-                href={`/tournaments/${tournament._id}`}
+                to="/tournaments/$tournamentId"
+                params={{ tournamentId: tournament._id }}
                 className="hover:underline"
               >
                 {tournament.name}
@@ -49,7 +50,9 @@ export function UserTeamCard({
         </div>
         <div className="flex xs:flex-col flex-wrap gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/teams/${team._id}`}>View Team</Link>
+            <Link to="/teams/$teamId" params={{ teamId: team._id }}>
+              View Team
+            </Link>
           </Button>
         </div>
       </CardContent>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import {
   BarChart3,
   Calendar,
@@ -9,7 +10,6 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import Link from "next/link";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import type { TournamentWithAuthority } from "../../../convex/tournaments";
 import { Badge } from "../ui/badge";
@@ -57,7 +57,7 @@ export function TournamentWithAuthorityCard({ tournament }: Props) {
 
         {/* Reviewer call-out: only when pending > 0 */}
         {authority.canReview && authority.pendingReviewCount > 0 && (
-          <Link href="/reviewer" className="block">
+          <Link to="/reviewer" className="block">
             <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-secondary-foreground text-sm">
               <Trophy className="h-4 w-4 shrink-0" />
               Review queue ({authority.pendingReviewCount} pending)
@@ -70,7 +70,8 @@ export function TournamentWithAuthorityCard({ tournament }: Props) {
           <div className="rounded-md border px-3 py-2 text-sm">
             <div className="flex items-center gap-2 font-medium">
               <Link
-                href={`/teams/${authority.team._id}`}
+                to="/teams/$teamId"
+                params={{ teamId: authority.team._id }}
                 className="hover:underline"
               >
                 Your Team: {authority.team.name}
@@ -97,13 +98,16 @@ export function TournamentWithAuthorityCard({ tournament }: Props) {
           {authority.canManage && (
             <>
               <Button variant="outline" size="sm" asChild>
-                <Link href={`/admin/tournaments?edit=${tournament._id}`}>
+                <Link to={`/admin/tournaments?edit=${tournament._id}` as never}>
                   <Edit className="h-4 w-4" />
                   Edit
                 </Link>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <Link href={`/tournaments/${tournament._id}/leaderboard`}>
+                <Link
+                  to="/tournaments/$tournamentId/leaderboard"
+                  params={{ tournamentId: tournament._id }}
+                >
                   <BarChart3 className="h-4 w-4" />
                   Leaderboard
                 </Link>
@@ -112,7 +116,10 @@ export function TournamentWithAuthorityCard({ tournament }: Props) {
           )}
           {!authority.canManage && (
             <Button asChild>
-              <Link href={`/tournaments/${tournament._id}`}>
+              <Link
+                to="/tournaments/$tournamentId"
+                params={{ tournamentId: tournament._id }}
+              >
                 <span>Browse Teams</span>
                 <ChevronRight className="h-4 w-4" />
               </Link>

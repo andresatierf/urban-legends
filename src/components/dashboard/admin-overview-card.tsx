@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { StatCard } from "@/components/stat-card";
 import { SvgIcon } from "@/components/svg-icon";
 import { Button } from "@/components/ui/button";
@@ -85,17 +85,17 @@ export function AdminOverviewCard({ stats }: AdminOverviewCardProps) {
         <div className="flex flex-wrap gap-2">
           <CardAction>
             <Button variant="solid" color="purple" asChild>
-              <Link href="/admin">Admin Dashboard</Link>
+              <Link to="/admin">Admin Dashboard</Link>
             </Button>
           </CardAction>
           <Button variant="outline" color="purple" asChild>
-            <Link href="/tournaments">Manage Tournaments</Link>
+            <Link to="/tournaments">Manage Tournaments</Link>
           </Button>
           <Button variant="outline" color="purple" asChild>
-            <Link href="/teams">Manage Teams</Link>
+            <Link to="/teams">Manage Teams</Link>
           </Button>
           <Button variant="outline" color="purple" asChild>
-            <Link href="/users">Manage Users</Link>
+            <Link to="/users">Manage Users</Link>
           </Button>
         </div>
       </CardFooter>

@@ -1,7 +1,7 @@
 "use client";
 
 import { cva } from "class-variance-authority";
-import Image from "next/image";
+import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { toUTCDateString } from "../../../convex/lib/dates";

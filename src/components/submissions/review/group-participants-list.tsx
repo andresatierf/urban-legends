@@ -1,8 +1,8 @@
 "use client";
 
 import { Check, X } from "lucide-react";
-import Image from "next/image";
 import type { UserWithRoles } from "@/../convex/users";
+import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
 import type { SubmitterEvidence } from "./types";
 

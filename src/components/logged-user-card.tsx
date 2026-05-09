@@ -1,5 +1,5 @@
+import { Link } from "@tanstack/react-router";
 import { Settings } from "lucide-react";
-import Link from "next/link";
 import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -28,7 +28,8 @@ export function LoggedUserCard() {
         className={cn("flex items-center gap-2 p-3", { "p-0": !open })}
       >
         <Link
-          href={`/users/${user._id}`}
+          to="/users/$userId"
+          params={{ userId: user._id }}
           className="flex flex-1 items-center gap-2 transition"
         >
           <Avatar>
@@ -48,7 +49,7 @@ export function LoggedUserCard() {
           className={cn("ml-auto", { hidden: !open })}
           asChild
         >
-          <Link href="/settings">
+          <Link to="/settings">
             <Settings className="h-4 w-4" />
           </Link>
         </Button>

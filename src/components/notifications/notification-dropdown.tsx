@@ -1,7 +1,7 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
-import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -99,7 +99,7 @@ export function NotificationDropdown({
               className="h-auto w-full p-0 text-sm"
               asChild
             >
-              <Link href="/notifications" onClick={() => setIsOpen(false)}>
+              <Link to="/notifications" onClick={() => setIsOpen(false)}>
                 View all notifications
               </Link>
             </Button>

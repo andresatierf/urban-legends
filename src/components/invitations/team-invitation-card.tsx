@@ -1,6 +1,6 @@
+import { Link } from "@tanstack/react-router";
 import { capitalize } from "lodash";
 import { Calendar, Check, Loader2, Trophy, UserPlus, X } from "lucide-react";
-import Link from "next/link";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Badge } from "../ui/badge";
@@ -42,7 +42,8 @@ export function TeamInvitationCard({
             <span className="flex items-center gap-1">
               <Trophy className="h-4 w-4" />
               <Link
-                href={`/tournaments/${invitation.tournament?._id}`}
+                to="/tournaments/$tournamentId"
+                params={{ tournamentId: invitation.tournament?._id ?? "" }}
                 className="hover:underline"
               >
                 {invitation.tournament?.name}

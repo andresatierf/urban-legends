@@ -1,6 +1,4 @@
-"use client";
-
-import { usePathname } from "next/navigation";
+import { useRouterState } from "@tanstack/react-router";
 
 /**
  * Hook to determine if a route is currently active based on the current pathname.
@@ -15,7 +13,7 @@ import { usePathname } from "next/navigation";
  * ```
  */
 export function useActiveRoute() {
-  const pathname = usePathname();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   /**
    * Check if a given href matches the current route.

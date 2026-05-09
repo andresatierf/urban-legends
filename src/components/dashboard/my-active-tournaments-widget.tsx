@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import type { Doc } from "../../../convex/_generated/dataModel";
@@ -33,7 +33,7 @@ export function MyActiveTournamentsWidget({
             Join a tournament to start competing with your team.
           </EmptyDescription>
           <Button asChild className="mt-4">
-            <Link href="/tournaments">Browse Tournaments</Link>
+            <Link to="/tournaments">Browse Tournaments</Link>
           </Button>
         </Empty>
       ) : (

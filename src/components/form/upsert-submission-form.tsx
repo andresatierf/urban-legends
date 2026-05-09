@@ -1,7 +1,7 @@
 "use client";
 
+import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
-import { useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
 import { z } from "zod";
 import { EvidenceUploader } from "@/components/submissions/evidence-uploader";
@@ -54,7 +54,7 @@ export function UpsertSubmissionFormDialog({
 }: Props) {
   const { user, isDev } = useUser();
   const formId = useId();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [internalOpen, setInternalOpen] = useState(false);
   const [evidenceStorageIds, setEvidenceStorageIds] = useState<
     Id<"_storage">[]
@@ -110,7 +110,7 @@ export function UpsertSubmissionFormDialog({
             evidenceStorageIds,
           }),
         onSuccess: () => {
-          router.push("/submissions");
+          navigate({ to: "/submissions" });
           setOpen(false);
           form.reset();
           setEvidenceStorageIds([]);

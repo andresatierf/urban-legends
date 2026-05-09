@@ -1,7 +1,7 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import Link from "next/link";
 import { useMemo } from "react";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../convex/_generated/api";
@@ -147,17 +147,17 @@ export function UserDashboard(_props: UserDashboardProps) {
             <div className="flex flex-wrap gap-2">
               <CardAction>
                 <Button variant="solid" color="purple" asChild>
-                  <Link href="/admin">Admin Dashboard</Link>
+                  <Link to="/admin">Admin Dashboard</Link>
                 </Button>
               </CardAction>
               <Button variant="outline" color="purple" asChild>
-                <Link href="/tournaments">Manage Tournaments</Link>
+                <Link to="/tournaments">Manage Tournaments</Link>
               </Button>
               <Button variant="outline" color="purple" asChild>
-                <Link href="/teams">Manage Teams</Link>
+                <Link to="/teams">Manage Teams</Link>
               </Button>
               <Button variant="outline" color="purple" asChild>
-                <Link href="/users">Manage Users</Link>
+                <Link to="/users">Manage Users</Link>
               </Button>
             </div>
           </CardFooter>

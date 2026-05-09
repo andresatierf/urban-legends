@@ -1,6 +1,6 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import * as z from "zod";
 import { useAppForm } from "@/hooks/form";
@@ -64,7 +64,7 @@ export function UpsertTournamentFormDialog({
 }: UpsertTournamentFormProps) {
   const { isDev } = useUser();
   const formId = useId();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [internalOpen, setInternalOpen] = useState(false);
 
   const open = controlledOpen ?? internalOpen;
@@ -96,7 +96,7 @@ export function UpsertTournamentFormDialog({
       await tryMutate({
         fn: () => upsertTournament({ ...value, _id: tournament?._id }),
         onSuccess: (upsertedId) => {
-          router.push(`/tournaments/${upsertedId}`);
+          navigate({ to: `/tournaments/${upsertedId}` });
           setOpen(false);
         },
         successToast: `Tournament ${tournament ? "updated" : "created"} successfully!`,

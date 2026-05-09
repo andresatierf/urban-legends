@@ -1,6 +1,6 @@
+import { Link, type LinkProps } from "@tanstack/react-router";
 import { startCase } from "lodash";
 import { type LucideIcon, MoreHorizontalIcon } from "lucide-react";
-import Link, { type LinkProps } from "next/link";
 import { Fragment } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -53,7 +53,7 @@ export function DetailsCard({
                 if ("href" in action)
                   return (
                     <Button key={action.label} variant="outline" asChild>
-                      <Link href={action.href}>
+                      <Link to={action.href}>
                         <action.icon className="h-4 w-4" />
                         {action.label}
                       </Link>
@@ -94,7 +94,7 @@ export function DetailsCard({
                           )}
                           {"href" in action ? (
                             <DropdownMenuItem asChild>
-                              <Link href={action.href}>
+                              <Link to={action.href}>
                                 <action.icon className="h-4 w-4" />
                                 {action.label}
                               </Link>

@@ -1,8 +1,8 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { Trophy, Users } from "lucide-react";
-import Link from "next/link";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -37,7 +37,8 @@ export function WinnerAnnouncement({ tournamentId }: Props) {
       <CardContent className="space-y-4">
         <div>
           <Link
-            href={`/teams/${winner.team._id}`}
+            to="/teams/$teamId"
+            params={{ teamId: winner.team._id }}
             className="font-bold text-3xl hover:underline"
           >
             {winner.team.name}
@@ -73,12 +74,17 @@ export function WinnerAnnouncement({ tournamentId }: Props) {
 
         <div className="flex gap-2">
           <Button asChild>
-            <Link href={`/tournaments/${tournamentId}/leaderboard`}>
+            <Link
+              to="/tournaments/$tournamentId/leaderboard"
+              params={{ tournamentId: tournamentId }}
+            >
               View Full Leaderboard
             </Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href={`/teams/${winner.team._id}`}>View Team Profile</Link>
+            <Link to="/teams/$teamId" params={{ teamId: winner.team._id }}>
+              View Team Profile
+            </Link>
           </Button>
         </div>
       </CardContent>

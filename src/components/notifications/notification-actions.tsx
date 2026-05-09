@@ -1,8 +1,8 @@
 "use client";
 
+import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { CheckIcon, XIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "../../../convex/_generated/api";
@@ -28,7 +28,7 @@ export function NotificationActions({
   actions,
   onActionComplete,
 }: NotificationActionsProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const markAsRead = useMutation(api.notifications.markAsRead);
   const respondToInvitation = useMutation(
@@ -84,7 +84,7 @@ export function NotificationActions({
       } else if (action.action === "view") {
         // Navigate to the related page
         if (action.args?.url) {
-          router.push(action.args.url as string);
+          navigate({ to: action.args.url as string });
         }
       } else if (action.action === "dismiss") {
         // Just mark as read (already done above)

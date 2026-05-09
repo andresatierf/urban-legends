@@ -1,8 +1,8 @@
+import { Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMutation } from "convex/react";
 import { capitalize } from "lodash";
 import { Check, Pencil, Trash, X } from "lucide-react";
-import Link from "next/link";
 import { useMemo } from "react";
 import { useUser } from "@/hooks/useUser";
 import { tryMutate } from "@/lib/utils";
@@ -121,7 +121,7 @@ export function SubmissionsDataTable<T, V>({
                 </>
               )}
               <Button variant="outline" size="icon" className="z-10" asChild>
-                <Link href={`/submissions/${submission._id}/edit`}>
+                <Link to={`/submissions/${submission._id}/edit` as never}>
                   <Pencil />
                 </Link>
               </Button>

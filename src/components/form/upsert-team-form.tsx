@@ -1,8 +1,8 @@
 "use client";
 
+import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
 import z from "zod";
 import { useAppForm } from "@/hooks/form";
@@ -49,7 +49,7 @@ export function UpsertTeamFormDialog({
 }: Props) {
   const { isDev } = useUser();
   const formId = useId();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [internalOpen, setInternalOpen] = useState(false);
 
   const open = controlledOpen ?? internalOpen;
@@ -85,7 +85,7 @@ export function UpsertTeamFormDialog({
       await tryMutate({
         fn: () => upsertUserTeam({ _id: team?._id, ...value }),
         onSuccess: (upsertedTeamId) => {
-          router.push(`/teams/${upsertedTeamId}`);
+          navigate({ to: `/teams/${upsertedTeamId}` });
           setOpen(false);
         },
         successToast: `Team ${team ? "updated" : "created"} successfully!`,
