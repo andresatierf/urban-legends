@@ -32,16 +32,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import type { TeamDetailsFixture } from "./team-details-fixtures";
-import { ALL_FIXTURES } from "./team-details-fixtures";
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
+import { ALL_FIXTURES, getInitials } from "./team-details-fixtures";
 
 function HeroHeader({ data }: { data: TeamDetailsFixture }) {
   const { team, tournament, captain, stats, permissions, userMembership } =

@@ -33,20 +33,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 
 import type { TeamDetailsFixture } from "./team-details-fixtures";
-import { ALL_FIXTURES } from "./team-details-fixtures";
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
+import { ALL_FIXTURES, getInitials } from "./team-details-fixtures";
 
 function Sidebar({ data }: { data: TeamDetailsFixture }) {
   const { team, tournament, stats, permissions, userMembership } = data;

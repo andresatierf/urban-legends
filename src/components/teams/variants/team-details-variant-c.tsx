@@ -41,21 +41,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 import type {
   FixtureMember,
   TeamDetailsFixture,
 } from "./team-details-fixtures";
-import { ALL_FIXTURES } from "./team-details-fixtures";
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
+import { ALL_FIXTURES, getInitials } from "./team-details-fixtures";
 
 function TeamInfoCard({ data }: { data: TeamDetailsFixture }) {
   const { team, tournament, stats, userMembership, permissions, captain } =
@@ -217,7 +209,10 @@ function MemberRow({
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-md px-3 py-2 ${isCaptain ? "bg-muted/50" : ""}`}
+      className={cn(
+        "flex items-center gap-3 rounded-md px-3 py-2",
+        isCaptain && "bg-muted/50",
+      )}
     >
       <Avatar size="sm">
         <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
