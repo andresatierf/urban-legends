@@ -28,7 +28,7 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
           )}
         </div>
         <div className="bg-muted/30 flex min-h-screen w-full flex-col items-center">
-          <main className="mt-8 flex w-full max-w-5xl flex-1 flex-col gap-4 p-4">
+          <main className="mt-8 flex w-full flex-1 flex-col gap-4 p-4">
             {children}
           </main>
           <Toaster />

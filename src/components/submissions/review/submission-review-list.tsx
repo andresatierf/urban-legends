@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/useDebounce";
 
-import { SubmissionReviewCard } from "./submission-review-card";
+import { CarouselReviewCard } from "./submission-review-card-carousel";
 import { filterReviewItems, sortReviewItems } from "./transforms";
 import type { ReviewItem } from "./types";
 
@@ -119,7 +119,7 @@ export function SubmissionReviewList({
       )}
 
       {/* Submissions grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filteredAndSortedItems.map((item) => {
           const key =
             item.type === "individual"
@@ -127,7 +127,7 @@ export function SubmissionReviewList({
               : `group-${item.data.group._id}`;
 
           return (
-            <SubmissionReviewCard
+            <CarouselReviewCard
               key={key}
               item={item}
               onApprove={() => onApprove(item)}
