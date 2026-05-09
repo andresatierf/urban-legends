@@ -17,6 +17,7 @@ import { useFormattedDate } from "@/hooks/useFormattedDate";
 
 import type { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { JoinTeamFormButton } from "../form/join-team-form-button";
 import { UpsertTeamFormDialog } from "../form/upsert-team-form";
 import { UpsertTournamentFormDialog } from "../form/upsert-tournament-form";
 import { SectionHeader } from "../section-header";
@@ -63,11 +64,13 @@ function TournamentTimeline({ data }: { data: TournamentDetails }) {
   const start = new Date(data.tournament.startDate).getTime();
   const end = new Date(data.tournament.endDate).getTime();
   const now = Date.now();
+  const msPerDay = 1000 * 60 * 60 * 24;
   const total = end - start;
   const elapsed = Math.max(0, Math.min(now - start, total));
   const pct = total > 0 ? Math.round((elapsed / total) * 100) : 0;
-  const daysLeft = Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
-  const totalDays = Math.ceil(total / (1000 * 60 * 60 * 24));
+  const daysLeft = Math.max(0, Math.ceil((end - now) / msPerDay));
+  const totalDays = Math.max(1, Math.ceil(total / msPerDay));
+  const currentDay = Math.min(totalDays, Math.floor(elapsed / msPerDay) + 1);
 
   return (
     <div className="space-y-3">
@@ -86,6 +89,7 @@ function TournamentTimeline({ data }: { data: TournamentDetails }) {
         </div>
       </div>
       <Progress
+        aria-label="Tournament progress"
         value={
           data.status === "ended" ? 100 : data.status === "upcoming" ? 0 : pct
         }
@@ -94,12 +98,12 @@ function TournamentTimeline({ data }: { data: TournamentDetails }) {
       <div className="text-muted-foreground text-center text-xs">
         {data.status === "active" && (
           <>
-            Day {totalDays - daysLeft} of {totalDays} · {daysLeft} day
+            Day {currentDay} of {totalDays} · {daysLeft} day
             {daysLeft === 1 ? "" : "s"} left
           </>
         )}
         {data.status === "upcoming" && (
-          <>Starts in {Math.ceil((start - now) / (1000 * 60 * 60 * 24))} days</>
+          <>Starts in {Math.ceil((start - now) / msPerDay)} days</>
         )}
         {data.status === "ended" && "Tournament complete"}
       </div>
@@ -127,9 +131,7 @@ function TeamRankRow({
   };
 
   return (
-    <TableRow
-      className={isUserTeam ? "bg-blue-50/50 dark:bg-blue-950/20" : undefined}
-    >
+    <TableRow className={isUserTeam ? "bg-card-info-from/40" : undefined}>
       <TableCell className="w-12 text-center">
         {rank <= 3 ? (
           <div
@@ -146,7 +148,7 @@ function TeamRankRow({
         <div className="flex items-center gap-2">
           <span className="font-medium">{team.name}</span>
           {isUserTeam && (
-            <Badge variant="outline" className="text-[0.6rem]">
+            <Badge variant="outline" className="text-xs">
               You
             </Badge>
           )}
@@ -188,6 +190,10 @@ type Props = {
 export function TournamentDetailsLayout({ data, tournamentId }: Props) {
   const sortedTeams = [...data.teams].sort((a, b) => b.points - a.points);
   const maxPoints = sortedTeams[0]?.points ?? 0;
+  const winnerTeam =
+    data.status === "ended" && data.tournament.winnerId
+      ? data.teams.find((t) => t._id === data.tournament.winnerId)
+      : undefined;
   const [editTournamentDialogOpen, setEditTournamentDialogOpen] =
     useState(false);
 
@@ -265,7 +271,7 @@ export function TournamentDetailsLayout({ data, tournamentId }: Props) {
           </Card>
 
           {data.userTeam && (
-            <Card className="border-blue-200 dark:border-blue-800">
+            <Card className="border-card-info-border">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Shield className="text-primary h-4 w-4" />
@@ -352,14 +358,14 @@ export function TournamentDetailsLayout({ data, tournamentId }: Props) {
             )}
           </div>
 
-          {data.status === "ended" && data.tournament.winnerId && (
-            <Card className="border-yellow-400 bg-yellow-50/50 dark:border-yellow-600 dark:bg-yellow-950/20">
+          {winnerTeam && (
+            <Card className="border-podium-gold bg-podium-gold-bg">
               <CardContent className="flex items-center gap-3">
-                <Trophy className="h-8 w-8 text-yellow-600" />
+                <Trophy className="text-podium-gold h-8 w-8" />
                 <div>
                   <div className="font-bold">Tournament Champion</div>
                   <div className="text-muted-foreground text-sm">
-                    {sortedTeams[0]?.name} — {sortedTeams[0]?.points} pts
+                    {winnerTeam.name} — {winnerTeam.points} pts
                   </div>
                 </div>
               </CardContent>
@@ -415,12 +421,10 @@ export function TournamentDetailsLayout({ data, tournamentId }: Props) {
                       key={team._id}
                       size="sm"
                       className={
-                        isUserTeam
-                          ? "border-blue-200 dark:border-blue-800"
-                          : undefined
+                        isUserTeam ? "border-card-info-border" : undefined
                       }
                     >
-                      <CardContent className="space-y-2">
+                      <CardContent className="flex flex-1 flex-col gap-2">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-semibold">
                             {team.name}
@@ -453,19 +457,31 @@ export function TournamentDetailsLayout({ data, tournamentId }: Props) {
                             </div>
                           ))}
                         </div>
-                        <div className="flex items-center justify-between pt-1">
+                        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
                           <span className="text-muted-foreground text-xs">
                             {team.memberCount}
                             {team.maxMembers && `/${team.maxMembers}`} members
                           </span>
-                          <Button size="xs" variant="outline" asChild>
-                            <Link
-                              to="/teams/$teamId"
-                              params={{ teamId: team._id }}
-                            >
-                              View
-                            </Link>
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            {!data.userTeam && data.status !== "ended" && (
+                              <JoinTeamFormButton
+                                teamId={team._id}
+                                team={team}
+                                currentMemberCount={team.memberCount}
+                                isUserMember={isUserTeam}
+                                isUserInTeam={false}
+                                size="xs"
+                              />
+                            )}
+                            <Button size="xs" variant="outline" asChild>
+                              <Link
+                                to="/teams/$teamId"
+                                params={{ teamId: team._id }}
+                              >
+                                View
+                              </Link>
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
