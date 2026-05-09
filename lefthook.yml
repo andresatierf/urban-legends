@@ -12,7 +12,9 @@ pre-commit:
       stage_fixed: true
     typecheck:
       glob: "*.{js,ts,jsx,tsx}"
-      exclude: "convex/_generated/**"
+      exclude:
+        - "convex/_generated/**"
+        - ".sandcastle/**"
       run: bun --bun tsc-files --noEmit {staged_files}
 post-checkout:
   commands:
