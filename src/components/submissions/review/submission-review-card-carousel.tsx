@@ -239,21 +239,11 @@ function IndividualPortrait({
           </span>
         </div>
       </div>
-      <div className="flex justify-center gap-1 py-2">
-        {hasMultiple ? (
-          evidence.map((img, idx) => (
-            <span
-              key={img._id}
-              className={cn(
-                "h-0.5 w-5 rounded-full transition",
-                idx === safeIdx ? "bg-primary" : "bg-muted",
-              )}
-            />
-          ))
-        ) : (
-          <span className="h-0.5 w-5" />
-        )}
-      </div>
+      <DotStrip
+        evidence={evidence}
+        activeIdx={safeIdx}
+        onSelect={setActiveIdx}
+      />
     </div>
   );
 }
@@ -326,21 +316,11 @@ function GroupPortraitWithStrip({
           {participantCount}/{totalTeamMembers} submitted
         </div>
       </div>
-      <div className="flex justify-center gap-1 py-2">
-        {hasMultipleImages ? (
-          lead.evidence.map((img, idx) => (
-            <span
-              key={img._id}
-              className={cn(
-                "h-0.5 w-5 rounded-full transition",
-                idx === safeImgIdx ? "bg-primary" : "bg-muted",
-              )}
-            />
-          ))
-        ) : (
-          <span className="h-0.5 w-5" />
-        )}
-      </div>
+      <DotStrip
+        evidence={lead.evidence}
+        activeIdx={safeImgIdx}
+        onSelect={setActiveImgIdx}
+      />
       <SubmitterStrip
         submitterEvidence={withImages}
         activeIdx={safeIdx}
@@ -410,6 +390,48 @@ function SubmitterStrip({
             >
               {se.submitterName.split(" ")[0]}
             </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function DotStrip({
+  evidence,
+  activeIdx,
+  onSelect,
+}: {
+  evidence: EvidenceImage[];
+  activeIdx: number;
+  onSelect: (idx: number) => void;
+}) {
+  if (evidence.length <= 1) {
+    return (
+      <div className="flex justify-center gap-1 py-2">
+        <span className="h-0.5 w-5" />
+      </div>
+    );
+  }
+  return (
+    <div className="flex justify-center gap-1 py-2">
+      {evidence.map((img, idx) => {
+        const isActive = idx === activeIdx;
+        return (
+          <button
+            key={img._id}
+            type="button"
+            onClick={() => onSelect(idx)}
+            aria-label={`Show image ${idx + 1} of ${evidence.length}`}
+            aria-pressed={isActive}
+            className="grid h-4 w-5 place-items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span
+              className={cn(
+                "h-0.5 w-5 rounded-full transition",
+                isActive ? "bg-primary" : "bg-muted",
+              )}
+            />
           </button>
         );
       })}
