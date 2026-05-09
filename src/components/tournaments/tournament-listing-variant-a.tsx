@@ -167,14 +167,9 @@ function ImmersiveCard({
             Manage
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>
-        ) : authority.team ? (
-          <Button size="sm" className="ml-auto">
-            View Tournament
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Button>
         ) : (
           <Button size="sm" className="ml-auto">
-            Browse Teams
+            {authority.team ? "View Tournament" : "Browse Teams"}
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         )}

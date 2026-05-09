@@ -27,6 +27,7 @@ import {
   DEMO_TOURNAMENTS,
   daysUntil,
   getTournamentStatus,
+  partitionTournaments,
   tournamentProgress,
 } from "./tournament-listing-fixtures";
 
@@ -139,6 +140,19 @@ function CompactCard({ tournament }: { tournament: TournamentWithAuthority }) {
     ended: { label: "Ended", variant: "secondary" as const },
   }[status];
 
+  let dateLabel: string;
+  switch (status) {
+    case "upcoming":
+      dateLabel = `Starts ${startDate}`;
+      break;
+    case "active":
+      dateLabel = `${daysUntil(tournament.endDate)}d left`;
+      break;
+    case "ended":
+      dateLabel = "Ended";
+      break;
+  }
+
   return (
     <Card>
       <CardContent className="flex flex-col gap-2">
@@ -164,11 +178,7 @@ function CompactCard({ tournament }: { tournament: TournamentWithAuthority }) {
           </span>
           <span className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            {status === "upcoming"
-              ? `Starts ${startDate}`
-              : status === "active"
-                ? `${daysUntil(tournament.endDate)}d left`
-                : `Ended`}
+            {dateLabel}
           </span>
         </div>
 
@@ -237,12 +247,7 @@ function EndedRow({ tournament }: { tournament: TournamentWithAuthority }) {
 }
 
 export function TournamentListingVariantC() {
-  const now = new Date().toISOString();
-  const active = DEMO_TOURNAMENTS.filter(
-    (t) => t.startDate <= now && t.endDate >= now,
-  );
-  const upcoming = DEMO_TOURNAMENTS.filter((t) => t.startDate > now);
-  const ended = DEMO_TOURNAMENTS.filter((t) => t.endDate < now);
+  const { active, upcoming, ended } = partitionTournaments(DEMO_TOURNAMENTS);
 
   return (
     <div className="space-y-8">

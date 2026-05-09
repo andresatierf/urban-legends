@@ -19,6 +19,7 @@ import {
   DEMO_TOURNAMENTS,
   daysUntil,
   getTournamentStatus,
+  partitionTournaments,
 } from "./tournament-listing-fixtures";
 
 function StatusIndicator({
@@ -50,12 +51,18 @@ function TournamentRow({
   const status = getTournamentStatus(tournament);
   const { authority, teamCount } = tournament;
 
-  const dateLabel =
-    status === "upcoming"
-      ? `Starts in ${daysUntil(tournament.startDate)}d`
-      : status === "active"
-        ? `${daysUntil(tournament.endDate)}d left`
-        : `Ended ${Math.abs(daysUntil(tournament.endDate))}d ago`;
+  let dateLabel: string;
+  switch (status) {
+    case "upcoming":
+      dateLabel = `Starts in ${daysUntil(tournament.startDate)}d`;
+      break;
+    case "active":
+      dateLabel = `${daysUntil(tournament.endDate)}d left`;
+      break;
+    case "ended":
+      dateLabel = `Ended ${Math.abs(daysUntil(tournament.endDate))}d ago`;
+      break;
+  }
 
   return (
     <div
@@ -145,12 +152,7 @@ function StatPill({
 }
 
 export function TournamentListingVariantB() {
-  const now = new Date().toISOString();
-  const active = DEMO_TOURNAMENTS.filter(
-    (t) => t.startDate <= now && t.endDate >= now,
-  );
-  const upcoming = DEMO_TOURNAMENTS.filter((t) => t.startDate > now);
-  const ended = DEMO_TOURNAMENTS.filter((t) => t.endDate < now);
+  const { active, upcoming, ended } = partitionTournaments(DEMO_TOURNAMENTS);
 
   const totalTeams = DEMO_TOURNAMENTS.reduce((s, t) => s + t.teamCount, 0);
   const pendingReviews = DEMO_TOURNAMENTS.reduce(
