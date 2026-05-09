@@ -1,11 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { ArrowLeft } from "lucide-react";
+
 import { SectionHeader } from "@/components/section-header";
 import { SubmissionDetailsCard } from "@/components/submissions/submission-details-card";
 import { SubmitterInfo } from "@/components/submissions/submitter-info";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 

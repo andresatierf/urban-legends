@@ -16,7 +16,9 @@ Scheduled job that soft-deletes notifications older than 90 days to prevent unbo
 ```typescript
 export const cleanupOldNotifications = internalMutation({
   args: {},
-  handler: async (ctx) => { /* ... */ }
+  handler: async (ctx) => {
+    /* ... */
+  },
 });
 ```
 
@@ -27,7 +29,7 @@ export const cleanupOldNotifications = internalMutation({
 crons.daily(
   "cleanup old notifications",
   { hourUTC: 2, minuteUTC: 0 }, // 2:00 AM UTC daily
-  internal.notifications.cleanupOldNotifications
+  internal.notifications.cleanupOldNotifications,
 );
 ```
 
@@ -81,8 +83,8 @@ export const cleanupOldNotifications = internalMutation({
         .filter((q) =>
           q.and(
             q.lt(q.field("createdAt"), cutoffIso),
-            q.neq(q.field("isDeleted"), true)
-          )
+            q.neq(q.field("isDeleted"), true),
+          ),
         )
         .take(batchSize);
 
@@ -90,9 +92,9 @@ export const cleanupOldNotifications = internalMutation({
 
       // Soft delete all notifications in batch
       await Promise.all(
-        oldNotifications.map(notification =>
-          ctx.db.patch(notification._id, { isDeleted: true })
-        )
+        oldNotifications.map((notification) =>
+          ctx.db.patch(notification._id, { isDeleted: true }),
+        ),
       );
 
       totalDeleted += oldNotifications.length;
@@ -101,10 +103,12 @@ export const cleanupOldNotifications = internalMutation({
       if (oldNotifications.length < batchSize) break;
     }
 
-    console.log(`Cleaned up ${totalDeleted} notifications older than ${retentionDays} days`);
+    console.log(
+      `Cleaned up ${totalDeleted} notifications older than ${retentionDays} days`,
+    );
 
     return { deletedCount: totalDeleted };
-  }
+  },
 });
 ```
 
@@ -126,7 +130,9 @@ Scheduled job that checks for tournaments starting in approximately 24 hours and
 ```typescript
 export const checkTournament24hWarnings = internalMutation({
   args: {},
-  handler: async (ctx) => { /* ... */ }
+  handler: async (ctx) => {
+    /* ... */
+  },
 });
 ```
 
@@ -137,7 +143,7 @@ export const checkTournament24hWarnings = internalMutation({
 crons.hourly(
   "tournament 24h warnings",
   { minuteUTC: 0 }, // Every hour at :00
-  internal.notifications.checkTournament24hWarnings
+  internal.notifications.checkTournament24hWarnings,
 );
 ```
 
@@ -166,6 +172,7 @@ type Tournament24hWarningsOutput = { notificationsSent: number };
 ### Idempotency Handling
 
 Uses unique `relatedEntityId` pattern to prevent duplicate warnings:
+
 - `relatedEntityId`: `${tournamentId}_${startDate}`
 - If notification already exists for this combination, skip creation
 - Allows cron to run hourly without creating duplicate notifications
@@ -185,11 +192,11 @@ export const checkTournament24hWarnings = internalMutation({
   handler: async (ctx) => {
     const now = new Date();
     const windowStart = new Date(now.getTime() + 23 * 60 * 60 * 1000); // +23 hours
-    const windowEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000);   // +25 hours
+    const windowEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000); // +25 hours
 
     const allTournaments = await ctx.db.query("tournaments").collect();
 
-    const tournamentsStartingSoon = allTournaments.filter(tournament => {
+    const tournamentsStartingSoon = allTournaments.filter((tournament) => {
       const startDate = new Date(tournament.startDate);
       return startDate >= windowStart && startDate <= windowEnd;
     });
@@ -204,20 +211,20 @@ export const checkTournament24hWarnings = internalMutation({
         .collect();
 
       // Get all team members
-      const teamMemberPromises = teams.map(team =>
+      const teamMemberPromises = teams.map((team) =>
         ctx.db
           .query("teamMembers")
           .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect()
+          .collect(),
       );
       const teamMembersNested = await Promise.all(teamMemberPromises);
       const teamMembers = teamMembersNested.flat();
 
       // Get unique user IDs
-      const userIds = [...new Set(teamMembers.map(m => m.userId))];
+      const userIds = [...new Set(teamMembers.map((m) => m.userId))];
 
       // Create notifications (idempotent)
-      const notificationPromises = userIds.map(userId =>
+      const notificationPromises = userIds.map((userId) =>
         ctx.runMutation(internal.notifications.create, {
           userId,
           type: "tournament_starting_24h",
@@ -226,17 +233,19 @@ export const checkTournament24hWarnings = internalMutation({
           relatedEntityId: `${tournament._id}_${tournament.startDate}`,
           relatedEntityType: "tournament",
           actionUrl: `/tournaments/${tournament._id}`,
-        })
+        }),
       );
 
       await Promise.all(notificationPromises);
       notificationsSent += userIds.length;
     }
 
-    console.log(`Sent ${notificationsSent} tournament 24h warning notifications`);
+    console.log(
+      `Sent ${notificationsSent} tournament 24h warning notifications`,
+    );
 
     return { notificationsSent };
-  }
+  },
 });
 ```
 
@@ -258,7 +267,9 @@ Scheduled job that aggregates pending items (pending submissions, unapproved joi
 ```typescript
 export const sendDailyDigest = internalMutation({
   args: {},
-  handler: async (ctx) => { /* ... */ }
+  handler: async (ctx) => {
+    /* ... */
+  },
 });
 ```
 
@@ -269,7 +280,7 @@ export const sendDailyDigest = internalMutation({
 crons.daily(
   "send daily digest",
   { hourUTC: 9, minuteUTC: 0 }, // 9:00 AM UTC daily
-  internal.notifications.sendDailyDigest
+  internal.notifications.sendDailyDigest,
 );
 ```
 
@@ -339,12 +350,12 @@ export const sendDailyDigest = internalMutation({
     // Get all team captains
     const teamMembers = await ctx.db.query("teamMembers").collect();
     const captains = teamMembers
-      .filter(m => m.role === "captain")
-      .map(m => m.userId);
+      .filter((m) => m.role === "captain")
+      .map((m) => m.userId);
 
     // Combine all users with responsibilities
     const usersWithResponsibilities = [
-      ...new Set([...rolesMap.keys(), ...captains])
+      ...new Set([...rolesMap.keys(), ...captains]),
     ];
 
     let digestsSent = 0;
@@ -371,15 +382,15 @@ export const sendDailyDigest = internalMutation({
       // Count pending join requests (captains)
       if (isCaptain) {
         const captainTeams = teamMembers
-          .filter(m => m.userId === userId && m.role === "captain")
-          .map(m => m.teamId);
+          .filter((m) => m.userId === userId && m.role === "captain")
+          .map((m) => m.teamId);
 
-        const joinRequestPromises = captainTeams.map(teamId =>
+        const joinRequestPromises = captainTeams.map((teamId) =>
           ctx.db
             .query("joinRequests")
             .withIndex("by_team", (q) => q.eq("teamId", teamId))
             .filter((q) => q.eq(q.field("status"), "pending"))
-            .collect()
+            .collect(),
         );
         const joinRequestsNested = await Promise.all(joinRequestPromises);
         pendingItems.joinRequests = joinRequestsNested.flat().length;
@@ -402,20 +413,26 @@ export const sendDailyDigest = internalMutation({
 
       const bodyParts = [];
       if (pendingItems.submissions > 0) {
-        bodyParts.push(`${pendingItems.submissions} submission${pendingItems.submissions > 1 ? 's' : ''} awaiting approval`);
+        bodyParts.push(
+          `${pendingItems.submissions} submission${pendingItems.submissions > 1 ? "s" : ""} awaiting approval`,
+        );
       }
       if (pendingItems.joinRequests > 0) {
-        bodyParts.push(`${pendingItems.joinRequests} team join request${pendingItems.joinRequests > 1 ? 's' : ''}`);
+        bodyParts.push(
+          `${pendingItems.joinRequests} team join request${pendingItems.joinRequests > 1 ? "s" : ""}`,
+        );
       }
       if (pendingItems.flaggedSubmissions > 0) {
-        bodyParts.push(`${pendingItems.flaggedSubmissions} flagged submission${pendingItems.flaggedSubmissions > 1 ? 's' : ''}`);
+        bodyParts.push(
+          `${pendingItems.flaggedSubmissions} flagged submission${pendingItems.flaggedSubmissions > 1 ? "s" : ""}`,
+        );
       }
 
       await ctx.runMutation(internal.notifications.create, {
         userId,
         type: "pending_items_digest",
-        title: `${totalPendingItems} item${totalPendingItems > 1 ? 's' : ''} require your attention`,
-        body: bodyParts.join('\n'),
+        title: `${totalPendingItems} item${totalPendingItems > 1 ? "s" : ""} require your attention`,
+        body: bodyParts.join("\n"),
         actionUrl: "/dashboard",
         relatedEntityType: "user",
         relatedEntityId: userId,
@@ -427,7 +444,7 @@ export const sendDailyDigest = internalMutation({
     console.log(`Sent ${digestsSent} daily digest notifications`);
 
     return { digestsSent };
-  }
+  },
 });
 ```
 
@@ -441,13 +458,13 @@ Current implementation sends at fixed UTC time (9:00 AM UTC). For user-local tim
 4. Use `date-fns-tz` for timezone conversions
 
 ```typescript
-import { utcToZonedTime } from 'date-fns-tz';
+import { utcToZonedTime } from "date-fns-tz";
 
 const currentUtcHour = new Date().getUTCHours();
 
 for (const userId of usersWithResponsibilities) {
   const user = await ctx.db.get(userId);
-  const userTimezone = user?.timezone || 'UTC';
+  const userTimezone = user?.timezone || "UTC";
   const userLocalTime = utcToZonedTime(new Date(), userTimezone);
   const userLocalHour = userLocalTime.getHours();
 
@@ -469,7 +486,9 @@ Scheduled job that checks for tournaments that have just started and notifies al
 ```typescript
 export const checkTournamentStarted = internalMutation({
   args: {},
-  handler: async (ctx) => { /* ... */ }
+  handler: async (ctx) => {
+    /* ... */
+  },
 });
 ```
 
@@ -480,13 +499,14 @@ export const checkTournamentStarted = internalMutation({
 crons.hourly(
   "tournament started notifications",
   { minuteUTC: 0 },
-  internal.notifications.checkTournamentStarted
+  internal.notifications.checkTournamentStarted,
 );
 ```
 
 ### Logic
 
 Similar to `checkTournament24hWarnings` but checks for tournaments where:
+
 - `startDate <= now`
 - `startDate >= now - 1 hour`
 
@@ -504,7 +524,7 @@ Scheduled job for tournaments ending in 24 hours.
 crons.hourly(
   "tournament ending 24h warnings",
   { minuteUTC: 0 },
-  internal.notifications.checkTournamentEnding24h
+  internal.notifications.checkTournamentEnding24h,
 );
 ```
 
@@ -524,13 +544,14 @@ Scheduled job for tournaments that have just ended.
 crons.hourly(
   "tournament ended notifications",
   { minuteUTC: 0 },
-  internal.notifications.checkTournamentEnded
+  internal.notifications.checkTournamentEnded,
 );
 ```
 
 ### Logic
 
 Checks for tournaments where:
+
 - `endDate <= now`
 - `endDate >= now - 1 hour`
 
@@ -552,39 +573,39 @@ const crons = cronJobs();
 crons.daily(
   "send daily digest",
   { hourUTC: 9, minuteUTC: 0 },
-  internal.notifications.sendDailyDigest
+  internal.notifications.sendDailyDigest,
 );
 
 // Cleanup old notifications at 2:00 AM UTC
 crons.daily(
   "cleanup old notifications",
   { hourUTC: 2, minuteUTC: 0 },
-  internal.notifications.cleanupOldNotifications
+  internal.notifications.cleanupOldNotifications,
 );
 
 // Tournament notifications - run hourly
 crons.hourly(
   "tournament 24h start warnings",
   { minuteUTC: 0 },
-  internal.notifications.checkTournament24hWarnings
+  internal.notifications.checkTournament24hWarnings,
 );
 
 crons.hourly(
   "tournament started notifications",
   { minuteUTC: 0 },
-  internal.notifications.checkTournamentStarted
+  internal.notifications.checkTournamentStarted,
 );
 
 crons.hourly(
   "tournament ending 24h warnings",
   { minuteUTC: 0 },
-  internal.notifications.checkTournamentEnding24h
+  internal.notifications.checkTournamentEnding24h,
 );
 
 crons.hourly(
   "tournament ended notifications",
   { minuteUTC: 0 },
-  internal.notifications.checkTournamentEnded
+  internal.notifications.checkTournamentEnded,
 );
 
 export default crons;
@@ -595,6 +616,7 @@ export default crons;
 ## Monitoring & Observability
 
 All scheduled jobs should log:
+
 - Execution start time
 - Number of items processed
 - Execution duration
@@ -609,7 +631,9 @@ console.log(`[checkTournament24hWarnings] Starting execution`);
 // ... job logic ...
 
 const duration = Date.now() - startTime;
-console.log(`[checkTournament24hWarnings] Completed in ${duration}ms. Sent ${notificationsSent} notifications`);
+console.log(
+  `[checkTournament24hWarnings] Completed in ${duration}ms. Sent ${notificationsSent} notifications`,
+);
 ```
 
 ---
@@ -630,7 +654,7 @@ export const checkTournament24hWarnings = internalMutation({
       // Don't throw - allow cron to continue on next run
       return { notificationsSent: 0, error: String(error) };
     }
-  }
+  },
 });
 ```
 

@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
+
 import { PublicLeaderboardCard } from "@/components/public/public-leaderboard-card";
 import { SectionHeader } from "@/components/section-header";
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { api } from "../../../../convex/_generated/api";
 
 export const Route = createFileRoute("/_public/public/leaderboards")({

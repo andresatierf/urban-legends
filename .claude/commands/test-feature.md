@@ -20,6 +20,7 @@ Examples: `/test-feature team joining`, `/test-feature submission approval`
 ## What It Does
 
 Launches the **QA Tester agent** to:
+
 1. Understand the feature to test
 2. Create comprehensive test plan
 3. Execute tests systematically
@@ -36,6 +37,7 @@ Launches the **QA Tester agent** to:
 ## Output
 
 Test report with:
+
 - Test coverage summary (functional, edge cases, accessibility, performance)
 - Bugs found with severity (Critical/High/Medium/Low)
 - Reproduction steps for each bug

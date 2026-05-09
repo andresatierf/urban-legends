@@ -47,14 +47,12 @@ The team detail page shows a list of members but provides no management capabili
 ### Functional Requirements
 
 1. **View Team Roster**
-
    - Display all team members with names and avatars
    - Show role badges (Captain, Member)
    - Display join date
    - Show member activity stats (submissions contributed)
 
 2. **Add Members**
-
    - Captain can add members by email
    - Validate user exists in system
    - Validate user not already on team
@@ -62,7 +60,6 @@ The team detail page shows a list of members but provides no management capabili
    - Send notification to added user
 
 3. **Remove Members**
-
    - Captain can remove members (except captain)
    - Members can remove themselves (leave team)
    - Confirmation required
@@ -70,7 +67,6 @@ The team detail page shows a list of members but provides no management capabili
    - Removed user loses access to team
 
 4. **Manage Captaincy**
-
    - Captain can transfer captaincy to another member
    - Confirmation required
    - Original captain becomes regular member
@@ -768,18 +764,15 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
 ## Security Considerations
 
 1. **Permission Validation**
-
    - All mutations check user is captain or admin
    - Frontend also hides UI (defense in depth)
 
 2. **Email Validation**
-
    - Validate email format client-side
    - Validate user exists server-side
    - Prevent adding non-existent users
 
 3. **Team Constraints**
-
    - Enforce min/max team size
    - Prevent users on multiple teams in same tournament
    - Prevent orphaned teams (at least 1 member)
@@ -792,7 +785,6 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
 ## Edge Cases
 
 1. **Last member leaves team**
-
    - Team becomes empty
    - Options:
      - Auto-delete team
@@ -800,17 +792,14 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
      - Prevent if min size > 0
 
 2. **Captain removed by admin**
-
    - Auto-promote oldest member
    - Or require admin to transfer first
 
 3. **User deleted while in team**
-
    - TeamMember records orphaned
    - Clean up via scheduled job
 
 4. **Concurrent member additions**
-
    - Race condition: team becomes over-full
    - Validation catches, rejects one request
 
@@ -821,21 +810,18 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
 ## Migration Plan
 
 1. **Update Backend Permissions**
-
    - Modify `addMember` to allow captains
    - Modify `removeMember` to allow captains
    - Implement `transferCaptaincy` mutation
    - Test in Convex dashboard
 
 2. **Add Optional Schema Fields**
-
    - Add `joinedAt` to teamMembers (optional)
    - Add `invitedBy` to teamMembers (optional)
    - Backfill existing records with nulls
    - Deploy schema changes
 
 3. **Build UI Components**
-
    - Create TeamMembersList component
    - Create AddMemberDialog component
    - Create RemoveMemberDialog component
@@ -843,7 +829,6 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
    - Test in isolation
 
 4. **Integrate with Pages**
-
    - Update team detail page
    - Add member management section
    - Wire up mutations

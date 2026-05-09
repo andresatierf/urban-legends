@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { getInitials } from "../users/utils";
 
@@ -37,7 +38,7 @@ export function SubmitterInfo({ submitter, teammates }: SubmitterInfoProps) {
             <>
               <hr />
               <div className="space-y-3">
-                <p className="font-medium text-muted-foreground text-sm">
+                <p className="text-muted-foreground text-sm font-medium">
                   Teammates ({teammates.length})
                 </p>
                 {teammates.map((teammate) => (

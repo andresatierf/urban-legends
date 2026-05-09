@@ -1,8 +1,10 @@
 "use client";
 
 import { Toaster } from "sonner";
+
 import { useUnreadCount } from "@/hooks/use-unread-count";
 import { useUser } from "@/hooks/useUser";
+
 import { AppSidebar } from "./app-sidebar";
 import { FloatingSidebarActions } from "./floating-sidebar-actions";
 import { NotificationDropdown } from "./notifications/notification-dropdown";
@@ -25,7 +27,7 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
             <NotificationDropdown userId={user._id} unreadCount={unreadCount} />
           )}
         </div>
-        <div className="flex min-h-screen w-full flex-col items-center bg-muted/30">
+        <div className="bg-muted/30 flex min-h-screen w-full flex-col items-center">
           <main className="mt-8 flex w-full max-w-5xl flex-1 flex-col gap-4 p-4">
             {children}
           </main>

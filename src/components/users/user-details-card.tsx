@@ -1,6 +1,7 @@
 import type { FunctionReturnType } from "convex/server";
 import { Settings, Trophy, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+
 import type { api } from "../../../convex/_generated/api";
 import { DetailsCard } from "../details-card";
 import { ManageRolesFormDialog } from "../form/manage-roles-form";

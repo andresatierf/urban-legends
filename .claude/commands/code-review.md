@@ -43,6 +43,7 @@ Run CodeRabbit analysis, wait for completion, and resolve all issues found.
 ## When Complete
 
 Summary with:
+
 - Number of issues resolved
 - Types fixed (security, bugs, quality, style)
 - Files modified

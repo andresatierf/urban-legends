@@ -49,7 +49,6 @@ This limits the platform's visibility, reduces engagement from non-participants,
 ### Functional Requirements
 
 1. **Public Tournament Discovery**
-
    - List all public tournaments (without authentication)
    - Filter by status (active/upcoming/ended)
    - Search by tournament name
@@ -57,7 +56,6 @@ This limits the platform's visibility, reduces engagement from non-participants,
    - No sensitive information exposed (user emails, admin details)
 
 2. **Public Leaderboards**
-
    - View tournament leaderboards without login
    - Real-time leaderboard updates
    - Show top 10 teams prominently
@@ -66,7 +64,6 @@ This limits the platform's visibility, reduces engagement from non-participants,
    - Shareable links for specific tournaments
 
 3. **Public Team Profiles**
-
    - View team names and member counts (not individual names without permission)
    - Team statistics (points, rank, submissions count)
    - Team achievements and badges
@@ -74,7 +71,6 @@ This limits the platform's visibility, reduces engagement from non-participants,
    - No sensitive data (emails, contact info)
 
 4. **Viewer Dashboard** (for authenticated viewer role)
-
    - Browse all tournaments and leaderboards
    - Save favorite tournaments for quick access
    - Comparison view for multiple tournaments
@@ -83,7 +79,6 @@ This limits the platform's visibility, reduces engagement from non-participants,
    - No write permissions (cannot create/edit/delete)
 
 5. **Live Tournament Feed**
-
    - Real-time updates on active tournaments
    - Recent submissions approved (anonymized or public based on settings)
    - Rank changes and leader updates
@@ -91,7 +86,6 @@ This limits the platform's visibility, reduces engagement from non-participants,
    - Tournament completion announcements
 
 6. **Social Sharing**
-
    - Share tournament leaderboard (embeddable widget)
    - Share team achievements (social cards with Open Graph)
    - Generate shareable images for social media
@@ -172,7 +166,9 @@ publicPageViews: defineTable({
 ```typescript
 export const listTournaments = query({
   args: {
-    status: v.optional(v.union(v.literal("active"), v.literal("upcoming"), v.literal("ended"))),
+    status: v.optional(
+      v.union(v.literal("active"), v.literal("upcoming"), v.literal("ended")),
+    ),
   },
   handler: async (ctx, args) => {
     // Public query - no auth required
@@ -182,7 +178,7 @@ export const listTournaments = query({
 
     // Filter by visibility (only public)
     const publicTournaments = allTournaments.filter(
-      (t) => !t.visibility || t.visibility === "public"
+      (t) => !t.visibility || t.visibility === "public",
     );
 
     // Filter by status if specified
@@ -205,7 +201,9 @@ export const listTournaments = query({
       filteredTournaments.map(async (tournament) => {
         const teams = await ctx.db
           .query("teams")
-          .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
+          .withIndex("by_tournament", (q) =>
+            q.eq("tournamentId", tournament._id),
+          )
           .collect();
 
         return {
@@ -219,10 +217,10 @@ export const listTournaments = query({
             tournament.endDate < now
               ? "ended"
               : tournament.startDate > now
-              ? "upcoming"
-              : "active",
+                ? "upcoming"
+                : "active",
         };
-      })
+      }),
     );
 
     return enriched;
@@ -254,7 +252,9 @@ export const getTournamentLeaderboard = query({
     // Get teams
     const teams = await ctx.db
       .query("teams")
-      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", args.tournamentId),
+      )
       .collect();
 
     // Sort by points, then lastActivityAt
@@ -288,7 +288,7 @@ export const getTournamentLeaderboard = query({
           memberCount: members.length,
           lastActivityAt: team.lastActivityAt,
         };
-      })
+      }),
     );
 
     return {
@@ -344,7 +344,7 @@ export const getTeamProfile = query({
         members.map(async (member) => {
           const user = await ctx.db.get(member.userId);
           return user?.name || "Unknown";
-        })
+        }),
       );
     }
 
@@ -354,12 +354,16 @@ export const getTeamProfile = query({
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
       .collect();
 
-    const approvedSubmissions = submissions.filter((s) => s.state === "approved");
+    const approvedSubmissions = submissions.filter(
+      (s) => s.state === "approved",
+    );
 
     // Get rank
     const allTeams = await ctx.db
       .query("teams")
-      .withIndex("by_tournament", (q) => q.eq("tournamentId", team.tournamentId))
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", team.tournamentId),
+      )
       .collect();
 
     const sortedTeams = allTeams.sort((a, b) => {
@@ -420,7 +424,7 @@ export const getFavoriteTournaments = query({
       favorites.map(async (fav) => {
         const tournament = await ctx.db.get(fav.tournamentId);
         return tournament;
-      })
+      }),
     );
 
     return tournaments.filter((t) => t !== null);
@@ -444,7 +448,7 @@ export const addFavorite = mutation({
     const existing = await ctx.db
       .query("viewerFavorites")
       .withIndex("by_user_and_tournament", (q) =>
-        q.eq("userId", user._id).eq("tournamentId", args.tournamentId)
+        q.eq("userId", user._id).eq("tournamentId", args.tournamentId),
       )
       .first();
 
@@ -476,7 +480,7 @@ export const removeFavorite = mutation({
     const favorite = await ctx.db
       .query("viewerFavorites")
       .withIndex("by_user_and_tournament", (q) =>
-        q.eq("userId", user._id).eq("tournamentId", args.tournamentId)
+        q.eq("userId", user._id).eq("tournamentId", args.tournamentId),
       )
       .first();
 

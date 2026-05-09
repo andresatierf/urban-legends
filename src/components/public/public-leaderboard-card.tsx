@@ -1,6 +1,7 @@
 "use client";
 
 import { Trophy, Users } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -77,7 +78,7 @@ export function PublicLeaderboardCard({
       </CardHeader>
       <CardContent>
         {leaderboard.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground">
+          <div className="text-muted-foreground py-8 text-center">
             No teams yet
           </div>
         ) : (
@@ -90,15 +91,15 @@ export function PublicLeaderboardCard({
                 <div className="flex items-center gap-3">
                   {getRankBadge(entry.rank)}
                   <div>
-                    <div className="font-medium text-sm">{entry.team.name}</div>
-                    <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                    <div className="text-sm font-medium">{entry.team.name}</div>
+                    <div className="text-muted-foreground flex items-center gap-1 text-xs">
                       <Users className="h-3 w-3" />
                       {entry.memberCount} member
                       {entry.memberCount === 1 ? "" : "s"}
                     </div>
                   </div>
                 </div>
-                <div className="font-bold text-lg">{entry.team.points}</div>
+                <div className="text-lg font-bold">{entry.team.points}</div>
               </div>
             ))}
           </div>

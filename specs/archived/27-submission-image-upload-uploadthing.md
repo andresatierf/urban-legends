@@ -166,6 +166,7 @@ This specification adapts the requirements from Spec 25 (Submission Image Upload
 ```
 
 **Key Points**:
+
 - UploadThing acts as an abstraction layer over S3
 - File data never touches Next.js server (direct client → S3)
 - UploadThing handles presigned URL generation and webhook callbacks
@@ -190,34 +191,36 @@ export default defineSchema({
     submissionId: v.id("submissions"),
 
     // UploadThing fields
-    uploadthingUrl: v.string(),        // Full CDN URL from UploadThing
-    uploadthingKey: v.string(),        // UploadThing file key (for deletion)
-    fileKey: v.string(),               // S3 object key (for direct S3 access if needed)
+    uploadthingUrl: v.string(), // Full CDN URL from UploadThing
+    uploadthingKey: v.string(), // UploadThing file key (for deletion)
+    fileKey: v.string(), // S3 object key (for direct S3 access if needed)
 
     // File metadata
     uploadedBy: v.id("users"),
-    uploadedAt: v.string(),            // ISO timestamp
-    filename: v.string(),              // Original filename
-    contentType: v.string(),           // MIME type (image/jpeg, etc.)
-    size: v.number(),                  // File size in bytes
+    uploadedAt: v.string(), // ISO timestamp
+    filename: v.string(), // Original filename
+    contentType: v.string(), // MIME type (image/jpeg, etc.)
+    size: v.number(), // File size in bytes
 
     // Display settings
-    order: v.number(),                 // Display order (0, 1, 2)
+    order: v.number(), // Display order (0, 1, 2)
   })
     .index("by_submission", ["submissionId"])
     .index("by_user", ["uploadedBy"])
-    .index("by_uploadthing_key", ["uploadthingKey"])  // For deletion lookups
+    .index("by_uploadthing_key", ["uploadthingKey"]) // For deletion lookups
     .index("by_submission_and_order", ["submissionId", "order"]),
 });
 ```
 
 **Schema Differences from Spec 25**:
+
 - Replaces `storageId: v.id("_storage")` with UploadThing fields
 - `uploadthingUrl`: Permanent CDN URL (e.g., `https://utfs.io/f/abc123.jpg`)
 - `uploadthingKey`: Unique key for UploadThing API operations (deletion)
 - `fileKey`: S3 object key (for direct bucket access if migrating off UploadThing)
 
 **Migration Strategy**:
+
 - Table is additive (no changes to existing tables)
 - Deploy schema with Convex push
 - No data migration needed (new feature, no existing images)
@@ -280,7 +283,7 @@ export const getSubmissionImages = query({
         const uploader = await ctx.db.get(img.uploadedBy);
         return {
           _id: img._id,
-          url: img.uploadthingUrl,           // UploadThing CDN URL
+          url: img.uploadthingUrl, // UploadThing CDN URL
           filename: img.filename,
           contentType: img.contentType,
           size: img.size,
@@ -299,6 +302,7 @@ export const getSubmissionImages = query({
 ```
 
 **Key Differences from Spec 25**:
+
 - No `ctx.storage.getUrl()` calls (UploadThing URLs are permanent)
 - Returns `uploadthingUrl` directly (already a full CDN URL)
 - Same permission logic as Spec 25
@@ -316,9 +320,9 @@ import { getCurrentUserOrThrow } from "./users";
 export const saveSubmissionImage = mutation({
   args: {
     submissionId: v.id("submissions"),
-    uploadthingUrl: v.string(),      // From onUploadComplete
-    uploadthingKey: v.string(),      // From onUploadComplete
-    fileKey: v.string(),             // From onUploadComplete
+    uploadthingUrl: v.string(), // From onUploadComplete
+    uploadthingKey: v.string(), // From onUploadComplete
+    fileKey: v.string(), // From onUploadComplete
     filename: v.string(),
     contentType: v.string(),
     size: v.number(),
@@ -410,6 +414,7 @@ export const saveSubmissionImage = mutation({
 ```
 
 **Validation Logic**:
+
 - Same validation as Spec 25 (type, size, count limits)
 - No storage cleanup needed (UploadThing handles file storage)
 - Metadata saved after successful upload (called from `onUploadComplete`)
@@ -469,6 +474,7 @@ export const deleteSubmissionImage = mutation({
 ```
 
 **Deletion Flow**:
+
 1. Client calls `deleteSubmissionImage` mutation
 2. Mutation validates permissions and deletes Convex metadata
 3. Mutation returns `uploadthingKey` to client
@@ -519,7 +525,10 @@ export const remove = mutation({
     // ... existing validation ...
 
     // NEW: Delete associated images
-    const uploadthingKeys = await deleteSubmissionImages(ctx, args.submissionId);
+    const uploadthingKeys = await deleteSubmissionImages(
+      ctx,
+      args.submissionId,
+    );
 
     // ... rest of deletion logic ...
 
@@ -610,7 +619,9 @@ export const ourFileRouter = {
 
       // 2. Extract submissionId from request metadata
       // (Passed from client via useUploadThing hook)
-      const submissionId = req.headers.get("x-submission-id") as Id<"submissions"> | null;
+      const submissionId = req.headers.get(
+        "x-submission-id",
+      ) as Id<"submissions"> | null;
       if (!submissionId) {
         throw new UploadThingError("Missing submission ID");
       }
@@ -640,14 +651,10 @@ export const ourFileRouter = {
             userId: user._id,
           });
           if (!membership) {
-            throw new UploadThingError(
-              "Permission denied: not a team member",
-            );
+            throw new UploadThingError("Permission denied: not a team member");
           }
         } else {
-          throw new UploadThingError(
-            "Permission denied: not submission owner",
-          );
+          throw new UploadThingError("Permission denied: not submission owner");
         }
       }
 
@@ -659,9 +666,12 @@ export const ourFileRouter = {
       }
 
       // 7. Check existing image count
-      const existingImages = await fetchQuery(api.submissions.getSubmissionImages, {
-        submissionId,
-      });
+      const existingImages = await fetchQuery(
+        api.submissions.getSubmissionImages,
+        {
+          submissionId,
+        },
+      );
       if (existingImages.length + files.length > 3) {
         throw new UploadThingError(
           `Cannot upload ${files.length} images. Maximum 3 images per submission (${existingImages.length} already uploaded)`,
@@ -685,9 +695,12 @@ export const ourFileRouter = {
       // Save image metadata to Convex
       try {
         // Determine order based on existing images
-        const existingImages = await fetchQuery(api.submissions.getSubmissionImages, {
-          submissionId: metadata.submissionId,
-        });
+        const existingImages = await fetchQuery(
+          api.submissions.getSubmissionImages,
+          {
+            submissionId: metadata.submissionId,
+          },
+        );
         const order = existingImages.length;
 
         await fetchMutation(api.submissions.saveSubmissionImage, {
@@ -719,6 +732,7 @@ export type OurFileRouter = typeof ourFileRouter;
 ```
 
 **Key Features**:
+
 - **Type Safety**: `FileRouter` type ensures type inference for client
 - **Middleware**: Validates auth, permissions, and business rules before upload
 - **onUploadComplete**: Saves metadata to Convex after S3 upload succeeds
@@ -750,6 +764,7 @@ export const { GET, POST } = createRouteHandler({
 ```
 
 **Deployment Notes**:
+
 - This route must be deployed at `/api/uploadthing` (UploadThing convention)
 - Handles both GET (metadata) and POST (upload URL generation) requests
 - Environment variables must be set (see Migration section)
@@ -772,6 +787,7 @@ export const { useUploadThing, uploadFiles } =
 ```
 
 **Type Inference**:
+
 - `useUploadThing("submissionImageUploader")` auto-completes route name
 - Hook return types inferred from `FileRouter` definition
 - Compile-time errors if route doesn't exist
@@ -1014,6 +1030,7 @@ export function ImageUploader({
 ```
 
 **Component Features**:
+
 - Drag-and-drop support (via native file input)
 - Real-time validation (type, size, count)
 - Progress tracking with percentage
@@ -1122,6 +1139,7 @@ export function UpsertSubmissionFormDialog({
 ```
 
 **Integration Points**:
+
 - Form creates submission first (draft state)
 - After creation, `submissionId` becomes available
 - Image uploader enables once submission exists
@@ -1135,10 +1153,11 @@ export function UpsertSubmissionFormDialog({
 #### File Type Validation
 
 **Allowed MIME Types**:
+
 ```typescript
 const allowedTypes = [
   "image/jpeg",
-  "image/jpg",   // Some browsers send jpg instead of jpeg
+  "image/jpg", // Some browsers send jpg instead of jpeg
   "image/png",
   "image/webp",
   "image/heic",
@@ -1146,6 +1165,7 @@ const allowedTypes = [
 ```
 
 **Client-Side** (early feedback):
+
 ```typescript
 // In ImageUploader component
 if (!allowedTypes.includes(file.type.toLowerCase())) {
@@ -1155,6 +1175,7 @@ if (!allowedTypes.includes(file.type.toLowerCase())) {
 ```
 
 **Server-Side** (UploadThing config):
+
 ```typescript
 // In file router
 f({
@@ -1162,10 +1183,11 @@ f({
     maxFileSize: "10MB",
     maxFileCount: 3,
   },
-})
+});
 ```
 
 **Server-Side** (Convex double-check):
+
 ```typescript
 // In saveSubmissionImage mutation
 if (!allowedTypes.includes(args.contentType.toLowerCase())) {
@@ -1178,10 +1200,12 @@ if (!allowedTypes.includes(args.contentType.toLowerCase())) {
 #### File Size Validation
 
 **Limits**:
+
 - Per-image: 10MB max
 - Total submission: 25MB max (3 × 10MB with overhead)
 
 **Client-Side**:
+
 ```typescript
 const maxSize = 10 * 1024 * 1024; // 10MB
 if (file.size > maxSize) {
@@ -1191,15 +1215,17 @@ if (file.size > maxSize) {
 ```
 
 **Server-Side** (UploadThing):
+
 ```typescript
 f({
   image: {
     maxFileSize: "10MB",
   },
-})
+});
 ```
 
 **Server-Side** (Convex):
+
 ```typescript
 const MAX_SIZE = 10 * 1024 * 1024;
 if (args.size > MAX_SIZE) {
@@ -1212,10 +1238,12 @@ if (args.size > MAX_SIZE) {
 #### Count Validation
 
 **Limits**:
+
 - Minimum: 1 image (enforced when moving to "pending")
 - Maximum: 3 images (enforced on upload)
 
 **Client-Side**:
+
 ```typescript
 const maxCount = 3 - existingImages.length;
 if (selectedFiles.length > maxCount) {
@@ -1225,6 +1253,7 @@ if (selectedFiles.length > maxCount) {
 ```
 
 **Server-Side** (UploadThing middleware):
+
 ```typescript
 if (existingImages.length + files.length > 3) {
   throw new UploadThingError("Maximum 3 images per submission");
@@ -1232,6 +1261,7 @@ if (existingImages.length + files.length > 3) {
 ```
 
 **Server-Side** (Convex):
+
 ```typescript
 const existingImages = await ctx.db
   .query("submissionImages")
@@ -1250,6 +1280,7 @@ if (existingImages.length >= 3) {
 #### Upload Errors
 
 **Network Failure**:
+
 ```typescript
 // UploadThing auto-retries failed uploads (3 attempts)
 // Client handles via onUploadError callback
@@ -1259,14 +1290,17 @@ onUploadError: (error) => {
   } else {
     toast.error(error.message || "Upload failed");
   }
-}
+};
 ```
 
 **File Too Large**:
+
 ```typescript
 // Client-side (immediate feedback)
 if (file.size > 10 * 1024 * 1024) {
-  toast.error(`${file.name} exceeds 10MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+  toast.error(
+    `${file.name} exceeds 10MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`,
+  );
 }
 
 // Server-side (UploadThing rejects)
@@ -1274,10 +1308,13 @@ if (file.size > 10 * 1024 * 1024) {
 ```
 
 **Invalid File Type**:
+
 ```typescript
 // Client-side
 if (!allowedTypes.includes(file.type)) {
-  toast.error(`Invalid file type: ${file.name}. Only JPEG, PNG, WebP, and HEIC allowed.`);
+  toast.error(
+    `Invalid file type: ${file.name}. Only JPEG, PNG, WebP, and HEIC allowed.`,
+  );
 }
 
 // Server-side (UploadThing rejects)
@@ -1285,11 +1322,12 @@ if (!allowedTypes.includes(file.type)) {
 ```
 
 **Maximum Count Exceeded**:
+
 ```typescript
 // Middleware check
 if (existingImages.length + files.length > 3) {
   throw new UploadThingError(
-    `Cannot upload ${files.length} images. Maximum 3 images per submission`
+    `Cannot upload ${files.length} images. Maximum 3 images per submission`,
   );
 }
 ```
@@ -1299,6 +1337,7 @@ if (existingImages.length + files.length > 3) {
 #### Permission Errors
 
 **Unauthorized**:
+
 ```typescript
 // Middleware throws before upload starts
 if (!clerkUserId) {
@@ -1307,6 +1346,7 @@ if (!clerkUserId) {
 ```
 
 **Not Submission Owner**:
+
 ```typescript
 if (submission.userId !== user._id && !isTeamMember) {
   throw new UploadThingError("Permission denied: not submission owner");
@@ -1314,6 +1354,7 @@ if (submission.userId !== user._id && !isTeamMember) {
 ```
 
 **Approved Submission**:
+
 ```typescript
 if (submission.state === "approved") {
   throw new UploadThingError("Cannot upload images to approved submissions");
@@ -1325,6 +1366,7 @@ if (submission.state === "approved") {
 #### Deletion Errors
 
 **Image Not Found**:
+
 ```typescript
 const image = await ctx.db.get(args.imageId);
 if (!image) {
@@ -1333,6 +1375,7 @@ if (!image) {
 ```
 
 **Permission Denied**:
+
 ```typescript
 if (!isOwner && !isAdmin) {
   throw new Error("Permission denied");
@@ -1340,6 +1383,7 @@ if (!isOwner && !isAdmin) {
 ```
 
 **UploadThing Deletion Failure**:
+
 ```typescript
 // Client-side deletion
 try {
@@ -1357,16 +1401,19 @@ try {
 #### Authentication & Authorization
 
 **UploadThing Middleware**:
+
 - Validates Clerk session before generating upload URL
 - Checks submission ownership or team membership
 - Prevents unauthorized uploads to other users' submissions
 
 **Convex Mutations**:
+
 - All mutations use `getCurrentUserOrThrow()`
 - Double-checks permissions (defense in depth)
 - Validates submission state (cannot modify approved)
 
 **Upload URL Expiration**:
+
 - UploadThing presigned URLs expire in 1 hour
 - Old URLs cannot be reused after expiration
 
@@ -1375,16 +1422,19 @@ try {
 #### File Validation
 
 **MIME Type Checking**:
+
 - Client validates `file.type` (early feedback)
 - UploadThing validates during upload (file router config)
 - Convex validates `contentType` on save (defense in depth)
 
 **Size Validation**:
+
 - Client: Early feedback before upload
 - UploadThing: Rejects oversized files during upload
 - Convex: Validates on metadata save
 
 **Content Validation** (Future Enhancement):
+
 - UploadThing supports custom file validators
 - Could add image dimension checks (min/max resolution)
 - Could integrate virus scanning (UploadThing + external service)
@@ -1394,16 +1444,19 @@ try {
 #### Storage Security
 
 **S3 Bucket Configuration**:
+
 - Bucket is private (no public read access)
 - Files served via UploadThing CDN URLs
 - UploadThing handles signed URL generation
 
 **File Keys**:
+
 - UploadThing generates unique, non-guessable keys
 - Keys stored in Convex for deletion operations
 - Direct S3 access blocked (only via UploadThing)
 
 **Sensitive Data**:
+
 - No EXIF GPS data stored in metadata (privacy)
 - Filenames sanitized to prevent XSS (future enhancement)
 - No personally identifiable info in file keys
@@ -1415,6 +1468,7 @@ try {
 #### Upload Performance
 
 **Parallel Uploads**:
+
 ```typescript
 // UploadThing handles multiple files in parallel
 await startUpload([file1, file2, file3]);
@@ -1422,14 +1476,16 @@ await startUpload([file1, file2, file3]);
 ```
 
 **Progress Tracking**:
+
 ```typescript
 onUploadProgress: (p) => {
   setProgress(p); // 0-100
   // Show real-time progress bar
-}
+};
 ```
 
 **Chunked Uploads**:
+
 - UploadThing automatically chunks large files (>5MB)
 - Improves reliability on slow connections
 - Supports resumable uploads (future enhancement)
@@ -1439,11 +1495,13 @@ onUploadProgress: (p) => {
 #### Image Delivery Performance
 
 **CDN Delivery**:
+
 - UploadThing serves files via CDN (low latency)
 - Global edge locations (fast worldwide)
 - Auto-scaled for traffic spikes
 
 **Lazy Loading**:
+
 ```typescript
 // In SubmissionCardImage component
 <Image
@@ -1454,6 +1512,7 @@ onUploadProgress: (p) => {
 ```
 
 **Image Optimization** (Future Enhancement):
+
 ```typescript
 // UploadThing supports automatic image transformations
 // Example: Resize, compress, convert format
@@ -1465,6 +1524,7 @@ onUploadProgress: (p) => {
 #### Database Performance
 
 **Indexes**:
+
 ```typescript
 .index("by_submission", ["submissionId"])        // Fast image lookups
 .index("by_uploadthing_key", ["uploadthingKey"]) // Fast deletion lookups
@@ -1472,6 +1532,7 @@ onUploadProgress: (p) => {
 ```
 
 **Query Optimization**:
+
 ```typescript
 // Fetch images only when needed (not on every submission list view)
 const images = useQuery(
@@ -1487,6 +1548,7 @@ const images = useQuery(
 #### Unit Tests
 
 **Convex Mutations** (using Convex test framework):
+
 ```typescript
 // Test saveSubmissionImage validation
 test("rejects invalid file types", async () => {
@@ -1495,18 +1557,21 @@ test("rejects invalid file types", async () => {
       submissionId: "test-id",
       contentType: "application/pdf", // Invalid
       // ... other args
-    })
+    }),
   ).rejects.toThrow("Invalid file type");
 });
 
 test("enforces 3 image limit", async () => {
   // Create submission with 3 images
   // Attempt to upload 4th
-  await expect(saveSubmissionImage(/* ... */)).rejects.toThrow("Maximum 3 images");
+  await expect(saveSubmissionImage(/* ... */)).rejects.toThrow(
+    "Maximum 3 images",
+  );
 });
 ```
 
 **UploadThing Middleware** (integration tests):
+
 ```typescript
 // Test authentication check
 test("rejects unauthenticated uploads", async () => {
@@ -1527,6 +1592,7 @@ test("rejects uploads to other user's submissions", async () => {
 #### Integration Tests
 
 **Upload Flow** (E2E with Playwright):
+
 ```typescript
 test("user uploads submission image", async ({ page }) => {
   // 1. Navigate to submission form
@@ -1550,6 +1616,7 @@ test("user uploads submission image", async ({ page }) => {
 ```
 
 **Deletion Flow**:
+
 ```typescript
 test("user deletes submission image", async ({ page }) => {
   // Setup: Submission with 1 image
@@ -1600,12 +1667,15 @@ test("user deletes submission image", async ({ page }) => {
 ### Phase 1: Foundation (Day 1)
 
 **Tasks**:
+
 1. Install UploadThing dependencies
+
    ```bash
    bun add uploadthing @uploadthing/react
    ```
 
 2. Set up environment variables
+
    ```bash
    # .env.local
    UPLOADTHING_SECRET=sk_live_...
@@ -1613,6 +1683,7 @@ test("user deletes submission image", async ({ page }) => {
    ```
 
 3. Deploy Convex schema changes
+
    ```bash
    bunx convex dev
    # Schema auto-deploys on save
@@ -1623,6 +1694,7 @@ test("user deletes submission image", async ({ page }) => {
 6. Create client utilities (`src/lib/uploadthing.ts`)
 
 **Deliverables**:
+
 - Schema deployed to Convex
 - UploadThing configured and tested (basic upload works)
 - Type generation verified (client sees route types)
@@ -1632,6 +1704,7 @@ test("user deletes submission image", async ({ page }) => {
 ### Phase 2: Backend Logic (Day 1-2)
 
 **Tasks**:
+
 1. Implement `saveSubmissionImage` mutation (Convex)
 2. Implement `getSubmissionImages` query (Convex)
 3. Implement `deleteSubmissionImage` mutation (Convex)
@@ -1641,12 +1714,14 @@ test("user deletes submission image", async ({ page }) => {
 7. Implement `onUploadComplete` callback in file router
 
 **Testing**:
+
 - Test mutations with Convex dashboard
 - Test file router with mock uploads
 - Verify permission checks (try unauthorized access)
 - Test cascade delete (delete submission with images)
 
 **Deliverables**:
+
 - All backend mutations working
 - UploadThing integration complete
 - Permission checks verified
@@ -1656,6 +1731,7 @@ test("user deletes submission image", async ({ page }) => {
 ### Phase 3: User Interface (Day 2)
 
 **Tasks**:
+
 1. Create `ImageUploader` component
    - File selection UI
    - Validation feedback
@@ -1674,6 +1750,7 @@ test("user deletes submission image", async ({ page }) => {
    - Test lazy loading
 
 **Testing**:
+
 - Manual test full upload flow
 - Test file validation (client-side)
 - Test progress tracking
@@ -1681,6 +1758,7 @@ test("user deletes submission image", async ({ page }) => {
 - Test on mobile (camera access)
 
 **Deliverables**:
+
 - Image uploader component complete
 - Form integration working
 - Card view displays images correctly
@@ -1690,6 +1768,7 @@ test("user deletes submission image", async ({ page }) => {
 ### Phase 4: Polish & Testing (Day 3)
 
 **Tasks**:
+
 1. Add loading states
    - Skeleton loaders for images
    - Disabled state during upload
@@ -1716,12 +1795,14 @@ test("user deletes submission image", async ({ page }) => {
    - Add troubleshooting guide
 
 **Testing**:
+
 - Full regression test (all submission workflows)
 - Accessibility testing (keyboard, screen reader)
 - Mobile testing (iOS Safari, Android Chrome)
 - Performance testing (3 concurrent uploads)
 
 **Deliverables**:
+
 - Production-ready feature
 - Documentation complete
 - All tests passing
@@ -1733,12 +1814,14 @@ test("user deletes submission image", async ({ page }) => {
 ### 1. UploadThing Account Setup
 
 **Steps**:
+
 1. Sign up at https://uploadthing.com
 2. Create new app (name: "Urban Legends")
 3. Select "S3-compatible storage" backend
 4. Connect AWS S3 bucket or use UploadThing's managed S3
 
 **AWS S3 Configuration** (if using own bucket):
+
 ```yaml
 Bucket Name: urban-legends-submissions
 Region: us-east-1
@@ -1750,6 +1833,7 @@ CORS Configuration:
 ```
 
 **UploadThing Dashboard**:
+
 1. Copy API keys (secret + app ID)
 2. Configure file size limits (10MB max)
 3. Enable webhook for `onUploadComplete` (if needed)
@@ -1760,6 +1844,7 @@ CORS Configuration:
 ### 2. Environment Variables
 
 **Add to `.env.local`**:
+
 ```bash
 # UploadThing Configuration
 UPLOADTHING_SECRET=sk_live_xxxxxxxxxxxxxxxxxxxxx
@@ -1771,6 +1856,7 @@ UPLOADTHING_APP_ID=app_xxxxxxxxxxxxxxxxxxxxx
 ```
 
 **Add to `.env.example`**:
+
 ```bash
 # UploadThing File Upload Service
 # Get these values from https://uploadthing.com/dashboard
@@ -1779,6 +1865,7 @@ UPLOADTHING_APP_ID=
 ```
 
 **Vercel/Production**:
+
 - Add environment variables in Vercel dashboard
 - Mark `UPLOADTHING_SECRET` as sensitive (encrypted)
 - Set variables for all environments (preview + production)
@@ -1788,11 +1875,13 @@ UPLOADTHING_APP_ID=
 ### 3. Dependencies
 
 **Install**:
+
 ```bash
 bun add uploadthing @uploadthing/react
 ```
 
 **package.json** (expected versions):
+
 ```json
 {
   "dependencies": {
@@ -1803,6 +1892,7 @@ bun add uploadthing @uploadthing/react
 ```
 
 **Peer Dependencies**:
+
 - `react` (already installed: 19.1.0)
 - `react-dom` (already installed: 19.1.0)
 
@@ -1959,7 +2049,7 @@ const { startUpload } = useUploadThing(
       console.log(res[0].url); // ✅ Type-safe
       // console.log(res[0].invalid); // ❌ Type error
     },
-  }
+  },
 );
 ```
 
@@ -2015,6 +2105,7 @@ const handleUpload = async () => {
 **Question**: Should we compress images before upload to reduce storage costs and improve performance?
 
 **Options**:
+
 - **Client-side compression**: Use browser-image-compression library (reduces upload time, saves bandwidth)
 - **Server-side compression**: UploadThing supports automatic image optimization (resize, compress, convert)
 - **No compression**: Accept images as-is (simpler implementation, higher quality)
@@ -2028,6 +2119,7 @@ const handleUpload = async () => {
 **Question**: Safari uses HEIC for photos, but browser support for displaying HEIC is limited.
 
 **Options**:
+
 - **Accept and display as-is**: Works on Safari, may fail on Chrome/Firefox
 - **Server-side conversion**: Convert HEIC to JPEG on upload (UploadThing + external service)
 - **Client-side conversion**: Use heic2any library before upload
@@ -2041,6 +2133,7 @@ const handleUpload = async () => {
 **Question**: What happens to files uploaded but never linked to submissions (e.g., user uploads, then abandons form)?
 
 **Options**:
+
 - **Background job**: Periodic cleanup of files older than 24 hours with no metadata (requires Convex cron job + UploadThing API)
 - **TTL on uploads**: UploadThing auto-deletes files after N days if not confirmed (built-in feature)
 - **Manual cleanup**: Admin dashboard to view/delete orphaned files
@@ -2054,6 +2147,7 @@ const handleUpload = async () => {
 **Question**: Modern smartphones capture 12-20MB images, exceeding our 10MB limit.
 
 **Options**:
+
 - **Increase limit**: Raise to 20MB per image (higher storage costs)
 - **Client-side compression**: Automatically compress images over 10MB before upload
 - **User education**: Clear messaging about file size limits + suggestion to use lower quality setting
@@ -2067,6 +2161,7 @@ const handleUpload = async () => {
 **Question**: Should we use a custom CDN domain for image delivery?
 
 **Options**:
+
 - **UploadThing default CDN**: `https://utfs.io/f/...` (free, automatic)
 - **Custom domain**: `https://images.urbanlegends.com/...` (branded, requires DNS setup)
 - **CloudFront integration**: Use AWS CloudFront with UploadThing's S3 bucket (lower latency for global users)
@@ -2080,6 +2175,7 @@ const handleUpload = async () => {
 **Question**: Should we implement AI-based image moderation to detect inappropriate content?
 
 **Options**:
+
 - **No moderation**: Trust users, rely on manual admin review
 - **AI moderation**: Integrate AWS Rekognition or Google Cloud Vision API (flag explicit content, violence, etc.)
 - **Hybrid**: AI flags suspicious images, admins manually review before approval
@@ -2123,6 +2219,7 @@ const handleUpload = async () => {
 ### Why UploadThing Over Convex Storage?
 
 **Advantages of UploadThing**:
+
 1. **Type Safety**: End-to-end type inference from backend to frontend
 2. **S3 Compatibility**: Future-proof (easy to migrate to direct S3 if needed)
 3. **Better Developer Experience**: Presigned URLs, progress tracking, and webhooks out of the box
@@ -2131,6 +2228,7 @@ const handleUpload = async () => {
 6. **File Transformations**: Built-in support for image resize/compress (future enhancement)
 
 **Trade-offs**:
+
 1. **Additional Service**: One more service to manage (UploadThing account)
 2. **Cost**: UploadThing has usage-based pricing (Convex storage is included in plan)
 3. **Deletion Complexity**: UploadThing deletion requires client-side call (not server-side)
@@ -2142,12 +2240,14 @@ const handleUpload = async () => {
 ### Why S3 Over Direct Convex Storage?
 
 **Advantages of S3**:
+
 1. **Portability**: Easy to migrate storage providers without code changes (S3 API is standard)
 2. **Cost Efficiency**: S3 storage costs ~$0.023/GB/month (cheaper at scale than Convex)
 3. **Tooling**: Rich ecosystem (Cloudinary, Imgix, AWS services) integrates with S3
 4. **Performance**: Global CDN options (CloudFront) with advanced caching
 
 **Convex Storage Limitations**:
+
 1. No CDN delivery (URLs expire, not cacheable)
 2. Tighter coupling (harder to migrate off Convex if needed)
 3. Limited file transformation options
@@ -2167,6 +2267,7 @@ This specification provides a complete implementation guide for submission image
 - **Scalability**: S3-backed storage, proven for billions of files
 
 **Next Steps**:
+
 1. Review this spec with team/stakeholders
 2. Get UploadThing account approved (if budget required)
 3. Begin Phase 1 implementation (foundation setup)

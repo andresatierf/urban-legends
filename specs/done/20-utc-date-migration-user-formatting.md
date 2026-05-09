@@ -5,12 +5,14 @@
 This specification outlines the migration of the Urban Legends application to use UTC ISO format dates consistently throughout the backend while introducing user-configurable date formatting preferences on the frontend. This change will improve data consistency, eliminate timezone-related bugs, and provide a better user experience through personalized date display formats.
 
 **Primary Benefits:**
+
 - Consistent date storage across all Convex tables (UTC ISO format)
 - Eliminates timezone ambiguity in date comparisons and queries
 - User-friendly date display through configurable formatting preferences
 - Improved data integrity and query performance
 
 **Expected Complexity:** Large (2-3 weeks)
+
 - Backend migration: 3-5 days
 - Frontend utilities and updates: 5-7 days
 - Settings UI and testing: 3-4 days
@@ -25,41 +27,50 @@ This specification outlines the migration of the Urban Legends application to us
 Based on analysis of `/convex/schema.ts`, the following date fields exist:
 
 **tournaments table:**
+
 - `startDate: v.string()` - Tournament start date
 - `endDate: v.string()` - Tournament end date
 - `completedAt: v.optional(v.string())` - Tournament completion timestamp
 
 **teams table:**
+
 - `lastActivityAt: v.optional(v.string())` - Last activity timestamp
 
 **userRoles table:**
+
 - `assignedAt: v.optional(v.string())` - Role assignment timestamp
 
 **submissions table:**
+
 - `date: v.string()` - Submission date (YYYY-MM-DD format)
 
 **submissionGroups table:**
+
 - `date: v.string()` - Group date (YYYY-MM-DD format)
 - `createdAt: v.string()` - Group creation timestamp
 - `updatedAt: v.string()` - Last update timestamp
 
 **teamInvitations table:**
+
 - `expiresAt: v.string()` - Invitation expiry date (ISO format)
 - `createdAt: v.string()` - Creation timestamp
 - `respondedAt: v.optional(v.string())` - Response timestamp
 
 **joinRequests table:**
+
 - `createdAt: v.string()` - Request creation timestamp
 - `respondedAt: v.optional(v.string())` - Response timestamp
 
 ### Current Date Storage Patterns
 
 **Backend (Convex):**
+
 1. **ISO Timestamps:** Most timestamps use `new Date().toISOString()` (e.g., `createdAt`, `updatedAt`, `expiresAt`)
 2. **Date-only strings:** Submission dates use YYYY-MM-DD format (e.g., `"2025-11-18"`)
 3. **Date comparisons:** Use string comparison with ISO format (works correctly for UTC)
 
 **Frontend (React/Next.js):**
+
 1. **Display format:** Uses `toLocaleDateString()` without locale/format specification
 2. **Date pickers:** HTML5 date inputs return YYYY-MM-DD format
 3. **No centralized formatting:** Date formatting is scattered across components
@@ -80,6 +91,7 @@ Based on analysis of `/convex/schema.ts`, the following date fields exist:
 ### Functional Requirements
 
 #### FR1: Backend Date Standardization
+
 - **FR1.1:** ALL date fields in Convex schema must store dates as UTC ISO 8601 strings
 - **FR1.2:** Date-only fields (submission dates) must store UTC midnight (e.g., `"2025-11-18T00:00:00.000Z"`)
 - **FR1.3:** Timestamp fields must store full UTC timestamp (e.g., `"2025-11-18T14:32:15.123Z"`)
@@ -87,6 +99,7 @@ Based on analysis of `/convex/schema.ts`, the following date fields exist:
 - **FR1.5:** Date range queries must handle UTC boundaries correctly
 
 #### FR2: User Date Format Preferences
+
 - **FR2.1:** Users can select their preferred date format from a predefined list
 - **FR2.2:** Default format is "MM/dd/yyyy" (US format)
 - **FR2.3:** Supported formats:
@@ -100,6 +113,7 @@ Based on analysis of `/convex/schema.ts`, the following date fields exist:
 - **FR2.5:** Format preference persists across sessions and devices
 
 #### FR3: Frontend Date Formatting
+
 - **FR3.1:** All date displays must respect user's format preference
 - **FR3.2:** Dates must be displayed in user's local timezone by default
 - **FR3.3:** Date pickers must send UTC ISO format to backend
@@ -107,6 +121,7 @@ Based on analysis of `/convex/schema.ts`, the following date fields exist:
 - **FR3.5:** Relative dates (e.g., "2 days ago") can be used for recent timestamps
 
 #### FR4: Settings UI
+
 - **FR4.1:** Settings page has a "Date Format" section
 - **FR4.2:** Dropdown selector shows all available formats with live preview
 - **FR4.3:** Preview shows current date in each format before selection
@@ -114,6 +129,7 @@ Based on analysis of `/convex/schema.ts`, the following date fields exist:
 - **FR4.5:** Success feedback when preference is saved
 
 #### FR5: Migration Safety
+
 - **FR5.1:** Migration must be backward compatible (read old and new formats)
 - **FR5.2:** Data integrity checks before and after migration
 - **FR5.3:** Rollback plan must be documented and tested
@@ -123,22 +139,26 @@ Based on analysis of `/convex/schema.ts`, the following date fields exist:
 ### Non-Functional Requirements
 
 #### NFR1: Performance
+
 - Date formatting utilities must not cause noticeable UI lag
 - Date queries must maintain current performance (indexed fields)
 - User preference lookup should be cached on frontend
 - Migration script should process in batches to avoid timeouts
 
 #### NFR2: Security
+
 - Date format preference is user-specific (no shared preferences)
 - Malicious date strings are validated before storage
 - XSS prevention in date display (already handled by React)
 
 #### NFR3: Accessibility
+
 - Date format selector is keyboard navigable
 - Screen readers announce selected format and preview
 - Date displays include semantic HTML (time elements with datetime attribute)
 
 #### NFR4: Browser Compatibility
+
 - Date formatting works in all modern browsers
 - Graceful fallback if Intl.DateTimeFormat is unavailable
 - Date pickers work consistently across browsers
@@ -165,6 +185,7 @@ users: defineTable({
 ```
 
 **Migration strategy for users table:**
+
 - Add `dateFormat` as optional field (default: undefined)
 - Frontend uses "MM/dd/yyyy" if `dateFormat` is undefined
 - Users can set preference in settings page
@@ -178,16 +199,16 @@ Update schema comments to clarify UTC ISO format:
 tournaments: defineTable({
   // ...
   startDate: v.string(), // UTC ISO format: "2025-11-18T00:00:00.000Z"
-  endDate: v.string(),   // UTC ISO format: "2025-11-18T23:59:59.999Z"
+  endDate: v.string(), // UTC ISO format: "2025-11-18T23:59:59.999Z"
   completedAt: v.optional(v.string()), // UTC ISO timestamp
   // ...
-})
+});
 
 submissions: defineTable({
   // ...
   date: v.string(), // UTC ISO date at midnight: "2025-11-18T00:00:00.000Z"
   // ...
-})
+});
 ```
 
 ### Backend API Design
@@ -206,12 +227,9 @@ submissions: defineTable({
  */
 export function toUTCDateString(dateInput: string | Date): string {
   const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
-  const utcDate = new Date(Date.UTC(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    0, 0, 0, 0
-  ));
+  const utcDate = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0),
+  );
   return utcDate.toISOString();
 }
 
@@ -222,12 +240,17 @@ export function toUTCDateString(dateInput: string | Date): string {
  */
 export function toUTCEndOfDayString(dateInput: string | Date): string {
   const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
-  const utcDate = new Date(Date.UTC(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    23, 59, 59, 999
-  ));
+  const utcDate = new Date(
+    Date.UTC(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      23,
+      59,
+      59,
+      999,
+    ),
+  );
   return utcDate.toISOString();
 }
 
@@ -274,7 +297,7 @@ export function isToday(isoString: string, timezone?: string): boolean {
       timeZone: timezone,
       year: "numeric",
       month: "2-digit",
-      day: "2-digit"
+      day: "2-digit",
     });
     const dateStr = formatter.format(date);
     const nowStr = formatter.format(now);
@@ -381,9 +404,7 @@ export const migrateDatesToUTC = internalMutation({
           createdAt: group.createdAt.includes("T")
             ? group.createdAt
             : toUTCDateString(group.createdAt),
-          updatedAt: group.updatedAt.includes("T")
-            ? group.updatedAt
-            : nowUTC(),
+          updatedAt: group.updatedAt.includes("T") ? group.updatedAt : nowUTC(),
         });
         stats.submissionGroups.updated++;
       } catch (error) {
@@ -568,7 +589,7 @@ export const upsert = mutation({
       name: args.name,
       description: args.description || "",
       startDate: toUTCDateString(args.startDate), // Convert to UTC midnight
-      endDate: toUTCEndOfDayString(args.endDate),  // Convert to UTC end of day
+      endDate: toUTCEndOfDayString(args.endDate), // Convert to UTC end of day
       teamMinSize: args.teamMinSize,
       teamMaxSize: args.teamMaxSize,
       maxSubmissionsPerDay: args.maxSubmissionsPerDay,
@@ -720,7 +741,7 @@ export function formatDate(
   options?: {
     includeTime?: boolean;
     timezone?: string;
-  }
+  },
 ): string {
   if (!isoString) return "";
 
@@ -748,7 +769,9 @@ export function formatDate(
 /**
  * Parse format string to determine month style
  */
-function parseFormatString(format: DateFormat): { month: "numeric" | "2-digit" | "short" | "long" } {
+function parseFormatString(format: DateFormat): {
+  month: "numeric" | "2-digit" | "short" | "long";
+} {
   if (format.includes("MMMM")) return { month: "long" };
   if (format.includes("MMM")) return { month: "short" };
   if (format.includes("MM")) return { month: "2-digit" };
@@ -761,7 +784,7 @@ function parseFormatString(format: DateFormat): { month: "numeric" | "2-digit" |
 function formatWithPattern(
   date: Date,
   format: DateFormat,
-  formatter: Intl.DateTimeFormat
+  formatter: Intl.DateTimeFormat,
 ): string {
   const parts = formatter.formatToParts(date);
   const partMap: Record<string, string> = {};
@@ -778,12 +801,36 @@ function formatWithPattern(
 
   // Replace month
   if (format.includes("MMMM")) {
-    const monthNames = ["January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"];
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
     result = result.replace("MMMM", monthNames[date.getMonth()]);
   } else if (format.includes("MMM")) {
-    const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNamesShort = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     result = result.replace("MMM", monthNamesShort[date.getMonth()]);
   } else if (format.includes("MM")) {
     result = result.replace("MM", String(date.getMonth() + 1).padStart(2, "0"));
@@ -805,7 +852,7 @@ function formatWithPattern(
  */
 export function formatRelativeDate(
   isoString: string | undefined | null,
-  fallbackFormat: DateFormat = "MM/dd/yyyy"
+  fallbackFormat: DateFormat = "MM/dd/yyyy",
 ): string {
   if (!isoString) return "";
 
@@ -892,7 +939,7 @@ export function getFormatPreview(format: DateFormat): string {
       year: "numeric",
       month: parseFormatString(format).month,
       day: "numeric",
-    })
+    }),
   );
 }
 ```
@@ -917,7 +964,7 @@ export function useFormattedDate() {
       options?: {
         includeTime?: boolean;
         timezone?: string;
-      }
+      },
     ) => {
       const fmt = (userFormat || "MM/dd/yyyy") as DateFormat;
       return formatDate(isoString, fmt, options);
@@ -1309,11 +1356,13 @@ All components displaying dates must be updated to use `useFormattedDate()` hook
 ### Phase 1: Foundation (Days 1-3)
 
 **Objectives:**
+
 - Set up date utility libraries
 - Update database schema
 - Create migration scripts
 
 **Tasks:**
+
 1. Create `convex/lib/dates.ts` with utility functions
 2. Update `convex/schema.ts` to add `dateFormat` to users table
 3. Create migration functions in `convex/migrations.ts`
@@ -1322,6 +1371,7 @@ All components displaying dates must be updated to use `useFormattedDate()` hook
 6. Write unit tests for utility functions
 
 **Acceptance Criteria:**
+
 - All utility functions have test coverage
 - Migration script runs successfully on test data
 - Schema updated and deployed to dev environment
@@ -1329,10 +1379,12 @@ All components displaying dates must be updated to use `useFormattedDate()` hook
 ### Phase 2: Backend Migration (Days 4-5)
 
 **Objectives:**
+
 - Migrate existing data to UTC ISO format
 - Update all Convex mutations to use new utilities
 
 **Tasks:**
+
 1. Run migration on development environment
 2. Validate migration using `validateDateMigration`
 3. Update all mutations in:
@@ -1346,6 +1398,7 @@ All components displaying dates must be updated to use `useFormattedDate()` hook
 5. Test all mutations with new date format
 
 **Acceptance Criteria:**
+
 - All existing data migrated successfully
 - All mutations accept and return UTC ISO strings
 - Date queries and comparisons work correctly
@@ -1354,10 +1407,12 @@ All components displaying dates must be updated to use `useFormattedDate()` hook
 ### Phase 3: User Preferences (Days 6-7)
 
 **Objectives:**
+
 - Implement user date format preference storage
 - Create settings UI for date format selection
 
 **Tasks:**
+
 1. Add `getDateFormatPreference` query to `convex/users.ts`
 2. Add `updateDateFormatPreference` mutation to `convex/users.ts`
 3. Update settings page with date format selector
@@ -1365,6 +1420,7 @@ All components displaying dates must be updated to use `useFormattedDate()` hook
 5. Test preference persistence across sessions
 
 **Acceptance Criteria:**
+
 - Users can select and save date format preference
 - Preference persists across sessions and devices
 - Settings UI shows live preview
@@ -1373,10 +1429,12 @@ All components displaying dates must be updated to use `useFormattedDate()` hook
 ### Phase 4: Frontend Updates (Days 8-12)
 
 **Objectives:**
+
 - Update all components to use formatted dates
 - Update date input components
 
 **Tasks:**
+
 1. Update `DateField` component to handle UTC conversion
 2. Update tournament components (3 files)
 3. Update submission components (3 files)
@@ -1386,6 +1444,7 @@ All components displaying dates must be updated to use `useFormattedDate()` hook
 7. Test all date displays in different formats
 
 **Acceptance Criteria:**
+
 - All dates display in user's preferred format
 - Date pickers correctly convert to/from UTC
 - No hardcoded `toLocaleDateString()` calls remain
@@ -1394,11 +1453,13 @@ All components displaying dates must be updated to use `useFormattedDate()` hook
 ### Phase 5: Testing & Polish (Days 13-15)
 
 **Objectives:**
+
 - Comprehensive testing of date handling
 - Edge case handling
 - Performance optimization
 
 **Tasks:**
+
 1. Test timezone boundary cases (dates near midnight)
 2. Test date range queries with UTC dates
 3. Test submission calendar with UTC dates
@@ -1409,6 +1470,7 @@ All components displaying dates must be updated to use `useFormattedDate()` hook
 8. Documentation updates
 
 **Acceptance Criteria:**
+
 - All edge cases handled correctly
 - No performance regressions
 - Cross-browser compatibility verified
@@ -1530,7 +1592,7 @@ export const list = query({
   args: {
     // ... other args
     startDate: v.optional(v.string()), // Accepts YYYY-MM-DD or ISO
-    endDate: v.optional(v.string()),   // Accepts YYYY-MM-DD or ISO
+    endDate: v.optional(v.string()), // Accepts YYYY-MM-DD or ISO
   },
   handler: async (ctx, args) => {
     // ... base query
@@ -1564,16 +1626,19 @@ export const list = query({
 ### Technical Decisions
 
 **Q1: Should we support custom date formats (user-defined patterns)?**
+
 - **Recommendation:** No, stick to predefined formats for Phase 1
 - **Rationale:** Custom patterns increase complexity and validation burden
 - **Future:** Can add in Phase 2 if user demand exists
 
 **Q2: Should we detect user timezone automatically?**
+
 - **Recommendation:** Yes, use `Intl.DateTimeFormat().resolvedOptions().timeZone`
 - **Rationale:** Better UX for displaying times in local timezone
 - **Implementation:** Store in localStorage or user preferences
 
 **Q3: How to handle submissions calendar with UTC dates?**
+
 - **Current:** Stores "2025-11-18" (ambiguous timezone)
 - **Proposed:** Store "2025-11-18T00:00:00.000Z" (UTC midnight)
 - **Impact:** Submission date is now fixed to UTC day boundary
@@ -1581,6 +1646,7 @@ export const list = query({
 - **Recommendation:** Use UTC midnight for date-only fields (simpler)
 
 **Q4: Should week start preference move from localStorage to Convex?**
+
 - **Recommendation:** Yes, migrate in same PR for consistency
 - **Rationale:** User preferences should be centralized and synced
 - **Implementation:** Add `weekStartsOn` field to users table
@@ -1588,23 +1654,27 @@ export const list = query({
 ### Edge Cases
 
 **EC1: Timezone boundary submissions**
+
 - **Scenario:** User in GMT+12 submits on "2025-11-18" at 11 PM local time
 - **UTC:** Would be "2025-11-17T11:00:00.000Z" (previous day in UTC)
 - **Solution:** Store submission date based on user's local date, convert to UTC midnight
 - **Implementation:** Frontend sends local date (YYYY-MM-DD), backend converts to UTC midnight
 
 **EC2: Tournament end date boundary**
+
 - **Scenario:** Tournament ends "2025-12-31", user in GMT-8 at 11 PM
 - **UTC:** Would be "2026-01-01T07:00:00.000Z" (next day in UTC)
 - **Solution:** Store end date as UTC end-of-day (23:59:59.999Z)
 - **Implementation:** Backend converts YYYY-MM-DD to UTC 23:59:59.999Z
 
 **EC3: Date format preview in settings**
+
 - **Scenario:** User changes format, how quickly does UI update?
 - **Solution:** Convex reactivity updates all components automatically
 - **Performance:** Should be near-instant with Convex subscriptions
 
 **EC4: Migration rollback**
+
 - **Scenario:** Migration fails or data corruption detected
 - **Solution:** Keep migration idempotent, can re-run safely
 - **Rollback:** Manual rollback requires reversing UTC to date-only strings
@@ -1613,16 +1683,19 @@ export const list = query({
 ### Performance Considerations
 
 **PC1: Date formatting performance**
+
 - **Concern:** Formatting hundreds of dates in data tables
 - **Solution:** React.memo on date components, useMemo for formatted values
 - **Benchmark:** Test with 1000+ row tables
 
 **PC2: Convex query performance**
+
 - **Concern:** Date range queries with UTC strings
 - **Solution:** Indexes already exist, string comparison works efficiently
 - **Validation:** Run performance tests on large datasets
 
 **PC3: User preference caching**
+
 - **Concern:** Querying date format on every render
 - **Solution:** Convex caches query results, hook memoizes formatter
 - **Optimization:** Single query per component tree
@@ -1630,17 +1703,20 @@ export const list = query({
 ### Migration Risks
 
 **MR1: Data loss during migration**
+
 - **Mitigation:** Test migration on copy of production data
 - **Backup:** Full database backup before migration
 - **Validation:** Run validation script after migration
 - **Rollback:** Document rollback procedure
 
 **MR2: Breaking API changes**
+
 - **Mitigation:** Maintain backward compatibility (accept both formats)
 - **Testing:** Integration tests covering old and new formats
 - **Communication:** Document changes in PR and release notes
 
 **MR3: User timezone confusion**
+
 - **Mitigation:** Clear messaging in UI about date/time display
 - **Education:** Help text in settings explaining timezone handling
 - **Support:** Document common timezone issues in FAQ
@@ -1795,6 +1871,7 @@ All date fields are stored as UTC ISO 8601 strings:
   - Example: `"2025-11-18T14:32:15.123Z"`
 
 **Utility Functions** (`convex/lib/dates.ts`):
+
 - `toUTCDateString(date)` - Convert to UTC midnight
 - `toUTCEndOfDayString(date)` - Convert to UTC end of day
 - `nowUTC()` - Current UTC timestamp
@@ -1805,15 +1882,18 @@ All date fields are stored as UTC ISO 8601 strings:
 All dates are displayed using user's format preference.
 
 **Hooks:**
+
 - `useFormattedDate()` - Format dates according to user preference
 
 **Utilities** (`src/lib/dates.ts`):
+
 - `formatDate(iso, format)` - Format ISO string to display format
 - `formatRelativeDate(iso)` - Relative time (e.g., "2 days ago")
 - `localDateToUTC(date)` - Convert YYYY-MM-DD to UTC ISO
 - `utcToLocalDateInput(iso)` - Convert UTC ISO to YYYY-MM-DD for inputs
 
 **Date Pickers:**
+
 - Always send UTC ISO format to backend
 - Display local dates in date inputs
 - Use `DateField` component for consistent behavior
@@ -1895,10 +1975,9 @@ describe("compareDatesOnly", () => {
   });
 
   test("returns -1 when a < b", () => {
-    expect(compareDatesOnly(
-      "2025-11-17T00:00:00.000Z",
-      "2025-11-18T00:00:00.000Z"
-    )).toBe(-1);
+    expect(
+      compareDatesOnly("2025-11-17T00:00:00.000Z", "2025-11-18T00:00:00.000Z"),
+    ).toBe(-1);
   });
 });
 ```
@@ -1948,7 +2027,9 @@ describe("formatRelativeDate", () => {
 
   test("shows formatted date for old dates", () => {
     const old = "2024-01-01T00:00:00.000Z";
-    expect(formatRelativeDate(old, "MM/dd/yyyy")).toMatch(/\d{2}\/\d{2}\/\d{4}/);
+    expect(formatRelativeDate(old, "MM/dd/yyyy")).toMatch(
+      /\d{2}\/\d{2}\/\d{4}/,
+    );
   });
 });
 
@@ -1977,7 +2058,7 @@ test("migration handles all date fields", async () => {
   const tournamentId = await ctx.db.insert("tournaments", {
     name: "Test",
     startDate: "2025-11-01", // Old format
-    endDate: "2025-11-30",   // Old format
+    endDate: "2025-11-30", // Old format
     // ... other fields
   });
 
@@ -2033,7 +2114,10 @@ test("user can change date format in settings", async ({ page }) => {
   await page.goto("/tournaments");
 
   // Verify dates display in new format
-  const dateText = await page.locator('[data-testid="tournament-date"]').first().textContent();
+  const dateText = await page
+    .locator('[data-testid="tournament-date"]')
+    .first()
+    .textContent();
   expect(dateText).toMatch(/\d{2}\/\d{2}\/\d{4}/); // dd/MM/yyyy pattern
 });
 ```
@@ -2051,8 +2135,8 @@ test("submission date picker sends correct UTC format", async ({ page }) => {
   await page.click('button[type="submit"]');
 
   // Verify API call (intercept network request)
-  const request = await page.waitForRequest(req =>
-    req.url().includes("/submissions/upsert")
+  const request = await page.waitForRequest((req) =>
+    req.url().includes("/submissions/upsert"),
   );
   const postData = await request.postDataJSON();
   expect(postData.date).toBe("2025-11-18T00:00:00.000Z");
@@ -2066,6 +2150,7 @@ test("submission date picker sends correct UTC format", async ({ page }) => {
 This specification provides a comprehensive plan for migrating the Urban Legends application to use UTC ISO format dates consistently while adding user-configurable date formatting preferences. The migration is designed to be safe, backward-compatible, and user-friendly.
 
 **Key Benefits:**
+
 - Eliminates timezone ambiguity and date comparison bugs
 - Consistent data storage across all tables
 - Improved user experience through personalized formatting
@@ -2074,12 +2159,14 @@ This specification provides a comprehensive plan for migrating the Urban Legends
 **Implementation Timeline:** 2-3 weeks with proper testing and validation
 
 **Risk Mitigation:**
+
 - Idempotent migration (can be re-run safely)
 - Comprehensive testing at all levels
 - Clear rollback plan
 - Extensive documentation
 
 **Next Steps:**
+
 1. Review and approve specification
 2. Create feature branch
 3. Implement Phase 1 (foundation)

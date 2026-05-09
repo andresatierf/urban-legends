@@ -1,7 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { CheckCircle, Loader2, Shield, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { tryMutate } from "@/lib/utils";
+
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
@@ -43,10 +45,10 @@ function CaptainDashboard() {
       <div className="container mx-auto py-8">
         <div className="mb-8 flex items-center gap-3">
           <Shield className="h-8 w-8" />
-          <h1 className="font-bold text-3xl">Team Captain Dashboard</h1>
+          <h1 className="text-3xl font-bold">Team Captain Dashboard</h1>
         </div>
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
         </div>
       </div>
     );
@@ -113,14 +115,14 @@ function CaptainDashboard() {
                     className="flex items-center justify-between rounded-lg border p-3"
                   >
                     <div>
-                      <p className="font-medium text-sm">
+                      <p className="text-sm font-medium">
                         {request.user?.name || "Unknown User"}
                       </p>
                       <p className="text-muted-foreground text-xs">
                         wants to join {request.team?.name || "Unknown Team"}
                       </p>
                       {request.message && (
-                        <p className="mt-1 text-muted-foreground text-xs">
+                        <p className="text-muted-foreground mt-1 text-xs">
                           "{request.message}"
                         </p>
                       )}
@@ -169,7 +171,7 @@ function CaptainDashboard() {
                     className="flex items-center justify-between rounded-lg border p-3"
                   >
                     <div>
-                      <p className="font-medium text-sm">
+                      <p className="text-sm font-medium">
                         {invitation.invitedUser?.name ||
                           invitation.invitedUser?.email}
                       </p>

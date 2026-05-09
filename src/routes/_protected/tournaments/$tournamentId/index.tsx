@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { ArrowLeft } from "lucide-react";
+
 import { UpsertTeamFormDialog } from "@/components/form/upsert-team-form";
 import { SectionHeader } from "@/components/section-header";
 import { JoinTeamCard } from "@/components/teams/join-team-card";
@@ -16,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { CardGrid } from "@/components/ui/card-grid";
+
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 
@@ -71,7 +73,7 @@ function TournamentDetailsPage() {
               <Button
                 asChild
                 variant="outline"
-                className="flex gap-2 xs:self-auto self-end"
+                className="xs:self-auto flex gap-2 self-end"
               >
                 <Link
                   to="/teams/$teamId"

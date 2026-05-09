@@ -19,24 +19,24 @@ export const list = query({
     userId: v.id("users"),
     limit: v.optional(v.number()),
     offset: v.optional(v.number()),
-    filter: v.optional(v.union(
-      v.literal("all"),
-      v.literal("unread"),
-      v.literal("read")
-    )),
+    filter: v.optional(
+      v.union(v.literal("all"), v.literal("unread"), v.literal("read")),
+    ),
   },
-  handler: async (ctx, args) => { /* ... */ }
+  handler: async (ctx, args) => {
+    /* ... */
+  },
 });
 ```
 
 ### Input Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `userId` | `Id<"users">` | Yes | - | The user whose notifications to retrieve |
-| `limit` | `number` | No | `50` | Maximum number of notifications to return (1-100) |
-| `offset` | `number` | No | `0` | Number of notifications to skip for pagination |
-| `filter` | `"all" \| "unread" \| "read"` | No | `"all"` | Filter by read status |
+| Parameter | Type                          | Required | Default | Description                                       |
+| --------- | ----------------------------- | -------- | ------- | ------------------------------------------------- |
+| `userId`  | `Id<"users">`                 | Yes      | -       | The user whose notifications to retrieve          |
+| `limit`   | `number`                      | No       | `50`    | Maximum number of notifications to return (1-100) |
+| `offset`  | `number`                      | No       | `0`     | Number of notifications to skip for pagination    |
+| `filter`  | `"all" \| "unread" \| "read"` | No       | `"all"` | Filter by read status                             |
 
 ### Output Format
 
@@ -115,15 +115,17 @@ export const getUnreadCount = query({
   args: {
     userId: v.id("users"),
   },
-  handler: async (ctx, args) => { /* ... */ }
+  handler: async (ctx, args) => {
+    /* ... */
+  },
 });
 ```
 
 ### Input Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `userId` | `Id<"users">` | Yes | The user whose unread count to retrieve |
+| Parameter | Type          | Required | Description                             |
+| --------- | ------------- | -------- | --------------------------------------- |
+| `userId`  | `Id<"users">` | Yes      | The user whose unread count to retrieve |
 
 ### Output Format
 
@@ -184,16 +186,18 @@ export const recent = query({
     userId: v.id("users"),
     limit: v.optional(v.number()),
   },
-  handler: async (ctx, args) => { /* ... */ }
+  handler: async (ctx, args) => {
+    /* ... */
+  },
 });
 ```
 
 ### Input Parameters
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `userId` | `Id<"users">` | Yes | - | The user whose recent notifications to retrieve |
-| `limit` | `number` | No | `5` | Number of recent notifications (1-10) |
+| Parameter | Type          | Required | Default | Description                                     |
+| --------- | ------------- | -------- | ------- | ----------------------------------------------- |
+| `userId`  | `Id<"users">` | Yes      | -       | The user whose recent notifications to retrieve |
+| `limit`   | `number`      | No       | `5`     | Number of recent notifications (1-10)           |
 
 ### Output Format
 
@@ -262,15 +266,17 @@ export const get = query({
   args: {
     notificationId: v.id("notifications"),
   },
-  handler: async (ctx, args) => { /* ... */ }
+  handler: async (ctx, args) => {
+    /* ... */
+  },
 });
 ```
 
 ### Input Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `notificationId` | `Id<"notifications">` | Yes | The notification ID to retrieve |
+| Parameter        | Type                  | Required | Description                     |
+| ---------------- | --------------------- | -------- | ------------------------------- |
+| `notificationId` | `Id<"notifications">` | Yes      | The notification ID to retrieve |
 
 ### Output Format
 
@@ -333,6 +339,7 @@ export function NotificationDetail({ id }: { id: Id<"notifications"> }) {
 All queries return notifications with one of the following 23 types:
 
 ### Team Events (9 types)
+
 - `team_invitation_received`
 - `team_join_request_received`
 - `join_request_approved`
@@ -345,6 +352,7 @@ All queries return notifications with one of the following 23 types:
 - `team_deleted`
 
 ### Submission Events (5 types)
+
 - `submission_approved`
 - `submission_rejected`
 - `submission_group_auto_created`
@@ -352,6 +360,7 @@ All queries return notifications with one of the following 23 types:
 - `submission_flagged_for_review`
 
 ### Tournament Events (6 types)
+
 - `tournament_starting_24h`
 - `tournament_started`
 - `tournament_ending_24h`
@@ -360,6 +369,7 @@ All queries return notifications with one of the following 23 types:
 - `assigned_as_tournament_manager`
 
 ### Role/Admin Events (3 types)
+
 - `role_granted`
 - `role_revoked`
 - `pending_items_digest`
@@ -391,8 +401,8 @@ notifications: defineTable({
     "userId",
     "type",
     "relatedEntityType",
-    "relatedEntityId"
-  ])
+    "relatedEntityId",
+  ]);
 ```
 
 ---
@@ -411,6 +421,7 @@ All queries follow Convex error handling patterns:
 ## Real-Time Updates
 
 All queries automatically re-run and update components when:
+
 - A new notification is created for the user
 - A notification's `isRead` status changes
 - A notification is soft-deleted

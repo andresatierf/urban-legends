@@ -27,18 +27,18 @@ bun run start           # Start production server
 ### Code Quality
 
 ```bash
-bun run lint            # Run Biome linter
+bun run lint            # Run oxlint linter
 bun run lint:fix        # Auto-fix linting issues
-bun run format          # Check code formatting
-bun run format:fix      # Auto-format code
+bun run format          # Check code formatting (oxfmt)
+bun run format:fix      # Auto-format code (oxfmt)
 ```
 
-**Important**: This project uses **Biome** (not ESLint/Prettier) for linting and formatting. Always use the bun scripts above, not direct biome CLI commands. Biome is configured to:
+**Important**: This project uses **oxlint** for linting and **oxfmt** for formatting (the Oxc toolchain). Always use the bun scripts above. The tools are configured to:
 
-- Enforce sorted Tailwind classes (via `useSortedClasses` rule) in both `className` attributes and `cn()` function calls
+- Enforce sorted Tailwind classes in both `className` attributes and `cn()`/`cva()` function calls (via oxfmt `sortTailwindcss`)
+- Auto-organize imports on format (via oxfmt `sortImports`)
 - Exclude `convex/_generated/**` from linting and formatting
 - Use double quotes for JavaScript/TypeScript strings
-- Auto-organize imports when using assist mode
 
 ### Git Commits
 

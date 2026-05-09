@@ -21,32 +21,36 @@ export const create = internalMutation({
     title: v.string(),
     body: v.optional(v.string()),
     relatedEntityId: v.optional(v.string()),
-    relatedEntityType: v.optional(v.union(
-      v.literal("team"),
-      v.literal("tournament"),
-      v.literal("submission"),
-      v.literal("role"),
-      v.literal("user")
-    )),
+    relatedEntityType: v.optional(
+      v.union(
+        v.literal("team"),
+        v.literal("tournament"),
+        v.literal("submission"),
+        v.literal("role"),
+        v.literal("user"),
+      ),
+    ),
     actionUrl: v.optional(v.string()),
     actionMetadata: v.optional(v.any()),
   },
-  handler: async (ctx, args) => { /* ... */ }
+  handler: async (ctx, args) => {
+    /* ... */
+  },
 });
 ```
 
 ### Input Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `userId` | `Id<"users">` | Yes | The user who will receive the notification |
-| `type` | `string` | Yes | Notification type (one of 23 types, see reference) |
-| `title` | `string` | Yes | Notification title/headline (max 200 chars) |
-| `body` | `string` | No | Optional detailed message (max 1000 chars) |
-| `relatedEntityId` | `string` | No | ID of related entity (team, tournament, etc.) as string |
-| `relatedEntityType` | `"team" \| "tournament" \| "submission" \| "role" \| "user"` | No | Type of related entity |
-| `actionUrl` | `string` | No | URL to navigate when notification is clicked |
-| `actionMetadata` | `any` | No | Additional metadata for action buttons (e.g., invitation ID) |
+| Parameter           | Type                                                         | Required | Description                                                  |
+| ------------------- | ------------------------------------------------------------ | -------- | ------------------------------------------------------------ |
+| `userId`            | `Id<"users">`                                                | Yes      | The user who will receive the notification                   |
+| `type`              | `string`                                                     | Yes      | Notification type (one of 23 types, see reference)           |
+| `title`             | `string`                                                     | Yes      | Notification title/headline (max 200 chars)                  |
+| `body`              | `string`                                                     | No       | Optional detailed message (max 1000 chars)                   |
+| `relatedEntityId`   | `string`                                                     | No       | ID of related entity (team, tournament, etc.) as string      |
+| `relatedEntityType` | `"team" \| "tournament" \| "submission" \| "role" \| "user"` | No       | Type of related entity                                       |
+| `actionUrl`         | `string`                                                     | No       | URL to navigate when notification is clicked                 |
+| `actionMetadata`    | `any`                                                        | No       | Additional metadata for action buttons (e.g., invitation ID) |
 
 ### Output Format
 
@@ -59,6 +63,7 @@ type CreateOutput = Id<"notifications">;
 ### Idempotency Behavior
 
 The `create` mutation is idempotent based on the combination of:
+
 - `userId`
 - `type`
 - `relatedEntityType`
@@ -108,7 +113,7 @@ export const inviteUser = mutation({
     });
 
     return invitation._id;
-  }
+  },
 });
 ```
 
@@ -125,15 +130,17 @@ export const markAsRead = mutation({
   args: {
     notificationId: v.id("notifications"),
   },
-  handler: async (ctx, args) => { /* ... */ }
+  handler: async (ctx, args) => {
+    /* ... */
+  },
 });
 ```
 
 ### Input Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `notificationId` | `Id<"notifications">` | Yes | The notification to mark as read |
+| Parameter        | Type                  | Required | Description                      |
+| ---------------- | --------------------- | -------- | -------------------------------- |
+| `notificationId` | `Id<"notifications">` | Yes      | The notification to mark as read |
 
 ### Output Format
 
@@ -205,15 +212,17 @@ export const markAllAsRead = mutation({
   args: {
     userId: v.id("users"),
   },
-  handler: async (ctx, args) => { /* ... */ }
+  handler: async (ctx, args) => {
+    /* ... */
+  },
 });
 ```
 
 ### Input Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `userId` | `Id<"users">` | Yes | The user whose notifications to mark as read |
+| Parameter | Type          | Required | Description                                  |
+| --------- | ------------- | -------- | -------------------------------------------- |
+| `userId`  | `Id<"users">` | Yes      | The user whose notifications to mark as read |
 
 ### Output Format
 
@@ -286,15 +295,17 @@ export const deleteNotification = mutation({
   args: {
     notificationId: v.id("notifications"),
   },
-  handler: async (ctx, args) => { /* ... */ }
+  handler: async (ctx, args) => {
+    /* ... */
+  },
 });
 ```
 
 ### Input Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `notificationId` | `Id<"notifications">` | Yes | The notification to delete |
+| Parameter        | Type                  | Required | Description                |
+| ---------------- | --------------------- | -------- | -------------------------- |
+| `notificationId` | `Id<"notifications">` | Yes      | The notification to delete |
 
 ### Output Format
 
@@ -405,7 +416,8 @@ export const NOTIFICATION_TYPES = {
   PENDING_ITEMS_DIGEST: "pending_items_digest",
 } as const;
 
-export type NotificationType = typeof NOTIFICATION_TYPES[keyof typeof NOTIFICATION_TYPES];
+export type NotificationType =
+  (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
 ```
 
 ---
@@ -419,26 +431,28 @@ Internal helper for creating notifications for multiple users efficiently.
 ```typescript
 export const createBulkNotifications = internalMutation({
   args: {
-    notifications: v.array(v.object({
-      userId: v.id("users"),
-      type: v.string(),
-      title: v.string(),
-      body: v.optional(v.string()),
-      relatedEntityId: v.optional(v.string()),
-      relatedEntityType: v.optional(v.string()),
-      actionUrl: v.optional(v.string()),
-      actionMetadata: v.optional(v.any()),
-    })),
+    notifications: v.array(
+      v.object({
+        userId: v.id("users"),
+        type: v.string(),
+        title: v.string(),
+        body: v.optional(v.string()),
+        relatedEntityId: v.optional(v.string()),
+        relatedEntityType: v.optional(v.string()),
+        actionUrl: v.optional(v.string()),
+        actionMetadata: v.optional(v.any()),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const notificationIds = await Promise.all(
-      args.notifications.map(notification =>
-        ctx.runMutation(internal.notifications.create, notification)
-      )
+      args.notifications.map((notification) =>
+        ctx.runMutation(internal.notifications.create, notification),
+      ),
     );
 
     return { createdCount: notificationIds.length };
-  }
+  },
 });
 ```
 
@@ -450,19 +464,20 @@ export const createBulkNotifications = internalMutation({
 
 All mutations follow these error handling patterns:
 
-| Error Type | Behavior | HTTP Equivalent |
-|-----------|----------|-----------------|
-| **Authentication Error** | Throw error via `getCurrentUserOrThrow(ctx)` | 401 Unauthorized |
-| **Authorization Error** | Throw error with message "Not authorized" | 403 Forbidden |
-| **Not Found** | Throw error with message "Notification not found" | 404 Not Found |
-| **Invalid Parameters** | Convex validator throws before handler runs | 400 Bad Request |
-| **Idempotency** | Return existing result, do not throw error | 200 OK (idempotent) |
+| Error Type               | Behavior                                          | HTTP Equivalent     |
+| ------------------------ | ------------------------------------------------- | ------------------- |
+| **Authentication Error** | Throw error via `getCurrentUserOrThrow(ctx)`      | 401 Unauthorized    |
+| **Authorization Error**  | Throw error with message "Not authorized"         | 403 Forbidden       |
+| **Not Found**            | Throw error with message "Notification not found" | 404 Not Found       |
+| **Invalid Parameters**   | Convex validator throws before handler runs       | 400 Bad Request     |
+| **Idempotency**          | Return existing result, do not throw error        | 200 OK (idempotent) |
 
 ---
 
 ## Transaction Safety
 
 All mutations are automatically wrapped in Convex transactions:
+
 - Multiple database operations within a mutation are atomic
 - If any operation fails, the entire mutation rolls back
 - No partial state updates occur
@@ -473,6 +488,7 @@ All mutations are automatically wrapped in Convex transactions:
 ## Real-Time Updates
 
 All mutations automatically trigger real-time updates:
+
 - `markAsRead`: Updates unread count queries and notification list queries
 - `markAllAsRead`: Triggers re-render of all notification UI components
 - `create`: New notification appears in all listening queries immediately

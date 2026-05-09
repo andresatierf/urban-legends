@@ -345,20 +345,17 @@ Despite the limitations, the current architecture has strengths we must maintain
 **Display Variants**:
 
 1. **Daily Activity** (current):
-
    - Description text
    - Tier badge
    - Points display
 
 2. **Photo Contest**:
-
    - Image gallery (grid/carousel)
    - Caption
    - Category badge
    - Like/vote count
 
 3. **Fitness Challenge**:
-
    - Metrics dashboard (distance, time, calories)
    - Route map visualization
    - Personal bests indicator
@@ -2433,31 +2430,26 @@ registerComponent("FitnessChallengeCard", FitnessChallengeCard);
 ### Phase 2 Features (3-6 months)
 
 1. **Voting/Liking System**
-
    - Users can vote on submissions (photo contests)
    - Like counts affect scoring (ranked scoring)
    - Anti-gaming measures (rate limiting, verification)
 
 2. **GPS/Map Integration**
-
    - Location field type with map picker
    - Route visualization for fitness challenges
    - Geofencing for scavenger hunts
 
 3. **Automated Validation**
-
    - External API integration (verify GitHub repos, validate GPS data)
    - Image analysis (detect inappropriate content)
    - Code testing (run unit tests on submission)
 
 4. **Submission Revisions**
-
    - Allow editing after submission (before approval)
    - Version history
    - Diff view for reviewers
 
 5. **Multi-Stage Approval**
-
    - Preliminary review → final review
    - Reviewer assignment and workload distribution
    - Approval quotas and SLAs
@@ -2470,19 +2462,16 @@ registerComponent("FitnessChallengeCard", FitnessChallengeCard);
 ### Phase 3 Features (6-12 months)
 
 7. **Competition Type Marketplace**
-
    - Third-party developers can create and share competition types
    - Template library for common patterns
    - Rating and reviews for types
 
 8. **Advanced Scoring**
-
    - ML-based scoring (image quality, code complexity)
    - Peer review scoring (community voting)
    - Dynamic difficulty adjustment
 
 9. **Real-Time Competitions**
-
    - Live leaderboard updates during events
    - Live streaming integration
    - Real-time notifications

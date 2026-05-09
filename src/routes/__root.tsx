@@ -1,16 +1,18 @@
 import { ClerkProvider, useAuth } from "@clerk/tanstack-react-start";
 import {
-  createRootRoute,
   HeadContent,
   Outlet,
   Scripts,
+  createRootRoute,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+
 import { ThemeScript } from "@/components/theme-script";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
+
 import appCss from "@/styles/globals.css?url";
 
 const convexUrl = import.meta.env.NEXT_PUBLIC_CONVEX_URL as string | undefined;

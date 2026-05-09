@@ -42,7 +42,6 @@ Admin statistics are currently displayed on the user dashboard, but there is no 
 ### Functional Requirements
 
 1. **System Statistics Overview**
-
    - Total users (with new users this week)
    - Total tournaments (active/upcoming/ended)
    - Total teams
@@ -50,7 +49,6 @@ Admin statistics are currently displayed on the user dashboard, but there is no 
    - Activity trends (charts showing growth)
 
 2. **Recent Activity Feed**
-
    - New user registrations
    - New tournaments created
    - Teams created
@@ -60,7 +58,6 @@ Admin statistics are currently displayed on the user dashboard, but there is no 
    - Limit to last 50 items
 
 3. **Quick Actions Panel**
-
    - "Create Tournament" button
    - "View Pending Submissions" button
    - "Manage Users" button
@@ -68,7 +65,6 @@ Admin statistics are currently displayed on the user dashboard, but there is no 
    - "System Settings" link (future)
 
 4. **Alerts & Notifications**
-
    - Submissions awaiting approval (count badge)
    - Tournaments ending soon
    - Teams below minimum size
@@ -677,17 +673,14 @@ export default function AdminDashboardPage() {
 ## Edge Cases
 
 1. **No data to display**
-
    - Show empty states with helpful messages
    - "No recent activity" with icon
 
 2. **Very large numbers**
-
    - Format with commas (1,234)
    - Abbreviate if >999,999 (1.2M)
 
 3. **Admin loses admin role while viewing**
-
    - Redirect to dashboard
    - Show toast: "Admin access removed"
 
@@ -720,14 +713,12 @@ export default function AdminDashboardPage() {
 ## Migration Plan
 
 1. **Create Backend Queries**
-
    - Implement `getDashboardStats`
    - Implement `getRecentActivity`
    - Implement `getAlerts`
    - Test in Convex dashboard
 
 2. **Build Components**
-
    - Create AdminStatsCards
    - Create RecentActivityFeed
    - Create QuickActionsPanel
@@ -735,14 +726,12 @@ export default function AdminDashboardPage() {
    - Test in isolation
 
 3. **Create Dashboard Page**
-
    - Create `/admin/page.tsx`
    - Add permission check
    - Compose components
    - Test layout
 
 4. **Update Navigation**
-
    - Ensure sidebar links work
    - Add breadcrumbs
    - Test navigation flow

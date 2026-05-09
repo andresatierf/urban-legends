@@ -1,7 +1,8 @@
 import type { UserJSON } from "@clerk/backend";
 import { type Validator, v } from "convex/values";
+
 import type { Doc, Id } from "./_generated/dataModel";
-import { internalMutation, type QueryCtx, query } from "./_generated/server";
+import { type QueryCtx, internalMutation, query } from "./_generated/server";
 import { batchGetDocuments } from "./lib/helpers";
 import type { RoleName } from "./roles";
 

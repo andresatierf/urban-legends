@@ -1,6 +1,8 @@
 import { capitalize } from "lodash";
 import { Calendar, Check, Loader2, Mail, X } from "lucide-react";
+
 import { useFormattedDate } from "@/hooks/useFormattedDate";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -32,16 +34,16 @@ export function JoinRequestCard({
             <p className="font-medium">{request.user?.name}</p>
             {getStatusBadge(request.status)}
           </div>
-          <p className="flex items-center gap-1 text-muted-foreground text-sm">
+          <p className="text-muted-foreground flex items-center gap-1 text-sm">
             <Mail className="h-3 w-3" />
             {request.user?.email}
           </p>
           {request.message && (
-            <p className="mt-1 text-muted-foreground text-sm">
+            <p className="text-muted-foreground mt-1 text-sm">
               {request.message}
             </p>
           )}
-          <div className="mt-1 flex flex-col items-start text-muted-foreground text-xs">
+          <div className="text-muted-foreground mt-1 flex flex-col items-start text-xs">
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               Requested {format(request.createdAt, "short")}

@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+
 import { NotificationList } from "@/components/notifications/notification-list";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
@@ -23,7 +24,7 @@ function NotificationsPage() {
     <div className="container mx-auto py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="font-bold text-3xl">Notifications</h1>
+          <h1 className="text-3xl font-bold">Notifications</h1>
           <p className="text-muted-foreground">
             Stay updated on tournament activities and team events
           </p>

@@ -1,4 +1,5 @@
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps, cva } from "class-variance-authority";
+
 import { cn } from "@/lib/utils";
 
 const containerVariants = cva("h-min rounded-full p-3", {

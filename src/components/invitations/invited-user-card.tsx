@@ -1,6 +1,8 @@
 import { capitalize } from "lodash";
 import { Calendar, Loader2, Mail, UserPlus, X } from "lucide-react";
+
 import { useFormattedDate } from "@/hooks/useFormattedDate";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -30,17 +32,17 @@ export function InvitedUserCard({
 
   return (
     <Card className={className}>
-      <CardContent className="flex xs:flex-row flex-col xs:items-center justify-between gap-4">
+      <CardContent className="xs:flex-row xs:items-center flex flex-col justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <p className="font-medium">{invitation.invitedUser?.name}</p>
             {getStatusBadge(isExpired ? "expired" : invitation.status)}
           </div>
-          <div className="mt-1 flex items-center gap-1 text-muted-foreground text-sm">
+          <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
             <Mail className="h-3 w-3" />
             {invitation.invitedUser?.email}
           </div>
-          <div className="mt-1 flex flex-col items-start text-muted-foreground text-xs">
+          <div className="text-muted-foreground mt-1 flex flex-col items-start text-xs">
             <span className="flex items-center gap-1">
               <UserPlus className="h-3 w-3" />
               Invited by {invitation.invitedByUser?.name} on{" "}
@@ -62,7 +64,7 @@ export function InvitedUserCard({
             variant="outline"
             onClick={onClick}
             disabled={processing}
-            className="flex gap-2 xs:self-auto self-end"
+            className="xs:self-auto flex gap-2 self-end"
           >
             {processing ? (
               <Loader2 className="h-4 w-4 animate-spin" />

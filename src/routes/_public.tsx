@@ -1,5 +1,6 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
 import { Toaster } from "sonner";
+
 import { Layout } from "@/components/layout";
 
 export const Route = createFileRoute("/_public")({
@@ -8,7 +9,7 @@ export const Route = createFileRoute("/_public")({
 
 function PublicLayout() {
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/30">
+    <div className="bg-muted/30 flex min-h-screen w-full flex-col">
       <main className="flex-1">
         <Layout>
           <Outlet />

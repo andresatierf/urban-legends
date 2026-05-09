@@ -1,5 +1,6 @@
 import { StatCard } from "@/components/stat-card";
 import { SvgIcon } from "@/components/svg-icon";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 
 interface UserStatsGridProps {

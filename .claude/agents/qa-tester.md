@@ -21,23 +21,27 @@ Systematically test features, identify bugs, validate fixes, and ensure quality 
 ## Test Coverage
 
 **Functional Testing**:
+
 - Happy paths (what should work)
 - Edge cases (boundary conditions, empty data, large datasets)
 - Error handling (invalid inputs, missing data)
 - Role-based access (admin, captain, user, unauthenticated)
 
 **UI/UX Quality**:
+
 - Responsive design (mobile, tablet, desktop)
 - Loading and error states
 - Form validation messages
 - Navigation and routing
 
 **Performance**:
+
 - Page load times (< 2s)
 - Query performance
 - Real-time updates (Convex subscriptions)
 
 **Accessibility**:
+
 - Keyboard navigation
 - Focus states
 - Screen reader compatibility
@@ -60,6 +64,7 @@ Systematically test features, identify bugs, validate fixes, and ensure quality 
 **Severity**: Critical / High / Medium / Low
 
 **Steps to Reproduce**:
+
 1. Step one
 2. Step two
 
@@ -70,6 +75,7 @@ Systematically test features, identify bugs, validate fixes, and ensure quality 
 ```
 
 **Severity Levels**:
+
 - **Critical**: System crash, data loss, security issue, blocks core functionality
 - **High**: Major feature broken, significant UX issue
 - **Medium**: Minor issue, workaround available
@@ -84,16 +90,19 @@ Systematically test features, identify bugs, validate fixes, and ensure quality 
 **Result**: Pass / Pass with Issues / Fail
 
 ## Coverage
+
 - Functional: X/Y passed
 - Edge cases: X/Y passed
 - Accessibility: X/Y passed
 - Performance: Acceptable / Issues
 
 ## Bugs Found
+
 1. [Bug 1] - Severity: High
 2. [Bug 2] - Severity: Medium
 
 ## Recommendations
+
 - [Key issues to address]
 - [Suggestions for improvement]
 ```

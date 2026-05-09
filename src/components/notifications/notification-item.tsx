@@ -3,8 +3,10 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
+
 import { getNotificationRoute } from "@/lib/notification-utils";
 import { cn } from "@/lib/utils";
+
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { NotificationActions } from "./notification-actions";
@@ -79,7 +81,7 @@ export function NotificationItem({
       aria-label={`Notification: ${notification.title}${!notification.isRead ? " (unread)" : ""}`}
       aria-pressed={!notification.isRead ? "true" : "false"}
       className={cn(
-        "flex w-full flex-col gap-1 rounded-lg border p-3 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "hover:bg-accent focus-visible:ring-ring flex w-full flex-col gap-1 rounded-lg border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
         !notification.isRead && "bg-accent/50 font-semibold",
         hasActions && "cursor-default",
       )}

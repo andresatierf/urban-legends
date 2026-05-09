@@ -2,6 +2,7 @@
 
 import { Link } from "@tanstack/react-router";
 import { FileCheck, UserPlus } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,9 +39,9 @@ export function AdminPendingActionsPanel({
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between rounded-lg border p-4">
           <div className="flex items-center gap-3">
-            <FileCheck className="h-5 w-5 text-muted-foreground" />
+            <FileCheck className="text-muted-foreground h-5 w-5" />
             <div>
-              <div className="font-medium text-sm">Pending Submissions</div>
+              <div className="text-sm font-medium">Pending Submissions</div>
               <div className="text-muted-foreground text-xs">
                 Awaiting approval
               </div>
@@ -62,9 +63,9 @@ export function AdminPendingActionsPanel({
 
         <div className="flex items-center justify-between rounded-lg border p-4">
           <div className="flex items-center gap-3">
-            <UserPlus className="h-5 w-5 text-muted-foreground" />
+            <UserPlus className="text-muted-foreground h-5 w-5" />
             <div>
-              <div className="font-medium text-sm">Join Requests</div>
+              <div className="text-sm font-medium">Join Requests</div>
               <div className="text-muted-foreground text-xs">
                 System-wide pending requests
               </div>

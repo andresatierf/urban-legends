@@ -2,8 +2,10 @@
 
 import { useMutation } from "convex/react";
 import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/use-notifications";
+
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { NotificationItem } from "./notification-item";
@@ -78,7 +80,7 @@ export function NotificationList({
 
   if (notifications.length === 0) {
     return (
-      <div className="p-4 text-center text-muted-foreground text-sm">
+      <div className="text-muted-foreground p-4 text-center text-sm">
         No notifications yet
       </div>
     );
@@ -99,7 +101,7 @@ export function NotificationList({
             />
           </div>
         )}
-        <div className="p-4 text-center text-muted-foreground text-sm">
+        <div className="text-muted-foreground p-4 text-center text-sm">
           No {typeFilter} notifications
         </div>
       </div>

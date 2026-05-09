@@ -37,28 +37,24 @@ This creates a bottleneck where every user action requires admin intervention, p
 ### Functional Requirements
 
 1. **User Team Creation**
-
    - Users can create teams for tournaments they're eligible for
    - Creator automatically becomes team captain
    - Must respect tournament team size constraints (min/max)
    - Team names must be unique within a tournament
 
 2. **Join Existing Team**
-
    - Users can browse teams in tournaments they're interested in
    - Users can request to join open teams
    - Team captains can approve/reject join requests
    - Users can cancel pending join requests
 
 3. **Team Invitations**
-
    - Team captains can invite users by email
    - Invited users receive notification
    - Users can accept/reject invitations
    - Invitations expire after 7 days
 
 4. **Leave Team**
-
    - Users can leave teams they're part of
    - Cannot leave if they're the last member (must delete team instead)
    - Captains leaving must transfer captaincy or delete team
@@ -509,27 +505,22 @@ export const getUserJoinRequest = query({
 ## Edge Cases
 
 1. **User deletes account with pending join requests**
-
    - Join requests marked as cancelled
    - Team rosters updated
 
 2. **Tournament ends mid-join-request**
-
    - Can still join team (for historical record)
    - Cannot create new teams
 
 3. **Team reaches max size while request pending**
-
    - Request automatically rejected with message
    - User notified
 
 4. **Captain leaves without transferring**
-
    - If other members exist: auto-promote oldest member
    - If no members: delete team
 
 5. **Duplicate team names**
-
    - Validate uniqueness within tournament
    - Show error message with suggestion
 
@@ -559,19 +550,16 @@ export const getUserJoinRequest = query({
 ## Migration Plan
 
 1. **Phase 1: Schema Changes**
-
    - Add new tables to schema
    - Deploy schema changes
    - No user-facing changes yet
 
 2. **Phase 2: Backend Implementation**
-
    - Implement all mutations and queries
    - Test via Convex dashboard
    - Keep admin-only team creation as fallback
 
 3. **Phase 3: Frontend Implementation**
-
    - Build components incrementally
    - Start with team creation
    - Then join requests

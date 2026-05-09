@@ -122,8 +122,7 @@ export default defineSchema({
     quietHoursEnd: v.optional(v.string()),
     timezone: v.optional(v.string()), // IANA timezone
     updatedAt: v.string(),
-  })
-    .index("by_user", ["userId"]),
+  }).index("by_user", ["userId"]),
 });
 ```
 
@@ -268,11 +267,7 @@ Create the main notification queries and mutations.
 
 ```typescript
 import { v } from "convex/values";
-import {
-  internalMutation,
-  mutation,
-  query,
-} from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { getCurrentUserOrThrow } from "./users";
 
 /**
@@ -674,9 +669,7 @@ export const checkTournament24hWarnings = internalMutation({
     for (const tournament of tournamentsStartingSoon) {
       const teams = await ctx.db
         .query("teams")
-        .withIndex("by_tournament", (q) =>
-          q.eq("tournamentId", tournament._id),
-        )
+        .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
         .collect();
 
       const teamMemberPromises = teams.map((team) =>
@@ -1290,6 +1283,7 @@ bun run format:fix
 ```
 
 **Important**: This project uses **Biome** (not ESLint/Prettier). Biome will:
+
 - Enforce sorted Tailwind classes
 - Auto-organize imports
 - Ensure consistent code style
@@ -1313,7 +1307,7 @@ notifications: defineTable({
     "type",
     "relatedEntityType",
     "relatedEntityId",
-  ])
+  ]);
 ```
 
 ### Query with useQuery Hook
@@ -1410,6 +1404,7 @@ bun test convex/notifications.test.ts
 ```
 
 **Coverage**:
+
 - ✅ Notification creation with valid data
 - ✅ Idempotency (duplicate prevention)
 - ✅ Mark as read functionality
@@ -1496,6 +1491,7 @@ test("user receives and views notification", async ({ page }) => {
 **Problem**: Next.js app runs but Convex queries fail.
 
 **Solution**: Always run both:
+
 ```bash
 # Terminal 1
 bun run dev
@@ -1509,16 +1505,17 @@ bunx convex dev
 **Problem**: Slow query performance, Convex dashboard warnings.
 
 **Solution**: Always use `.withIndex()`:
+
 ```typescript
 // Good
-ctx.db.query("notifications")
+ctx.db
+  .query("notifications")
   .withIndex("by_user_and_read", (q) =>
-    q.eq("userId", userId).eq("isRead", false)
-  )
+    q.eq("userId", userId).eq("isRead", false),
+  );
 
 // Bad
-ctx.db.query("notifications")
-  .filter((q) => q.eq(q.field("userId"), userId))
+ctx.db.query("notifications").filter((q) => q.eq(q.field("userId"), userId));
 ```
 
 ### ❌ Creating Duplicate Notifications
@@ -1526,13 +1523,12 @@ ctx.db.query("notifications")
 **Problem**: Users receive multiple notifications for the same event.
 
 **Solution**: Use idempotent pattern with compound index:
+
 ```typescript
 const existing = await ctx.db
   .query("notifications")
   .withIndex("by_user_type_entity", (q) =>
-    q.eq("userId", userId)
-     .eq("type", type)
-     .eq("relatedEntityId", entityId)
+    q.eq("userId", userId).eq("type", type).eq("relatedEntityId", entityId),
   )
   .first();
 
@@ -1544,6 +1540,7 @@ if (existing) return existing._id;
 **Problem**: Soft-deleted notifications still appear in queries.
 
 **Solution**: Always filter:
+
 ```typescript
 .filter((q) => q.neq(q.field("isDeleted"), true))
 ```
@@ -1553,6 +1550,7 @@ if (existing) return existing._id;
 **Problem**: Users can access other users' notifications.
 
 **Solution**: Always check ownership:
+
 ```typescript
 const currentUser = await getCurrentUserOrThrow(ctx);
 if (currentUser._id !== args.userId) {
@@ -1616,6 +1614,7 @@ vercel deploy --prod
 **Navigate to**: https://dashboard.convex.dev
 
 **Monitor**:
+
 - **Cron Jobs**: Execution logs, success/failure rates
 - **Functions**: Query performance, mutation latency
 - **Database**: Table sizes, index usage
@@ -1623,13 +1622,13 @@ vercel deploy --prod
 
 ### Key Metrics to Track
 
-| Metric | Target | Alert Threshold |
-|--------|--------|-----------------|
-| Notification delivery latency | < 3 seconds | > 5 seconds |
-| Query response time (list 50 notifications) | < 1 second | > 2 seconds |
-| Cron job execution time (cleanup) | < 30 seconds | > 60 seconds |
-| Notification table size | Grows linearly | Sudden spike (> 10k/day) |
-| Failed notification creation rate | < 0.1% | > 1% |
+| Metric                                      | Target         | Alert Threshold          |
+| ------------------------------------------- | -------------- | ------------------------ |
+| Notification delivery latency               | < 3 seconds    | > 5 seconds              |
+| Query response time (list 50 notifications) | < 1 second     | > 2 seconds              |
+| Cron job execution time (cleanup)           | < 30 seconds   | > 60 seconds             |
+| Notification table size                     | Grows linearly | Sudden spike (> 10k/day) |
+| Failed notification creation rate           | < 0.1%         | > 1%                     |
 
 ### Cleanup Effectiveness
 
@@ -1638,7 +1637,7 @@ Monitor notification count growth:
 ```typescript
 // Query total notification count
 const totalNotifications = await ctx.db.query("notifications").collect();
-const activeNotifications = totalNotifications.filter(n => !n.isDeleted);
+const activeNotifications = totalNotifications.filter((n) => !n.isDeleted);
 
 console.log({
   total: totalNotifications.length,

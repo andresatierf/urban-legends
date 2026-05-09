@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -32,15 +33,15 @@ export function SystemServiceStatus({ services }: SystemServiceStatusProps) {
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between rounded-lg border p-3">
-          <span className="font-medium text-sm">Convex Backend</span>
+          <span className="text-sm font-medium">Convex Backend</span>
           {getStatusBadge(services.convex)}
         </div>
         <div className="flex items-center justify-between rounded-lg border p-3">
-          <span className="font-medium text-sm">Clerk Auth</span>
+          <span className="text-sm font-medium">Clerk Auth</span>
           {getStatusBadge(services.clerk)}
         </div>
         <div className="flex items-center justify-between rounded-lg border p-3">
-          <span className="font-medium text-sm">Database</span>
+          <span className="text-sm font-medium">Database</span>
           {getStatusBadge(services.database)}
         </div>
       </CardContent>

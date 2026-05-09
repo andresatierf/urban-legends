@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
 import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Image } from "@/components/ui/image";
@@ -31,13 +32,13 @@ export function EvidenceGallery({
     return (
       <div
         className={cn(
-          "flex aspect-square w-full max-w-[128px] items-center justify-center rounded-lg border-2 border-dashed bg-muted",
+          "bg-muted flex aspect-square w-full max-w-[128px] items-center justify-center rounded-lg border-2 border-dashed",
           className,
         )}
       >
         <div className="text-center">
-          <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground" />
-          <p className="mt-2 text-muted-foreground text-xs">No images</p>
+          <ImageIcon className="text-muted-foreground mx-auto h-12 w-12" />
+          <p className="text-muted-foreground mt-2 text-xs">No images</p>
         </div>
       </div>
     );
@@ -76,7 +77,7 @@ export function EvidenceGallery({
               </button>
             ))}
             {images.length > 2 && (
-              <div className="absolute right-2 bottom-2 rounded-md bg-black/70 px-2 py-1 text-white text-xs">
+              <div className="absolute right-2 bottom-2 rounded-md bg-black/70 px-2 py-1 text-xs text-white">
                 +{images.length - 2} more
               </div>
             )}
@@ -114,7 +115,7 @@ export function EvidenceGallery({
                   setCurrentIndex(idx + 2);
                   setLightboxOpen(true);
                 }}
-                className="relative h-16 w-16 overflow-hidden rounded border hover:ring-2 hover:ring-primary"
+                className="hover:ring-primary relative h-16 w-16 overflow-hidden rounded border hover:ring-2"
                 aria-label={`View image ${idx + 3}: ${altFor(img, idx + 2)}`}
               >
                 <Image
@@ -128,7 +129,7 @@ export function EvidenceGallery({
               </button>
             ))}
             {images.length > maxDisplay && (
-              <div className="flex h-16 w-16 items-center justify-center rounded border bg-muted font-medium text-xs">
+              <div className="bg-muted flex h-16 w-16 items-center justify-center rounded border text-xs font-medium">
                 +{images.length - maxDisplay}
               </div>
             )}
@@ -153,7 +154,7 @@ export function EvidenceGallery({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="-translate-y-1/2 absolute top-1/2 left-2"
+                  className="absolute top-1/2 left-2 -translate-y-1/2"
                   onClick={() =>
                     setCurrentIndex((prev) =>
                       prev === 0 ? images.length - 1 : prev - 1,
@@ -166,7 +167,7 @@ export function EvidenceGallery({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="-translate-y-1/2 absolute top-1/2 right-2"
+                  className="absolute top-1/2 right-2 -translate-y-1/2"
                   onClick={() =>
                     setCurrentIndex((prev) =>
                       prev === images.length - 1 ? 0 : prev + 1,
@@ -181,7 +182,7 @@ export function EvidenceGallery({
 
             <div className="mt-4 text-center">
               {images[currentIndex]?.filename && (
-                <p className="font-medium text-sm">
+                <p className="text-sm font-medium">
                   {images[currentIndex].filename}
                 </p>
               )}

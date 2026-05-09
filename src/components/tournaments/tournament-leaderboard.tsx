@@ -3,6 +3,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { Trophy, Users } from "lucide-react";
+
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
@@ -18,7 +19,7 @@ import { TableSkeleton } from "../ui/table-skeleton";
 const getRankBadge = (rank: number, _isWinner: boolean) => {
   if (rank === 1) {
     return (
-      <div className="flex items-center justify-center gap-1 font-bold text-podium-gold">
+      <div className="text-podium-gold flex items-center justify-center gap-1 font-bold">
         <Trophy className="h-4 w-4" />
         {rank}
       </div>
@@ -26,7 +27,7 @@ const getRankBadge = (rank: number, _isWinner: boolean) => {
   }
   if (rank === 2) {
     return (
-      <div className="flex items-center justify-center gap-1 font-bold text-podium-silver">
+      <div className="text-podium-silver flex items-center justify-center gap-1 font-bold">
         <Trophy className="h-4 w-4" />
         {rank}
       </div>
@@ -34,14 +35,14 @@ const getRankBadge = (rank: number, _isWinner: boolean) => {
   }
   if (rank === 3) {
     return (
-      <div className="flex items-center justify-center gap-1 font-bold text-podium-bronze">
+      <div className="text-podium-bronze flex items-center justify-center gap-1 font-bold">
         <Trophy className="h-4 w-4" />
         {rank}
       </div>
     );
   }
   return (
-    <div className="text-center font-medium text-muted-foreground">#{rank}</div>
+    <div className="text-muted-foreground text-center font-medium">#{rank}</div>
   );
 };
 
@@ -83,8 +84,8 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
   if (leaderboard.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border p-12 text-center">
-        <Trophy className="mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 className="mb-2 font-semibold text-lg">No teams yet</h3>
+        <Trophy className="text-muted-foreground mb-4 h-12 w-12" />
+        <h3 className="mb-2 text-lg font-semibold">No teams yet</h3>
         <p className="text-muted-foreground text-sm">
           Be the first to create a team and start competing!
         </p>
@@ -119,7 +120,7 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
                 >
                   {team.teamName}
                   {team.isWinner && (
-                    <span className="ml-2 text-podium-gold text-xs">
+                    <span className="text-podium-gold ml-2 text-xs">
                       <Trophy className="h-3 w-3" />
                       Winner
                     </span>
@@ -129,7 +130,7 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
               <TableCell className="text-right font-semibold">
                 {team.points}
               </TableCell>
-              <TableCell className="text-right text-muted-foreground">
+              <TableCell className="text-muted-foreground text-right">
                 <div className="flex items-center justify-end gap-1">
                   <Users className="h-3 w-3" />
                   {team.memberCount}

@@ -3,7 +3,9 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { Trophy, Users } from "lucide-react";
+
 import { useFormattedDate } from "@/hooks/useFormattedDate";
+
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -39,11 +41,11 @@ export function WinnerAnnouncement({ tournamentId }: Props) {
           <Link
             to="/teams/$teamId"
             params={{ teamId: winner.team._id }}
-            className="font-bold text-3xl hover:underline"
+            className="text-3xl font-bold hover:underline"
           >
             {winner.team.name}
           </Link>
-          <p className="mt-2 text-lg text-muted-foreground">
+          <p className="text-muted-foreground mt-2 text-lg">
             Final Score:{" "}
             <span className="font-semibold">{winner.team.points} points</span>
           </p>

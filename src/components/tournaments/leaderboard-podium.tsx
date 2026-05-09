@@ -3,6 +3,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { Medal, Trophy, Users } from "lucide-react";
+
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Card, CardContent } from "../ui/card";
@@ -10,13 +11,13 @@ import { PodiumSkeleton } from "../ui/podium-skeleton";
 
 const getPodiumIcon = (rank: number) => {
   if (rank === 1) {
-    return <Trophy className="h-12 w-12 text-podium-gold" />;
+    return <Trophy className="text-podium-gold h-12 w-12" />;
   }
   if (rank === 2) {
-    return <Medal className="h-10 w-10 text-podium-silver" />;
+    return <Medal className="text-podium-silver h-10 w-10" />;
   }
   if (rank === 3) {
-    return <Medal className="h-10 w-10 text-podium-bronze" />;
+    return <Medal className="text-podium-bronze h-10 w-10" />;
   }
   return null;
 };
@@ -81,19 +82,19 @@ export function LeaderboardPodium({ tournamentId }: Props) {
                 <Link
                   to="/teams/$teamId"
                   params={{ teamId: team.teamId }}
-                  className="font-bold text-lg hover:underline"
+                  className="text-lg font-bold hover:underline"
                   aria-label={`View ${team.teamName} team profile - Rank ${team.rank}`}
                 >
                   {team.teamName}
                 </Link>
               </div>
-              <div className="mb-3 font-bold text-3xl">{team.points} pts</div>
-              <div className="flex items-center gap-1 text-muted-foreground text-sm">
+              <div className="mb-3 text-3xl font-bold">{team.points} pts</div>
+              <div className="text-muted-foreground flex items-center gap-1 text-sm">
                 <Users className="h-4 w-4" />
                 {team.memberCount} members
               </div>
               {team.isWinner && (
-                <div className="mt-3 rounded-full bg-yellow-500 px-3 py-1 font-semibold text-white text-xs">
+                <div className="mt-3 rounded-full bg-yellow-500 px-3 py-1 text-xs font-semibold text-white">
                   Tournament Winner
                 </div>
               )}

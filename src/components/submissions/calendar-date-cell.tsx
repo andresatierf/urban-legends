@@ -1,8 +1,10 @@
 "use client";
 
 import { cva } from "class-variance-authority";
+
 import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
+
 import type { Id } from "../../../convex/_generated/dataModel";
 import { toUTCDateString } from "../../../convex/lib/dates";
 
@@ -11,10 +13,10 @@ export const cellStyles = cva(
   {
     variants: {
       isOutsideTournament: {
-        true: "cursor-not-allowed border-2 border-calendar-disabled-border border-dashed bg-calendar-disabled-bg text-calendar-disabled-text",
+        true: "border-calendar-disabled-border bg-calendar-disabled-bg text-calendar-disabled-text cursor-not-allowed border-2 border-dashed",
       },
       isDisabled: {
-        true: "cursor-not-allowed border-2 border-calendar-disabled-border border-dashed bg-calendar-disabled-bg text-calendar-disabled-text opacity-50",
+        true: "border-calendar-disabled-border bg-calendar-disabled-bg text-calendar-disabled-text cursor-not-allowed border-2 border-dashed opacity-50",
       },
       state: {
         pending:
@@ -24,25 +26,25 @@ export const cellStyles = cva(
         rejected:
           "border-calendar-rejected-border bg-calendar-rejected-bg text-calendar-rejected-text hover:bg-calendar-rejected-bg-hover",
         deleted:
-          "border-calendar-deleted-border bg-calendar-deleted-bg text-calendar-deleted-text line-through hover:bg-calendar-deleted-bg-hover",
+          "border-calendar-deleted-border bg-calendar-deleted-bg text-calendar-deleted-text hover:bg-calendar-deleted-bg-hover line-through",
         undefined:
-          "border-calendar-undefined-border border-dashed bg-calendar-undefined-bg text-calendar-undefined-text hover:bg-calendar-undefined-bg-hover",
+          "border-calendar-undefined-border bg-calendar-undefined-bg text-calendar-undefined-text hover:bg-calendar-undefined-bg-hover border-dashed",
       },
       isToday: {
-        true: "ring-2 ring-calendar-today-ring ring-offset-2 ring-offset-card",
+        true: "ring-calendar-today-ring ring-offset-card ring-2 ring-offset-2",
       },
     },
     compoundVariants: [
       {
         isOutsideTournament: true,
         className:
-          "cursor-not-allowed border-2 border-calendar-disabled-border border-dashed bg-calendar-disabled-bg text-calendar-disabled-text",
+          "border-calendar-disabled-border bg-calendar-disabled-bg text-calendar-disabled-text cursor-not-allowed border-2 border-dashed",
       },
       {
         isOutsideTournament: false,
         isDisabled: true,
         className:
-          "cursor-not-allowed border-2 border-calendar-disabled-border border-dashed bg-calendar-disabled-bg text-calendar-disabled-text opacity-50",
+          "border-calendar-disabled-border bg-calendar-disabled-bg text-calendar-disabled-text cursor-not-allowed border-2 border-dashed opacity-50",
       },
     ],
   },
@@ -131,7 +133,7 @@ export function CalendarDateCell({
       onClick={handleClick}
       disabled={isDisabled || isOutsideTournament}
       className={cn(
-        "relative flex h-16 w-full flex-col items-center justify-center rounded-md p-2 text-center font-medium text-sm",
+        "relative flex h-16 w-full flex-col items-center justify-center rounded-md p-2 text-center text-sm font-medium",
         cellStyles({
           isToday,
           isDisabled,
@@ -154,7 +156,7 @@ export function CalendarDateCell({
             className="object-cover"
           />
           {(submission.evidenceCount ?? 0) > 1 && (
-            <span className="absolute inset-0 flex items-center justify-center rounded-sm bg-black/60 font-bold text-[8px] text-white">
+            <span className="absolute inset-0 flex items-center justify-center rounded-sm bg-black/60 text-[8px] font-bold text-white">
               +{(submission.evidenceCount ?? 0) - 1}
             </span>
           )}

@@ -3,12 +3,14 @@
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { NotificationIndicator } from "./notification-indicator";
@@ -55,7 +57,7 @@ export function NotificationDropdown({
         aria-label="Notification panel"
       >
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-semibold text-sm">Notifications</h3>
+          <h3 className="text-sm font-semibold">Notifications</h3>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -69,11 +71,11 @@ export function NotificationDropdown({
         </div>
 
         {recentNotifications === undefined ? (
-          <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
+          <div className="text-muted-foreground flex items-center justify-center py-8 text-sm">
             Loading...
           </div>
         ) : recentNotifications.length === 0 ? (
-          <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
+          <div className="text-muted-foreground flex items-center justify-center py-8 text-sm">
             No notifications yet
           </div>
         ) : (

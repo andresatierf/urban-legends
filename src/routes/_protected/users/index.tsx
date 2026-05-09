@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
+
 import { SectionHeader } from "@/components/section-header";
 import { Card } from "@/components/ui/card";
 import {
@@ -14,6 +15,7 @@ import {
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { RolesBadgeList } from "@/components/users/roles-badge-list";
 import { cn } from "@/lib/utils";
+
 import { api } from "../../../../convex/_generated/api";
 
 export const Route = createFileRoute("/_protected/users/")({
@@ -47,7 +49,7 @@ function UsersPage() {
               {users?.length} users
             </TableCaption>
           )}
-          <TableHeader className="bg-gray-50 text-gray-600 text-sm uppercase">
+          <TableHeader className="bg-gray-50 text-sm text-gray-600 uppercase">
             <TableRow>
               <TableHead className="p-3">Name</TableHead>
               <TableHead className="p-3">Email</TableHead>

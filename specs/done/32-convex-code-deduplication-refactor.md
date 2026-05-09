@@ -21,6 +21,7 @@ The Urban Legends Convex backend contains significant code duplication across mu
 **Occurrences** (at least 8 instances):
 
 1. **tournaments.ts:122-140** - `getDetails` query
+
 ```typescript
 const teamsWithMembers = await Promise.all(
   teams.map(async (team) => {
@@ -41,6 +42,7 @@ const teamsWithMembers = await Promise.all(
 ```
 
 2. **tournaments.ts:386-403** - `getLeaderboard` query (simplified version)
+
 ```typescript
 const teamsWithCounts = await Promise.all(
   teams.map(async (team) => {
@@ -60,6 +62,7 @@ const teamsWithCounts = await Promise.all(
 ```
 
 3. **tournaments.ts:453-462** - `getWinner` query
+
 ```typescript
 const members = await ctx.db
   .query("teamMembers")
@@ -76,6 +79,7 @@ return {
 ```
 
 4. **teams.ts:199-214** - `getDetails` query
+
 ```typescript
 const membersWithRoles = await Promise.all(
   teamMembers.map(async (member) => {
@@ -93,6 +97,7 @@ const membersWithRoles = await Promise.all(
 ```
 
 5. **teams.ts:355-370** - `listTeamMembers` query
+
 ```typescript
 const teamMembers = await ctx.db
   .query("teamMembers")
@@ -101,9 +106,7 @@ const teamMembers = await ctx.db
 const users = await ctx.db
   .query("users")
   .filter((q) =>
-    q.or(
-      ...teamMembers.map((member) => q.eq(q.field("_id"), member.userId)),
-    ),
+    q.or(...teamMembers.map((member) => q.eq(q.field("_id"), member.userId))),
   )
   .collect();
 return users
@@ -125,6 +128,7 @@ return users
 **Occurrences** (at least 6 instances):
 
 1. **users.ts:26-34** - `list` query
+
 ```typescript
 return await Promise.all(
   users.map(async (user) => {
@@ -151,6 +155,7 @@ return await Promise.all(
 **Occurrences** (at least 4 instances):
 
 1. **submissionGroups.ts:364-378** - `getWithSubmissions` query
+
 ```typescript
 const submissionsWithUsers = await Promise.all(
   submissions.map(async (submission) => {
@@ -170,6 +175,7 @@ const submissionsWithUsers = await Promise.all(
 ```
 
 2. **submissions.ts:554-564** - `getDetails` query (teammates in group)
+
 ```typescript
 const teammatePromises = groupSubmissions.map(({ userId }) =>
   getUser(ctx, { userId, throw: false }),
@@ -237,6 +243,7 @@ All three fetch pending submissions and groups with slight variations in access 
 The codebase has extensive role validation duplication with inconsistent patterns:
 
 1. **Single role check** - Example from users.ts:260, dashboard.ts:89:
+
 ```typescript
 if (!user.roleNames.includes("admin")) {
   throw new Error("Admin access required");
@@ -244,16 +251,15 @@ if (!user.roleNames.includes("admin")) {
 ```
 
 2. **Multiple role check (AND pattern)** - Example from reviewer.ts:15-20, 54-60, 236-237:
+
 ```typescript
-if (
-  !user.roleNames.includes("reviewer") &&
-  !user.roleNames.includes("admin")
-) {
+if (!user.roleNames.includes("reviewer") && !user.roleNames.includes("admin")) {
   throw new Error("Reviewer or admin access required");
 }
 ```
 
 3. **Multiple role check (OR pattern, inconsistent syntax)** - Example from tournaments.ts:231-232, 508-509:
+
 ```typescript
 if (
   !user.roleNames.includes("admin") &&
@@ -264,6 +270,7 @@ if (
 ```
 
 4. **Array.some() pattern** - Example from tournamentManager.ts:20, 54, 152, 219:
+
 ```typescript
 if (!["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))) {
   throw new Error("Unauthorized");
@@ -271,6 +278,7 @@ if (!["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))) {
 ```
 
 5. **Triple role check** - Example from submissionGroups.ts:398-400:
+
 ```typescript
 if (
   user.roleNames.includes("admin") ||
@@ -282,6 +290,7 @@ if (
 ```
 
 6. **Local boolean variables** - Example from tournaments.ts:165-166, teams.ts:231, 276-277:
+
 ```typescript
 const isAdmin = user.roleNames.includes("admin");
 const isTournamentManager = user.roleNames.includes("tournament_manager");
@@ -291,6 +300,7 @@ if (!isAdmin && !isTournamentManager) {
 ```
 
 **Files with role validation duplication**:
+
 - **users.ts** - 2 instances
 - **reviewer.ts** - 3 instances (lines 17-18, 56-57, 236-237)
 - **tournaments.ts** - 5 instances (lines 165-166, 231-232, 278, 508-509)
@@ -301,23 +311,26 @@ if (!isAdmin && !isTournamentManager) {
 - **dashboard.ts** - 1 instance (line 89)
 
 **Existing validation function** (partial solution):
+
 - `validateIsAdmin` exists in users.ts:259-263 but only handles admin role
 
 **Key insight**: The `convex/data.ts` file already defines a role hierarchy system (lines 174-217):
+
 ```typescript
 export const rolesToCreate = [
-  { name: "dev", hierarchy: 0 },           // Highest privilege
+  { name: "dev", hierarchy: 0 }, // Highest privilege
   { name: "admin", hierarchy: 1 },
   { name: "tournament_manager", hierarchy: 2 },
   { name: "reviewer", hierarchy: 3 },
   { name: "player", hierarchy: 4 },
-  { name: "viewer", hierarchy: 5 },        // Lowest privilege
+  { name: "viewer", hierarchy: 5 }, // Lowest privilege
 ];
 ```
 
 This hierarchy system is currently **not utilized** for validation - all checks use explicit role name matching, missing the opportunity for hierarchy-based authorization.
 
 **Problems with current approach**:
+
 1. **Inconsistent syntax**: 4 different patterns for checking the same concept
 2. **No hierarchy awareness**: Can't check "admin or higher" easily
 3. **Verbose and error-prone**: Easy to forget a role in multi-role checks
@@ -375,6 +388,7 @@ This hierarchy system is currently **not utilized** for validation - all checks 
 ```
 
 **Benefits of this approach**:
+
 - No circular dependencies
 - Domain cohesion maintained
 - Helpers close to their usage context
@@ -382,6 +396,7 @@ This hierarchy system is currently **not utilized** for validation - all checks 
 - Follows existing pattern in users.ts (getUser, getRolesForUser already exist)
 
 **Convention**: Helpers should be placed at the bottom of each file in a clearly marked section:
+
 ```typescript
 // ============================================================================
 // Helper Functions
@@ -439,21 +454,19 @@ export async function enrichTeamWithMembers(
     );
   }
 
-  let memberDetails: Array<Doc<"users"> & { memberRole?: "captain" | "member" }> | undefined;
+  let memberDetails:
+    | Array<Doc<"users"> & { memberRole?: "captain" | "member" }>
+    | undefined;
 
   if (options?.includeMemberDetails) {
     const userIds = filteredMembers.map((m) => m.userId);
     const users = await ctx.db
       .query("users")
-      .filter((q) =>
-        q.or(...userIds.map((id) => q.eq(q.field("_id"), id))),
-      )
+      .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("_id"), id))))
       .collect();
 
     if (options?.includeMemberRoles) {
-      const membershipByUserId = new Map(
-        teamMembers.map((m) => [m.userId, m]),
-      );
+      const membershipByUserId = new Map(teamMembers.map((m) => [m.userId, m]));
       memberDetails = users.map((user) => {
         const membership = membershipByUserId.get(user._id);
         return {
@@ -517,9 +530,7 @@ export async function enrichTeamsWithMembers(
     const allUserIds = allTeamMembers.map((m) => m.userId);
     const users = await ctx.db
       .query("users")
-      .filter((q) =>
-        q.or(...allUserIds.map((id) => q.eq(q.field("_id"), id))),
-      )
+      .filter((q) => q.or(...allUserIds.map((id) => q.eq(q.field("_id"), id))))
       .collect();
     usersMap = toIdMap(users);
   }
@@ -574,7 +585,9 @@ export async function getTeamMembersWithUsers(
     .collect();
 
   const userIds = teamMembers
-    .filter((m) => !options?.excludeUserId || m.userId !== options.excludeUserId)
+    .filter(
+      (m) => !options?.excludeUserId || m.userId !== options.excludeUserId,
+    )
     .map((m) => m.userId);
 
   if (userIds.length === 0) return [];
@@ -616,13 +629,19 @@ import { rolesToCreate } from "./data";
  * Lower hierarchy number = higher privilege.
  */
 const ROLE_HIERARCHY = new Map(
-  rolesToCreate.map((role) => [role.name, role.hierarchy])
+  rolesToCreate.map((role) => [role.name, role.hierarchy]),
 );
 
 /**
  * Type for role names in the system.
  */
-export type RoleName = "dev" | "admin" | "tournament_manager" | "reviewer" | "player" | "viewer";
+export type RoleName =
+  | "dev"
+  | "admin"
+  | "tournament_manager"
+  | "reviewer"
+  | "player"
+  | "viewer";
 
 /**
  * Validates that a user has at least the specified minimum role privilege.
@@ -654,10 +673,11 @@ export function validateMinimumRole(
   minimumRole: RoleName,
   options?: {
     customMessage?: string;
-  }
+  },
 ): void {
   if (!hasMinimumRole(user, minimumRole)) {
-    const message = options?.customMessage ??
+    const message =
+      options?.customMessage ??
       `${minimumRole.replace("_", " ")} access or higher required`;
     throw new Error(message);
   }
@@ -679,7 +699,7 @@ export function validateMinimumRole(
  */
 export function hasMinimumRole(
   user: UserWithRoles,
-  minimumRole: RoleName
+  minimumRole: RoleName,
 ): boolean {
   const requiredHierarchy = ROLE_HIERARCHY.get(minimumRole);
   if (requiredHierarchy === undefined) {
@@ -689,7 +709,9 @@ export function hasMinimumRole(
   // Check if user has any role with equal or higher privilege (lower hierarchy number)
   return user.roleNames.some((roleName) => {
     const userRoleHierarchy = ROLE_HIERARCHY.get(roleName);
-    return userRoleHierarchy !== undefined && userRoleHierarchy <= requiredHierarchy;
+    return (
+      userRoleHierarchy !== undefined && userRoleHierarchy <= requiredHierarchy
+    );
   });
 }
 
@@ -711,10 +733,11 @@ export function validateHasAnyRole(
   allowedRoles: RoleName[],
   options?: {
     customMessage?: string;
-  }
+  },
 ): void {
   if (!hasAnyRole(user, allowedRoles)) {
-    const message = options?.customMessage ??
+    const message =
+      options?.customMessage ??
       `One of the following roles required: ${allowedRoles.join(", ")}`;
     throw new Error(message);
   }
@@ -730,7 +753,7 @@ export function validateHasAnyRole(
  */
 export function hasAnyRole(
   user: UserWithRoles,
-  allowedRoles: RoleName[]
+  allowedRoles: RoleName[],
 ): boolean {
   return allowedRoles.some((role) => user.roleNames.includes(role));
 }
@@ -749,16 +772,15 @@ export function validateIsAdmin(user: UserWithRoles, message?: string) {
 **Migration Examples**:
 
 **Before** (reviewer.ts:15-20):
+
 ```typescript
-if (
-  !user.roleNames.includes("reviewer") &&
-  !user.roleNames.includes("admin")
-) {
+if (!user.roleNames.includes("reviewer") && !user.roleNames.includes("admin")) {
   return 0;
 }
 ```
 
 **After**:
+
 ```typescript
 if (!hasMinimumRole(user, "reviewer")) {
   return 0;
@@ -766,6 +788,7 @@ if (!hasMinimumRole(user, "reviewer")) {
 ```
 
 **Before** (tournaments.ts:231-234):
+
 ```typescript
 if (
   !user.roleNames.includes("admin") &&
@@ -776,11 +799,13 @@ if (
 ```
 
 **After**:
+
 ```typescript
 validateMinimumRole(user, "tournament_manager");
 ```
 
 **Before** (tournamentManager.ts:20):
+
 ```typescript
 if (!["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))) {
   throw new Error("Unauthorized");
@@ -788,13 +813,15 @@ if (!["admin", "tournament_manager"].some((r) => user.roleNames.includes(r))) {
 ```
 
 **After**:
+
 ```typescript
 validateMinimumRole(user, "tournament_manager", {
-  customMessage: "Unauthorized"
+  customMessage: "Unauthorized",
 });
 ```
 
 **Benefits**:
+
 1. **Single source of truth**: Role hierarchy logic in one place
 2. **Type safety**: `RoleName` type prevents typos
 3. **Clearer intent**: `validateMinimumRole(user, "reviewer")` is self-documenting
@@ -807,6 +834,7 @@ validateMinimumRole(user, "tournament_manager", {
 **Location**: Bottom of `convex/users.ts` (below role validation helpers)
 
 The `getUser` and `getRolesForUser` functions already exist. We should:
+
 1. Keep them as-is (they're well-designed)
 2. Add bulk enrichment helper at the bottom:
 
@@ -900,10 +928,7 @@ export function toIdMap<T extends { _id: Id<any> }>(
  * @param keyFn - Function to extract the grouping key
  * @returns Map of grouped items
  */
-export function groupBy<T, K>(
-  items: T[],
-  keyFn: (item: T) => K,
-): Map<K, T[]> {
+export function groupBy<T, K>(items: T[], keyFn: (item: T) => K): Map<K, T[]> {
   return items.reduce<Map<K, T[]>>((acc, item) => {
     const key = keyFn(item);
     const group = acc.get(key) ?? [];
@@ -981,6 +1006,7 @@ export async function enrichWithRelated<
 ```
 
 **Usage of Generic Helpers**: These utilities are imported and used by all domain-specific enrichment functions:
+
 - **`toIdMap`** - Used in:
   - `enrichTeamsWithMembers` (teams.ts) - for creating users map
   - `getUsersWithRoles` (users.ts) - for creating roles map
@@ -1020,15 +1046,11 @@ export async function enrichTeamsWithTournaments(
     tournament: Doc<"tournaments"> | null;
   }>
 > {
-  const tournamentIds = Array.from(
-    new Set(teams.map((t) => t.tournamentId)),
-  );
+  const tournamentIds = Array.from(new Set(teams.map((t) => t.tournamentId)));
 
   const tournaments = await ctx.db
     .query("tournaments")
-    .filter((q) =>
-      q.or(...tournamentIds.map((id) => q.eq(q.field("_id"), id))),
-    )
+    .filter((q) => q.or(...tournamentIds.map((id) => q.eq(q.field("_id"), id))))
     .collect();
 
   const tournamentMap = toIdMap(tournaments);
@@ -1139,9 +1161,7 @@ export async function detectOrphanedRecords(
   const userIds = new Set(users.map((u) => u._id));
 
   // Find orphaned teams (teams with non-existent tournaments)
-  const orphanedTeams = teams.filter(
-    (t) => !tournamentIds.has(t.tournamentId),
-  );
+  const orphanedTeams = teams.filter((t) => !tournamentIds.has(t.tournamentId));
 
   // Find orphaned submissions (submissions with non-existent teams or tournaments)
   const orphanedSubmissions = submissions.filter(
@@ -1170,6 +1190,7 @@ export async function detectOrphanedRecords(
 **Goal**: Introduce new helper functions without changing existing code
 
 **Steps**:
+
 1. Create `convex/lib/helpers.ts` with generic data manipulation utilities (toIdMap, groupBy, batchGetByIds, enrichWithRelated)
 2. Add role validation helpers to bottom of `users.ts` (validateMinimumRole, hasMinimumRole, validateHasAnyRole, hasAnyRole, update validateIsAdmin)
 3. Add helper functions section at bottom of `teams.ts` with team enrichment helpers
@@ -1179,6 +1200,7 @@ export async function detectOrphanedRecords(
 7. Add integrity helpers to `convex/lib/helpers.ts` (detectOrphanedRecords)
 
 **File Structure Changes**:
+
 ```
 convex/
   teams.ts                    # Add helpers at bottom
@@ -1190,6 +1212,7 @@ convex/
 ```
 
 **Testing**:
+
 - Unit test each helper function in isolation
 - Verify type inference works correctly
 - Test with various input sizes (0, 1, 10, 100 items)
@@ -1201,6 +1224,7 @@ convex/
 **Goal**: Replace the most pervasive pattern (role validation) first - affects 28+ locations
 
 **Priority Order** (by frequency and impact):
+
 1. `reviewer.ts` - Replace 3 instances with `validateMinimumRole(user, "reviewer")`
 2. `tournamentManager.ts` - Replace 4 instances with `validateMinimumRole(user, "tournament_manager")`
 3. `tournaments.ts` - Replace 5 instances with `validateMinimumRole` or `hasMinimumRole`
@@ -1213,16 +1237,15 @@ convex/
 **Example Refactoring**:
 
 **Before** (reviewer.ts:15-20):
+
 ```typescript
-if (
-  !user.roleNames.includes("reviewer") &&
-  !user.roleNames.includes("admin")
-) {
+if (!user.roleNames.includes("reviewer") && !user.roleNames.includes("admin")) {
   return 0;
 }
 ```
 
 **After**:
+
 ```typescript
 if (!hasMinimumRole(user, "reviewer")) {
   return 0;
@@ -1230,6 +1253,7 @@ if (!hasMinimumRole(user, "reviewer")) {
 ```
 
 **Before** (tournaments.ts:165-166, then 168):
+
 ```typescript
 const isAdmin = user.roleNames.includes("admin");
 const isTournamentManager = user.roleNames.includes("tournament_manager");
@@ -1239,13 +1263,15 @@ if (!isAdmin && !isTournamentManager) {
 ```
 
 **After**:
+
 ```typescript
 validateMinimumRole(user, "tournament_manager", {
-  customMessage: "Unauthorized"
+  customMessage: "Unauthorized",
 });
 ```
 
 **Testing for Each Refactor**:
+
 1. Run existing integration tests
 2. Test authorization flows - verify unauthorized users are blocked
 3. Test with different role levels (dev, admin, tournament_manager, etc.)
@@ -1257,6 +1283,7 @@ validateMinimumRole(user, "tournament_manager", {
 **Goal**: Replace the second most duplicated pattern (team enrichment)
 
 **Priority Order** (by impact):
+
 1. `tournaments.ts` - `getDetails`, `getLeaderboard`, `getWinner`
 2. `teams.ts` - `getDetails`, `listTeamMembers`
 3. `captain.ts` - `getDashboardData`, `getTeamsComparison`
@@ -1265,6 +1292,7 @@ validateMinimumRole(user, "tournament_manager", {
 **Example Refactoring**:
 
 **Before** (tournaments.ts:122-140):
+
 ```typescript
 const teamsWithMembers = await Promise.all(
   teams.map(async (team) => {
@@ -1285,6 +1313,7 @@ const teamsWithMembers = await Promise.all(
 ```
 
 **After**:
+
 ```typescript
 const teamsWithMembers = await enrichTeamsWithMembers(
   ctx,
@@ -1297,6 +1326,7 @@ const teamsWithMembers = await enrichTeamsWithMembers(
 ```
 
 **Testing for Each Refactor**:
+
 1. Run existing integration tests
 2. Manually test affected pages in the UI
 3. Compare query results before/after (use console.log temporarily)
@@ -1307,6 +1337,7 @@ const teamsWithMembers = await enrichTeamsWithMembers(
 **Goal**: Consolidate user with roles fetching
 
 **Files to Update**:
+
 1. `users.ts` - Add `getUsersWithRoles` helper
 2. Replace individual `getUser` calls in loops with bulk fetching
 3. Update all dashboard queries using user enrichment
@@ -1318,6 +1349,7 @@ const teamsWithMembers = await enrichTeamsWithMembers(
 **Goal**: Consolidate submission + user data fetching
 
 **Files to Update**:
+
 1. `submissions.ts` - Add `enrichSubmissionsWithUsers`
 2. `submissionGroups.ts` - Use new helper in `getWithSubmissions`
 3. `reviewer.ts` - Use new helper in `getPendingSubmissions`
@@ -1328,6 +1360,7 @@ const teamsWithMembers = await enrichTeamsWithMembers(
 **Goal**: Eliminate duplicate orphaned records detection
 
 **Files to Update**:
+
 1. `admin.ts` - Replace inline logic with `detectOrphanedRecords`
 2. Remove `getOrphanedRecordsData` function (duplicate)
 
@@ -1336,6 +1369,7 @@ const teamsWithMembers = await enrichTeamsWithMembers(
 **Goal**: Use `toIdMap` and `groupBy` utilities consistently
 
 **Files to Update**:
+
 1. All files creating ID maps manually
 2. Replace with `toIdMap(items)` or `groupBy(items, keyFn)`
 
@@ -1344,11 +1378,13 @@ const teamsWithMembers = await enrichTeamsWithMembers(
 ## Implementation Checklist
 
 ### Pre-Implementation
+
 - [ ] Review specification with team
 - [ ] Identify any additional duplication patterns
 - [ ] Set up branch: `feature/convex-deduplication`
 
 ### Phase 1: Helper Functions
+
 - [ ] Create `convex/lib/helpers.ts` with generic utilities (toIdMap, groupBy, batchGetByIds, enrichWithRelated)
 - [ ] Add integrity helpers (detectOrphanedRecords) to `convex/lib/helpers.ts`
 - [ ] Add role validation helpers to bottom of `users.ts` (validateMinimumRole, hasMinimumRole, validateHasAnyRole, hasAnyRole)
@@ -1361,6 +1397,7 @@ const teamsWithMembers = await enrichTeamsWithMembers(
 - [ ] Verify types and TypeScript compilation
 
 ### Phase 2: Role Validation
+
 - [ ] Refactor `reviewer.ts` - Replace 3 role check instances
 - [ ] Test reviewer dashboard and pending submissions
 - [ ] Refactor `tournamentManager.ts` - Replace 4 role check instances
@@ -1377,6 +1414,7 @@ const teamsWithMembers = await enrichTeamsWithMembers(
 - [ ] Verify error messages are appropriate
 
 ### Phase 3: Team Enrichment
+
 - [ ] Refactor `tournaments.ts` - `getDetails`
 - [ ] Test tournament details page
 - [ ] Refactor `tournaments.ts` - `getLeaderboard`
@@ -1392,12 +1430,14 @@ const teamsWithMembers = await enrichTeamsWithMembers(
 - [ ] Test user dashboard
 
 ### Phase 4: User Enrichment
+
 - [ ] Add `getUsersWithRoles` to `users.ts`
 - [ ] Identify all loops calling `getUser`
 - [ ] Refactor to use bulk helper
 - [ ] Test user lists and dashboards
 
 ### Phase 5: Submission Enrichment
+
 - [ ] Add `enrichSubmissionsWithUsers` to `submissions.ts`
 - [ ] Refactor `submissionGroups.ts` - `getWithSubmissions`
 - [ ] Refactor `reviewer.ts` - `getPendingSubmissions`
@@ -1405,17 +1445,20 @@ const teamsWithMembers = await enrichTeamsWithMembers(
 - [ ] Test submission views
 
 ### Phase 6: Integrity Checks
+
 - [ ] Refactor `admin.ts` - `getSystemHealth`
 - [ ] Refactor `admin.ts` - `runIntegrityCheck`
 - [ ] Remove duplicate `getOrphanedRecordsData`
 - [ ] Test admin health dashboard
 
 ### Phase 7: Map Construction
+
 - [ ] Find all manual Map construction
 - [ ] Replace with `toIdMap` or `groupBy`
 - [ ] Test affected queries
 
 ### Post-Implementation
+
 - [ ] Full regression testing
 - [ ] Performance benchmarking
 - [ ] Update CLAUDE.md with helper patterns
@@ -1429,6 +1472,7 @@ const teamsWithMembers = await enrichTeamsWithMembers(
 ### Unit Testing Strategy
 
 For each helper function:
+
 1. **Empty input test**: `enrichTeamsWithMembers(ctx, [])`
 2. **Single item test**: Verify correct enrichment
 3. **Multiple items test**: Verify bulk efficiency
@@ -1438,6 +1482,7 @@ For each helper function:
 ### Integration Testing
 
 For each refactored query:
+
 1. **Comparison test**: Compare output before/after refactoring
 2. **UI test**: Manually verify affected pages work
 3. **Performance test**: Check query times in Convex dashboard
@@ -1471,14 +1516,15 @@ For each refactored query:
 
 For key queries before/after refactoring:
 
-| Query | Before (ms) | After (ms) | Change |
-|-------|-------------|------------|--------|
-| `tournaments.getDetails` | TBD | TBD | TBD |
-| `teams.getDetails` | TBD | TBD | TBD |
-| `captain.getDashboardData` | TBD | TBD | TBD |
-| `reviewer.getPendingSubmissions` | TBD | TBD | TBD |
+| Query                            | Before (ms) | After (ms) | Change |
+| -------------------------------- | ----------- | ---------- | ------ |
+| `tournaments.getDetails`         | TBD         | TBD        | TBD    |
+| `teams.getDetails`               | TBD         | TBD        | TBD    |
+| `captain.getDashboardData`       | TBD         | TBD        | TBD    |
+| `reviewer.getPendingSubmissions` | TBD         | TBD        | TBD    |
 
 **How to Measure**:
+
 1. Use Convex dashboard query logs
 2. Note execution time before refactoring
 3. Compare after refactoring
@@ -1603,12 +1649,14 @@ After initial refactoring, consider:
 This refactoring eliminates ~465 lines of duplicate code, establishes reusable patterns, and improves maintainability without breaking existing functionality. The phased migration approach allows for safe, incremental changes with comprehensive testing at each step.
 
 **Key Improvements**:
+
 1. **Role Validation**: 28+ instances consolidated into hierarchy-aware helpers
 2. **Data Enrichment**: Team, user, and submission enrichment patterns standardized
 3. **Generic Utilities**: Reusable `toIdMap`, `groupBy`, and integrity helpers
 4. **Type Safety**: New `RoleName` type prevents authorization bugs
 
 **Estimated Timeline**:
+
 - Phase 1 (Helpers): 1 day
 - Phase 2 (Role validation): 1 day
 - Phase 3 (Team enrichment): 1 day

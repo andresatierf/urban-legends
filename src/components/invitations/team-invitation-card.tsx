@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { capitalize } from "lodash";
 import { Calendar, Check, Loader2, Trophy, UserPlus, X } from "lucide-react";
+
 import { useFormattedDate } from "@/hooks/useFormattedDate";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -38,7 +40,7 @@ export function TeamInvitationCard({
             <p className="font-medium">{invitation.team?.name}</p>
             {isExpired && <Badge variant="destructive">Expired</Badge>}
           </div>
-          <div className="mt-1 flex flex-col items-start text-muted-foreground">
+          <div className="text-muted-foreground mt-1 flex flex-col items-start">
             <span className="flex items-center gap-1">
               <Trophy className="h-4 w-4" />
               <Link

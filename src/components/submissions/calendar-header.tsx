@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 
 interface CalendarHeaderProps {
@@ -35,7 +36,7 @@ export function CalendarHeader({
 
   return (
     <>
-      <h2 className="font-semibold text-2xl">{monthYear}</h2>
+      <h2 className="text-2xl font-semibold">{monthYear}</h2>
 
       <div className="flex gap-2">
         <Button

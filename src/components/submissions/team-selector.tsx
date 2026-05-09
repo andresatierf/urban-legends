@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId } from "react";
+
 import {
   Select,
   SelectContent,
@@ -8,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 
 interface TeamSelectorProps {
@@ -55,7 +57,7 @@ export function TeamSelector({
 
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor={selectId} className="font-medium text-sm">
+      <label htmlFor={selectId} className="text-sm font-medium">
         Team:
       </label>
       <Select
@@ -71,7 +73,7 @@ export function TeamSelector({
               <div className="flex flex-col items-start">
                 <span className="font-medium">{team.name}</span>
                 {team.tournament && (
-                  <span className="text-gray-500 text-xs">
+                  <span className="text-xs text-gray-500">
                     {team.tournament.name}
                   </span>
                 )}

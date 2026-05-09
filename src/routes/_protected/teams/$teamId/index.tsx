@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { ArrowLeft, Trophy } from "lucide-react";
+
 import { InvitedUsersList } from "@/components/invitations/invited-users-list";
 import { JoinRequestsList } from "@/components/invitations/join-requests-list";
 import { SectionHeader } from "@/components/section-header";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { CardGrid } from "@/components/ui/card-grid";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 import { useUser } from "@/hooks/useUser";
+
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 

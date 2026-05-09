@@ -5,10 +5,12 @@ import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Check, Pencil, Trash2, Trophy, Users, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+
 import { DetailsCard } from "@/components/details-card";
 import { Badge } from "@/components/ui/badge";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { tryMutate } from "@/lib/utils";
+
 import { api } from "../../../convex/_generated/api";
 import { UpsertSubmissionFormDialog } from "../form/upsert-submission-form";
 import { Button } from "../ui/button";

@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
+
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { SectionHeader } from "../section-header";
 import { UserTournamentCard } from "../tournaments/user-tournament-card";

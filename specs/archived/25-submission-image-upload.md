@@ -603,15 +603,12 @@ Error: Please upload at least 1 image as proof of activity before submitting
 ## Open Questions
 
 1. **Image Compression**: Should we compress images before storage?
-
    - **Recommendation**: Phase 2 feature (client-side compression)
 
 2. **HEIC Browser Support**: Safari uses HEIC, but display support varies
-
    - **Recommendation**: Accept uploads, consider server-side conversion in Phase 2
 
 3. **Orphaned File Cleanup**: How to handle files uploaded but never saved?
-
    - **Recommendation**: Background job to clean up files older than 24 hours with no metadata
 
 4. **Mobile Camera Quality**: Modern phones capture 12-20MB images

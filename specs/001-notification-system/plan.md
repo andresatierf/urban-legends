@@ -18,25 +18,26 @@ Build an in-app notification system that notifies users of actions relevant to t
 **Target Platform**: Web application (modern browsers)
 **Project Type**: Web (Next.js App Router frontend + Convex backend)
 **Performance Goals**:
-  - Notification delivery latency <3 seconds
-  - Notification list load time <1 second for 100 notifications
-  - Real-time updates across multiple browser tabs
-  - Support 50 concurrent notification deliveries
-**Constraints**:
-  - In-app only (no email or external notification systems)
-  - 90-day notification retention
-  - Real-time sync via Convex subscriptions (no polling)
-  - Must integrate with existing RBAC system
-**Scale/Scope**:
-  - 23 notification types across 4 categories
-  - ~8 new Convex functions (queries/mutations/actions)
-  - ~5 new React components
-  - 1 new database table + 1 preferences table
-  - Integration touchpoints in ~10 existing Convex mutations
+
+- Notification delivery latency <3 seconds
+- Notification list load time <1 second for 100 notifications
+- Real-time updates across multiple browser tabs
+- Support 50 concurrent notification deliveries
+  **Constraints**:
+- In-app only (no email or external notification systems)
+- 90-day notification retention
+- Real-time sync via Convex subscriptions (no polling)
+- Must integrate with existing RBAC system
+  **Scale/Scope**:
+- 23 notification types across 4 categories
+- ~8 new Convex functions (queries/mutations/actions)
+- ~5 new React components
+- 1 new database table + 1 preferences table
+- Integration touchpoints in ~10 existing Convex mutations
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ### Gate 1: Type-Safe Architecture ✅ PASS
 
@@ -185,11 +186,13 @@ tests/ or __tests__/
 ```
 
 **Structure Decision**: This is a web application using Next.js 15 App Router (frontend) with Convex serverless backend. The structure follows the existing Urban Legends architecture:
+
 - **Backend**: Convex functions in `/convex/` directory
 - **Frontend**: React components in `/src/app/` (pages) and `/src/components/` (UI components)
 - **Shared logic**: Hooks in `/src/hooks/`, utilities in `/src/lib/`
 
 This feature adds:
+
 - 1 new Convex module (`notifications.ts`) with queries/mutations
 - 1 new Convex subdirectory (`notifications/`) for helpers
 - 1 new frontend page (`/notifications`)
@@ -214,6 +217,7 @@ All design decisions align with the Urban Legends constitution and follow existi
 **Artifact**: [`research.md`](./research.md)
 
 All technical unknowns resolved:
+
 - **Testing Framework**: Vitest for unit tests, Playwright for E2E (no existing framework in project)
 - **Convex Scheduled Jobs**: Built-in cron jobs via `crons.ts` for time-based notifications
 - **Real-Time Subscriptions**: Standard `useQuery` hook with automatic reactivity
@@ -224,6 +228,7 @@ All technical unknowns resolved:
 ### Phase 1: Design & Contracts ✅ COMPLETE
 
 **Artifacts**:
+
 - [`data-model.md`](./data-model.md) - Database schema with 2 tables, 3 indexes, 23 notification types
 - [`contracts/queries.md`](./contracts/queries.md) - 4 query functions (list, getUnreadCount, recent, get)
 - [`contracts/mutations.md`](./contracts/mutations.md) - 5 mutation functions (create, markAsRead, markAllAsRead, deleteNotification, createBulkNotifications)
@@ -242,6 +247,7 @@ This will generate `tasks.md` with dependency-ordered implementation tasks based
 ### Constitution Re-Check (Post-Design)
 
 All gates continue to pass after detailed design:
+
 - ✅ Type-safe architecture maintained (Convex validators + TypeScript)
 - ✅ Real-time data integrity via Convex subscriptions
 - ✅ Code quality enforcement (Biome linting/formatting)
@@ -260,6 +266,7 @@ All gates continue to pass after detailed design:
 All design artifacts complete and validated. The feature is ready to move to Phase 2 (task generation) via `/speckit.tasks` command, followed by implementation via `/speckit.implement`.
 
 **Estimated Implementation Scope**:
+
 - Backend: ~8 new Convex functions + 15 trigger integrations
 - Frontend: ~5 new React components + 2 custom hooks
 - Testing: ~20 unit tests + ~5 E2E test scenarios

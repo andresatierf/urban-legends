@@ -38,27 +38,23 @@ The `tournament_manager` role exists in the system but has limited functionality
 ### Functional Requirements
 
 1. **Tournament Management**
-
    - Tournament managers can create new tournaments
    - Tournament managers can edit any tournament
    - Tournament managers cannot delete tournaments (admin-only for safety)
    - Tournament managers can view all tournaments
 
 2. **Submission Management**
-
    - Tournament managers can approve submissions
    - Tournament managers can reject submissions with reason
    - Tournament managers can view all submissions across all tournaments
 
 3. **Team Oversight**
-
    - Tournament managers can view all teams
    - Tournament managers can view team composition
    - Tournament managers cannot create/delete teams (users do this)
    - Tournament managers can remove teams that violate rules (via admin interface)
 
 4. **Analytics & Leaderboards**
-
    - Tournament managers can view tournament leaderboards
    - Tournament managers can view tournament statistics
    - Tournament managers can view team statistics
@@ -314,7 +310,10 @@ export const getDashboardStats = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!user.roleNames.includes("tournament_manager") && !user.roleNames.includes("admin")) {
+    if (
+      !user.roleNames.includes("tournament_manager") &&
+      !user.roleNames.includes("admin")
+    ) {
       throw new Error("Tournament Manager or Admin access required");
     }
 
@@ -325,7 +324,7 @@ export const getDashboardStats = query({
 
     // Categorize tournaments
     const activeTournaments = tournaments.filter(
-      (t) => t.startDate <= now && t.endDate >= now
+      (t) => t.startDate <= now && t.endDate >= now,
     );
     const upcomingTournaments = tournaments.filter((t) => t.startDate > now);
     const endedTournaments = tournaments.filter((t) => t.endDate < now);
@@ -350,7 +349,9 @@ export const getDashboardStats = query({
           .collect();
 
         totalSubmissions += submissions.length;
-        pendingSubmissions += submissions.filter((s) => s.state === "pending").length;
+        pendingSubmissions += submissions.filter(
+          (s) => s.state === "pending",
+        ).length;
       }
     }
 
@@ -388,7 +389,10 @@ export const getRecentActivity = query({
     const user = await getCurrentUserOrThrow(ctx);
     const limit = args.limit || 30;
 
-    if (!user.roleNames.includes("tournament_manager") && !user.roleNames.includes("admin")) {
+    if (
+      !user.roleNames.includes("tournament_manager") &&
+      !user.roleNames.includes("admin")
+    ) {
       throw new Error("Tournament Manager or Admin access required");
     }
 
@@ -651,6 +655,7 @@ export default function TournamentManagerDashboard() {
 ```
 
 **Features:**
+
 - Dashboard overview with statistics
 - Quick action buttons for common tasks
 - List of all tournaments (since managers can access all)
@@ -870,13 +875,11 @@ Update these pages to restrict to admin-only (keep tournament managers out):
 Add visual indicators to show role-based permissions:
 
 1. **Page Headers**
-
    - Show "Tournament Manager" badge for non-admin tournament managers
    - Show "Admin" badge for admins
    - Use Badge component with variant="secondary" for tournament manager
 
 2. **Button States**
-
    - Hide "Delete Tournament" button for tournament managers
    - Show all other tournament actions (Edit, View, Leaderboard, etc.)
    - Add conditional rendering based on role check
@@ -927,6 +930,7 @@ Add visual indicators to show role-based permissions:
 ### Frontend Tests
 
 #### Navigation & Access
+
 - [ ] Tournament managers see "Tournament Management" section in sidebar
 - [ ] Tournament managers can access `/tournament-manager` dashboard
 - [ ] Tournament managers can access `/tournament-manager/submissions`
@@ -936,6 +940,7 @@ Add visual indicators to show role-based permissions:
 - [ ] Redirect to dashboard if user lacks tournament_manager role
 
 #### Dashboard Page
+
 - [ ] Dashboard loads without errors
 - [ ] Stats cards display correct numbers (tournaments, teams, submissions)
 - [ ] Tournament breakdown (active/upcoming/ended) is accurate
@@ -949,6 +954,7 @@ Add visual indicators to show role-based permissions:
 - [ ] Loading states render properly
 
 #### Submissions Page
+
 - [ ] Submissions table loads all submissions
 - [ ] Filter by tournament works correctly
 - [ ] Filter by status (all/pending/approved/rejected) works
@@ -958,6 +964,7 @@ Add visual indicators to show role-based permissions:
 - [ ] Real-time updates when submissions change
 
 #### UI & Permissions
+
 - [ ] Delete button hidden for tournament managers in tournament lists
 - [ ] All other tournament actions visible (Edit, View, Leaderboard)
 - [ ] Tooltips explain disabled actions
@@ -966,6 +973,7 @@ Add visual indicators to show role-based permissions:
 - [ ] Empty states show when no data
 
 #### Responsive Design
+
 - [ ] Dashboard layout responsive on mobile
 - [ ] Stats cards stack properly on small screens
 - [ ] Activity feed readable on mobile
@@ -975,7 +983,6 @@ Add visual indicators to show role-based permissions:
 ## Implementation Order
 
 1. **Backend Permission Updates** (45 min)
-
    - Update all tournament mutations to allow `tournament_manager`
    - Update submission mutations to allow `tournament_manager`
    - Update team mutations to allow `tournament_manager`
@@ -985,7 +992,6 @@ Add visual indicators to show role-based permissions:
    - Test permission checks
 
 2. **Dashboard Components** (2 hours)
-
    - Create `TournamentManagerStatsCards` component
    - Create `ManagedTournamentsList` component
    - Create `TournamentManagerActivityFeed` component
@@ -994,7 +1000,6 @@ Add visual indicators to show role-based permissions:
    - Style with Tailwind and match existing design patterns
 
 3. **Dashboard Pages** (1.5 hours)
-
    - Create `/tournament-manager/page.tsx` dashboard page
    - Create `/tournament-manager/submissions/page.tsx` page
    - Implement filtering and sorting logic
@@ -1002,19 +1007,16 @@ Add visual indicators to show role-based permissions:
    - Integrate components with Convex queries
 
 4. **Sidebar Navigation** (15 min)
-
    - Update sidebar to show "Tournament Management" section for tournament managers
    - Add Dashboard, Tournaments, and Submissions links
    - Keep admin-only sections restricted
 
 5. **Page Protection & Updates** (30 min)
-
    - Update `/admin/tournaments/page.tsx` to allow tournament managers
    - Verify `/admin/users` and `/admin/roles` remain admin-only
    - Update `/admin/teams/page.tsx` to allow tournament managers
 
 6. **UI Polish** (45 min)
-
    - Add role badges to dashboard header
    - Hide delete buttons for tournament managers in tournament tables
    - Add tooltips for disabled actions
@@ -1035,43 +1037,36 @@ Add visual indicators to show role-based permissions:
 ## Edge Cases
 
 1. **User loses tournament_manager role while viewing page**
-
    - Redirect to `/dashboard`
    - Show toast: "Your permissions have changed"
    - Remove tournament management nav items
 
 2. **User has both admin and tournament_manager roles**
-
    - Show as admin (higher privilege) in badge
    - Full access to all features
    - Show both admin and tournament sections in sidebar
 
 3. **Tournament manager attempts admin-only action**
-
    - Show error toast with clear message
    - Log attempt for security monitoring
    - Do not expose internal error details
 
 4. **No tournaments exist in system**
-
    - Show empty state on dashboard
    - "No tournaments yet. Create your first tournament!"
    - Provide "Create Tournament" button
 
 5. **No pending submissions**
-
    - Show "0 pending" in stats with neutral styling
    - "All caught up!" message on submissions page
    - Empty state in activity feed if no recent activity
 
 6. **Dashboard stats slow to load**
-
    - Show skeleton loaders for each section
    - Load stats, tournaments, and activity independently
    - Don't block entire page render
 
 7. **Activity feed has hundreds of items**
-
    - Limit to 30 most recent by default
    - Add pagination or "Load more" button
    - Consider virtual scrolling for performance
@@ -1113,18 +1108,15 @@ Add visual indicators to show role-based permissions:
 Since this requires no schema changes, deployment is straightforward:
 
 1. **Deploy Backend Changes**
-
    - Update mutation permission checks
    - Deploy to Convex
 
 2. **Deploy Frontend Changes**
-
    - Update sidebar navigation
    - Update page protections
    - Deploy Next.js app
 
 3. **Test in Production**
-
    - Verify tournament manager can create tournaments
    - Verify cannot access admin-only pages
    - Test all CRUD operations
@@ -1139,6 +1131,7 @@ Since this requires no schema changes, deployment is straightforward:
 This simplified approach with dashboard:
 
 **Advantages:**
+
 - ✅ No schema changes required (no `tournamentManagers` table)
 - ✅ Clear permission model - tournament managers can access all tournaments
 - ✅ Easy to understand and maintain
@@ -1150,18 +1143,21 @@ This simplified approach with dashboard:
 - ✅ Mobile responsive design
 
 **Trade-offs:**
+
 - ❌ No fine-grained tournament assignment (all tournament managers see all tournaments)
 - ❌ All tournament managers have equal access
 - ❌ No audit trail for manager assignments
 - ⚠️ Longer implementation time (1 day vs 2 hours) due to dashboard
 
 **When to use this approach:**
+
 - Small to medium teams where all tournament managers should have equal access
 - Organizations with high trust between tournament managers
 - Quick to deploy and doesn't require complex assignment workflows
 - Dashboard provides good oversight without granular permissions
 
 **When to upgrade to spec 11:**
+
 - Large organizations with many tournament managers
 - Need to limit specific managers to specific tournaments
 - Require audit trails for who manages what

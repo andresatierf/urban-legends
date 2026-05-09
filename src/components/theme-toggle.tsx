@@ -8,17 +8,17 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="inline-flex items-center gap-1 rounded-lg border bg-background p-1">
+    <div className="bg-background inline-flex items-center gap-1 rounded-lg border p-1">
       {Object.entries(THEME_OPTIONS).map(([value, { icon: Icon, label }]) => (
         <button
           key={value}
           type="button"
           onClick={() => setTheme(value as Theme)}
           className={cn(
-            "flex items-center gap-2 rounded-md px-3 py-2 font-medium text-sm transition-colors",
-            "hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            "hover:bg-muted focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
             theme === value
-              ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary/80"
+              ? "bg-primary text-primary-foreground hover:bg-primary/80 shadow-sm"
               : "text-muted-foreground",
           )}
           aria-pressed={theme === value}

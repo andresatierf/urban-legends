@@ -112,25 +112,21 @@ The platform has **6 system roles** with hierarchical access:
 Action pages are grouped into **5 categories**:
 
 1. **Submission Management Actions**
-
    - Review Queue (`/reviewer`) - Reviewer-focused pending submissions
    - Submissions (`/manage/submissions`) - **Shared**: Admin + Tournament Manager access
    - Submission Groups (`/manage/submission-groups`) - **Shared**: Admin + Tournament Manager access
    - Flagged Submissions (`/reviewer/flagged`) - Disputed/problematic submissions
 
 2. **Team Management Actions**
-
    - My Teams (`/teams`) - Teams user is part of
    - Captain Dashboard (`/captain`) - Teams user captains (conditional)
    - Team Comparison (`/captain/comparison`) - Performance across captain's teams
 
 3. **Tournament Management Actions**
-
    - Tournament List (`/tournaments`) - Browse/join tournaments (all users)
    - Tournaments (`/manage/tournaments`) - **Shared**: Admin + Tournament Manager can create/manage
 
 4. **User Management Actions**
-
    - User Directory (`/users`) - All platform users (admin only)
    - Role Management (integrated in user directory)
 

@@ -2,7 +2,9 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { CheckCircle, Clock, FileText, XCircle } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 
 interface ActivityItem {
@@ -55,7 +57,7 @@ export function AdminRecentActivityFeed({
 
   if (activities.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+      <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">
         <p className="text-sm">No recent activity</p>
       </div>
     );
@@ -66,7 +68,7 @@ export function AdminRecentActivityFeed({
       <div className="space-y-4 pr-4">
         {activities.map((activity) => (
           <div key={activity.id} className="flex gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
+            <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
               {getActivityIcon(activity.state)}
             </div>
             <div className="flex-1 space-y-1">

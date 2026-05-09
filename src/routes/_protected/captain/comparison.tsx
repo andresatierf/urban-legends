@@ -1,7 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { ArrowLeft, Loader2, TrendingUp, Trophy, Users } from "lucide-react";
 import { useEffect } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
 import { api } from "../../../../convex/_generated/api";
 
 export const Route = createFileRoute("/_protected/captain/comparison")({
@@ -35,10 +37,10 @@ function TeamComparison() {
       <div className="container mx-auto py-8">
         <div className="mb-8 flex items-center gap-3">
           <Trophy className="h-8 w-8" />
-          <h1 className="font-bold text-3xl">Team Comparison</h1>
+          <h1 className="text-3xl font-bold">Team Comparison</h1>
         </div>
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
         </div>
       </div>
     );
@@ -50,7 +52,7 @@ function TeamComparison() {
         <div className="flex items-center gap-3">
           <Trophy className="h-8 w-8" />
           <div>
-            <h1 className="font-bold text-3xl">Team Comparison</h1>
+            <h1 className="text-3xl font-bold">Team Comparison</h1>
             <p className="text-muted-foreground text-sm">
               Compare metrics across your {teamsComparison.length}{" "}
               {teamsComparison.length === 1 ? "team" : "teams"}
@@ -69,8 +71,8 @@ function TeamComparison() {
       {teamsComparison.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Trophy className="mb-4 h-12 w-12 text-muted-foreground" />
-            <p className="font-medium text-muted-foreground">
+            <Trophy className="text-muted-foreground mb-4 h-12 w-12" />
+            <p className="text-muted-foreground font-medium">
               No teams to compare
             </p>
             <p className="text-muted-foreground text-sm">
@@ -98,17 +100,17 @@ function TeamComparison() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Rank & Points */}
-                <div className="rounded-lg bg-muted p-3">
+                <div className="bg-muted rounded-lg p-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-muted-foreground text-xs">Rank</p>
-                      <p className="font-bold text-lg">
+                      <p className="text-lg font-bold">
                         #{teamData.rank} / {teamData.totalTeamsInTournament}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-muted-foreground text-xs">Points</p>
-                      <p className="font-bold text-lg">{teamData.points}</p>
+                      <p className="text-lg font-bold">{teamData.points}</p>
                     </div>
                   </div>
                 </div>
@@ -117,7 +119,7 @@ function TeamComparison() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <Users className="text-muted-foreground h-4 w-4" />
                       <span className="text-muted-foreground">Members</span>
                     </div>
                     <span className="font-medium">{teamData.membersCount}</span>
@@ -151,17 +153,17 @@ function TeamComparison() {
                 <div className="rounded-lg border p-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      <TrendingUp className="text-muted-foreground h-4 w-4" />
                       <span className="text-muted-foreground text-sm">
                         Approval Rate
                       </span>
                     </div>
-                    <span className="font-bold text-lg">
+                    <span className="text-lg font-bold">
                       {teamData.approvalRate}%
                     </span>
                   </div>
                   <div className="mt-2">
-                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div className="bg-muted h-2 overflow-hidden rounded-full">
                       <div
                         className="h-full bg-green-500 transition-all"
                         style={{ width: `${teamData.approvalRate}%` }}

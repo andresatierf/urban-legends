@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { CheckCircle, Loader2, TrendingUp, XCircle } from "lucide-react";
 import { useEffect } from "react";
+
 import { SectionHeader } from "@/components/section-header";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,6 +15,7 @@ import {
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
+
 import { api } from "../../../../convex/_generated/api";
 
 export const Route = createFileRoute("/_protected/reviewer/statistics")({
@@ -41,10 +43,10 @@ function ReviewStatistics() {
       <div className="container mx-auto py-8">
         <div className="mb-8 flex items-center gap-3">
           <TrendingUp className="h-8 w-8" />
-          <h1 className="font-bold text-3xl">Review Statistics</h1>
+          <h1 className="text-3xl font-bold">Review Statistics</h1>
         </div>
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
         </div>
       </div>
     );
@@ -66,22 +68,22 @@ function ReviewStatistics() {
       <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">Total Reviews</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Reviews</CardTitle>
+            <TrendingUp className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="font-bold text-2xl">{totalReviews}</div>
+            <div className="text-2xl font-bold">{totalReviews}</div>
             <p className="text-muted-foreground text-xs">All time</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">Approved</CardTitle>
+            <CardTitle className="text-sm font-medium">Approved</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="font-bold text-2xl">{approved}</div>
+            <div className="text-2xl font-bold">{approved}</div>
             <p className="text-muted-foreground text-xs">
               {totalReviews > 0
                 ? `${Math.round((approved / totalReviews) * 100)}% of total`
@@ -92,11 +94,11 @@ function ReviewStatistics() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">Rejected</CardTitle>
+            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
             <XCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="font-bold text-2xl">{rejected}</div>
+            <div className="text-2xl font-bold">{rejected}</div>
             <p className="text-muted-foreground text-xs">
               {totalReviews > 0
                 ? `${Math.round((rejected / totalReviews) * 100)}% of total`
@@ -107,11 +109,11 @@ function ReviewStatistics() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">Approval Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Approval Rate</CardTitle>
+            <TrendingUp className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="font-bold text-2xl">{approvalRate}%</div>
+            <div className="text-2xl font-bold">{approvalRate}%</div>
             <p className="text-muted-foreground text-xs">
               Based on {totalReviews} reviews
             </p>
@@ -144,7 +146,7 @@ function ReviewStatistics() {
                       <XCircle className="h-4 w-4 text-red-600" />
                     )}
                     <div>
-                      <p className="font-medium text-sm">
+                      <p className="text-sm font-medium">
                         {review.team?.name || "Unknown Team"}
                       </p>
                       <p className="text-muted-foreground text-xs">

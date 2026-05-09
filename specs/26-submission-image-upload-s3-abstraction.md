@@ -13,6 +13,7 @@
 Implement a production-ready image upload system for tournament submissions using **Convex Actions** with a **custom TypeScript storage abstraction layer**. The abstraction enables easy provider swapping (S3, Cloudflare R2, Vercel Blob, etc.) through a unified interface. Initial implementation uses **AWS S3** with presigned URL uploads for security and scalability.
 
 **Primary Benefits**:
+
 - Visual proof of activity completion for tournament integrity
 - Provider-agnostic architecture for future flexibility (swap S3 for R2 with config change)
 - Secure, authenticated uploads via presigned URLs
@@ -28,6 +29,7 @@ Implement a production-ready image upload system for tournament submissions usin
 ### Functional Requirements
 
 **Image Upload Workflow**:
+
 1. User uploads 1-3 images per submission as proof of activity
 2. Frontend requests presigned upload URL from Convex action
 3. User's browser uploads directly to S3 (bypassing backend)
@@ -35,6 +37,7 @@ Implement a production-ready image upload system for tournament submissions usin
 5. Images display in submission cards with lightbox viewer
 
 **File Validation**:
+
 - **Allowed formats**: JPEG, PNG, WebP, HEIC
 - **Size limits**:
   - Per-image: 10MB maximum
@@ -44,17 +47,20 @@ Implement a production-ready image upload system for tournament submissions usin
   - Maximum: 3 images per submission
 
 **Access Control**:
+
 - Only submission owner or team members can upload images
 - Only submission owner, team members, and admins can view images
 - Admins can delete images from any submission
 - Users can delete images from their own draft submissions only
 
 **Image Deletion**:
+
 - Deleting an image removes it from both S3 and database
 - Cascade delete: removing submission deletes all associated images from S3 and database
 - Cannot delete images from approved submissions (unless admin)
 
 **Error Handling**:
+
 - Invalid file types rejected with clear error messages
 - Oversized files rejected before upload begins
 - Network failures during upload provide retry mechanism
@@ -63,28 +69,33 @@ Implement a production-ready image upload system for tournament submissions usin
 ### Non-Functional Requirements
 
 **Performance**:
+
 - Presigned URL generation: < 500ms
 - Direct-to-S3 upload: limited by user's network (not backend bottleneck)
 - Image display: < 1s for first image (lazy loading for subsequent)
 - Parallel uploads supported (all 3 images upload simultaneously)
 
 **Security**:
+
 - Presigned URLs expire after 15 minutes
 - All uploads authenticated via Convex (getCurrentUserOrThrow)
 - S3 bucket is private (no public access)
 - Image URLs generated on-demand with Convex auth check
 
 **Scalability**:
+
 - Direct S3 uploads prevent backend bandwidth bottleneck
 - CDN-backed S3 URLs for fast global delivery
 - Storage abstraction allows migration to cheaper providers
 
 **Accessibility**:
+
 - Image alt text uses original filename
 - Keyboard navigation in lightbox modal
 - Screen reader announcements for upload progress
 
 **Mobile Responsiveness**:
+
 - Upload button optimized for touch targets
 - Image preview works on mobile screens
 - Camera capture integration (HTML5 file input)
@@ -181,12 +192,14 @@ submissionImages: defineTable({
 ```
 
 **Key Differences from Spec 25**:
+
 - `storageKey` (S3 path) instead of `storageId` (Convex storage ID)
 - `storageProvider` field enables multi-provider support
 - `size` tracked for quota enforcement
 - No direct URL storage (URLs generated on-demand via actions)
 
 **Migration Strategy**:
+
 - Table is additive (no changes to existing schema)
 - Existing submissions without images continue to work
 - No data migration needed
@@ -325,9 +338,7 @@ export class S3StorageProvider implements StorageProvider {
     } catch (error) {
       // If error is NOT "NoSuchKey", it means auth/config is wrong
       if (error instanceof Error && !error.message.includes("NoSuchKey")) {
-        throw new Error(
-          `S3 configuration validation failed: ${error.message}`,
-        );
+        throw new Error(`S3 configuration validation failed: ${error.message}`);
       }
     }
   }
@@ -425,7 +436,11 @@ export async function createStorageProvider(
       };
 
       // Validate required fields
-      if (!s3Config.bucket || !s3Config.accessKeyId || !s3Config.secretAccessKey) {
+      if (
+        !s3Config.bucket ||
+        !s3Config.accessKeyId ||
+        !s3Config.secretAccessKey
+      ) {
         throw new Error(
           "Missing required S3 configuration. Ensure AWS_S3_BUCKET, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY are set.",
         );
@@ -450,7 +465,11 @@ export async function createStorageProvider(
           `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
       };
 
-      if (!r2Config.bucket || !r2Config.accessKeyId || !r2Config.secretAccessKey) {
+      if (
+        !r2Config.bucket ||
+        !r2Config.accessKeyId ||
+        !r2Config.secretAccessKey
+      ) {
         throw new Error(
           "Missing required R2 configuration. Ensure R2_BUCKET, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY are set.",
         );
@@ -468,6 +487,7 @@ export async function createStorageProvider(
 ```
 
 **To Add Vercel Blob Support (Future)**:
+
 1. Create `convex/lib/storage/vercel-blob-provider.ts` implementing `StorageProvider`
 2. Add `case "vercel-blob"` to factory
 3. Install `@vercel/blob` package
@@ -738,7 +758,9 @@ export const saveImageMetadata = mutation({
     // 5. Check max count
     const existingImages = await ctx.db
       .query("submissionImages")
-      .withIndex("by_submission", (q) => q.eq("submissionId", args.submissionId))
+      .withIndex("by_submission", (q) =>
+        q.eq("submissionId", args.submissionId),
+      )
       .collect();
 
     if (existingImages.length >= 3) {
@@ -822,7 +844,9 @@ export const list = query({
     // 3. Get images (metadata only, no URLs yet)
     const images = await ctx.db
       .query("submissionImages")
-      .withIndex("by_submission", (q) => q.eq("submissionId", args.submissionId))
+      .withIndex("by_submission", (q) =>
+        q.eq("submissionId", args.submissionId),
+      )
       .collect();
 
     return images.sort((a, b) => a.order - b.order);
@@ -1293,10 +1317,7 @@ AWS_S3_ENDPOINT=  # Optional: custom S3-compatible endpoint
   {
     "AllowedHeaders": ["*"],
     "AllowedMethods": ["GET", "PUT"],
-    "AllowedOrigins": [
-      "http://localhost:3000",
-      "https://yourdomain.com"
-    ],
+    "AllowedOrigins": ["http://localhost:3000", "https://yourdomain.com"],
     "ExposeHeaders": ["ETag"],
     "MaxAgeSeconds": 3000
   }
@@ -1333,11 +1354,7 @@ AWS_S3_ENDPOINT=  # Optional: custom S3-compatible endpoint
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "s3:PutObject",
-        "s3:GetObject",
-        "s3:DeleteObject"
-      ],
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
       "Resource": "arn:aws:s3:::urban-legends-submissions/*"
     }
   ]
@@ -1374,6 +1391,7 @@ bun add @vercel/blob
 ### Phase 1: Foundation (Day 1-2)
 
 **Tasks**:
+
 1. Create storage abstraction layer
    - Define `StorageProvider` interface (`convex/lib/storage/types.ts`)
    - Implement `S3StorageProvider` (`convex/lib/storage/s3-provider.ts`)
@@ -1390,6 +1408,7 @@ bun add @vercel/blob
    - Add environment variables to `.env.local`
 
 **Validation**:
+
 - Factory function can create S3StorageProvider
 - `validateConfig()` successfully connects to S3
 - Presigned URLs can be generated
@@ -1398,6 +1417,7 @@ bun add @vercel/blob
 ### Phase 2: Backend API (Day 2-3)
 
 **Tasks**:
+
 1. Implement Convex actions
    - `generateUploadUrl` (presigned URL generation)
    - `deleteImage` (S3 + metadata deletion)
@@ -1416,6 +1436,7 @@ bun add @vercel/blob
    - Add cascade delete to `remove`
 
 **Validation**:
+
 - Test actions via Convex dashboard
 - Verify presigned URL upload with curl
 - Confirm metadata saves correctly
@@ -1424,6 +1445,7 @@ bun add @vercel/blob
 ### Phase 3: Frontend Components (Day 3-4)
 
 **Tasks**:
+
 1. Create `ImageUploader` component
    - File input with validation
    - Progress indicator
@@ -1442,6 +1464,7 @@ bun add @vercel/blob
    - Validation messaging
 
 **Validation**:
+
 - Upload 1-3 images successfully
 - View uploaded images in submission card
 - Delete images via UI
@@ -1450,6 +1473,7 @@ bun add @vercel/blob
 ### Phase 4: Polish & Testing (Day 4-5)
 
 **Tasks**:
+
 1. Error handling
    - Network failure retry logic
    - S3 credential errors
@@ -1474,6 +1498,7 @@ bun add @vercel/blob
    - Admin deleting other's images
 
 **Validation**:
+
 - All error scenarios handled gracefully
 - Loading states display correctly
 - WCAG 2.1 AA compliance for new components
@@ -1482,6 +1507,7 @@ bun add @vercel/blob
 ### Phase 5: Documentation & Deployment (Day 5-6)
 
 **Tasks**:
+
 1. Update README with setup instructions
 2. Document environment variables
 3. Add inline code comments
@@ -1489,6 +1515,7 @@ bun add @vercel/blob
 5. Monitor error logs
 
 **Validation**:
+
 - Production deployment successful
 - S3 uploads working in production
 - No environment variable issues
@@ -1698,8 +1725,12 @@ export async function createStorageProvider(
   const providerType = config?.provider || process.env.STORAGE_PROVIDER;
 
   switch (providerType) {
-    case "s3": { /* ... existing ... */ }
-    case "r2": { /* ... existing ... */ }
+    case "s3": {
+      /* ... existing ... */
+    }
+    case "r2": {
+      /* ... existing ... */
+    }
 
     case "vercel-blob": {
       const token = config?.vercelBlobToken || process.env.VERCEL_BLOB_TOKEN;
@@ -1851,6 +1882,7 @@ export class MockStorageProvider implements StorageProvider {
 **Current Solution**: File remains in S3 without database record (orphaned)
 
 **Options**:
+
 - **Option A**: Scheduled job to delete S3 files with no metadata (after 24 hours)
 - **Option B**: Two-phase commit (upload to temporary key, move on success)
 - **Option C**: Accept orphans, clean up manually
@@ -1864,6 +1896,7 @@ export class MockStorageProvider implements StorageProvider {
 **Current Solution**: No compression (client uploads original)
 
 **Options**:
+
 - **Option A**: Client-side compression (browser Canvas API)
 - **Option B**: Server-side compression (Lambda/Convex action)
 - **Option C**: No compression (rely on S3 storage cost)
@@ -1877,6 +1910,7 @@ export class MockStorageProvider implements StorageProvider {
 **Current Solution**: Accept HEIC uploads, but may not display correctly
 
 **Options**:
+
 - **Option A**: Convert HEIC to JPEG on server
 - **Option B**: Client-side conversion (heic2any library)
 - **Option C**: Reject HEIC, only accept JPEG/PNG/WebP
@@ -1890,6 +1924,7 @@ export class MockStorageProvider implements StorageProvider {
 **Current Solution**: Direct S3 signed URLs
 
 **Options**:
+
 - **Option A**: CloudFront distribution (better performance, higher cost)
 - **Option B**: S3 Transfer Acceleration (faster uploads, moderate cost)
 - **Option C**: Direct S3 (simple, lower cost)
@@ -1903,6 +1938,7 @@ export class MockStorageProvider implements StorageProvider {
 **Current Solution**: No EXIF extraction
 
 **Options**:
+
 - **Option A**: Extract and store EXIF (verify location/timestamp)
 - **Option B**: Strip EXIF (privacy)
 - **Option C**: Preserve EXIF but don't use it
@@ -1914,21 +1950,25 @@ export class MockStorageProvider implements StorageProvider {
 ## Success Metrics
 
 **Functional Metrics**:
+
 - 100% of new submissions include at least 1 image
 - < 1% upload failure rate (excluding network issues)
 - 0 unauthorized image access (permission checks work)
 
 **Performance Metrics**:
+
 - Presigned URL generation: < 500ms (p95)
 - Image display (first load): < 1s (p95)
 - Upload success rate: > 95%
 
 **Business Metrics**:
+
 - Increased submission quality (visual proof)
 - Reduced fraudulent submissions (admin approval)
 - User satisfaction with upload experience
 
 **Technical Metrics**:
+
 - 0 orphaned S3 files (after cleanup job implemented)
 - Storage cost: < $10/month for 1000 active users
 - API error rate: < 0.1%
