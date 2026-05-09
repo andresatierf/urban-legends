@@ -1,5 +1,5 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import type { RoleName } from "../../common/roles";
 import { api } from "../../convex/_generated/api";
@@ -30,13 +30,13 @@ export function useUserWithMinimumRole(
   target: string = "/dashboard",
 ) {
   const { user } = useUser();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user && !user.roleNames.includes(role)) {
-      router.replace(target);
+      navigate({ to: target, replace: true });
     }
-  }, [user, router, role, target]);
+  }, [user, navigate, role, target]);
 
   return { user };
 }

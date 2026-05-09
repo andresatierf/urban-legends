@@ -1,5 +1,6 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -14,7 +15,6 @@ import {
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   Table,
@@ -150,7 +150,7 @@ export function DataTable<TData, TValue>({
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) =>
                 hrefFn ? (
-                  <Link key={row.id} href={hrefFn(row)} className="contents">
+                  <Link key={row.id} to={hrefFn(row)} className="contents">
                     <InnerTableRow
                       row={row}
                       className={rowClassNameFn?.(row)}

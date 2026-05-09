@@ -1,5 +1,5 @@
+import { Link } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -40,7 +40,8 @@ export function UpcomingDeadlinesWidget({
             {deadlines.map(({ tournament, daysUntilEnd }) => (
               <Link
                 key={tournament._id}
-                href={`/tournaments/${tournament._id}/leaderboard`}
+                to="/tournaments/$tournamentId/leaderboard"
+                params={{ tournamentId: tournament._id }}
                 className="block rounded-md p-3 transition-colors hover:bg-muted"
               >
                 <div className="flex items-start justify-between">

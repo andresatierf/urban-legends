@@ -1,10 +1,10 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
 
 interface EvidenceGalleryProps {

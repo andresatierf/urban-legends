@@ -1,10 +1,9 @@
 "use client";
 
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Check, Pencil, Trash2, Trophy, Users, X } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { DetailsCard } from "@/components/details-card";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +24,7 @@ export function SubmissionDetailsCard({
   data,
   className,
 }: SubmissionDetailsCardProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { format } = useFormattedDate();
 
@@ -64,12 +63,12 @@ export function SubmissionDetailsCard({
     await tryMutate({
       fn: () => removeSubmission({ submissionId }),
       onSuccess: () => {
-        router.push("/submissions");
+        navigate({ to: "/submissions" });
       },
       successToast: "Submission deleted successfully",
       defaultFailureToast: "Failed to delete submission",
     });
-  }, [removeSubmission, submissionId, router, data]);
+  }, [removeSubmission, submissionId, navigate, data]);
 
   const details = useMemo(() => {
     if (!data) return [];
@@ -122,7 +121,8 @@ export function SubmissionDetailsCard({
         value: data.team ? (
           <Button variant="link" className="p-0" asChild>
             <Link
-              href={`/teams/${data.team._id}`}
+              to="/teams/$teamId"
+              params={{ teamId: data.team._id }}
               className="text-blue-600 hover:underline"
             >
               {data.team.name}
@@ -137,7 +137,8 @@ export function SubmissionDetailsCard({
         value: data.tournament ? (
           <Button variant="link" className="p-0" asChild>
             <Link
-              href={`/tournaments/${data.tournament._id}`}
+              to="/tournaments/$tournamentId"
+              params={{ tournamentId: data.tournament._id }}
               className="text-blue-600 hover:underline"
             >
               {data.tournament.name}

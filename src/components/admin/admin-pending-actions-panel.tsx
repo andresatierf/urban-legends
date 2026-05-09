@@ -1,7 +1,7 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { FileCheck, UserPlus } from "lucide-react";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,7 +55,7 @@ export function AdminPendingActionsPanel({
               {pendingActions.pendingSubmissions}
             </Badge>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/manage/submissions">View</Link>
+              <Link to="/manage/submissions">View</Link>
             </Button>
           </div>
         </div>

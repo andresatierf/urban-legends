@@ -1,7 +1,7 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { Activity, FileText, Plus, Trophy, UserCog, Users } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UpsertTournamentFormDialog } from "../form/upsert-tournament-form";
@@ -32,7 +32,7 @@ export function AdminQuickActions() {
         </UpsertTournamentFormDialog>
 
         <Button variant="outline" className="h-auto flex-1" asChild>
-          <Link href="/users">
+          <Link to="/users">
             <UserCog className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">Manage Users</div>
@@ -44,7 +44,7 @@ export function AdminQuickActions() {
         </Button>
 
         <Button variant="outline" className="h-auto flex-1" asChild>
-          <Link href="/manage/submissions">
+          <Link to="/manage/submissions">
             <FileText className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">View Submissions</div>
@@ -56,7 +56,7 @@ export function AdminQuickActions() {
         </Button>
 
         <Button variant="outline" className="h-auto flex-1" asChild>
-          <Link href="/manage/tournaments">
+          <Link to={"/manage/tournaments" as never}>
             <Trophy className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">All Tournaments</div>
@@ -68,7 +68,7 @@ export function AdminQuickActions() {
         </Button>
 
         <Button variant="outline" className="h-auto flex-1" asChild>
-          <Link href="/teams">
+          <Link to="/teams">
             <Users className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">View Teams</div>
@@ -80,7 +80,7 @@ export function AdminQuickActions() {
         </Button>
 
         <Button variant="outline" className="h-auto flex-1" asChild>
-          <Link href="/admin/system">
+          <Link to="/admin/system">
             <Activity className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">System Health</div>

@@ -1,5 +1,5 @@
+import { Link } from "@tanstack/react-router";
 import { FileText, Plus, Trophy, Users } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -18,7 +18,7 @@ export function QuickActionsPanel({ hasActiveTeams }: QuickActionsPanelProps) {
             className="h-auto flex-col gap-2 py-4"
             asChild
           >
-            <Link href="/tournaments">
+            <Link to="/tournaments">
               <Trophy className="h-5 w-5" />
               <span className="text-wrap text-center text-xs">
                 Browse Tournaments
@@ -30,7 +30,7 @@ export function QuickActionsPanel({ hasActiveTeams }: QuickActionsPanelProps) {
             className="h-auto flex-col gap-2 py-4"
             asChild
           >
-            <Link href="/submissions">
+            <Link to="/submissions">
               <FileText className="h-5 w-5" />
               <span className="text-wrap text-center text-xs">
                 My Submissions
@@ -42,7 +42,7 @@ export function QuickActionsPanel({ hasActiveTeams }: QuickActionsPanelProps) {
             className="h-auto flex-col gap-2 py-4"
             asChild
           >
-            <Link href="/teams">
+            <Link to="/teams">
               <Users className="h-5 w-5" />
               <span className="text-wrap text-center text-xs">My Teams</span>
             </Link>
@@ -54,7 +54,7 @@ export function QuickActionsPanel({ hasActiveTeams }: QuickActionsPanelProps) {
             asChild={hasActiveTeams}
           >
             {hasActiveTeams ? (
-              <Link href="/submissions/new">
+              <Link to={"/submissions/new" as never}>
                 <Plus className="h-5 w-5" />
                 <span className="text-wrap text-center text-xs">
                   New Submission

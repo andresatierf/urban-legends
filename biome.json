@@ -6,7 +6,14 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!convex/_generated"],
+    "includes": [
+      "**",
+      "!convex/_generated",
+      "!.output",
+      "!.nitro",
+      "!.tanstack",
+      "!src/routeTree.gen.ts"
+    ],
     "ignoreUnknown": false
   },
   "formatter": {

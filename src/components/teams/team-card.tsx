@@ -1,5 +1,5 @@
+import { Link } from "@tanstack/react-router";
 import { Crown, Trophy, Users } from "lucide-react";
-import Link from "next/link";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { JoinTeamFormButton } from "../form/join-team-form-button";
 import { getStatusBadge } from "../tournaments/utils";
@@ -81,7 +81,8 @@ export function TeamCard({
               <div className="mt-2 flex items-center gap-2 text-muted-foreground text-sm">
                 <Trophy className="h-4 w-4" />
                 <Link
-                  href={`/tournaments/${tournament._id}`}
+                  to="/tournaments/$tournamentId"
+                  params={{ tournamentId: tournament._id }}
                   className="hover:underline"
                 >
                   {tournament.name}
@@ -133,7 +134,9 @@ export function TeamCard({
             isUserInTeam={isUserInTeam}
           />
           <Button variant="outline" asChild>
-            <Link href={`/teams/${team._id}`}>View</Link>
+            <Link to="/teams/$teamId" params={{ teamId: team._id }}>
+              View
+            </Link>
           </Button>
         </div>
       </CardContent>

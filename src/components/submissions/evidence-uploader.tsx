@@ -2,10 +2,10 @@
 
 import { useAction, useMutation } from "convex/react";
 import { ImageIcon, X } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Image } from "@/components/ui/image";
 import { processForUpload } from "@/lib/clientImage";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";

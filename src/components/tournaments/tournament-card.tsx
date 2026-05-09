@@ -1,5 +1,5 @@
+import { Link } from "@tanstack/react-router";
 import { Calendar, ChevronRight, Users } from "lucide-react";
-import Link from "next/link";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -39,7 +39,10 @@ export function TournamentCard({ tournament, teamCount }: Props) {
         </div>
         <div className="flex gap-2 xs:self-auto self-end">
           <Button asChild>
-            <Link href={`/tournaments/${tournament._id}`}>
+            <Link
+              to="/tournaments/$tournamentId"
+              params={{ tournamentId: tournament._id }}
+            >
               <span className="text-wrap">Browse Teams</span>
               <ChevronRight />
             </Link>

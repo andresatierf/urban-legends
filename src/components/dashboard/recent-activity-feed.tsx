@@ -1,6 +1,6 @@
+import { Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { CheckCircle, UserPlus, Users, XCircle } from "lucide-react";
-import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -53,7 +53,7 @@ export function RecentActivityFeed({ activities }: RecentActivityFeedProps) {
               return activity.link ? (
                 <Link
                   key={activityKey}
-                  href={activity.link}
+                  to={activity.link}
                   className="flex gap-3 rounded-md p-2 transition-colors hover:bg-muted"
                 >
                   {Icon && (

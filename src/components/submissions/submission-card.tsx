@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import type { Doc } from "@/../convex/_generated/dataModel";
 import type { UserWithRoles } from "@/../convex/users";
+import { Image } from "@/components/ui/image";
 import { useUser } from "@/hooks/useUser";
 import { SubmissionCardActions } from "./submission-card-actions";
 import { SubmissionCardDetails } from "./submission-card-details";

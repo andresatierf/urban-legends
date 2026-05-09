@@ -1,8 +1,8 @@
 "use client";
 
+import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
-import { useRouter } from "next/navigation";
 import { getNotificationRoute } from "@/lib/notification-utils";
 import { cn } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
@@ -41,7 +41,7 @@ export function NotificationItem({
   onClick,
   showActions = true,
 }: NotificationItemProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const markAsRead = useMutation(api.notifications.markAsRead);
   const hasActions =
     showActions &&
@@ -66,7 +66,7 @@ export function NotificationItem({
     );
 
     if (route) {
-      router.push(route);
+      navigate({ to: route });
     }
 
     onClick?.();

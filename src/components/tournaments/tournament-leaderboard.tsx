@@ -1,8 +1,8 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { Trophy, Users } from "lucide-react";
-import Link from "next/link";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
@@ -112,7 +112,8 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
               <TableCell>{getRankBadge(team.rank, team.isWinner)}</TableCell>
               <TableCell>
                 <Link
-                  href={`/teams/${team.teamId}`}
+                  to="/teams/$teamId"
+                  params={{ teamId: team.teamId }}
                   className="font-medium hover:underline"
                   aria-label={`View ${team.teamName} team profile - Rank ${team.rank}${team.isWinner ? " - Tournament Winner" : ""}`}
                 >

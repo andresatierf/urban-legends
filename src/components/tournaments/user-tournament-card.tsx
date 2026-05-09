@@ -1,5 +1,5 @@
+import { Link } from "@tanstack/react-router";
 import { Calendar, Users } from "lucide-react";
-import Link from "next/link";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Badge } from "../ui/badge";
@@ -26,7 +26,8 @@ export function UserTournamentCard({ tournament, team, userRole }: Props) {
           <div className="flex items-center gap-2">
             <CardTitle>
               <Link
-                href={`/tournaments/${tournament._id}`}
+                to="/tournaments/$tournamentId"
+                params={{ tournamentId: tournament._id }}
                 className="hover:underline"
               >
                 {tournament.name}
@@ -38,7 +39,11 @@ export function UserTournamentCard({ tournament, team, userRole }: Props) {
           <CardDescription className="mt-2">
             <div className="flex items-center gap-1">
               <Users className="h-4 w-4" />
-              <Link href={`/teams/${team._id}`} className="hover:underline">
+              <Link
+                to="/teams/$teamId"
+                params={{ teamId: team._id }}
+                className="hover:underline"
+              >
                 {team.name}
               </Link>
             </div>
@@ -51,10 +56,17 @@ export function UserTournamentCard({ tournament, team, userRole }: Props) {
         </div>
         <div className="flex flex-wrap xs:justify-end justify-center gap-2 xs:self-auto self-end">
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/tournaments/${tournament._id}`}>View Tournament</Link>
+            <Link
+              to="/tournaments/$tournamentId"
+              params={{ tournamentId: tournament._id }}
+            >
+              View Tournament
+            </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/teams/${team._id}`}>View Team</Link>
+            <Link to="/teams/$teamId" params={{ teamId: team._id }}>
+              View Team
+            </Link>
           </Button>
         </div>
       </CardContent>

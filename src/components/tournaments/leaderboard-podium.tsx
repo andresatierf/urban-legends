@@ -1,8 +1,8 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { Medal, Trophy, Users } from "lucide-react";
-import Link from "next/link";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Card, CardContent } from "../ui/card";
@@ -79,7 +79,8 @@ export function LeaderboardPodium({ tournamentId }: Props) {
               <div className="mb-4">{getPodiumIcon(team.rank)}</div>
               <div className="mb-2 text-center">
                 <Link
-                  href={`/teams/${team.teamId}`}
+                  to="/teams/$teamId"
+                  params={{ teamId: team.teamId }}
                   className="font-bold text-lg hover:underline"
                   aria-label={`View ${team.teamName} team profile - Rank ${team.rank}`}
                 >

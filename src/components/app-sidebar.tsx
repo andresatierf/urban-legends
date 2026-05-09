@@ -1,5 +1,4 @@
-"use client";
-
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 import {
@@ -18,8 +17,6 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import {
   Sidebar,
@@ -47,7 +44,7 @@ type SidebarItem = {
   roles?: string[];
   condition?: (context: { captainedTeamsCount: number }) => boolean;
   publicAccess?: boolean;
-  exact?: boolean; // For route matching (exact vs partial)
+  exact?: boolean;
   badge?: {
     query: FunctionReference<"query">;
     color?: "default" | "destructive" | "secondary" | "outline";
@@ -62,46 +59,42 @@ function useSidebarItems(
   openSubmissionDialog: () => void,
   setInviteMemberDialogOpen: (state: boolean) => void,
 ) {
-  const t = useTranslations("sidebar.items");
-  const tTooltip = useTranslations("sidebar.tooltip");
-
   const sidebar: SidebarItem[] = useMemo(
     () => [
-      // ===== USER SECTION (Always Visible) =====
       {
-        title: t("user.group"),
+        title: "Player",
         publicAccess: true,
         items: [
           {
-            title: t("user.dashboard"),
+            title: "Dashboard",
             href: "/dashboard",
             icon: LayoutDashboard,
             exact: true,
           },
           {
-            title: t("user.tournaments"),
+            title: "Tournaments",
             href: "/tournaments",
             roles: ["player"],
             icon: Trophy,
           },
           {
-            title: t("user.teams"),
+            title: "Teams",
             href: "/teams",
             roles: ["player"],
             icon: Users,
           },
           {
-            title: t("user.submissions"),
+            title: "Submissions",
             href: "/submissions",
             icon: ClipboardList,
             badge: {
               query: api.role.reviewer.getPendingCount,
               color: "secondary",
-              tooltip: tTooltip("pendingSubmissions"),
+              tooltip: "Pending Submissions",
             },
           },
           {
-            title: t("user.newSubmission"),
+            title: "Submit Activity",
             roles: ["player"],
             onClick: openSubmissionDialog,
             icon: PlusCircle,
@@ -109,82 +102,78 @@ function useSidebarItems(
         ],
       },
 
-      // ===== ADMIN SECTION (Conditional: Has 'admin' or 'tournament_manager' role) =====
       {
-        title: t("admin.group"),
+        title: "Admin",
         roles: ["admin"],
         items: [
           {
-            title: t("admin.dashboard"),
+            title: "Admin Dashboard",
             href: "/admin",
             icon: Shield,
-            roles: ["admin"], // Admin-only
+            roles: ["admin"],
             exact: true,
           },
           {
-            title: t("admin.users"),
+            title: "Users",
             href: "/users",
             icon: UserCog,
-            roles: ["admin"], // Admin-only
+            roles: ["admin"],
           },
           {
-            title: t("admin.system"),
+            title: "System Health",
             href: "/admin/system",
             icon: Activity,
-            roles: ["admin"], // Admin-only
+            roles: ["admin"],
           },
         ],
       },
 
-      // ===== REVIEWER SECTION (Conditional: Has 'reviewer' role) =====
       {
-        title: t("reviewer.group"),
-        roles: ["reviewer", "admin"], // Admins also have review access
+        title: "Review",
+        roles: ["reviewer", "admin"],
         items: [
           {
-            title: t("reviewer.statistics"),
+            title: "Review Stats",
             href: "/reviewer/statistics",
             icon: TrendingUp,
           },
         ],
       },
 
-      // ===== CAPTAIN SECTION (Conditional: User Captains Teams) =====
       {
-        title: t("captain.group"),
+        title: "Team Captain",
         condition: ({ captainedTeamsCount }) => captainedTeamsCount > 0,
         items: [
           {
-            title: t("captain.myTeams"),
+            title: "My Teams",
             href: "/captain",
             icon: Shield,
             badge: {
               query: api.captain.getPendingActionsCount,
               color: "default",
-              tooltip: tTooltip("pendingRequestsAndInvitations"),
+              tooltip: "Pending Requests & Invitations",
             },
             exact: true,
           },
           {
-            title: t("captain.comparison"),
+            title: "Team Comparison",
             href: "/captain/comparison",
             icon: BarChart3,
           },
           {
-            title: t("captain.inviteMember"),
+            title: "Invite Member",
             onClick: () => setInviteMemberDialogOpen(true),
             icon: UserPlus,
           },
         ],
       },
 
-      // ===== VIEWER SECTION (Conditional: Has 'viewer' role OR public access) =====
       {
-        title: t("viewer.group"),
-        publicAccess: true, // Visible even without login
+        title: "Discover",
+        publicAccess: true,
         items: [
           {
-            title: t("viewer.publicLeaderboards"),
+            title: "Public Leaderboards",
             href: "/public/leaderboards",
             icon: Trophy,
             publicAccess: true,
@@ -192,25 +181,24 @@ function useSidebarItems(
         ],
       },
 
-      // ===== DEV SECTION (Conditional: Has 'dev' role) =====
       {
-        title: t("dev.group"),
+        title: "Developer",
         roles: ["dev"],
         items: [
           {
-            title: t("dev.buttonDemo"),
+            title: "Button Demo",
             href: "/dev/button-demo",
             icon: Code2,
           },
           {
-            title: t("dev.cardDemo"),
+            title: "Card Demo",
             href: "/dev/card-demo",
             icon: Layers,
           },
         ],
       },
     ],
-    [t, tTooltip, openSubmissionDialog, setInviteMemberDialogOpen],
+    [openSubmissionDialog, setInviteMemberDialogOpen],
   );
 
   return { items: sidebar };
@@ -223,7 +211,6 @@ export function AppSidebar() {
 
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
 
-  // Get captain teams count for conditional rendering
   const captainedTeamsCount = useQuery(api.captain.getCaptainedTeamsCount) ?? 0;
 
   const { items: sidebarItems } = useSidebarItems(
@@ -264,28 +251,23 @@ function renderItem(
   context: { captainedTeamsCount: number },
   isActive: (href: string, exact?: boolean) => boolean,
 ) {
-  // Check role-based visibility
   if (item.roles && !userRoles.some((role) => item.roles?.includes(role))) {
     return null;
   }
 
-  // Check custom condition (e.g., user must captain teams)
   if (item.condition && !item.condition(context)) {
     return null;
   }
 
-  // Check public access (visible even without auth)
   if (!item.publicAccess && !user) {
     return null;
   }
 
-  // Render group
   if ("items" in item) {
     const visibleItems = item.items
       .map((subItem) => renderItem(subItem, user, userRoles, context, isActive))
       .filter(Boolean);
 
-    // Don't render empty groups
     if (visibleItems.length === 0) return null;
 
     return (
@@ -298,7 +280,6 @@ function renderItem(
     );
   }
 
-  // Render button item (onClick)
   if ("onClick" in item) {
     return (
       <SidebarMenuItem key={item.title}>
@@ -317,13 +298,12 @@ function renderItem(
     );
   }
 
-  // Render link item with active state
   const active = isActive(item.href, item.exact);
 
   return (
     <SidebarMenuItem key={item.title}>
       <SidebarMenuButton asChild isActive={active}>
-        <Link href={item.href} aria-current={active ? "page" : undefined}>
+        <Link to={item.href} aria-current={active ? "page" : undefined}>
           <item.icon />
           <span>{item.title}</span>
           {item.badge && (
