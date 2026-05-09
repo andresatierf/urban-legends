@@ -11,12 +11,14 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Image } from "@/components/ui/image";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { cn } from "@/lib/utils";
+
 import { DotStrip } from "./dot-strip";
 import {
   getReviewItemFacts,
@@ -58,7 +60,7 @@ export function MosaicReviewCard({
           isGroup={facts.isGroup}
           pointsEarned={facts.pointsEarned}
         />
-        <p className="font-semibold leading-tight">{facts.teamName}</p>
+        <p className="leading-tight font-semibold">{facts.teamName}</p>
         <p className="text-muted-foreground text-sm">{facts.tournamentName}</p>
         <div className="text-muted-foreground text-sm">
           {item.type === "individual" ? (
@@ -124,14 +126,14 @@ function Chips({
     <div className="flex flex-wrap gap-1">
       <Badge
         variant={stateBadgeVariant(state)}
-        className="font-medium text-[10px] shadow-sm"
+        className="text-[10px] font-medium shadow-sm"
       >
         {capitalize(state)}
       </Badge>
       {tier === "advanced" && (
         <Badge
           variant="outline"
-          className="gap-0.5 bg-background/90 font-medium text-[10px] shadow-sm backdrop-blur"
+          className="bg-background/90 gap-0.5 text-[10px] font-medium shadow-sm backdrop-blur"
         >
           <Sparkles className="h-2.5 w-2.5" />
           Advanced
@@ -140,7 +142,7 @@ function Chips({
       {isGroup && (
         <Badge
           variant="outline"
-          className="gap-0.5 bg-background/90 font-medium text-[10px] shadow-sm backdrop-blur"
+          className="bg-background/90 gap-0.5 text-[10px] font-medium shadow-sm backdrop-blur"
         >
           <Users className="h-2.5 w-2.5" />
           Team
@@ -149,7 +151,7 @@ function Chips({
       {pointsEarned > 0 && (
         <Badge
           variant="outline"
-          className="bg-background/90 font-medium text-[10px] shadow-sm backdrop-blur"
+          className="bg-background/90 text-[10px] font-medium shadow-sm backdrop-blur"
         >
           +{pointsEarned} pts
         </Badge>
@@ -163,8 +165,8 @@ function IndividualLead({ evidence }: { evidence: EvidenceImage[] }) {
   if (evidence.length === 0) {
     return (
       <div className="aspect-square w-full px-3 pt-3">
-        <div className="flex h-full w-full items-center justify-center rounded-md bg-muted">
-          <ImageIcon className="h-12 w-12 text-muted-foreground" />
+        <div className="bg-muted flex h-full w-full items-center justify-center rounded-md">
+          <ImageIcon className="text-muted-foreground h-12 w-12" />
         </div>
       </div>
     );
@@ -189,7 +191,7 @@ function IndividualLead({ evidence }: { evidence: EvidenceImage[] }) {
               type="button"
               onClick={goPrev}
               aria-label="Previous image"
-              className="-translate-y-1/2 absolute top-1/2 left-2 grid h-7 w-7 place-items-center rounded-full bg-black/50 text-white backdrop-blur transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="focus-visible:ring-ring absolute top-1/2 left-2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-black/50 text-white backdrop-blur transition hover:bg-black/70 focus-visible:ring-2 focus-visible:outline-none"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -197,7 +199,7 @@ function IndividualLead({ evidence }: { evidence: EvidenceImage[] }) {
               type="button"
               onClick={goNext}
               aria-label="Next image"
-              className="-translate-y-1/2 absolute top-1/2 right-2 grid h-7 w-7 place-items-center rounded-full bg-black/50 text-white backdrop-blur transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="focus-visible:ring-ring absolute top-1/2 right-2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full bg-black/50 text-white backdrop-blur transition hover:bg-black/70 focus-visible:ring-2 focus-visible:outline-none"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -222,8 +224,8 @@ function GroupMosaicLead({
   if (withImages.length === 0) {
     return (
       <div className="aspect-square w-full px-3 pt-3">
-        <div className="flex h-full w-full items-center justify-center rounded-md bg-muted">
-          <ImageIcon className="h-12 w-12 text-muted-foreground" />
+        <div className="bg-muted flex h-full w-full items-center justify-center rounded-md">
+          <ImageIcon className="text-muted-foreground h-12 w-12" />
         </div>
       </div>
     );
@@ -275,7 +277,7 @@ function GroupMosaicLead({
         )}
 
         {extra > 0 && (
-          <div className="absolute right-2 bottom-2 rounded-md bg-black/70 px-2 py-1 text-white text-xs">
+          <div className="absolute right-2 bottom-2 rounded-md bg-black/70 px-2 py-1 text-xs text-white">
             +{extra} more
           </div>
         )}
