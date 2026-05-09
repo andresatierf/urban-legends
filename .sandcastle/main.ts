@@ -105,8 +105,6 @@ for (const issue of issues) {
 // Phase 2: Execute + Review (parallel, one PR per issue)
 // ---------------------------------------------------------------------------
 
-const SOURCE_BRANCH = "main";
-
 const settled = await Promise.allSettled(
   issues.map(async (issue) => {
     const sb = await sandcastle.createSandbox({
@@ -141,7 +139,6 @@ const settled = await Promise.allSettled(
           promptFile: "./.sandcastle/review-prompt.md",
           promptArgs: {
             BRANCH: issue.branch,
-            SOURCE_BRANCH,
           },
         });
 
