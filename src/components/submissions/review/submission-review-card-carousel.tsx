@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/card";
 import { Image } from "@/components/ui/image";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { cn } from "@/lib/utils";
+import { DotStrip } from "./dot-strip";
 import {
   getReviewItemFacts,
   initials,
@@ -390,48 +391,6 @@ function SubmitterStrip({
             >
               {se.submitterName.split(" ")[0]}
             </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function DotStrip({
-  evidence,
-  activeIdx,
-  onSelect,
-}: {
-  evidence: EvidenceImage[];
-  activeIdx: number;
-  onSelect: (idx: number) => void;
-}) {
-  if (evidence.length <= 1) {
-    return (
-      <div className="flex justify-center gap-1 py-2">
-        <span className="h-0.5 w-5" />
-      </div>
-    );
-  }
-  return (
-    <div className="flex justify-center gap-1 py-2">
-      {evidence.map((img, idx) => {
-        const isActive = idx === activeIdx;
-        return (
-          <button
-            key={img._id}
-            type="button"
-            onClick={() => onSelect(idx)}
-            aria-label={`Show image ${idx + 1} of ${evidence.length}`}
-            aria-pressed={isActive}
-            className="grid h-4 w-5 place-items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <span
-              className={cn(
-                "h-0.5 w-5 rounded-full transition",
-                isActive ? "bg-primary" : "bg-muted",
-              )}
-            />
           </button>
         );
       })}

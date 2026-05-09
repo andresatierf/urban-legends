@@ -5,7 +5,7 @@ import {
 } from "./submission-card-demo-fixtures";
 import { CarouselReviewCard } from "./submissions/review/submission-review-card-carousel";
 import { MosaicReviewCard } from "./submissions/review/submission-review-card-mosaic";
-import type { ReviewItem } from "./submissions/review/types";
+import type { SubmissionReviewCardProps } from "./submissions/review/submission-review-card-shared";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -149,8 +149,9 @@ function SubmissionVariantSection({
   Component,
 }: {
   title: string;
-  Component: (props: { item: ReviewItem }) => React.JSX.Element;
+  Component: (props: SubmissionReviewCardProps) => React.JSX.Element;
 }) {
+  const noop = async () => {};
   return (
     <div className="mt-8">
       <SectionHeader as="h2" title={title} />
@@ -161,7 +162,12 @@ function SubmissionVariantSection({
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {DEMO_INDIVIDUAL_ITEMS.map((item) => (
-            <Component key={item.data.submission._id} item={item} />
+            <Component
+              key={item.data.submission._id}
+              item={item}
+              onApprove={noop}
+              onReject={noop}
+            />
           ))}
         </div>
       </div>
@@ -172,7 +178,12 @@ function SubmissionVariantSection({
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {DEMO_GROUP_ITEMS.map((item) => (
-            <Component key={item.data.group._id} item={item} />
+            <Component
+              key={item.data.group._id}
+              item={item}
+              onApprove={noop}
+              onReject={noop}
+            />
           ))}
         </div>
       </div>
