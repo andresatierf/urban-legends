@@ -19,11 +19,11 @@ What the migration costs are bounded:
 - **Routing parity is mechanical.** No parallel routes (`@*`), no intercepting routes (`(.)`). Just route groups + dynamic segments, both of which TanStack Router models directly.
 - **shadcn/ui, Tailwind, TanStack Form and Table** are framework-agnostic; they move without changes.
 
-Why now rather than later: the surface is 17 page routes, ~half a dozen layouts, and one cookie-based i18n entry. Every month on Next.js compounds the migration cost without changing the verdict, because none of the framework features that *would* change the verdict (RSCs, server actions, parallel routes) are in use today and there is no roadmap item that adds them.
+Why now rather than later: the surface is 17 page routes, ~half a dozen layouts, and one cookie-based i18n entry. Every month on Next.js compounds the migration cost without changing the verdict, because none of the framework features that _would_ change the verdict (RSCs, server actions, parallel routes) are in use today and there is no roadmap item that adds them.
 
 ## Considered options
 
 - **Stay on Next.js indefinitely.** Rejected: the type-safety and cohesion wins are real and persistent, and the costs that ordinarily justify "stay" (loss of RSCs, server actions, Vercel ergonomics) are largely inapplicable to this codebase. Vercel still works as a deploy target for TanStack Start via its Vite preset, so the deployment-ergonomics objection does not survive scrutiny.
-- **Defer until a migration trigger emerges (perf regression, major Next upgrade, etc.).** Rejected: there is no plausible trigger that *strengthens* the case in six months — only triggers that weaken it (more routes, deeper Next coupling). "Later" is strictly worse than "now" given the present surface area.
+- **Defer until a migration trigger emerges (perf regression, major Next upgrade, etc.).** Rejected: there is no plausible trigger that _strengthens_ the case in six months — only triggers that weaken it (more routes, deeper Next coupling). "Later" is strictly worse than "now" given the present surface area.
 - **Run the spike as originally scoped in #93 (full ADR with PoC).** Rejected: the eight investigation questions in #93 were answered in roughly 30 minutes of doc-reading and code-grepping. Building a PoC to reconfirm what the official Clerk and Convex integration guides already document would burn time without changing the outcome.
 - **Big-bang vs. route-by-route migration.** Big-bang chosen for the follow-up plan: TanStack Router and Next App Router cannot coexist in one app, and operating two apps behind a reverse proxy with shared Clerk session would cost more than rewriting 17 routes on a branch.

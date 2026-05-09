@@ -4,10 +4,12 @@ import { useMutation, useQuery } from "convex/react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useId, useState } from "react";
 import z from "zod";
+
 import { useAppForm } from "@/hooks/form";
 import { useUser } from "@/hooks/useUser";
 import { toastFormValues } from "@/lib/form";
 import { tryMutate } from "@/lib/utils";
+
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -143,11 +145,11 @@ export function ManageRolesFormDialog({
                           <div className="flex-1">
                             <FieldLabel
                               htmlFor={`role-${role._id}`}
-                              className="cursor-pointer font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              className="cursor-pointer leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
                               {role.displayName}
                             </FieldLabel>
-                            <p className="mt-1 text-muted-foreground text-sm">
+                            <p className="text-muted-foreground mt-1 text-sm">
                               {role.description}
                             </p>
                           </div>
@@ -168,7 +170,7 @@ export function ManageRolesFormDialog({
                 {!hasAdminSelected &&
                   currentRoles.includes("admin") &&
                   userId === user?._id && (
-                    <div className="flex gap-2 rounded-md border border-orange-200 bg-orange-50 p-3 text-orange-900 text-sm">
+                    <div className="flex gap-2 rounded-md border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900">
                       <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                       <p>
                         This will revoke YOUR administrator privileges. You
@@ -178,7 +180,7 @@ export function ManageRolesFormDialog({
                     </div>
                   )}
                 {hasAdminSelected && !currentRoles.includes("admin") && (
-                  <div className="flex gap-2 rounded-md border border-orange-200 bg-orange-50 p-3 text-orange-900 text-sm">
+                  <div className="flex gap-2 rounded-md border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900">
                     <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                     <p>
                       This will grant full administrative privileges to{" "}

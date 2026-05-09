@@ -64,21 +64,21 @@ notificationPreferences: defineTable({
 
 ### 2.1 `notifications` Fields
 
-| Field | Type | Required | Constraints | Description |
-|-------|------|----------|-------------|-------------|
-| `_id` | `Id<"notifications">` | Yes | Auto-generated | Unique notification identifier |
-| `_creationTime` | `number` | Yes | Auto-generated | Convex internal timestamp (milliseconds since epoch) |
-| `userId` | `Id<"users">` | Yes | References `users._id` | Recipient of the notification |
-| `type` | `string` | Yes | Must be one of 23 valid notification types (see 2.2) | Category and event type |
-| `title` | `string` | Yes | Max length: 200 characters | Primary notification message shown to user |
-| `body` | `string \| undefined` | No | Max length: 1000 characters | Additional context (e.g., rejection reason, role name, digest summary) |
-| `relatedEntityId` | `string \| undefined` | No | Generic string ID | ID of the related entity (team ID, tournament ID, submission ID, etc.) |
-| `relatedEntityType` | `string \| undefined` | No | Must be one of: "team", "submission", "tournament", "role", "user", "submissionGroup" | Type of the related entity |
-| `isRead` | `boolean` | Yes | Defaults to `false` | Whether user has marked notification as read |
-| `isDeleted` | `boolean \| undefined` | No | Defaults to `false` | Soft delete flag for 90-day retention cleanup |
-| `createdAt` | `string` | Yes | ISO 8601 format (e.g., "2026-01-29T10:30:00.000Z") | When notification was created |
-| `actionUrl` | `string \| undefined` | No | Valid relative URL path | Where to navigate when notification is clicked |
-| `actionMetadata` | `any \| undefined` | No | JSON-serializable object | Additional data for action buttons (Accept/Reject, View, etc.) |
+| Field               | Type                   | Required | Constraints                                                                           | Description                                                            |
+| ------------------- | ---------------------- | -------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `_id`               | `Id<"notifications">`  | Yes      | Auto-generated                                                                        | Unique notification identifier                                         |
+| `_creationTime`     | `number`               | Yes      | Auto-generated                                                                        | Convex internal timestamp (milliseconds since epoch)                   |
+| `userId`            | `Id<"users">`          | Yes      | References `users._id`                                                                | Recipient of the notification                                          |
+| `type`              | `string`               | Yes      | Must be one of 23 valid notification types (see 2.2)                                  | Category and event type                                                |
+| `title`             | `string`               | Yes      | Max length: 200 characters                                                            | Primary notification message shown to user                             |
+| `body`              | `string \| undefined`  | No       | Max length: 1000 characters                                                           | Additional context (e.g., rejection reason, role name, digest summary) |
+| `relatedEntityId`   | `string \| undefined`  | No       | Generic string ID                                                                     | ID of the related entity (team ID, tournament ID, submission ID, etc.) |
+| `relatedEntityType` | `string \| undefined`  | No       | Must be one of: "team", "submission", "tournament", "role", "user", "submissionGroup" | Type of the related entity                                             |
+| `isRead`            | `boolean`              | Yes      | Defaults to `false`                                                                   | Whether user has marked notification as read                           |
+| `isDeleted`         | `boolean \| undefined` | No       | Defaults to `false`                                                                   | Soft delete flag for 90-day retention cleanup                          |
+| `createdAt`         | `string`               | Yes      | ISO 8601 format (e.g., "2026-01-29T10:30:00.000Z")                                    | When notification was created                                          |
+| `actionUrl`         | `string \| undefined`  | No       | Valid relative URL path                                                               | Where to navigate when notification is clicked                         |
+| `actionMetadata`    | `any \| undefined`     | No       | JSON-serializable object                                                              | Additional data for action buttons (Accept/Reject, View, etc.)         |
 
 ### 2.2 Notification Type Enum
 
@@ -261,10 +261,12 @@ notifications → joinRequests
 **Purpose**: Filter user's unread notifications
 **Usage**: Notification list page, unread count queries
 **Query Pattern**:
+
 ```typescript
-ctx.db.query("notifications")
+ctx.db
+  .query("notifications")
   .withIndex("by_user_and_read", (q) =>
-    q.eq("userId", userId).eq("isRead", false)
+    q.eq("userId", userId).eq("isRead", false),
   )
   .collect();
 ```
@@ -278,8 +280,10 @@ ctx.db.query("notifications")
 **Purpose**: Cleanup cron job to find old notifications
 **Usage**: 90-day retention cleanup
 **Query Pattern**:
+
 ```typescript
-ctx.db.query("notifications")
+ctx.db
+  .query("notifications")
   .withIndex("by_createdAt")
   .filter((q) => q.lt(q.field("createdAt"), cutoffDate))
   .collect();
@@ -299,13 +303,16 @@ ctx.db.query("notifications")
 **Purpose**: Deduplication - prevent duplicate notifications for same event
 **Usage**: Idempotent notification creation
 **Query Pattern**:
+
 ```typescript
-const existing = await ctx.db.query("notifications")
+const existing = await ctx.db
+  .query("notifications")
   .withIndex("by_user_type_entity", (q) =>
-    q.eq("userId", userId)
-     .eq("type", "team_invitation_received")
-     .eq("relatedEntityType", "team")
-     .eq("relatedEntityId", teamId)
+    q
+      .eq("userId", userId)
+      .eq("type", "team_invitation_received")
+      .eq("relatedEntityType", "team")
+      .eq("relatedEntityId", teamId),
   )
   .first();
 
@@ -315,6 +322,7 @@ if (existing) return existing._id; // Already exists
 ### 4.2 Index Usage Examples
 
 **Notification List with Pagination**:
+
 ```typescript
 export const list = query({
   args: {
@@ -325,9 +333,7 @@ export const list = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("notifications")
-      .withIndex("by_user_and_read", (q) =>
-        q.eq("userId", args.userId)
-      )
+      .withIndex("by_user_and_read", (q) => q.eq("userId", args.userId))
       .order("desc") // Most recent first
       .take(args.limit ?? 50);
   },
@@ -335,6 +341,7 @@ export const list = query({
 ```
 
 **Unread Count**:
+
 ```typescript
 export const getUnreadCount = query({
   args: { userId: v.id("users") },
@@ -342,7 +349,7 @@ export const getUnreadCount = query({
     const unread = await ctx.db
       .query("notifications")
       .withIndex("by_user_and_read", (q) =>
-        q.eq("userId", args.userId).eq("isRead", false)
+        q.eq("userId", args.userId).eq("isRead", false),
       )
       .collect();
 
@@ -352,6 +359,7 @@ export const getUnreadCount = query({
 ```
 
 **Recent Notifications (Dropdown)**:
+
 ```typescript
 export const recent = query({
   args: {
@@ -361,9 +369,7 @@ export const recent = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("notifications")
-      .withIndex("by_user_and_read", (q) =>
-        q.eq("userId", args.userId)
-      )
+      .withIndex("by_user_and_read", (q) => q.eq("userId", args.userId))
       .order("desc")
       .take(args.limit);
   },
@@ -394,17 +400,18 @@ Hard Deleted (record removed from database)
 
 ### 5.2 State Transition Rules
 
-| Current State | Transition | Next State | Trigger |
-|--------------|------------|------------|---------|
-| Created (isRead = false) | Mark as read | Read (isRead = true) | User action: clicks notification or "Mark as read" button |
-| Created (isRead = false) | Mark all as read | Read (isRead = true) | User action: clicks "Mark all as read" button |
-| Read (isRead = true) | - | Read (isRead = true) | Read state is permanent (no "mark as unread" feature) |
-| Any state | Soft delete | Deleted (isDeleted = true) | System action: cleanup cron runs after 90 days |
-| Deleted (isDeleted = true) | Hard delete | Removed from DB | Optional: future implementation for compliance |
+| Current State              | Transition       | Next State                 | Trigger                                                   |
+| -------------------------- | ---------------- | -------------------------- | --------------------------------------------------------- |
+| Created (isRead = false)   | Mark as read     | Read (isRead = true)       | User action: clicks notification or "Mark as read" button |
+| Created (isRead = false)   | Mark all as read | Read (isRead = true)       | User action: clicks "Mark all as read" button             |
+| Read (isRead = true)       | -                | Read (isRead = true)       | Read state is permanent (no "mark as unread" feature)     |
+| Any state                  | Soft delete      | Deleted (isDeleted = true) | System action: cleanup cron runs after 90 days            |
+| Deleted (isDeleted = true) | Hard delete      | Removed from DB            | Optional: future implementation for compliance            |
 
 ### 5.3 State Transition Mutations
 
 **Mark as Read**:
+
 ```typescript
 export const markAsRead = mutation({
   args: { notificationId: v.id("notifications") },
@@ -415,6 +422,7 @@ export const markAsRead = mutation({
 ```
 
 **Mark All as Read**:
+
 ```typescript
 export const markAllAsRead = mutation({
   args: { userId: v.id("users") },
@@ -422,20 +430,21 @@ export const markAllAsRead = mutation({
     const unread = await ctx.db
       .query("notifications")
       .withIndex("by_user_and_read", (q) =>
-        q.eq("userId", args.userId).eq("isRead", false)
+        q.eq("userId", args.userId).eq("isRead", false),
       )
       .collect();
 
     await Promise.all(
       unread.map((notification) =>
-        ctx.db.patch(notification._id, { isRead: true })
-      )
+        ctx.db.patch(notification._id, { isRead: true }),
+      ),
     );
   },
 });
 ```
 
 **Soft Delete (Cleanup)**:
+
 ```typescript
 export const cleanupOldNotifications = internalMutation({
   handler: async (ctx) => {
@@ -450,8 +459,8 @@ export const cleanupOldNotifications = internalMutation({
       .filter((q) =>
         q.and(
           q.lt(q.field("createdAt"), cutoffIso),
-          q.neq(q.field("isDeleted"), true)
-        )
+          q.neq(q.field("isDeleted"), true),
+        ),
       )
       .take(100); // Process in batches
 
@@ -471,6 +480,7 @@ export const cleanupOldNotifications = internalMutation({
 ### 6.1 Field Validation
 
 #### `type` Validation
+
 ```typescript
 const VALID_NOTIFICATION_TYPES = [
   // Team events
@@ -509,14 +519,19 @@ function validateNotificationType(type: string): boolean {
 ```
 
 #### `userId` Validation
+
 ```typescript
-async function validateUserId(ctx: QueryCtx | MutationCtx, userId: Id<"users">): Promise<boolean> {
+async function validateUserId(
+  ctx: QueryCtx | MutationCtx,
+  userId: Id<"users">,
+): Promise<boolean> {
   const user = await ctx.db.get(userId);
   return user !== null;
 }
 ```
 
 #### `createdAt` Validation
+
 ```typescript
 function validateISODate(dateString: string): boolean {
   const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
@@ -528,10 +543,11 @@ function validateISODate(dateString: string): boolean {
 ```
 
 #### `relatedEntityId` Validation
+
 ```typescript
 function validateRelatedEntity(
   relatedEntityType?: string,
-  relatedEntityId?: string
+  relatedEntityId?: string,
 ): boolean {
   // If type is set, ID must also be set
   if (relatedEntityType && !relatedEntityId) return false;
@@ -546,6 +562,7 @@ function validateRelatedEntity(
 ### 6.2 Business Logic Validation
 
 #### Notification Creation Validation
+
 ```typescript
 export const create = mutation({
   args: {
@@ -571,7 +588,9 @@ export const create = mutation({
 
     // Validate related entity consistency
     if (!validateRelatedEntity(args.relatedEntityType, args.relatedEntityId)) {
-      throw new Error("relatedEntityType and relatedEntityId must both be set or both be undefined");
+      throw new Error(
+        "relatedEntityType and relatedEntityId must both be set or both be undefined",
+      );
     }
 
     // Validate title length
@@ -588,10 +607,11 @@ export const create = mutation({
     const existing = await ctx.db
       .query("notifications")
       .withIndex("by_user_type_entity", (q) =>
-        q.eq("userId", args.userId)
-         .eq("type", args.type)
-         .eq("relatedEntityType", args.relatedEntityType ?? null)
-         .eq("relatedEntityId", args.relatedEntityId ?? null)
+        q
+          .eq("userId", args.userId)
+          .eq("type", args.type)
+          .eq("relatedEntityType", args.relatedEntityType ?? null)
+          .eq("relatedEntityId", args.relatedEntityId ?? null),
       )
       .first();
 
@@ -618,17 +638,20 @@ export const create = mutation({
 **Rationale**: Soft deletes preserve audit trail and allow recovery if needed.
 
 **Implementation**:
+
 - Add `isDeleted: v.optional(v.boolean())` field to schema
 - Cleanup cron sets `isDeleted = true` after 90 days
 - Queries filter out deleted notifications by default
 - Optional hard delete after additional retention period
 
 **Benefits**:
+
 - Preserves data for compliance audits
 - Allows recovery from accidental deletion
 - Gradual cleanup reduces database load
 
 **Queries Must Filter Deleted**:
+
 ```typescript
 // Good: Excludes deleted notifications
 const notifications = await ctx.db
@@ -657,15 +680,17 @@ const notifications = await ctx.db
 **Implementation**: Use compound index `by_user_type_entity` to check for existing notifications before creation.
 
 **Pattern**:
+
 ```typescript
 // Step 1: Check for existing notification
 const existing = await ctx.db
   .query("notifications")
   .withIndex("by_user_type_entity", (q) =>
-    q.eq("userId", userId)
-     .eq("type", notificationType)
-     .eq("relatedEntityType", entityType)
-     .eq("relatedEntityId", entityId)
+    q
+      .eq("userId", userId)
+      .eq("type", notificationType)
+      .eq("relatedEntityType", entityType)
+      .eq("relatedEntityId", entityId),
   )
   .first();
 
@@ -674,10 +699,13 @@ if (existing) {
   return existing._id; // Idempotent
 }
 
-return await ctx.db.insert("notifications", { /* ... */ });
+return await ctx.db.insert("notifications", {
+  /* ... */
+});
 ```
 
 **Benefits**:
+
 - Safe retries on mutation failures
 - Prevents duplicate notifications from rapid-fire events
 - Database-level constraint (index) ensures uniqueness
@@ -689,15 +717,14 @@ return await ctx.db.insert("notifications", { /* ... */ });
 **Solution**: Handle missing entities gracefully in UI and queries.
 
 **Pattern**:
+
 ```typescript
 export const listWithEntities = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
     const notifications = await ctx.db
       .query("notifications")
-      .withIndex("by_user_and_read", (q) =>
-        q.eq("userId", args.userId)
-      )
+      .withIndex("by_user_and_read", (q) => q.eq("userId", args.userId))
       .filter((q) => q.neq(q.field("isDeleted"), true))
       .order("desc")
       .take(50);
@@ -711,11 +738,11 @@ export const listWithEntities = query({
           try {
             if (notification.relatedEntityType === "team") {
               relatedEntity = await ctx.db.get(
-                notification.relatedEntityId as Id<"teams">
+                notification.relatedEntityId as Id<"teams">,
               );
             } else if (notification.relatedEntityType === "tournament") {
               relatedEntity = await ctx.db.get(
-                notification.relatedEntityId as Id<"tournaments">
+                notification.relatedEntityId as Id<"tournaments">,
               );
             }
             // ... other entity types
@@ -730,7 +757,7 @@ export const listWithEntities = query({
           relatedEntity,
           entityDeleted: notification.relatedEntityId && !relatedEntity,
         };
-      })
+      }),
     );
 
     return enriched;
@@ -739,6 +766,7 @@ export const listWithEntities = query({
 ```
 
 **UI Handling**:
+
 ```typescript
 function NotificationItem({ notification }: { notification: EnrichedNotification }) {
   if (notification.entityDeleted) {
@@ -764,12 +792,14 @@ function NotificationItem({ notification }: { notification: EnrichedNotification
 **Rationale**: Balance storage costs with user needs. Most tournaments complete within 90 days.
 
 **Implementation**:
+
 - Cron job runs daily at 2:00 AM UTC (low-traffic period)
 - Soft deletes notifications older than 90 days
 - Batch processing (100 records per run) to avoid timeouts
 - Logs deleted count for monitoring
 
 **Cron Configuration**:
+
 ```typescript
 // convex/crons.ts
 import { cronJobs } from "convex/server";
@@ -780,13 +810,14 @@ const crons = cronJobs();
 crons.daily(
   "cleanup old notifications",
   { hourUTC: 2, minuteUTC: 0 },
-  internal.notifications.cleanupOldNotifications
+  internal.notifications.cleanupOldNotifications,
 );
 
 export default crons;
 ```
 
 **Cleanup Mutation**:
+
 ```typescript
 // convex/notifications.ts
 export const cleanupOldNotifications = internalMutation({
@@ -806,8 +837,8 @@ export const cleanupOldNotifications = internalMutation({
         .filter((q) =>
           q.and(
             q.lt(q.field("createdAt"), cutoffIso),
-            q.neq(q.field("isDeleted"), true)
-          )
+            q.neq(q.field("isDeleted"), true),
+          ),
         )
         .take(batchSize);
 
@@ -822,7 +853,9 @@ export const cleanupOldNotifications = internalMutation({
       if (oldNotifications.length < batchSize) break;
     }
 
-    console.log(`Cleaned up ${totalDeleted} notifications older than ${retentionDays} days`);
+    console.log(
+      `Cleaned up ${totalDeleted} notifications older than ${retentionDays} days`,
+    );
     return { deletedCount: totalDeleted };
   },
 });
@@ -835,11 +868,13 @@ export const cleanupOldNotifications = internalMutation({
 ### 8.1 Query Optimization
 
 **Index Coverage**:
+
 - All queries MUST use indexes (never scan full table)
 - Compound indexes cover common query patterns
 - Order matters: most selective fields first
 
 **Pagination**:
+
 ```typescript
 // Use take() for simple pagination
 .take(50)
@@ -863,6 +898,7 @@ return {
 ### 8.2 Batch Operations
 
 **Avoid N+1 Queries**:
+
 ```typescript
 // Bad: N+1 queries
 const notifications = await ctx.db.query("notifications").collect();
@@ -870,7 +906,7 @@ const enriched = await Promise.all(
   notifications.map(async (n) => {
     const user = await ctx.db.get(n.userId); // N queries
     return { ...n, user };
-  })
+  }),
 );
 
 // Good: Batch get
@@ -890,11 +926,13 @@ const enriched = notifications.map((n) => ({
 ### 8.3 Caching Strategy
 
 **Convex Built-in Caching**:
+
 - `useQuery` results are cached automatically
 - Identical queries share cached response
 - No manual cache invalidation needed (reactive updates)
 
 **Minimize Query Frequency**:
+
 ```typescript
 // Good: Separate queries for different concerns
 const unreadCount = useQuery(api.notifications.getUnreadCount, { userId });
@@ -907,11 +945,13 @@ const allData = useQuery(api.notifications.getEverything, { userId });
 ### 8.4 Real-Time Update Efficiency
 
 **Selective Updates**:
+
 - `useQuery` only rerenders when query results change
 - Use focused queries to minimize unnecessary rerenders
 - Convex ensures consistent state across multiple queries
 
 **Cross-Tab Synchronization**:
+
 - Convex client automatically syncs state across browser tabs
 - No manual BroadcastChannel or localStorage events needed
 - Mutations in one tab immediately update all tabs with active queries
@@ -1030,17 +1070,20 @@ const allData = useQuery(api.notifications.getEverything, { userId });
 ### 10.1 Schema Addition
 
 **Step 1**: Add `notifications` table to schema
+
 ```bash
 # Edit convex/schema.ts to add notifications table
 # Convex will automatically create the table on next deployment
 ```
 
 **Step 2**: Add `notificationPreferences` table (optional, for future)
+
 ```bash
 # Add to same schema update
 ```
 
 **Step 3**: Deploy schema changes
+
 ```bash
 bunx convex deploy
 ```
@@ -1052,6 +1095,7 @@ This is a new feature with no existing data. No migration scripts required.
 ### 10.3 Rollback Plan
 
 If notification system needs to be rolled back:
+
 1. Remove notification creation calls from mutations
 2. Hide notification UI components
 3. Disable cron jobs in `convex/crons.ts`
@@ -1066,6 +1110,7 @@ If notification system needs to be rolled back:
 ### 11.1 Unit Tests (Vitest + convex-test)
 
 **Notification Creation**:
+
 ```typescript
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
@@ -1136,6 +1181,7 @@ test("prevents duplicate notifications (idempotency)", async () => {
 ### 11.2 Integration Tests
 
 Test notification creation from actual mutations:
+
 ```typescript
 test("creates notification when team invitation is sent", async () => {
   const t = convexTest(schema);
@@ -1162,29 +1208,32 @@ test("creates notification when team invitation is sent", async () => {
 ### 11.3 E2E Tests (Playwright)
 
 Test full user flow:
-```typescript
-import { test, expect } from '@playwright/test';
 
-test('user receives and views notification', async ({ page }) => {
+```typescript
+import { test, expect } from "@playwright/test";
+
+test("user receives and views notification", async ({ page }) => {
   // Login as user
-  await page.goto('/sign-in');
-  await page.fill('input[name="email"]', 'test@example.com');
-  await page.fill('input[name="password"]', 'password123');
+  await page.goto("/sign-in");
+  await page.fill('input[name="email"]', "test@example.com");
+  await page.fill('input[name="password"]', "password123");
   await page.click('button[type="submit"]');
 
   // Trigger notification (via admin invite)
   // ...
 
   // Verify badge appears
-  await expect(page.locator('[data-testid="notification-badge"]'))
-    .toHaveText('1');
+  await expect(page.locator('[data-testid="notification-badge"]')).toHaveText(
+    "1",
+  );
 
   // Click notification bell
   await page.click('[data-testid="notification-bell"]');
 
   // Verify notification in dropdown
-  await expect(page.locator('[data-testid="notification-item"]'))
-    .toContainText("You've been invited");
+  await expect(page.locator('[data-testid="notification-item"]')).toContainText(
+    "You've been invited",
+  );
 
   // Click notification
   await page.click('[data-testid="notification-item"]');
@@ -1201,6 +1250,7 @@ test('user receives and views notification', async ({ page }) => {
 ### 12.1 Notification Preferences
 
 Allow users to customize notification types:
+
 - Enable/disable specific notification types
 - Set quiet hours (no notifications during sleep time)
 - Configure daily digest frequency
@@ -1211,9 +1261,13 @@ Allow users to customize notification types:
 ### 12.2 Notification Templates
 
 Centralize notification text generation:
+
 ```typescript
 const NOTIFICATION_TEMPLATES = {
-  team_invitation_received: (data: { teamName: string, inviterName: string }) => ({
+  team_invitation_received: (data: {
+    teamName: string;
+    inviterName: string;
+  }) => ({
     title: `You've been invited to join ${data.teamName}`,
     body: `${data.inviterName} invited you to join their team`,
   }),
@@ -1224,6 +1278,7 @@ const NOTIFICATION_TEMPLATES = {
 ### 12.3 Notification Grouping
 
 Group related notifications:
+
 - "3 team members submitted activities today" instead of 3 separate notifications
 - "5 new submissions pending approval" instead of 5 individual notifications
 
@@ -1232,6 +1287,7 @@ Group related notifications:
 ### 12.4 Rich Notifications
 
 Support embedded content:
+
 - Team logos/avatars
 - Submission images
 - Tournament banners
@@ -1242,6 +1298,7 @@ Support embedded content:
 ### 12.5 Read Receipts
 
 Track when notifications were read:
+
 - Add `readAt` timestamp field
 - Show "Read 2 hours ago" in notification list
 - Analytics on notification engagement

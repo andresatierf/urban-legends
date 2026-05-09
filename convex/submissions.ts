@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+
 import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import {
@@ -29,7 +30,7 @@ import {
   notifySubmissionRejected,
   notifyTeammateSubmitted,
 } from "./notifications/triggers";
-import { getCurrentUserOrThrow, getUser, type UserWithRoles } from "./users";
+import { type UserWithRoles, getCurrentUserOrThrow, getUser } from "./users";
 
 export const list = query({
   args: {

@@ -1,6 +1,7 @@
 import { v } from "convex/values";
+
 import type { Doc, Id } from "./_generated/dataModel";
-import { internalMutation, type MutationCtx } from "./_generated/server";
+import { type MutationCtx, internalMutation } from "./_generated/server";
 import { rolesToCreate, teamsData } from "./data";
 import { nowUTC } from "./lib/dates";
 

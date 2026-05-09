@@ -141,6 +141,7 @@ Replace the current basic `UserDashboard` component with a comprehensive, role-a
 ### Database Schema Changes
 
 **No schema changes required.** This feature uses existing tables:
+
 - `users` - Current user data
 - `tournaments` - Tournament information
 - `teams` - Team data
@@ -192,7 +193,7 @@ export const getUserDashboardData = query({
           memberCount,
           userRole: membership.role,
         };
-      })
+      }),
     );
 
     const validTeams = teams.filter((t) => t !== null && t.tournament !== null);
@@ -200,7 +201,7 @@ export const getUserDashboardData = query({
     // Calculate active tournaments
     const now = new Date().toISOString();
     const activeTournaments = validTeams.filter(
-      (t) => t!.tournament!.startDate <= now && t!.tournament!.endDate >= now
+      (t) => t!.tournament!.startDate <= now && t!.tournament!.endDate >= now,
     );
 
     // Fetch user's submissions
@@ -210,14 +211,14 @@ export const getUserDashboardData = query({
       .collect();
 
     const pendingSubmissions = userSubmissions.filter(
-      (s) => s.state === "pending"
+      (s) => s.state === "pending",
     );
 
     // Fetch team invitations
     const invitations = await ctx.db
       .query("teamInvitations")
       .withIndex("by_user_and_status", (q) =>
-        q.eq("invitedUserId", user._id).eq("status", "pending")
+        q.eq("invitedUserId", user._id).eq("status", "pending"),
       )
       .collect();
 
@@ -257,13 +258,13 @@ export const getAdminDashboardData = query({
     // Calculate new users this week
     const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const newUsersThisWeek = users.filter(
-      (u) => u._creationTime > oneWeekAgo
+      (u) => u._creationTime > oneWeekAgo,
     ).length;
 
     // Categorize tournaments
     const now = new Date().toISOString();
     const activeTournaments = tournaments.filter(
-      (t) => t.startDate <= now && t.endDate >= now
+      (t) => t.startDate <= now && t.endDate >= now,
     );
     const upcomingTournaments = tournaments.filter((t) => t.startDate > now);
     const endedTournaments = tournaments.filter((t) => t.endDate < now);
@@ -271,10 +272,10 @@ export const getAdminDashboardData = query({
     // Categorize submissions
     const pendingSubmissions = submissions.filter((s) => s.state === "pending");
     const approvedSubmissions = submissions.filter(
-      (s) => s.state === "approved"
+      (s) => s.state === "approved",
     );
     const rejectedSubmissions = submissions.filter(
-      (s) => s.state === "rejected"
+      (s) => s.state === "rejected",
     );
 
     return {
@@ -364,8 +365,8 @@ export const getRecentActivity = query({
         .filter((q) =>
           q.or(
             q.eq(q.field("status"), "approved"),
-            q.eq(q.field("status"), "rejected")
-          )
+            q.eq(q.field("status"), "rejected"),
+          ),
         )
         .order("desc")
         .take(5);
@@ -442,7 +443,7 @@ export const getUpcomingDeadlines = query({
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
 
     const tournaments = await Promise.all(
-      Array.from(tournamentIds).map((id) => ctx.db.get(id as any))
+      Array.from(tournamentIds).map((id) => ctx.db.get(id as any)),
     );
 
     const upcomingDeadlines = tournaments
@@ -454,7 +455,7 @@ export const getUpcomingDeadlines = query({
       .map((t) => {
         const endDate = new Date(t!.endDate);
         const daysUntilEnd = Math.ceil(
-          (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
         );
         return {
           tournament: t,
@@ -1367,6 +1368,7 @@ Use error boundaries for each major section:
 ### Rollback Plan
 
 If issues occur:
+
 1. Revert dashboard page to use old `UserDashboard`
 2. Investigate and fix issues
 3. Re-deploy when ready

@@ -85,6 +85,7 @@ test("notification creation", async () => {
 **Important Limitation**: Vitest does not support async Server Components (as of 2026). Use E2E tests with Playwright for async components.
 
 **Sources**:
+
 - [Vitest vs Jest - Which Should I Use for My Next.js App?](https://www.wisp.blog/blog/vitest-vs-jest-which-should-i-use-for-my-nextjs-app)
 - [Setting up Vitest for Next.js 15](https://www.wisp.blog/blog/setting-up-vitest-for-nextjs-15)
 - [Playwright vs Cypress: The 2026 Enterprise Testing Guide](https://devin-rosario.medium.com/playwright-vs-cypress-the-2026-enterprise-testing-guide-ade8b56d3478)
@@ -126,14 +127,14 @@ const crons = cronJobs();
 crons.daily(
   "send daily digest",
   { hourUTC: 9, minuteUTC: 0 },
-  internal.notifications.sendDailyDigest
+  internal.notifications.sendDailyDigest,
 );
 
 // Check for 24-hour tournament warnings every hour
 crons.hourly(
   "tournament 24h warnings",
   { minuteUTC: 0 },
-  internal.notifications.checkTournament24hWarnings
+  internal.notifications.checkTournament24hWarnings,
 );
 
 // Alternative: Traditional cron syntax
@@ -145,6 +146,7 @@ export default crons;
 **Handling Time Zones**:
 
 For user-specific scheduling (e.g., daily digest at user's local 9 AM):
+
 1. Store user timezone preference in user profile
 2. Cron runs at multiple hours (e.g., every hour)
 3. Filter users whose local time matches target time (9 AM)
@@ -152,7 +154,7 @@ For user-specific scheduling (e.g., daily digest at user's local 9 AM):
 
 ```typescript
 // Example time zone handling
-import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 
 export const sendDailyDigest = internalMutation({
   handler: async (ctx) => {
@@ -160,7 +162,7 @@ export const sendDailyDigest = internalMutation({
     const currentUtcHour = new Date().getUTCHours();
 
     for (const user of users) {
-      const userTimezone = user.timezone || 'UTC';
+      const userTimezone = user.timezone || "UTC";
       const userLocalTime = utcToZonedTime(new Date(), userTimezone);
       const userLocalHour = userLocalTime.getHours();
 
@@ -169,7 +171,7 @@ export const sendDailyDigest = internalMutation({
         await sendDigestToUser(ctx, user._id);
       }
     }
-  }
+  },
 });
 ```
 
@@ -186,6 +188,7 @@ export const sendDailyDigest = internalMutation({
 ```
 
 **Sources**:
+
 - [Cron Jobs | Convex Developer Hub](https://docs.convex.dev/scheduling/cron-jobs)
 - [Configure Cron Jobs at Runtime](https://stack.convex.dev/cron-jobs)
 - [Cron Jobs in Next.js App Using Convex](https://www.telerik.com/blogs/cron-jobs-nextjs-app-using-convex)
@@ -266,6 +269,7 @@ export function NotificationDropdown({ isOpen }: { isOpen: boolean }) {
 **Preventing Duplicate Notifications on Reconnection**:
 
 Convex handles reconnection automatically:
+
 - Client maintains query state during brief disconnections
 - On reconnection, Convex syncs to latest state
 - No duplicate mutations triggered (mutations are idempotent by design)
@@ -281,12 +285,10 @@ export const list = query({
     // Uses index for optimal performance
     return await ctx.db
       .query("notifications")
-      .withIndex("by_user_and_read", (q) =>
-        q.eq("userId", args.userId)
-      )
+      .withIndex("by_user_and_read", (q) => q.eq("userId", args.userId))
       .order("desc") // Most recent first
       .take(50); // Limit results
-  }
+  },
 });
 
 // Separate queries for different concerns
@@ -314,6 +316,7 @@ const handleClick = async (notificationId: Id<"notifications">) => {
 ```
 
 **Sources**:
+
 - [Queries | Convex Developer Hub](https://docs.convex.dev/functions/query-functions)
 - [Convex React | Convex Developer Hub](https://docs.convex.dev/client/react)
 - [Realtime | Convex Developer Hub](https://docs.convex.dev/realtime)
@@ -354,7 +357,7 @@ const crons = cronJobs();
 crons.daily(
   "cleanup old notifications",
   { hourUTC: 2, minuteUTC: 0 },
-  internal.notifications.cleanupOldNotifications
+  internal.notifications.cleanupOldNotifications,
 );
 
 export default crons;
@@ -384,16 +387,19 @@ export const cleanupOldNotifications = internalMutation({
     //   await ctx.db.delete(notification._id);
     // }
 
-    console.log(`Cleaned up ${oldNotifications.length} notifications older than ${retentionDays} days`);
+    console.log(
+      `Cleaned up ${oldNotifications.length} notifications older than ${retentionDays} days`,
+    );
 
     return { deletedCount: oldNotifications.length };
-  }
+  },
 });
 ```
 
 **Performance Implications**:
 
 For large notification tables (100k+ records):
+
 - **Batch processing**: Process in chunks to avoid timeout
 - **Pagination**: Use `.paginate()` for large result sets
 - **Index optimization**: Ensure `by_createdAt` index exists for efficient filtering
@@ -418,8 +424,8 @@ export const cleanupOldNotifications = internalMutation({
         .filter((q) =>
           q.and(
             q.lt(q.field("createdAt"), cutoffIso),
-            q.neq(q.field("isDeleted"), true) // Skip already deleted
-          )
+            q.neq(q.field("isDeleted"), true), // Skip already deleted
+          ),
         )
         .take(batchSize);
 
@@ -437,7 +443,7 @@ export const cleanupOldNotifications = internalMutation({
 
     console.log(`Cleaned up ${totalDeleted} notifications`);
     return { deletedCount: totalDeleted };
-  }
+  },
 });
 ```
 
@@ -469,14 +475,15 @@ export const list = query({
     return await ctx.db
       .query("notifications")
       .withIndex("by_user_and_deleted", (q) =>
-        q.eq("userId", args.userId).eq("isDeleted", false)
+        q.eq("userId", args.userId).eq("isDeleted", false),
       )
       .collect();
-  }
+  },
 });
 ```
 
 **Sources**:
+
 - [Data Retention Policy: 10 Best Practices](https://www.filecloud.com/blog/data-retention-policy-best-practices/)
 - [CPRA Auto-Deletion Workflows](https://secureprivacy.ai/blog/cpra-auto-deletion-workflows)
 - [Backup & Restore | Convex Developer Hub](https://docs.convex.dev/database/backup-restore)
@@ -637,6 +644,7 @@ export function NotificationPopover() {
 **Handling Stacked Popovers/Dropdowns**:
 
 When combining Radix components (e.g., notification popover with action dropdown inside):
+
 - Match `modal` props to avoid conflicts
 - Use Portal for proper z-index layering (Radix does this by default)
 - Consider closing parent popover when child action is taken
@@ -644,12 +652,14 @@ When combining Radix components (e.g., notification popover with action dropdown
 **Project-Specific Pattern** (from existing codebase):
 
 The project uses shadcn/ui conventions with class-variance-authority (CVA):
+
 - All UI components in `/src/components/ui/`
 - Use `cn()` utility for class merging (from `/src/lib/utils.ts`)
 - Follow existing popover.tsx patterns for consistency
 - Biome will enforce sorted Tailwind classes
 
 **Sources**:
+
 - [Popover – Radix Primitives](https://www.radix-ui.com/primitives/docs/components/popover)
 - [Dropdown Menu – Radix Primitives](https://www.radix-ui.com/primitives/docs/components/dropdown-menu)
 - [Interactive dropdown menus with Radix UI](https://www.joshuawootonn.com/radix-interactive-dropdown)
@@ -702,7 +712,7 @@ export default defineSchema({
       "userId",
       "type",
       "relatedEntityType",
-      "relatedEntityId"
+      "relatedEntityId",
     ]),
 });
 ```
@@ -733,7 +743,7 @@ export const create = mutation({
           .eq("userId", args.userId)
           .eq("type", args.type)
           .eq("relatedEntityType", args.relatedEntityType ?? null)
-          .eq("relatedEntityId", args.relatedEntityId ?? null)
+          .eq("relatedEntityId", args.relatedEntityId ?? null),
       )
       .first();
 
@@ -768,7 +778,9 @@ export const createTournament24hWarning = mutation({
     // Get all registered participants
     const teams = await ctx.db
       .query("teams")
-      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", args.tournamentId),
+      )
       .collect();
 
     const teamMembers = await Promise.all(
@@ -776,8 +788,8 @@ export const createTournament24hWarning = mutation({
         ctx.db
           .query("teamMembers")
           .withIndex("by_team", (q) => q.eq("teamId", team._id))
-          .collect()
-      )
+          .collect(),
+      ),
     );
 
     const userIds = [...new Set(teamMembers.flat().map((m) => m.userId))];
@@ -792,7 +804,7 @@ export const createTournament24hWarning = mutation({
               .eq("userId", userId)
               .eq("type", "tournament_starting_24h")
               .eq("relatedEntityType", "tournament")
-              .eq("relatedEntityId", args.tournamentId)
+              .eq("relatedEntityId", args.tournamentId),
           )
           .first()
           .then(async (existing) => {
@@ -808,8 +820,8 @@ export const createTournament24hWarning = mutation({
               isRead: false,
               createdAt: new Date().toISOString(),
             });
-          })
-      )
+          }),
+      ),
     );
 
     return { createdCount: notificationIds.length };
@@ -830,7 +842,7 @@ export const createTeamActivityNotification = mutation({
     activityDescription: v.string(),
   },
   handler: async (ctx, args) => {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
     const teamMembers = await ctx.db
       .query("teamMembers")
@@ -851,7 +863,7 @@ export const createTeamActivityNotification = mutation({
             .eq("userId", userId)
             .eq("type", "team_activity_daily")
             .eq("relatedEntityType", "team")
-            .eq("relatedEntityId", `${args.teamId}_${today}`)
+            .eq("relatedEntityId", `${args.teamId}_${today}`),
         )
         .first();
 
@@ -894,7 +906,10 @@ export const sendNotificationWithSideEffect = action({
   args: { userId: v.id("users"), type: v.string(), title: v.string() },
   handler: async (ctx, args) => {
     // Create notification (idempotent mutation)
-    const notificationId = await ctx.runMutation(internal.notifications.create, args);
+    const notificationId = await ctx.runMutation(
+      internal.notifications.create,
+      args,
+    );
 
     // Side effect (e.g., webhook, external API call)
     // Use idempotency key for external calls
@@ -920,11 +935,12 @@ The project has `batchGetDocuments` and `enrichWithRelations` helpers in `/conve
 import { batchGetDocuments } from "./lib/helpers";
 
 // Efficiently fetch all team members for notifications
-const userIds = [...new Set(teamMemberRecords.map(m => m.userId))];
+const userIds = [...new Set(teamMemberRecords.map((m) => m.userId))];
 const users = await batchGetDocuments(ctx, "users", userIds);
 ```
 
 **Sources**:
+
 - [Workpool](https://www.convex.dev/components/workpool)
 - [Understanding Idempotency in APIs and Distributed Systems](https://dev.to/msnmongare/understanding-idempotency-in-apis-and-distributed-systems-3afb)
 - [Deduplication in Distributed Systems](https://www.architecture-weekly.com/p/deduplication-in-distributed-systems)
@@ -935,24 +951,28 @@ const users = await batchGetDocuments(ctx, "users", userIds);
 ## Summary & Recommendations
 
 ### Testing Strategy
+
 1. Install Vitest + Playwright
 2. Use convex-test library for backend function testing
 3. Start with unit tests for notification creation logic
 4. Add E2E tests for critical user flows (mark as read, navigation)
 
 ### Convex Implementation
+
 1. Create `convex/crons.ts` for scheduled notifications
 2. Use standard `useQuery` for real-time updates (no additional libraries needed)
 3. Implement 90-day retention cleanup via daily cron
 4. Design schema with compound indexes for deduplication
 
 ### UI Components
+
 1. Use existing Popover component from `/src/components/ui/popover.tsx`
 2. Follow shadcn/ui patterns with CVA
 3. Ensure full keyboard accessibility and ARIA labels
 4. Test cross-tab consistency with multiple browser windows
 
 ### Key Architecture Decisions
+
 - **No external services needed**: Convex handles crons, real-time, and storage
 - **Type-safe throughout**: TypeScript + Convex validators
 - **Idempotent by design**: Database constraints prevent duplicates
@@ -960,6 +980,7 @@ const users = await batchGetDocuments(ctx, "users", userIds);
 - **Optimized queries**: Use indexes, pagination, and batch operations
 
 ### Next Steps
+
 1. Set up testing framework (Vitest + Playwright)
 2. Implement notification schema with indexes
 3. Create core mutations (create, markAsRead, markAllAsRead)

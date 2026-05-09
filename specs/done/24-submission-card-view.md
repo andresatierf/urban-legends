@@ -670,13 +670,11 @@ export function SubmissionCardList({
 **Pages to Update**:
 
 1. **`/submissions` (All Submissions Page)**
-
    - Replace `SubmissionsDataTable` with `SubmissionCardList`
    - Keep existing query logic
    - Maintain admin filtering
 
 2. **`/teams/[id]` (Team Submissions)**
-
    - Replace table with `SubmissionCardList`
    - Filter to team's submissions only
 
@@ -802,15 +800,12 @@ export default function SubmissionsPage() {
 ## Open Questions
 
 1. **Virtual Scrolling**: Should we implement virtual scrolling for large lists (100+ submissions)?
-
    - **Recommendation**: Start without, add if performance issues arise
 
 2. **Card Density**: Should we offer compact/comfortable/spacious view options?
-
    - **Recommendation**: Start with one density, add variants if requested
 
 3. **Bulk Actions**: How do users approve/reject multiple submissions at once?
-
    - **Recommendation**: Phase 2 feature - add checkboxes and bulk action toolbar
 
 4. **Animation**: Should cards animate in on load?

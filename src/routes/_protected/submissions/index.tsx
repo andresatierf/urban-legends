@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { Calendar, CheckCircle, Clock, FileCheck, List } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+
 import { UpsertSubmissionFormDialog } from "@/components/form/upsert-submission-form";
 import { SectionHeader } from "@/components/section-header";
 import { CalendarStatistics } from "@/components/submissions/calendar-statistics";
@@ -21,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { convertToReviewItems } from "@/dto/reviewer";
 import { useUser } from "@/hooks/useUser";
 import { tryMutate } from "@/lib/utils";
+
 import { api } from "../../../../convex/_generated/api";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
@@ -340,7 +342,7 @@ function SubmissionsPage() {
                   <CardContent>
                     <Empty className="gap-3 py-4!">
                       <EmptyMedia>
-                        <Calendar className="size-12 text-muted-foreground" />
+                        <Calendar className="text-muted-foreground size-12" />
                       </EmptyMedia>
                       <EmptyHeader>No Teams Yet</EmptyHeader>
                       <EmptyDescription>
@@ -374,7 +376,7 @@ function SubmissionsPage() {
                   <CardContent>
                     <Empty className="gap-3 py-4!">
                       <EmptyMedia>
-                        <List className="size-12 text-muted-foreground" />
+                        <List className="text-muted-foreground size-12" />
                       </EmptyMedia>
                       <EmptyHeader>Loading...</EmptyHeader>
                     </Empty>

@@ -3,10 +3,12 @@ import { useMutation } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useId, useState } from "react";
 import * as z from "zod";
+
 import { useAppForm } from "@/hooks/form";
 import { useUser } from "@/hooks/useUser";
 import { toastFormValues } from "@/lib/form";
 import { tryMutate } from "@/lib/utils";
+
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
@@ -239,9 +241,9 @@ export function UpsertTournamentFormDialog({
             </FieldGroup>
 
             <div className="space-y-4">
-              <div className="font-medium text-sm">Scoring Configuration</div>
+              <div className="text-sm font-medium">Scoring Configuration</div>
               <div className="space-y-3">
-                <div className="font-medium text-muted-foreground text-xs">
+                <div className="text-muted-foreground text-xs font-medium">
                   Individual Exercise Points
                 </div>
                 <FieldGroup className="flex-row">
@@ -253,7 +255,7 @@ export function UpsertTournamentFormDialog({
                   </form.AppField>
                 </FieldGroup>
 
-                <div className="font-medium text-muted-foreground text-xs">
+                <div className="text-muted-foreground text-xs font-medium">
                   Team Exercise Points
                 </div>
                 <FieldGroup className="flex-row">

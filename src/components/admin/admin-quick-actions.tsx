@@ -2,15 +2,17 @@
 
 import { Link } from "@tanstack/react-router";
 import { Activity, FileText, Plus, Trophy, UserCog, Users } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { UpsertTournamentFormDialog } from "../form/upsert-tournament-form";
 
 export function AdminQuickActions() {
   return (
     <Card variant="admin">
       <CardHeader>
-        <CardTitle className="font-semibold text-foreground text-xl">
+        <CardTitle className="text-foreground text-xl font-semibold">
           Quick Actions
         </CardTitle>
       </CardHeader>
@@ -24,7 +26,7 @@ export function AdminQuickActions() {
             <Plus className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">Create Tournament</div>
-              <div className="mt-1 text-muted-foreground text-xs">
+              <div className="text-muted-foreground mt-1 text-xs">
                 Set up a new tournament
               </div>
             </div>
@@ -36,7 +38,7 @@ export function AdminQuickActions() {
             <UserCog className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">Manage Users</div>
-              <div className="mt-1 text-muted-foreground text-xs">
+              <div className="text-muted-foreground mt-1 text-xs">
                 View and manage user roles
               </div>
             </div>
@@ -48,7 +50,7 @@ export function AdminQuickActions() {
             <FileText className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">View Submissions</div>
-              <div className="mt-1 text-muted-foreground text-xs">
+              <div className="text-muted-foreground mt-1 text-xs">
                 Review and approve
               </div>
             </div>
@@ -60,7 +62,7 @@ export function AdminQuickActions() {
             <Trophy className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">All Tournaments</div>
-              <div className="mt-1 text-muted-foreground text-xs">
+              <div className="text-muted-foreground mt-1 text-xs">
                 Manage tournaments
               </div>
             </div>
@@ -72,7 +74,7 @@ export function AdminQuickActions() {
             <Users className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">View Teams</div>
-              <div className="mt-1 text-muted-foreground text-xs">
+              <div className="text-muted-foreground mt-1 text-xs">
                 Browse all teams
               </div>
             </div>
@@ -84,7 +86,7 @@ export function AdminQuickActions() {
             <Activity className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">System Health</div>
-              <div className="mt-1 text-muted-foreground text-xs">
+              <div className="text-muted-foreground mt-1 text-xs">
                 Monitor platform status
               </div>
             </div>

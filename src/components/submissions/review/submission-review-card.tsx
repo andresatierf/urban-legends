@@ -3,6 +3,7 @@
 import { capitalize } from "lodash";
 import { Check, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { cn, tryMutate } from "@/lib/utils";
+
 import type { Doc } from "../../../../convex/_generated/dataModel";
 import { EvidenceGallery } from "../display/evidence-gallery";
 import { SubmissionMetadata } from "../display/submission-metadata";

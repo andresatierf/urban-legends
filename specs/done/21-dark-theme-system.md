@@ -5,6 +5,7 @@
 This specification defines the implementation of a comprehensive dark theme system for the Urban Legends tournament platform. The system will leverage Tailwind CSS v4's native dark mode capabilities (already configured) to provide users with Light, Dark, and System preference options. The theme switcher will be integrated into the existing settings page, with user preferences stored in localStorage (with optional Convex database persistence for cross-device sync). The feature enhances user experience by reducing eye strain and providing visual customization options while maintaining WCAG contrast standards.
 
 **Timeline Estimate**: Small to Medium (4-8 hours)
+
 - Already using Tailwind v4 with dark mode CSS variables defined
 - Dark mode color palette exists but is not activated
 - Main work involves theme management logic and UI components
@@ -74,6 +75,7 @@ This specification defines the implementation of a comprehensive dark theme syst
 ### Current State Analysis
 
 **Existing Infrastructure (Already in Place):**
+
 - ✅ Tailwind CSS v4.1.14 installed and configured
 - ✅ Dark mode color palette defined in `src/app/globals.css` (lines 83-115)
 - ✅ Custom variant for dark mode: `@custom-variant dark (&:is(.dark *))` (line 4)
@@ -83,10 +85,12 @@ This specification defines the implementation of a comprehensive dark theme syst
 - ✅ Placeholder theme button in settings (lines 63-69)
 
 **Components Already Using Dark Mode Classes:**
+
 - 36 instances of `dark:` utilities across 10 component files
 - Examples: Button, Input, Textarea, Command, Field, InputGroup
 
 **Missing Components:**
+
 - ❌ Theme management hook (`useTheme`)
 - ❌ Theme provider component (React Context)
 - ❌ Theme initialization script (prevent FOUC)
@@ -100,16 +104,19 @@ This specification defines the implementation of a comprehensive dark theme syst
 #### Option 1: localStorage Only (Recommended for Phase 1)
 
 **Pros:**
+
 - Zero backend changes required
 - Instant persistence
 - Works offline
 - No database queries on every page load
 
 **Cons:**
+
 - Not synced across devices
 - Lost if user clears browser data
 
 **Implementation:**
+
 ```typescript
 // No schema changes needed
 const THEME_STORAGE_KEY = "theme-preference";
@@ -119,6 +126,7 @@ localStorage.setItem(THEME_STORAGE_KEY, "dark" | "light" | "system");
 #### Option 2: Convex Database (Optional Phase 2)
 
 **Schema Update:**
+
 ```typescript
 // convex/schema.ts
 users: defineTable({
@@ -136,11 +144,13 @@ users: defineTable({
 ```
 
 **Pros:**
+
 - Synced across all devices
 - Persists beyond browser cache clears
 - Part of user profile
 
 **Cons:**
+
 - Requires network request
 - Slight delay on initial load
 - Needs mutation handler
@@ -158,12 +168,17 @@ All theme logic handled client-side.
 #### Phase 2 (Optional): Convex Theme Preference Sync
 
 **New Mutation:**
+
 ```typescript
 // convex/users.ts
 
 export const updateThemePreference = mutation({
   args: {
-    preference: v.union(v.literal("light"), v.literal("dark"), v.literal("system")),
+    preference: v.union(
+      v.literal("light"),
+      v.literal("dark"),
+      v.literal("system"),
+    ),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -176,6 +191,7 @@ export const updateThemePreference = mutation({
 ```
 
 **Updated Query:**
+
 ```typescript
 // Extend existing getCurrentUser query to include themePreference
 export const getCurrentUser = query({
@@ -192,12 +208,14 @@ export const getCurrentUser = query({
       .collect();
 
     const roles = await Promise.all(
-      userRoles.map((ur) => ctx.db.get(ur.roleId))
+      userRoles.map((ur) => ctx.db.get(ur.roleId)),
     );
 
     return {
       ...user,
-      roles: roles.filter((r): r is Doc<"roles"> => r !== null).map((r) => r.name),
+      roles: roles
+        .filter((r): r is Doc<"roles"> => r !== null)
+        .map((r) => r.name),
       themePreference: user.themePreference ?? "system", // NEW
     };
   },
@@ -319,6 +337,7 @@ export function useTheme() {
 ```
 
 **Key Design Decisions:**
+
 - Separate `theme` (user preference) from `resolvedTheme` (actual active theme)
 - Use `classList.add/remove` for instant DOM updates
 - Listen to `prefers-color-scheme` media query for System mode
@@ -369,6 +388,7 @@ export function ThemeScript() {
 ```
 
 **Integration in Root Layout:**
+
 ```typescript
 // src/app/layout.tsx
 import { ThemeScript } from "@/components/theme-script";
@@ -683,6 +703,7 @@ export default function SettingsPage() {
 ```
 
 **Changes:**
+
 - Import `ThemeSwitcher` and `ThemeToggle`
 - Add theme switcher button to header (replaces placeholder)
 - Add new "Theme Preferences" card section
@@ -699,17 +720,18 @@ The existing dark mode palette in `globals.css` is well-designed but needs verif
 
 ```css
 .dark {
-  --background: oklch(0.141 0.005 285.823);       /* Very dark blue-gray */
-  --foreground: oklch(0.985 0 0);                 /* Near white */
-  --card: oklch(0.21 0.006 285.885);              /* Slightly lighter than bg */
-  --primary: oklch(0.92 0.004 286.32);            /* Very light gray */
-  --muted: oklch(0.274 0.006 286.033);            /* Medium dark */
-  --destructive: oklch(0.704 0.191 22.216);       /* Red */
-  --border: oklch(1 0 0 / 10%);                   /* Semi-transparent white */
+  --background: oklch(0.141 0.005 285.823); /* Very dark blue-gray */
+  --foreground: oklch(0.985 0 0); /* Near white */
+  --card: oklch(0.21 0.006 285.885); /* Slightly lighter than bg */
+  --primary: oklch(0.92 0.004 286.32); /* Very light gray */
+  --muted: oklch(0.274 0.006 286.033); /* Medium dark */
+  --destructive: oklch(0.704 0.191 22.216); /* Red */
+  --border: oklch(1 0 0 / 10%); /* Semi-transparent white */
 }
 ```
 
 **Issues Found:**
+
 1. ✅ OKLCH colors are consistent (good for wide gamut)
 2. ⚠️ Some components use hardcoded `text-gray-*` classes (73 occurrences)
 3. ⚠️ Card variants use hardcoded colors (`bg-blue-50`, `border-purple-200`)
@@ -752,7 +774,8 @@ const cardVariants = cva(
         admin:
           "border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 shadow-md dark:border-[var(--color-card-admin-border)] dark:bg-gradient-to-r dark:from-[var(--color-card-admin-from)] dark:to-[var(--color-card-admin-to)]",
         info: "border-blue-200 bg-blue-50 dark:border-[var(--color-card-info-border)] dark:bg-[var(--color-card-info-bg)]",
-        dashed: "border-2 border-dashed border-gray-300 bg-gray-50 shadow-none dark:border-[var(--color-card-dashed-border)] dark:bg-[var(--color-card-dashed-bg)]",
+        dashed:
+          "border-2 border-dashed border-gray-300 bg-gray-50 shadow-none dark:border-[var(--color-card-dashed-border)] dark:bg-[var(--color-card-dashed-bg)]",
       },
     },
     defaultVariants: {
@@ -821,6 +844,7 @@ export default function RootLayout({
 ```
 
 **Key Changes:**
+
 - Add `suppressHydrationWarning` to `<html>` tag (prevents warnings from script)
 - Add `<ThemeScript />` in `<head>` for FOUC prevention
 - Wrap app in `<ThemeProvider>`
@@ -900,18 +924,21 @@ export default function AuthenticatedLayout({
 ### Phase 1: Foundation (2-3 hours)
 
 **Step 1: Create Theme Hook**
+
 - [ ] Create `/src/hooks/use-theme.ts` with `ThemeProvider` and `useTheme` hook
 - [ ] Test localStorage persistence
 - [ ] Test system preference detection
 - [ ] Test theme switching logic
 
 **Step 2: Prevent FOUC**
+
 - [ ] Create `/src/components/theme-script.tsx`
 - [ ] Update `/src/app/layout.tsx` to include `ThemeScript` and `ThemeProvider`
 - [ ] Add `suppressHydrationWarning` to `<html>` tag
 - [ ] Test that dark theme applies before page renders
 
 **Step 3: Create Theme Switcher Components**
+
 - [ ] Create `/src/components/theme-switcher.tsx` (dropdown version)
 - [ ] Create `/src/components/theme-toggle.tsx` (segmented control version)
 - [ ] Test keyboard navigation (Tab, Enter, Arrow keys)
@@ -922,6 +949,7 @@ export default function AuthenticatedLayout({
 ### Phase 2: UI Integration (1-2 hours)
 
 **Step 4: Update Settings Page**
+
 - [ ] Update `/src/app/(all)/settings/page.tsx` to include theme section
 - [ ] Add `ThemeSwitcher` to header
 - [ ] Add `ThemeToggle` to theme preferences card
@@ -929,12 +957,14 @@ export default function AuthenticatedLayout({
 - [ ] Test theme changes apply immediately
 
 **Step 5: Fix Hardcoded Colors**
+
 - [ ] Update `/src/components/layout.tsx` (`bg-gray-50` → `bg-muted/30`)
 - [ ] Update `/src/app/(all)/layout.tsx` (`bg-gray-50` → `bg-muted/30`)
 - [ ] Update `/src/components/ui/card.tsx` to support dark mode variants
 - [ ] Add dark mode CSS variables in `/src/app/globals.css`
 
 **Step 6: Audit & Fix Components**
+
 - [ ] Search for `text-gray-` and `bg-gray-` classes in all components
 - [ ] Replace with semantic tokens where appropriate:
   - `text-gray-900` → `text-foreground`
@@ -950,6 +980,7 @@ export default function AuthenticatedLayout({
 ### Phase 3: Polish & Testing (1-2 hours)
 
 **Step 7: Accessibility Testing**
+
 - [ ] Verify WCAG AA contrast ratios in both themes using browser DevTools
 - [ ] Test keyboard navigation (Tab, Shift+Tab, Enter, Space, Arrows)
 - [ ] Test with screen reader (VoiceOver on Mac, NVDA on Windows)
@@ -957,6 +988,7 @@ export default function AuthenticatedLayout({
 - [ ] Test `prefers-reduced-motion` respect (if transitions added)
 
 **Step 8: Cross-Browser Testing**
+
 - [ ] Test in Chrome (desktop & mobile)
 - [ ] Test in Firefox
 - [ ] Test in Safari (macOS & iOS)
@@ -964,6 +996,7 @@ export default function AuthenticatedLayout({
 - [ ] Verify OKLCH color rendering consistency
 
 **Step 9: Edge Case Testing**
+
 - [ ] Clear localStorage and verify fallback to System mode
 - [ ] Test rapid theme switching (no flash or lag)
 - [ ] Test browser without `matchMedia` support (graceful degradation)
@@ -975,12 +1008,14 @@ export default function AuthenticatedLayout({
 ### Phase 4 (Optional): Convex Database Sync (1-2 hours)
 
 **Step 10: Backend Implementation**
+
 - [ ] Add `themePreference` field to `users` table in `/convex/schema.ts`
 - [ ] Create `updateThemePreference` mutation in `/convex/users.ts`
 - [ ] Update `getCurrentUser` query to include `themePreference`
 - [ ] Test mutation with Convex dashboard
 
 **Step 11: Frontend Integration**
+
 - [ ] Update `ThemeProvider` to sync with Convex on load
 - [ ] Update `setTheme` to call mutation (with optimistic update)
 - [ ] Add error handling for failed mutations
@@ -1266,40 +1301,44 @@ import { ThemeToggle } from "@/components/theme-toggle";
 ## Appendix: Color Palette Reference
 
 ### Light Theme (Existing)
+
 ```css
---background: oklch(1 0 0);                     /* Pure white */
---foreground: oklch(0.141 0.005 285.823);       /* Dark blue-gray */
---primary: oklch(0.21 0.006 285.885);           /* Dark gray */
---muted: oklch(0.967 0.001 286.375);            /* Light gray */
---border: oklch(0.92 0.004 286.32);             /* Medium-light gray */
+--background: oklch(1 0 0); /* Pure white */
+--foreground: oklch(0.141 0.005 285.823); /* Dark blue-gray */
+--primary: oklch(0.21 0.006 285.885); /* Dark gray */
+--muted: oklch(0.967 0.001 286.375); /* Light gray */
+--border: oklch(0.92 0.004 286.32); /* Medium-light gray */
 ```
 
 ### Dark Theme (Existing)
+
 ```css
---background: oklch(0.141 0.005 285.823);       /* Very dark blue-gray */
---foreground: oklch(0.985 0 0);                 /* Near white */
---primary: oklch(0.92 0.004 286.32);            /* Very light gray */
---muted: oklch(0.274 0.006 286.033);            /* Medium dark */
---border: oklch(1 0 0 / 10%);                   /* Semi-transparent white */
+--background: oklch(0.141 0.005 285.823); /* Very dark blue-gray */
+--foreground: oklch(0.985 0 0); /* Near white */
+--primary: oklch(0.92 0.004 286.32); /* Very light gray */
+--muted: oklch(0.274 0.006 286.033); /* Medium dark */
+--border: oklch(1 0 0 / 10%); /* Semi-transparent white */
 ```
 
 ### Contrast Ratios (Verified WCAG AA)
-| Element | Light Mode | Dark Mode | Standard |
-|---------|-----------|-----------|----------|
-| Body text (foreground/background) | 15.8:1 | 13.1:1 | ✅ 4.5:1 |
-| Muted text (muted-foreground/background) | 7.2:1 | 6.4:1 | ✅ 4.5:1 |
-| Button (primary/primary-foreground) | 9.1:1 | 4.8:1 | ✅ 4.5:1 |
-| Border (border/background) | 3.2:1 | 3.1:1 | ✅ 3:1 |
+
+| Element                                  | Light Mode | Dark Mode | Standard |
+| ---------------------------------------- | ---------- | --------- | -------- |
+| Body text (foreground/background)        | 15.8:1     | 13.1:1    | ✅ 4.5:1 |
+| Muted text (muted-foreground/background) | 7.2:1      | 6.4:1     | ✅ 4.5:1 |
+| Button (primary/primary-foreground)      | 9.1:1      | 4.8:1     | ✅ 4.5:1 |
+| Border (border/background)               | 3.2:1      | 3.1:1     | ✅ 3:1   |
 
 ### Semantic Token Mapping
-| Use Case | Light | Dark | CSS Variable |
-|----------|-------|------|--------------|
-| Page background | White | Dark blue-gray | `bg-background` |
-| Main text | Dark gray | White | `text-foreground` |
-| Secondary text | Medium gray | Light gray | `text-muted-foreground` |
-| Card background | White | Slightly lighter | `bg-card` |
-| Borders | Light gray | Transparent white | `border` |
-| Primary actions | Dark gray | Light gray | `bg-primary` |
+
+| Use Case        | Light       | Dark              | CSS Variable            |
+| --------------- | ----------- | ----------------- | ----------------------- |
+| Page background | White       | Dark blue-gray    | `bg-background`         |
+| Main text       | Dark gray   | White             | `text-foreground`       |
+| Secondary text  | Medium gray | Light gray        | `text-muted-foreground` |
+| Card background | White       | Slightly lighter  | `bg-card`               |
+| Borders         | Light gray  | Transparent white | `border`                |
+| Primary actions | Dark gray   | Light gray        | `bg-primary`            |
 
 ---
 
@@ -1318,7 +1357,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 4. `/src/app/(all)/layout.tsx` - Replace hardcoded colors
 5. `/src/components/ui/card.tsx` - Add dark mode variant support
 6. `/src/app/globals.css` - Add dark mode card variable overrides
-7. *Various component files* - Replace `text-gray-*` with semantic tokens
+7. _Various component files_ - Replace `text-gray-*` with semantic tokens
 
 ## Estimated Timeline
 
@@ -1336,6 +1375,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 This specification provides a complete blueprint for implementing a dark theme system in the Urban Legends platform. The design leverages existing Tailwind v4 infrastructure (already 80% complete with CSS variables defined) and follows modern React patterns with minimal dependencies.
 
 The phased approach allows for incremental delivery:
+
 - **Phase 1-2:** Core functionality with localStorage persistence (can ship to users)
 - **Phase 3:** Production-ready with full testing
 - **Phase 4:** Enhanced cross-device experience via Convex sync

@@ -26,6 +26,7 @@ Before writing ANY specification:
 ## Specification Structure
 
 ### 1. Executive Summary
+
 - Brief overview (2-3 sentences)
 - Primary user benefit and value
 - Complexity estimate (small/medium/large)
@@ -59,6 +60,7 @@ Before writing ANY specification:
 ### 5. Code Examples
 
 Provide snippets for:
+
 - Schema definitions
 - Key mutations/queries with typing
 - React components with imports

@@ -21,6 +21,7 @@ git log -5 --pretty=format:"%h - %s%n%b" --stat
 ### 2. Analyze Current State
 
 Read:
+
 - docs/COMPLETED.md
 - docs/MISSING.md
 - All specs in specs/ (use Glob)
@@ -29,6 +30,7 @@ Read:
 ### 3. Verify Implementation
 
 For each spec in specs/:
+
 - Search codebase to verify implementation
 - Check for matching components, mutations, queries, pages
 - Determine status: fully implemented / partially implemented / not started
@@ -50,6 +52,7 @@ Add fully implemented features:
 ### 5. Update MISSING.md
 
 Update to reflect:
+
 - Features NOT yet implemented
 - Incomplete specs
 - Gaps and technical debt

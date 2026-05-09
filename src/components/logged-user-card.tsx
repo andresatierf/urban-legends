@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { Settings } from "lucide-react";
+
 import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
+
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
@@ -23,7 +25,7 @@ export function LoggedUserCard() {
     );
 
   return (
-    <Card className={cn("transition hover:bg-muted", { "p-0": !open })}>
+    <Card className={cn("hover:bg-muted transition", { "p-0": !open })}>
       <CardContent
         className={cn("flex items-center gap-2 p-3", { "p-0": !open })}
       >
@@ -37,7 +39,7 @@ export function LoggedUserCard() {
             <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col items-start truncate">
-            <p className="font-medium text-sm">{user.name}</p>
+            <p className="text-sm font-medium">{user.name}</p>
             <p className="text-muted-foreground text-xs">
               {getHighestRankingRole(user.roles)}
             </p>

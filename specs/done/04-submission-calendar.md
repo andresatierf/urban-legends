@@ -47,7 +47,6 @@ Currently, submissions are displayed in a table/list format only. A calendar vie
 ### Functional Requirements
 
 1. **Calendar Grid Display**
-
    - Show current month by default
    - Navigate between months (prev/next buttons)
    - Highlight current date
@@ -55,7 +54,6 @@ Currently, submissions are displayed in a table/list format only. A calendar vie
    - Responsive grid (7 columns for days of week)
 
 2. **Date Cell States**
-
    - **No submission:** Empty/gray cell
    - **Pending submission:** Yellow/orange cell
    - **Approved submission:** Green cell
@@ -65,21 +63,18 @@ Currently, submissions are displayed in a table/list format only. A calendar vie
    - **Outside tournament:** Not selectable
 
 3. **Interactions**
-
    - Click empty date → Create submission for that date
    - Click date with submission → View/edit submission
    - Hover shows tooltip with submission details
    - Double-click opens submission in modal
 
 4. **Team Selection**
-
    - If user is on multiple teams, show team selector dropdown
    - Calendar updates to show selected team's submissions
    - Default to most recently active team
    - Remember selection in local storage
 
 5. **Date Navigation**
-
    - Previous/Next month buttons
    - "Today" button to jump to current date
    - Month/Year picker for quick navigation
@@ -594,18 +589,15 @@ const cellStyles = {
 ### Requirements
 
 1. **Color Contrast**
-
    - Text on colored backgrounds: 4.5:1 ratio minimum
    - Use patterns/icons in addition to colors for color-blind users
 
 2. **Keyboard Navigation**
-
    - All interactive elements focusable
    - Visible focus indicators
    - Logical tab order
 
 3. **Screen Readers**
-
    - ARIA labels for all buttons
    - Calendar role and grid structure
    - Announce state changes
@@ -650,21 +642,17 @@ const cellStyles = {
 ## Edge Cases
 
 1. **Tournament spans multiple months**
-
    - Navigation restricted to tournament date range
    - Gray out dates outside tournament
 
 2. **User switches teams mid-month**
-
    - Calendar updates immediately
    - Preserve current month view
 
 3. **Submission approved while viewing calendar**
-
    - Cell updates color in real-time (Convex reactivity)
 
 4. **Today is outside current tournament**
-
    - "Today" button disabled
    - Show most recent active tournament
 
@@ -695,27 +683,23 @@ const cellStyles = {
 ## Migration Plan
 
 1. **Uncomment Existing Code**
-
    - Uncomment lines 76-153 in `/submissions/page.tsx`
    - Fix TypeScript errors
    - Update to use proper queries
 
 2. **Create Calendar Components**
-
    - Build SubmissionCalendar component
    - Build CalendarDateCell component
    - Build CalendarHeader component
    - Test in isolation (Storybook optional)
 
 3. **Integrate with Page**
-
    - Add team selector
    - Add view mode toggle (calendar/list)
    - Wire up date click handlers
    - Test navigation
 
 4. **Add Statistics**
-
    - Implement CalendarStatistics component
    - Add streak calculation
    - Display below calendar

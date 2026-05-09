@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { useState } from "react";
+
 import { UpsertTournamentFormDialog } from "@/components/form/upsert-tournament-form";
 import { SectionHeader } from "@/components/section-header";
 import {
@@ -10,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { CardGrid } from "@/components/ui/card-grid";
 import { useUser } from "@/hooks/useUser";
+
 import { api } from "../../../../convex/_generated/api";
 
 export const Route = createFileRoute("/_protected/tournaments/")({

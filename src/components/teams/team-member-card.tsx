@@ -1,4 +1,5 @@
 import { Crown, DoorOpen, Mail, User } from "lucide-react";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -19,10 +20,10 @@ export function TeamMemberCard({
 }: Props) {
   return (
     <Card>
-      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-2 xs:gap-16">
+      <CardContent className="xs:flex-row xs:gap-16 flex flex-col items-center justify-between gap-2">
         <div className="flex flex-1 flex-col justify-between self-start">
           <div className="flex items-center gap-2">
-            <CardTitle className="flex items-center gap-2 font-semibold text-base leading-none tracking-tight">
+            <CardTitle className="flex items-center gap-2 text-base leading-none font-semibold tracking-tight">
               <User className="h-4 w-4" />
               {member.name}
             </CardTitle>
@@ -39,7 +40,7 @@ export function TeamMemberCard({
           </CardDescription>
         </div>
         {canRemove && (
-          <div className="flex gap-2 xs:self-auto self-end">
+          <div className="xs:self-auto flex gap-2 self-end">
             <Button
               color="destructive"
               size="icon"

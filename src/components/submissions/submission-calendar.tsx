@@ -3,9 +3,11 @@
 import { useQuery } from "convex/react";
 import { capitalize, startCase } from "lodash";
 import { useEffect, useMemo, useState } from "react";
+
 import { useUser } from "@/hooks/useUser";
 import { isToday } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
@@ -200,7 +202,7 @@ export function SubmissionCalendar({
 
   return (
     <Card>
-      <CardHeader className="flex xs:flex-row flex-col items-center justify-between gap-4 text-center">
+      <CardHeader className="xs:flex-row flex flex-col items-center justify-between gap-4 text-center">
         <CalendarHeader
           currentDate={currentDate}
           onPrevMonth={handlePrevMonth}
@@ -215,7 +217,7 @@ export function SubmissionCalendar({
           {weekdayLabels.map((day) => (
             <div
               key={day}
-              className="text-center font-semibold text-foreground text-sm"
+              className="text-foreground text-center text-sm font-semibold"
             >
               {day}
             </div>
@@ -258,8 +260,8 @@ export function SubmissionCalendar({
 
 function CalendarLegend() {
   return (
-    <div className="mt-6 flex flex-1 xs:flex-row flex-col flex-wrap items-start xs:items-center justify-between gap-4 border-t pt-4 text-xs">
-      <div className="flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-center gap-4">
+    <div className="xs:flex-row xs:items-center mt-6 flex flex-1 flex-col flex-wrap items-start justify-between gap-4 border-t pt-4 text-xs">
+      <div className="xs:flex-row xs:items-center flex flex-col flex-wrap items-start justify-center gap-4">
         {(
           [undefined, "pending", "approved", "rejected"] as (
             | undefined
@@ -276,7 +278,7 @@ function CalendarLegend() {
           </div>
         ))}
       </div>
-      <div className="flex xs:flex-row flex-col flex-wrap items-start xs:items-center justify-center gap-4">
+      <div className="xs:flex-row xs:items-center flex flex-col flex-wrap items-start justify-center gap-4">
         {["isOutsideTournament", "isDisabled", "isToday"].map((options) => (
           <div key={options} className="flex items-center gap-2">
             <div

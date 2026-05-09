@@ -10,7 +10,9 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+
 import { useFormattedDate } from "@/hooks/useFormattedDate";
+
 import type { TournamentWithAuthority } from "../../../convex/tournaments";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -43,7 +45,7 @@ export function TournamentWithAuthorityCard({ tournament }: Props) {
         )}
 
         {/* Common metadata */}
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm">
+        <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-sm">
           <div className="flex items-center gap-1">
             <Users className="h-4 w-4" />
             {teamCount} team{teamCount === 1 ? "" : "s"}
@@ -58,7 +60,7 @@ export function TournamentWithAuthorityCard({ tournament }: Props) {
         {/* Reviewer call-out: only when pending > 0 */}
         {authority.canReview && authority.pendingReviewCount > 0 && (
           <Link to="/reviewer" className="block">
-            <div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-secondary-foreground text-sm">
+            <div className="bg-secondary text-secondary-foreground flex items-center gap-2 rounded-md px-3 py-2 text-sm">
               <Trophy className="h-4 w-4 shrink-0" />
               Review queue ({authority.pendingReviewCount} pending)
             </div>
@@ -86,7 +88,7 @@ export function TournamentWithAuthorityCard({ tournament }: Props) {
                 </Badge>
               )}
             </div>
-            <div className="mt-1 text-muted-foreground">
+            <div className="text-muted-foreground mt-1">
               {authority.team.points} pts · {authority.team.approvedSubmissions}
               /{authority.team.totalSubmissions} submissions approved
             </div>

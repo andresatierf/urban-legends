@@ -1,4 +1,5 @@
 import { type LucideIcon, Monitor, Moon, Sun } from "lucide-react";
+
 import type { Theme } from "@/hooks/use-theme";
 
 export const THEME_OPTIONS: Record<

@@ -69,19 +69,19 @@ export function CardDemo() {
                     <span className="text-muted-foreground text-sm">
                       Label:
                     </span>
-                    <span className="font-medium text-sm">Value</span>
+                    <span className="text-sm font-medium">Value</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground text-sm">
                       Status:
                     </span>
-                    <span className="font-medium text-sm">Active</span>
+                    <span className="text-sm font-medium">Active</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground text-sm">
                       Progress:
                     </span>
-                    <span className="font-medium text-sm">75%</span>
+                    <span className="text-sm font-medium">75%</span>
                   </div>
                 </div>
               </CardContent>

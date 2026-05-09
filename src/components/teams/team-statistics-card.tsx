@@ -9,6 +9,7 @@ import {
   Flame,
   TrendingUp,
 } from "lucide-react";
+
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -117,13 +118,13 @@ export function TeamStatisticsCard({ teamId }: Props) {
           return (
             <Card key={stat.title}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="font-medium text-sm">
+                <CardTitle className="text-sm font-medium">
                   {stat.title}
                 </CardTitle>
                 <Icon className={`h-4 w-4 ${stat.color}`} />
               </CardHeader>
               <CardContent className="pt-2">
-                <div className="font-bold text-2xl">{stat.value}</div>
+                <div className="text-2xl font-bold">{stat.value}</div>
                 <p className="text-muted-foreground text-xs">
                   {stat.description}
                 </p>

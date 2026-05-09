@@ -1,9 +1,11 @@
 "use client";
 
 import { Check, X } from "lucide-react";
+
 import type { UserWithRoles } from "@/../convex/users";
 import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
+
 import type { SubmitterEvidence } from "./types";
 
 interface GroupParticipantsListProps {
@@ -62,7 +64,7 @@ export function GroupParticipantsList({
                       </div>
                     ))}
                     {se.evidence.length > 3 && (
-                      <div className="flex h-8 w-8 items-center justify-center rounded bg-muted font-medium text-xs">
+                      <div className="bg-muted flex h-8 w-8 items-center justify-center rounded text-xs font-medium">
                         +{se.evidence.length - 3}
                       </div>
                     )}

@@ -63,6 +63,7 @@ export const inviteUser = mutation({
 ```
 
 **Notification Fields**:
+
 - **Type**: `team_invitation_received`
 - **Title**: `"You've been invited to join {teamName}"`
 - **Body**: `"{inviterName} invited you to join their team for the tournament"`
@@ -112,8 +113,8 @@ export const acceptInvitation = mutation({
       .collect();
 
     const notificationPromises = existingMembers
-      .filter(m => m.userId !== currentUser._id) // Don't notify the new joiner
-      .map(member =>
+      .filter((m) => m.userId !== currentUser._id) // Don't notify the new joiner
+      .map((member) =>
         ctx.runMutation(internal.notifications.create, {
           userId: member.userId,
           type: "member_joined_team",
@@ -122,17 +123,18 @@ export const acceptInvitation = mutation({
           relatedEntityId: invitation.teamId,
           relatedEntityType: "team",
           actionUrl: `/teams/${invitation.teamId}`,
-        })
+        }),
       );
 
     await Promise.all(notificationPromises);
 
     return { success: true };
-  }
+  },
 });
 ```
 
 **Notification Fields**:
+
 - **Type**: `member_joined_team`
 - **Title**: `"{newMemberName} joined {teamName}"`
 - **Body**: `"Your team now has {totalMembers} members"`
@@ -177,9 +179,9 @@ export const requestToJoin = mutation({
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
       .collect();
 
-    const captains = teamMembers.filter(m => m.role === "captain");
+    const captains = teamMembers.filter((m) => m.role === "captain");
 
-    const notificationPromises = captains.map(captain =>
+    const notificationPromises = captains.map((captain) =>
       ctx.runMutation(internal.notifications.create, {
         userId: captain.userId,
         type: "team_join_request_received",
@@ -189,17 +191,18 @@ export const requestToJoin = mutation({
         relatedEntityType: "team",
         actionUrl: `/teams/${args.teamId}/requests`,
         actionMetadata: { joinRequestId: joinRequest },
-      })
+      }),
     );
 
     await Promise.all(notificationPromises);
 
     return joinRequest;
-  }
+  },
 });
 ```
 
 **Notification Fields**:
+
 - **Type**: `team_join_request_received`
 - **Title**: `"{userName} wants to join {teamName}"`
 - **Body**: User's message or `"New join request pending your approval"`
@@ -264,8 +267,8 @@ export const approveJoinRequest = mutation({
     const newMember = await ctx.db.get(joinRequest.userId);
 
     const memberNotificationPromises = existingMembers
-      .filter(m => m.userId !== joinRequest.userId)
-      .map(member =>
+      .filter((m) => m.userId !== joinRequest.userId)
+      .map((member) =>
         ctx.runMutation(internal.notifications.create, {
           userId: member.userId,
           type: "member_joined_team",
@@ -274,23 +277,25 @@ export const approveJoinRequest = mutation({
           relatedEntityId: joinRequest.teamId,
           relatedEntityType: "team",
           actionUrl: `/teams/${joinRequest.teamId}`,
-        })
+        }),
       );
 
     await Promise.all(memberNotificationPromises);
 
     return { success: true };
-  }
+  },
 });
 ```
 
 **Notification Fields (Requester)**:
+
 - **Type**: `join_request_approved`
 - **Title**: `"Your request to join {teamName} was approved"`
 - **Body**: `"Welcome to the team! You can now participate in tournament activities"`
 - **Action URL**: `/teams/{teamId}`
 
 **Notification Fields (Existing Members)**:
+
 - Same as `member_joined_team` above
 
 ---
@@ -339,11 +344,12 @@ export const rejectJoinRequest = mutation({
     });
 
     return { success: true };
-  }
+  },
 });
 ```
 
 **Notification Fields**:
+
 - **Type**: `join_request_rejected`
 - **Title**: `"Your request to join {teamName} was declined"`
 - **Body**: Rejection reason or `"Your join request was not accepted at this time"`
@@ -380,7 +386,7 @@ export const removeMember = mutation({
     const membershipToRemove = await ctx.db
       .query("teamMembers")
       .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", args.teamId).eq("userId", args.userId)
+        q.eq("teamId", args.teamId).eq("userId", args.userId),
       )
       .first();
 
@@ -405,7 +411,7 @@ export const removeMember = mutation({
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
       .collect();
 
-    const memberNotificationPromises = remainingMembers.map(member =>
+    const memberNotificationPromises = remainingMembers.map((member) =>
       ctx.runMutation(internal.notifications.create, {
         userId: member.userId,
         type: "member_left_team",
@@ -414,23 +420,25 @@ export const removeMember = mutation({
         relatedEntityId: args.teamId,
         relatedEntityType: "team",
         actionUrl: `/teams/${args.teamId}`,
-      })
+      }),
     );
 
     await Promise.all(memberNotificationPromises);
 
     return { success: true };
-  }
+  },
 });
 ```
 
 **Notification Fields (Removed User)**:
+
 - **Type**: `removed_from_team`
 - **Title**: `"You've been removed from {teamName}"`
 - **Body**: `"You are no longer a member of this team"`
 - **Action URL**: `/teams`
 
 **Notification Fields (Remaining Members)**:
+
 - **Type**: `member_left_team`
 - **Title**: `"{userName} left {teamName}"`
 - **Body**: `"Your team now has {remainingCount} members"`
@@ -468,7 +476,7 @@ export const transferCaptain = mutation({
     const oldCaptainMembership = await ctx.db
       .query("teamMembers")
       .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", args.teamId).eq("userId", currentUser._id)
+        q.eq("teamId", args.teamId).eq("userId", currentUser._id),
       )
       .first();
 
@@ -480,7 +488,7 @@ export const transferCaptain = mutation({
     const newCaptainMembership = await ctx.db
       .query("teamMembers")
       .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", args.teamId).eq("userId", args.newCaptainUserId)
+        q.eq("teamId", args.teamId).eq("userId", args.newCaptainUserId),
       )
       .first();
 
@@ -511,17 +519,19 @@ export const transferCaptain = mutation({
     });
 
     return { success: true };
-  }
+  },
 });
 ```
 
 **Notification Fields (New Captain)**:
+
 - **Type**: `captain_role_transferred_to`
 - **Title**: `"You are now captain of {teamName}"`
 - **Body**: `"{oldCaptainName} transferred the captain role to you"`
 - **Action URL**: `/teams/{teamId}`
 
 **Notification Fields (Old Captain)**:
+
 - **Type**: `captain_role_transferred_from`
 - **Title**: `"You transferred captain role for {teamName}"`
 - **Body**: `"{newCaptainName} is now the team captain"`
@@ -556,7 +566,7 @@ export const deleteTeam = mutation({
     // ... existing deletion logic ...
 
     // NOTIFY ALL MEMBERS
-    const notificationPromises = teamMembers.map(member =>
+    const notificationPromises = teamMembers.map((member) =>
       ctx.runMutation(internal.notifications.create, {
         userId: member.userId,
         type: "team_deleted",
@@ -565,7 +575,7 @@ export const deleteTeam = mutation({
         relatedEntityId: args.teamId,
         relatedEntityType: "team",
         actionUrl: `/teams`,
-      })
+      }),
     );
 
     await Promise.all(notificationPromises);
@@ -574,11 +584,12 @@ export const deleteTeam = mutation({
     await ctx.db.delete(args.teamId);
 
     return { success: true };
-  }
+  },
 });
 ```
 
 **Notification Fields**:
+
 - **Type**: `team_deleted`
 - **Title**: `"{teamName} has been deleted"`
 - **Body**: `"The team was disbanded by {captainName}"`
@@ -634,11 +645,11 @@ export const approve = mutation({
       .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
       .collect();
 
-    const captains = teamMembers.filter(m => m.role === "captain");
+    const captains = teamMembers.filter((m) => m.role === "captain");
     const submitter = await ctx.db.get(submission.userId);
 
     const recipientIds = [
-      ...captains.map(c => c.userId),
+      ...captains.map((c) => c.userId),
       submission.userId, // Include submitter
     ];
 
@@ -646,26 +657,27 @@ export const approve = mutation({
     const uniqueRecipientIds = [...new Set(recipientIds)];
 
     // NOTIFY CAPTAIN AND SUBMITTER
-    const notificationPromises = uniqueRecipientIds.map(userId =>
+    const notificationPromises = uniqueRecipientIds.map((userId) =>
       ctx.runMutation(internal.notifications.create, {
         userId,
         type: "submission_approved",
         title: "Submission approved",
-        body: `${submission.description || 'Your submission'} for ${team.name} has been approved`,
+        body: `${submission.description || "Your submission"} for ${team.name} has been approved`,
         relatedEntityId: args.submissionId,
         relatedEntityType: "submission",
         actionUrl: `/submissions/${args.submissionId}`,
-      })
+      }),
     );
 
     await Promise.all(notificationPromises);
 
     return { success: true };
-  }
+  },
 });
 ```
 
 **Notification Fields**:
+
 - **Type**: `submission_approved`
 - **Title**: `"Submission approved"`
 - **Body**: `"{submissionDescription} for {teamName} has been approved"`
@@ -711,36 +723,34 @@ export const reject = mutation({
       .withIndex("by_team", (q) => q.eq("teamId", submission.teamId))
       .collect();
 
-    const captains = teamMembers.filter(m => m.role === "captain");
+    const captains = teamMembers.filter((m) => m.role === "captain");
 
-    const recipientIds = [
-      ...captains.map(c => c.userId),
-      submission.userId,
-    ];
+    const recipientIds = [...captains.map((c) => c.userId), submission.userId];
 
     const uniqueRecipientIds = [...new Set(recipientIds)];
 
     // NOTIFY CAPTAIN AND SUBMITTER (include rejection reason)
-    const notificationPromises = uniqueRecipientIds.map(userId =>
+    const notificationPromises = uniqueRecipientIds.map((userId) =>
       ctx.runMutation(internal.notifications.create, {
         userId,
         type: "submission_rejected",
         title: "Submission rejected",
-        body: `${submission.description || 'Your submission'} was rejected: ${args.reason}`,
+        body: `${submission.description || "Your submission"} was rejected: ${args.reason}`,
         relatedEntityId: args.submissionId,
         relatedEntityType: "submission",
         actionUrl: `/submissions/${args.submissionId}`,
-      })
+      }),
     );
 
     await Promise.all(notificationPromises);
 
     return { success: true };
-  }
+  },
 });
 ```
 
 **Notification Fields**:
+
 - **Type**: `submission_rejected`
 - **Title**: `"Submission rejected"`
 - **Body**: `"{submissionDescription} was rejected: {reason}"`
@@ -795,12 +805,12 @@ export const create = mutation({
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
       .collect();
 
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
     // Use daily digest pattern to prevent notification spam (FR-026)
     const recipientIds = teamMembers
-      .map(m => m.userId)
-      .filter(id => id !== currentUser._id);
+      .map((m) => m.userId)
+      .filter((id) => id !== currentUser._id);
 
     for (const userId of recipientIds) {
       // Check if notification for today already exists
@@ -811,7 +821,7 @@ export const create = mutation({
             .eq("userId", userId)
             .eq("type", "teammate_submitted")
             .eq("relatedEntityType", "team")
-            .eq("relatedEntityId", `${args.teamId}_${today}`)
+            .eq("relatedEntityId", `${args.teamId}_${today}`),
         )
         .first();
 
@@ -821,7 +831,7 @@ export const create = mutation({
           userId,
           type: "teammate_submitted",
           title: "Team activity today",
-          body: `${currentUser.name} submitted ${args.description || 'an activity'}`,
+          body: `${currentUser.name} submitted ${args.description || "an activity"}`,
           relatedEntityId: `${args.teamId}_${today}`,
           relatedEntityType: "team",
           actionUrl: `/teams/${args.teamId}`,
@@ -829,17 +839,18 @@ export const create = mutation({
       } else {
         // Update existing notification (optional: aggregate count)
         const currentBody = existing.body || "";
-        const newBody = `${currentBody}\n${currentUser.name} submitted ${args.description || 'an activity'}`;
+        const newBody = `${currentBody}\n${currentUser.name} submitted ${args.description || "an activity"}`;
         await ctx.db.patch(existing._id, { body: newBody });
       }
     }
 
     return submission;
-  }
+  },
 });
 ```
 
 **Notification Fields**:
+
 - **Type**: `teammate_submitted`
 - **Title**: `"Team activity today"`
 - **Body**: `"{teammateNam} submitted {activityDescription}"`
@@ -901,11 +912,12 @@ export const assignRole = mutation({
     });
 
     return userRole;
-  }
+  },
 });
 ```
 
 **Notification Fields**:
+
 - **Type**: `role_granted`
 - **Title**: `"{roleDisplayName} role granted"`
 - **Body**: `"You've been granted {roleDisplayName} permissions by {adminName}"`
@@ -943,7 +955,7 @@ export const revokeRole = mutation({
     const userRole = await ctx.db
       .query("userRoles")
       .withIndex("by_user_role", (q) =>
-        q.eq("userId", args.userId).eq("roleId", role._id)
+        q.eq("userId", args.userId).eq("roleId", role._id),
       )
       .first();
 
@@ -965,11 +977,12 @@ export const revokeRole = mutation({
     });
 
     return { success: true };
-  }
+  },
 });
 ```
 
 **Notification Fields**:
+
 - **Type**: `role_revoked`
 - **Title**: `"{roleDisplayName} role revoked"`
 - **Body**: `"Your {roleDisplayName} permissions have been removed"`
@@ -979,23 +992,23 @@ export const revokeRole = mutation({
 
 ## Summary Table
 
-| Event | Notification Type | Recipients | Implementation Location |
-|-------|-------------------|------------|------------------------|
-| Team invitation | `team_invitation_received` | Invited user | `teams.ts` → `inviteUser` |
-| Join request | `team_join_request_received` | Team captains | `teams.ts` → `requestToJoin` |
-| Join approved | `join_request_approved` | Requester | `teams.ts` → `approveJoinRequest` |
-| Join rejected | `join_request_rejected` | Requester | `teams.ts` → `rejectJoinRequest` |
-| Member joined | `member_joined_team` | Existing members | `teams.ts` → `acceptInvitation`, `approveJoinRequest` |
-| Member removed | `removed_from_team` | Removed user | `teams.ts` → `removeMember` |
-| Member left | `member_left_team` | Remaining members | `teams.ts` → `removeMember` |
-| Captain transferred | `captain_role_transferred_to` | New captain | `teams.ts` → `transferCaptain` |
-| Captain transferred | `captain_role_transferred_from` | Old captain | `teams.ts` → `transferCaptain` |
-| Team deleted | `team_deleted` | All members | `teams.ts` → `deleteTeam` |
-| Submission approved | `submission_approved` | Captain + submitter | `submissions.ts` → `approve` |
-| Submission rejected | `submission_rejected` | Captain + submitter | `submissions.ts` → `reject` |
-| Teammate submitted | `teammate_submitted` | Team members (not submitter) | `submissions.ts` → `create` |
-| Role granted | `role_granted` | User | `admin.ts` → `assignRole` |
-| Role revoked | `role_revoked` | User | `admin.ts` → `revokeRole` |
+| Event               | Notification Type               | Recipients                   | Implementation Location                               |
+| ------------------- | ------------------------------- | ---------------------------- | ----------------------------------------------------- |
+| Team invitation     | `team_invitation_received`      | Invited user                 | `teams.ts` → `inviteUser`                             |
+| Join request        | `team_join_request_received`    | Team captains                | `teams.ts` → `requestToJoin`                          |
+| Join approved       | `join_request_approved`         | Requester                    | `teams.ts` → `approveJoinRequest`                     |
+| Join rejected       | `join_request_rejected`         | Requester                    | `teams.ts` → `rejectJoinRequest`                      |
+| Member joined       | `member_joined_team`            | Existing members             | `teams.ts` → `acceptInvitation`, `approveJoinRequest` |
+| Member removed      | `removed_from_team`             | Removed user                 | `teams.ts` → `removeMember`                           |
+| Member left         | `member_left_team`              | Remaining members            | `teams.ts` → `removeMember`                           |
+| Captain transferred | `captain_role_transferred_to`   | New captain                  | `teams.ts` → `transferCaptain`                        |
+| Captain transferred | `captain_role_transferred_from` | Old captain                  | `teams.ts` → `transferCaptain`                        |
+| Team deleted        | `team_deleted`                  | All members                  | `teams.ts` → `deleteTeam`                             |
+| Submission approved | `submission_approved`           | Captain + submitter          | `submissions.ts` → `approve`                          |
+| Submission rejected | `submission_rejected`           | Captain + submitter          | `submissions.ts` → `reject`                           |
+| Teammate submitted  | `teammate_submitted`            | Team members (not submitter) | `submissions.ts` → `create`                           |
+| Role granted        | `role_granted`                  | User                         | `admin.ts` → `assignRole`                             |
+| Role revoked        | `role_revoked`                  | User                         | `admin.ts` → `revokeRole`                             |
 
 ---
 

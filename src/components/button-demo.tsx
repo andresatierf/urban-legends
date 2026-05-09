@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+
 import { SectionHeader } from "./section-header";
 import { Button } from "./ui/button";
 import {
@@ -35,7 +36,7 @@ export function ButtonDemo() {
               "col-span-2": !size.startsWith("icon"),
             })}
           >
-            <h3 className="font-medium text-gray-600 text-sm">Size: {size}</h3>
+            <h3 className="text-sm font-medium text-gray-600">Size: {size}</h3>
             <div className="flex flex-col gap-2">
               {colors.map((color) => (
                 <div key={color} className="flex flex-wrap gap-2">

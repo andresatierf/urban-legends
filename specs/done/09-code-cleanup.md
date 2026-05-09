@@ -71,26 +71,22 @@ See `/home/andre/dev/urban-legends/UNUSED_COMPONENTS.md` for complete analysis w
 ### Functional Requirements
 
 1. **Remove Safe-to-Delete Components**
-
    - Delete development/demo components
    - Delete legacy components replaced by newer implementations
    - Delete components with no imports across the entire codebase
 
 2. **Remove or Implement Stub Functions**
-
    - Either implement `tournaments.remove` or remove it and update UI
    - Remove `admin.addUserRole` empty stub
    - Decide on `admin.setUserRole` (implement UI or remove)
 
 3. **Consolidate Duplicate Functions**
-
    - Consolidate submission getters (get vs getById)
    - Consolidate submission list queries (list, listUserSubmissions, getUserSubmissions)
    - Remove duplicate team creation functions
    - Remove duplicate member addition functions
 
 4. **Document Manual/Admin Functions**
-
    - Add comments identifying functions intended for manual execution
    - Create admin utilities documentation if needed
    - Preserve bootstrap and data fix utilities with clear documentation
@@ -171,12 +167,10 @@ bun run build
 **Files to Modify:**
 
 1. `src/components/ui/badge.tsx`
-
    - Change `export const badgeVariants` to `const badgeVariants`
    - Verify no external usage first
 
 2. `src/components/ui/input.tsx`
-
    - Change `export const inputVariants` to `const inputVariants`
    - Verify no external usage first
 
@@ -202,19 +196,16 @@ bun run build
 **Functions to Remove:**
 
 1. **`convex/admin.ts:42-48` - `addUserRole`**
-
    - Empty stub implementation
    - No frontend imports
    - Action: Delete function
 
 2. **`convex/teams.ts:230-265` - `create`**
-
    - Incomplete (TODO on line 261)
    - Superseded by `upsertUserTeam`
    - Action: Delete function
 
 3. **`convex/submissions.ts:189-196` - `getById`**
-
    - Redundant with `submissions.get`
    - Action: Delete function or add admin bypass flag to `get`
 
@@ -241,12 +232,10 @@ bun run build
 **Functions to Remove/Consolidate:**
 
 1. **`convex/roles.ts:4-23` - `getByUserId`**
-
    - Duplicates `users.ts:116-127` internal helper
    - Action: Remove query, expose internal helper if needed externally
 
 2. **`convex/teams.ts:267-300` - `addMember`**
-
    - Superseded by invitation system (`teamInvitations.inviteMember`)
    - Action: Remove unless needed for admin bulk operations
 
@@ -309,13 +298,11 @@ export const remove = mutation({
 **Functions to Keep and Document:**
 
 1. **`convex/admin.ts:makeFirstUserAdmin`**
-
    - Purpose: Bootstrap first admin user
    - Usage: Manual execution via Convex dashboard
    - Action: Add JSDoc comment with instructions
 
 2. **`convex/tournaments.ts:determineWinner`**
-
    - Purpose: Admin sets tournament winner
    - Usage: Manual or future admin UI
    - Action: Add JSDoc comment, consider adding to admin dashboard (spec 07)
@@ -362,7 +349,6 @@ export const makeFirstUserAdmin = mutation({
    ```
 
 2. **Type Checking**
-
    - Ensure TypeScript compilation succeeds
    - No errors in `convex/_generated/` types
 
@@ -427,18 +413,15 @@ export const makeFirstUserAdmin = mutation({
 ## Success Metrics
 
 1. **Code Reduction**
-
    - Remove ~25KB of unused frontend code
    - Remove ~13 unused backend functions
    - Reduce total export count by 26
 
 2. **Build Performance**
-
    - Build time (should not increase)
    - Bundle size (may decrease slightly)
 
 3. **Code Quality**
-
    - Zero linting errors
    - Zero build errors
    - All tests passing
@@ -476,22 +459,18 @@ git reset --hard HEAD~1   # Undo last commit (if not pushed)
 ## Open Questions
 
 1. **Tournament Deletion**: Should we implement `tournaments.remove` or remove it entirely?
-
    - Impact: Admin capability to delete tournaments
    - Risk: Data loss if teams/submissions exist
 
 2. **Admin Role Management**: Should we implement `admin.setUserRole` UI?
-
    - Referenced in spec 05 (admin-role-management)
    - Needs decision on single vs multiple role assignment
 
 3. **Submission Calendar**: Is spec 04 (submission-calendar) still planned?
-
    - Affects decision to keep `submissions.getTeamSubmissions`
    - May need calendar-specific queries
 
 4. **Button Type Constants**: Should `button.types.ts` be removed entirely?
-
    - Only used in `button-demo.tsx` (removed) and `ui/button.tsx`
    - Could inline constants into `button.tsx`
 

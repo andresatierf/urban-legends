@@ -2,6 +2,7 @@ import { useClerk } from "@clerk/tanstack-react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { Calendar } from "lucide-react";
 import { useEffect, useId, useState } from "react";
+
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,12 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  type FormatLength,
   FULL_DATE_FORMATS,
-  getDateFormatPreference,
-  getFormatPreview,
+  type FormatLength,
   LONG_DATE_FORMATS,
   SHORT_DATE_FORMATS,
+  getDateFormatPreference,
+  getFormatPreview,
   setDateFormatPreference,
 } from "@/lib/dates";
 
@@ -112,8 +113,8 @@ function SettingsPage() {
         <section>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-semibold text-lg">
-                <Calendar className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <Calendar className="text-muted-foreground h-5 w-5" />
                 Calendar Preferences
               </CardTitle>
             </CardHeader>
@@ -122,11 +123,11 @@ function SettingsPage() {
                 <div className="flex-1">
                   <label
                     htmlFor={weekStartSelectId}
-                    className="block font-medium text-sm"
+                    className="block text-sm font-medium"
                   >
                     Week starts on
                   </label>
-                  <p className="mt-1 text-muted-foreground text-sm">
+                  <p className="text-muted-foreground mt-1 text-sm">
                     Choose which day your calendar week begins
                   </p>
                 </div>
@@ -154,11 +155,11 @@ function SettingsPage() {
                 <div className="flex-1">
                   <label
                     htmlFor={dateFormatShortSelectId}
-                    className="block font-medium text-sm"
+                    className="block text-sm font-medium"
                   >
                     Short date format
                   </label>
-                  <p className="mt-1 text-muted-foreground text-sm">
+                  <p className="text-muted-foreground mt-1 text-sm">
                     Compact numeric formats for lists and cards
                   </p>
                 </div>
@@ -195,11 +196,11 @@ function SettingsPage() {
                 <div className="flex-1">
                   <label
                     htmlFor={dateFormatLongSelectId}
-                    className="block font-medium text-sm"
+                    className="block text-sm font-medium"
                   >
                     Long date format
                   </label>
-                  <p className="mt-1 text-muted-foreground text-sm">
+                  <p className="text-muted-foreground mt-1 text-sm">
                     Verbose text-based formats for headers and announcements
                   </p>
                 </div>
@@ -236,11 +237,11 @@ function SettingsPage() {
                 <div className="flex-1">
                   <label
                     htmlFor={dateFormatFullSelectId}
-                    className="block font-medium text-sm"
+                    className="block text-sm font-medium"
                   >
                     Full date format
                   </label>
-                  <p className="mt-1 text-muted-foreground text-sm">
+                  <p className="text-muted-foreground mt-1 text-sm">
                     Includes day of week for detailed displays (e.g., titles)
                   </p>
                 </div>

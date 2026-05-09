@@ -27,10 +27,10 @@
 
 **Purpose**: Project initialization and database schema
 
-- [X] T001 Add notifications table to Convex schema in convex/schema.ts with indexes
-- [X] T002 [P] Add notificationPreferences table to Convex schema in convex/schema.ts
-- [X] T003 [P] Create notification types constants file in convex/notifications/types.ts
-- [X] T004 Verify schema deployed successfully via Convex Dashboard
+- [x] T001 Add notifications table to Convex schema in convex/schema.ts with indexes
+- [x] T002 [P] Add notificationPreferences table to Convex schema in convex/schema.ts
+- [x] T003 [P] Create notification types constants file in convex/notifications/types.ts
+- [x] T004 Verify schema deployed successfully via Convex Dashboard
 
 ---
 
@@ -40,20 +40,20 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [X] T005 [P] Create internal mutation `create` in convex/notifications.ts with idempotency
-- [X] T006 [P] Create query `list` with pagination in convex/notifications.ts
-- [X] T007 [P] Create query `getUnreadCount` in convex/notifications.ts
-- [X] T008 [P] Create query `recent` for dropdown in convex/notifications.ts
-- [X] T009 [P] Create query `get` single notification in convex/notifications.ts
-- [X] T010 [P] Create mutation `markAsRead` in convex/notifications.ts
-- [X] T011 [P] Create mutation `markAllAsRead` in convex/notifications.ts
-- [X] T012 [P] Create mutation `deleteNotification` (soft delete) in convex/notifications.ts
-- [X] T013 [P] Create internal mutation `cleanupOldNotifications` in convex/notifications.ts
-- [X] T014 Create notification triggers helper file in convex/notifications/triggers.ts
-- [X] T015 Setup cron jobs in convex/crons.ts for cleanup and time-based notifications
-- [X] T016 [P] Create custom hook `useNotifications` in src/hooks/use-notifications.ts
-- [X] T017 [P] Create custom hook `useUnreadCount` in src/hooks/use-unread-count.ts
-- [X] T018 [P] Create utility functions in src/lib/notification-utils.ts (formatting, routing)
+- [x] T005 [P] Create internal mutation `create` in convex/notifications.ts with idempotency
+- [x] T006 [P] Create query `list` with pagination in convex/notifications.ts
+- [x] T007 [P] Create query `getUnreadCount` in convex/notifications.ts
+- [x] T008 [P] Create query `recent` for dropdown in convex/notifications.ts
+- [x] T009 [P] Create query `get` single notification in convex/notifications.ts
+- [x] T010 [P] Create mutation `markAsRead` in convex/notifications.ts
+- [x] T011 [P] Create mutation `markAllAsRead` in convex/notifications.ts
+- [x] T012 [P] Create mutation `deleteNotification` (soft delete) in convex/notifications.ts
+- [x] T013 [P] Create internal mutation `cleanupOldNotifications` in convex/notifications.ts
+- [x] T014 Create notification triggers helper file in convex/notifications/triggers.ts
+- [x] T015 Setup cron jobs in convex/crons.ts for cleanup and time-based notifications
+- [x] T016 [P] Create custom hook `useNotifications` in src/hooks/use-notifications.ts
+- [x] T017 [P] Create custom hook `useUnreadCount` in src/hooks/use-unread-count.ts
+- [x] T018 [P] Create utility functions in src/lib/notification-utils.ts (formatting, routing)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -69,24 +69,24 @@
 
 #### Backend: Event Triggers (can be parallelized by module)
 
-- [X] T019 [P] [US1] Add team invitation notification trigger in convex/teamInvitations.ts `inviteMember` mutation
-- [X] T020 [P] [US1] Add join request notification trigger in convex/joinRequests.ts `requestToJoin` mutation
-- [X] T021 [P] [US1] Add join request approved notification trigger in convex/joinRequests.ts `respondToJoinRequest` mutation
-- [X] T022 [P] [US1] Add join request rejected notification trigger in convex/joinRequests.ts `respondToJoinRequest` mutation
-- [X] T023 [P] [US1] Add member joined notification trigger in convex/teamInvitations.ts `respondToInvitation` and convex/joinRequests.ts `respondToJoinRequest` mutations
-- [X] T024 [P] [US1] Add member removed notification trigger in convex/teams.ts `removeMember` mutation
-- [X] T025 [P] [US1] Add submission approved notification trigger in convex/submissions.ts `approve` mutation
-- [X] T026 [P] [US1] Add submission rejected notification trigger in convex/submissions.ts `reject` mutation
-- [X] T027 [P] [US1] Add teammate submitted notification trigger in convex/submissions.ts `upsert` mutation
-- [X] T028 [P] [US1] Add tournament starting in 24h cron job in convex/crons.ts (already implemented)
-- [X] T029 [P] [US1] Add winner announced notification logic in convex/tournaments.ts `determineWinner` mutation
+- [x] T019 [P] [US1] Add team invitation notification trigger in convex/teamInvitations.ts `inviteMember` mutation
+- [x] T020 [P] [US1] Add join request notification trigger in convex/joinRequests.ts `requestToJoin` mutation
+- [x] T021 [P] [US1] Add join request approved notification trigger in convex/joinRequests.ts `respondToJoinRequest` mutation
+- [x] T022 [P] [US1] Add join request rejected notification trigger in convex/joinRequests.ts `respondToJoinRequest` mutation
+- [x] T023 [P] [US1] Add member joined notification trigger in convex/teamInvitations.ts `respondToInvitation` and convex/joinRequests.ts `respondToJoinRequest` mutations
+- [x] T024 [P] [US1] Add member removed notification trigger in convex/teams.ts `removeMember` mutation
+- [x] T025 [P] [US1] Add submission approved notification trigger in convex/submissions.ts `approve` mutation
+- [x] T026 [P] [US1] Add submission rejected notification trigger in convex/submissions.ts `reject` mutation
+- [x] T027 [P] [US1] Add teammate submitted notification trigger in convex/submissions.ts `upsert` mutation
+- [x] T028 [P] [US1] Add tournament starting in 24h cron job in convex/crons.ts (already implemented)
+- [x] T029 [P] [US1] Add winner announced notification logic in convex/tournaments.ts `determineWinner` mutation
 
 #### Frontend: Notification Display Components
 
-- [X] T030 [US1] Create NotificationItem component in src/components/notifications/notification-item.tsx
-- [X] T031 [US1] Create NotificationList component in src/components/notifications/notification-list.tsx
-- [X] T032 [US1] Create full notifications page in src/app/(protected)/notifications/page.tsx
-- [X] T033 [US1] Add routing and navigation for notifications page
+- [x] T030 [US1] Create NotificationItem component in src/components/notifications/notification-item.tsx
+- [x] T031 [US1] Create NotificationList component in src/components/notifications/notification-list.tsx
+- [x] T032 [US1] Create full notifications page in src/app/(protected)/notifications/page.tsx
+- [x] T033 [US1] Add routing and navigation for notifications page
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can view their notifications on a dedicated page with correct timestamps and sorting.
 
@@ -100,10 +100,10 @@
 
 ### Implementation for User Story 2
 
-- [X] T034 [P] [US2] Update NotificationItem component to mark as read onClick in src/components/notifications/notification-item.tsx
-- [X] T035 [P] [US2] Add "Mark all as read" button to NotificationList in src/components/notifications/notification-list.tsx
-- [X] T036 [US2] Add visual indicators for read/unread state in NotificationItem (bold text, colored dot)
-- [X] T037 [US2] Verify unread count updates in real-time across tabs
+- [x] T034 [P] [US2] Update NotificationItem component to mark as read onClick in src/components/notifications/notification-item.tsx
+- [x] T035 [P] [US2] Add "Mark all as read" button to NotificationList in src/components/notifications/notification-list.tsx
+- [x] T036 [US2] Add visual indicators for read/unread state in NotificationItem (bold text, colored dot)
+- [x] T037 [US2] Verify unread count updates in real-time across tabs
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - users can view notifications and manage read/unread status.
 
@@ -117,12 +117,12 @@
 
 ### Implementation for User Story 3
 
-- [X] T038 [P] [US3] Create NotificationIndicator component in src/components/notifications/notification-indicator.tsx
-- [X] T039 [US3] Create NotificationDropdown component with Radix Popover in src/components/notifications/notification-dropdown.tsx
-- [X] T040 [US3] Integrate NotificationDropdown into app header in src/components/layout.tsx
-- [X] T041 [US3] Add real-time badge update logic using useUnreadCount hook
-- [X] T042 [US3] Add "View all notifications" link in dropdown to full page
-- [X] T043 [US3] Implement conditional query (skip when dropdown closed) for performance
+- [x] T038 [P] [US3] Create NotificationIndicator component in src/components/notifications/notification-indicator.tsx
+- [x] T039 [US3] Create NotificationDropdown component with Radix Popover in src/components/notifications/notification-dropdown.tsx
+- [x] T040 [US3] Integrate NotificationDropdown into app header in src/components/layout.tsx
+- [x] T041 [US3] Add real-time badge update logic using useUnreadCount hook
+- [x] T042 [US3] Add "View all notifications" link in dropdown to full page
+- [x] T043 [US3] Implement conditional query (skip when dropdown closed) for performance
 
 **Checkpoint**: All core user stories (US1, US2, US3) should now be independently functional - users can view, manage, and quickly access notifications from anywhere.
 
@@ -138,18 +138,18 @@
 
 #### Backend: Role-Specific Triggers
 
-- [X] T044 [P] [US4] Add submission flagged for review notification trigger in convex/submissions.ts `flagForReview` mutation
-- [X] T045 [P] [US4] Add tournament manager assigned notification trigger in convex/tournaments.ts `assignManager` mutation
-- [X] T046 [P] [US4] Add role granted notification trigger in convex/role/admin.ts `updateRoles` mutation
-- [X] T047 [P] [US4] Add role revoked notification trigger in convex/role/admin.ts `updateRoles` mutation
-- [X] T048 [US4] Create daily digest cron job in convex/notifications.ts `sendDailyDigest` with aggregation logic
-- [X] T049 [US4] Add pending items count logic for digest notifications
+- [x] T044 [P] [US4] Add submission flagged for review notification trigger in convex/submissions.ts `flagForReview` mutation
+- [x] T045 [P] [US4] Add tournament manager assigned notification trigger in convex/tournaments.ts `assignManager` mutation
+- [x] T046 [P] [US4] Add role granted notification trigger in convex/role/admin.ts `updateRoles` mutation
+- [x] T047 [P] [US4] Add role revoked notification trigger in convex/role/admin.ts `updateRoles` mutation
+- [x] T048 [US4] Create daily digest cron job in convex/notifications.ts `sendDailyDigest` with aggregation logic
+- [x] T049 [US4] Add pending items count logic for digest notifications
 
 #### Frontend: Role-Specific UI
 
-- [X] T050 [P] [US4] Add action buttons to NotificationItem for actionable notifications in src/components/notifications/notification-actions.tsx
-- [X] T051 [US4] Add role-specific filtering in NotificationList (optional enhancement)
-- [X] T052 [US4] Verify role-specific notifications only visible to authorized users (verified: backend authorization in queries)
+- [x] T050 [P] [US4] Add action buttons to NotificationItem for actionable notifications in src/components/notifications/notification-actions.tsx
+- [x] T051 [US4] Add role-specific filtering in NotificationList (optional enhancement)
+- [x] T052 [US4] Verify role-specific notifications only visible to authorized users (verified: backend authorization in queries)
 
 **Checkpoint**: All user stories (US1-US4) should now be independently functional - complete notification system with role-based features.
 
@@ -159,11 +159,11 @@
 
 **Purpose**: Automated notifications for tournament lifecycle events
 
-- [X] T053 [P] Implement `checkTournamentStarted` cron job in convex/notifications.ts
-- [X] T054 [P] Implement `checkTournamentEnding24h` cron job in convex/notifications.ts
-- [X] T055 [P] Implement `checkTournamentEnded` cron job in convex/notifications.ts
-- [X] T056 Verify all cron jobs scheduled correctly in Convex Dashboard
-- [X] T057 Test tournament notifications fire at correct times (use manual "Run Now" in dashboard)
+- [x] T053 [P] Implement `checkTournamentStarted` cron job in convex/notifications.ts
+- [x] T054 [P] Implement `checkTournamentEnding24h` cron job in convex/notifications.ts
+- [x] T055 [P] Implement `checkTournamentEnded` cron job in convex/notifications.ts
+- [x] T056 Verify all cron jobs scheduled correctly in Convex Dashboard
+- [x] T057 Test tournament notifications fire at correct times (use manual "Run Now" in dashboard)
 
 ---
 
@@ -171,19 +171,19 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [X] T058 [P] Add NotificationActions component for Accept/Reject buttons in src/components/notifications/notification-actions.tsx
-- [X] T059 [P] Implement graceful handling of deleted entities in notification display
-- [X] T060 [P] Add relative time formatting (formatDistanceToNow) to notifications
-- [X] T061 Add loading states and skeleton UI to all notification components
-- [X] T062 Add error boundaries for notification components
-- [X] T063 [P] Run Biome linting and formatting on all modified files (bun run lint:fix, bun run format:fix)
-- [X] T064 [P] Verify 90-day retention cleanup cron runs correctly
-- [X] T065 [P] Add missing team deletion trigger if deleteTeam mutation exists in convex/teams.ts
-- [X] T066 [P] Add missing captain transfer trigger if transferCaptain mutation exists in convex/teams.ts
-- [X] T067 Test notification system end-to-end per quickstart.md guide
-- [X] T068 Verify real-time updates work across multiple browser tabs
-- [X] T069 Performance test: Load 100 notifications and verify <1 second load time
-- [X] T070 Verify notification delivery latency <3 seconds for all event types
+- [x] T058 [P] Add NotificationActions component for Accept/Reject buttons in src/components/notifications/notification-actions.tsx
+- [x] T059 [P] Implement graceful handling of deleted entities in notification display
+- [x] T060 [P] Add relative time formatting (formatDistanceToNow) to notifications
+- [x] T061 Add loading states and skeleton UI to all notification components
+- [x] T062 Add error boundaries for notification components
+- [x] T063 [P] Run Biome linting and formatting on all modified files (bun run lint:fix, bun run format:fix)
+- [x] T064 [P] Verify 90-day retention cleanup cron runs correctly
+- [x] T065 [P] Add missing team deletion trigger if deleteTeam mutation exists in convex/teams.ts
+- [x] T066 [P] Add missing captain transfer trigger if transferCaptain mutation exists in convex/teams.ts
+- [x] T067 Test notification system end-to-end per quickstart.md guide
+- [x] T068 Verify real-time updates work across multiple browser tabs
+- [x] T069 Performance test: Load 100 notifications and verify <1 second load time
+- [x] T070 Verify notification delivery latency <3 seconds for all event types
 
 ---
 
@@ -215,33 +215,41 @@
 ### Parallel Opportunities
 
 **Phase 1 (Setup):**
+
 - T002 and T003 can run in parallel with T001 (different concerns)
 
 **Phase 2 (Foundational):**
+
 - All queries (T006-T009) can run in parallel
 - All mutations (T010-T013) can run in parallel
 - Hooks (T016-T017) can run in parallel
 - T014, T015, T018 are independent and can run in parallel with above
 
 **Phase 3 (User Story 1):**
+
 - All event triggers (T019-T029) can run in parallel (different files/mutations)
 - Frontend components must be sequential (T030 → T031 → T032 → T033)
 
 **Phase 4 (User Story 2):**
+
 - T034 and T035 can run in parallel (separate concerns within components)
 
 **Phase 5 (User Story 3):**
+
 - T038 and T039 can run in parallel initially (separate components)
 - T040-T043 are sequential (integration and optimization)
 
 **Phase 6 (User Story 4):**
+
 - All backend triggers (T044-T049) can run in parallel
 - All frontend tasks (T050-T052) can run in parallel
 
 **Phase 7 (Scheduled Jobs):**
+
 - T053-T055 can run in parallel (independent cron jobs)
 
 **Phase 8 (Polish):**
+
 - T058, T059, T060, T063, T064, T065, T066 can all run in parallel (independent improvements)
 
 ---
@@ -271,6 +279,7 @@ Task: "Add tournament starting notification cron job in convex/notifications.ts"
 5. Deploy/demo if ready
 
 **MVP Scope**: ~1,200 LOC
+
 - Backend: 8 Convex functions + 9 event triggers
 - Frontend: 3 components (NotificationItem, NotificationList, NotificationPage)
 - Result: Users can view all 9 core notification types on dedicated page
@@ -315,6 +324,7 @@ With multiple developers:
 ## Critical Path Analysis
 
 **Longest Sequential Path** (minimum time to MVP):
+
 1. T001 (schema notifications) → T005 (create mutation) → T019 (first trigger) → T030 (NotificationItem) → T031 (NotificationList) → T032 (Page) → T033 (routing)
 
 **Estimated**: 7-9 tasks on critical path, ~30-40 other tasks can be parallelized
@@ -362,6 +372,7 @@ With multiple developers:
 ## Suggested MVP Scope
 
 **Minimum Viable Product**: User Story 1 Only
+
 - **Phases**: Setup + Foundational + User Story 1
 - **Tasks**: T001-T033 (33 tasks)
 - **Outcome**: Users can view all core notifications on dedicated page
@@ -369,6 +380,7 @@ With multiple developers:
 - **Value**: Immediate visibility into system events
 
 **Enhanced MVP**: Add User Story 2
+
 - **Phases**: Setup + Foundational + US1 + US2
 - **Tasks**: T001-T037 (37 tasks)
 - **Outcome**: Users can view and manage notification read status
@@ -376,6 +388,7 @@ With multiple developers:
 - **Value**: Notification management and reduced noise
 
 **Recommended First Release**: US1 + US2 + US3
+
 - **Phases**: Setup + Foundational + US1 + US2 + US3
 - **Tasks**: T001-T043 (43 tasks)
 - **Outcome**: Full notification system with quick access dropdown

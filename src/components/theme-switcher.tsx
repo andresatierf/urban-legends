@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -46,7 +47,7 @@ export function ThemeSwitcher() {
               </div>
 
               {theme === key && (
-                <Check className="ml-auto h-4 w-4 text-primary" />
+                <Check className="text-primary ml-auto h-4 w-4" />
               )}
             </DropdownMenuItem>
           );

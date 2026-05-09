@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Calendar, ChevronRight, Users } from "lucide-react";
+
 import { useFormattedDate } from "@/hooks/useFormattedDate";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "../ui/card";
@@ -19,8 +21,8 @@ export function TournamentCard({ tournament, teamCount }: Props) {
 
   return (
     <Card>
-      <CardContent className="flex h-full xs:flex-row flex-col items-center justify-between gap-4">
-        <div className="flex h-full flex-1 flex-col justify-between xs:self-auto self-start">
+      <CardContent className="xs:flex-row flex h-full flex-col items-center justify-between gap-4">
+        <div className="xs:self-auto flex h-full flex-1 flex-col justify-between self-start">
           <div className="flex flex-wrap items-center gap-2">
             <CardTitle>{tournament.name}</CardTitle>
             {getStatusBadge(tournament)}
@@ -37,7 +39,7 @@ export function TournamentCard({ tournament, teamCount }: Props) {
             </div>
           </CardDescription>
         </div>
-        <div className="flex gap-2 xs:self-auto self-end">
+        <div className="xs:self-auto flex gap-2 self-end">
           <Button asChild>
             <Link
               to="/tournaments/$tournamentId"
@@ -56,8 +58,8 @@ export function TournamentCard({ tournament, teamCount }: Props) {
 export function TournamentCardSkeleton() {
   return (
     <Card>
-      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
-        <div className="flex-1 xs:self-auto self-start">
+      <CardContent className="xs:flex-row flex flex-col items-center justify-between gap-4">
+        <div className="xs:self-auto flex-1 self-start">
           <div className="flex items-center gap-2">
             <CardTitle>
               <Skeleton className="h-6 w-64" />
@@ -72,7 +74,7 @@ export function TournamentCardSkeleton() {
             </div>
           </CardDescription>
         </div>
-        <div className="flex gap-2 xs:self-auto self-end">
+        <div className="xs:self-auto flex gap-2 self-end">
           <Skeleton className="h-9 w-36" />
         </div>
       </CardContent>

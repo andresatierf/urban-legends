@@ -53,19 +53,16 @@ When data is being fetched from Convex, users see either a blank screen or a fla
 These components have custom loading states that should be extracted into reusable skeleton components for consistency:
 
 1. **`src/components/teams/team-statistics-card.tsx:40-54`**
-
    - Type: Grid of 6 stat cards (2 columns on md, 3 on lg)
    - Implementation: Inline Card skeleton with animate-pulse
    - Should use: StatCardsGridSkeleton (new component)
 
 2. **`src/components/tournaments/tournament-leaderboard.tsx:71-105`**
-
    - Type: Table with 4 columns (Rank, Team Name, Points, Members), 5 rows
    - Implementation: Inline table skeleton with custom styling
    - Should use: TableSkeleton (with leaderboard-specific styling)
 
 3. **`src/components/tournaments/leaderboard-podium.tsx:53-68`**
-
    - Type: Grid of 3 podium cards with icon, title, and score placeholders
    - Implementation: Inline Card skeleton grid
    - Should use: PodiumSkeleton (new component)
@@ -80,50 +77,42 @@ These components have custom loading states that should be extracted into reusab
 **9 Components/Pages Without Loading States:**
 
 1. **`src/components/tournaments/tournament-details-card.tsx:68`**
-
    - Component: `TournamentDetailsCard`
    - Type: DetailsCard with title, description, and key-value details
    - Loading condition: `tournament === undefined`
 
 2. **`src/app/(all)/users/page.tsx:22`**
-
    - Component: Users list page
    - Type: Table with Name, Email, Roles columns
    - Loading condition: `!users`
 
 3. **`src/components/users/user-details-card.tsx:10`**
-
    - Component: `UserDetailsCard`
    - Type: DetailsCard with user information
    - Loading condition: `!user`
    - Note: User is passed as prop, may need parent handling
 
 4. **`src/app/(all)/users/[userId]/page.tsx:23`**
-
    - Component: User detail page
    - Type: Page with UserDetailsCard and teams section
    - Loading condition: `!user`
 
 5. **`src/components/teams/team-details-card.tsx:122`**
-
    - Component: `TeamDetailsCard`
    - Type: DetailsCard with team information and members
    - Loading condition: `team === undefined`
 
 6. **`src/app/(all)/submissions/[submissionId]/page.tsx:24`**
-
    - Component: Submission detail page
    - Type: Page with submission card and details
    - Loading condition: `!submission`
 
 7. **`src/app/(all)/tournaments/page.tsx:36`**
-
    - Component: Tournaments list page
    - Type: Grid layout with TournamentCard components (2 columns on XL screens)
    - Loading condition: `!userTournaments`
 
 8. **`src/app/(all)/tournaments/[tournamentId]/page.tsx:75`**
-
    - Component: Tournament detail page
    - Type: Page with TournamentDetailsCard, tabs, and team cards
    - Loading condition: `!tournament`
@@ -150,7 +139,6 @@ See lines referenced above for exact locations.
 ### Functional Requirements
 
 1. **Create Reusable Skeleton Components**
-
    - DetailsCardSkeleton for card-based loading states
    - TableSkeleton for table-based loading states
    - CardGridSkeleton for grid-based loading states
@@ -160,20 +148,17 @@ See lines referenced above for exact locations.
    - WinnerAnnouncementSkeleton for winner card
 
 2. **Extract Existing Inline Skeletons**
-
    - Extract team-statistics-card inline skeleton to StatCardsGridSkeleton
    - Refactor tournament-leaderboard to use TableSkeleton
    - Extract leaderboard-podium inline skeleton to PodiumSkeleton
    - Extract winner-announcement inline skeleton to WinnerAnnouncementSkeleton
 
 3. **Replace All TODO Comments**
-
    - Replace `return null` with appropriate skeleton components
    - Maintain proper component structure and sizing
    - Ensure skeletons match the layout of loaded content
 
 4. **Consistent Animation**
-
    - Use existing `animate-pulse` from Skeleton component
    - Ensure consistent timing across all skeletons
 
@@ -937,19 +922,16 @@ if (winner === undefined) {
 ### Design Principles
 
 1. **Match Content Layout**
-
    - Skeletons should mirror the structure of loaded content
    - Use similar spacing, sizing, and card layouts
    - Maintain responsive grid/table layouts
 
 2. **Visual Hierarchy**
-
    - Larger skeletons for titles (h-6 to h-7)
    - Medium skeletons for descriptions (h-4)
    - Smaller skeletons for labels (h-3 to h-4)
 
 3. **Animation Timing**
-
    - Use existing `animate-pulse` from Tailwind
    - Consider adding optional delay (200ms) before showing skeleton to avoid flash on fast loads
 
@@ -1087,34 +1069,29 @@ function useDelayedLoading(isLoading: boolean, delay = 200) {
 ## Success Metrics
 
 1. **Completion**
-
    - All 9 TODO comments replaced with skeleton implementations
    - All 4 inline skeletons extracted to reusable components
    - Zero `return null` for loading states in production code
    - Zero duplicate inline skeleton implementations
 
 2. **Code Quality**
-
    - 7 reusable skeleton components created
    - Consistent patterns across all loading states
    - Reduced code duplication (removed ~100 lines of inline skeletons)
    - Improved maintainability
 
 3. **Visual Quality**
-
    - Skeleton layouts match actual content structure
    - No visible layout shifts during load
    - Consistent animation across all components
    - Existing loading states maintain their visual appearance
 
 4. **Accessibility**
-
    - All skeletons have proper ARIA attributes
    - Screen readers announce loading states
    - Keyboard navigation works during loading
 
 5. **Performance**
-
    - Skeletons render in <50ms
    - No performance degradation vs. inline implementations
    - Bundle size increase <8KB (minified + gzipped) for all 7 components

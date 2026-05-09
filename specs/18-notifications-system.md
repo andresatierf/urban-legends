@@ -1245,29 +1245,24 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 Update the following files to call notification helpers:
 
 1. **`convex/teamInvitations.ts`**
-
    - `inviteMember`: Notify invited user
    - `respondToInvitation`: Notify captain if accepted
 
 2. **`convex/joinRequests.ts`**
-
    - `requestToJoin`: Notify team captain(s)
    - `respondToJoinRequest`: Notify requester (approved/rejected)
 
 3. **`convex/submissions.ts`**
-
    - `approve`: Notify submitter
    - `reject`: Notify submitter with reason
    - Group creation: Notify team members
 
 4. **`convex/teams.ts`**
-
    - `removeMember`: Notify removed user
    - `transferCaptaincy`: Notify new and old captain
    - `deleteTeam`: Notify all members
 
 5. **`convex/tournaments.ts`**
-
    - Tournament state changes: Notify participants
    - Winner announcement: Notify winning team
 
@@ -1370,26 +1365,21 @@ For high-volume events like "teammate submitted", consider grouping:
 ## Edge Cases
 
 1. **User has notifications disabled globally**
-
    - Don't create notifications
    - Show message in settings explaining no notifications will be received
 
 2. **Notification refers to deleted entity**
-
    - Handle gracefully (e.g., team deleted, show "Team no longer exists")
    - Still allow reading the notification
 
 3. **Simultaneous mark as read from multiple devices**
-
    - Convex handles this automatically with optimistic updates
 
 4. **Notification spam (e.g., 100 teammates submit)**
-
    - Implement grouping logic for high-volume events
    - Daily digest option for less urgent notifications
 
 5. **User clicks notification while entity is being deleted**
-
    - Show error page with friendly message
    - Option to go back to notifications
 
@@ -1410,35 +1400,29 @@ For high-volume events like "teammate submitted", consider grouping:
 ### Migration Steps
 
 1. **Schema Update**
-
    - Add `notifications` and `notificationPreferences` tables
    - Deploy schema to Convex
 
 2. **Backend Implementation**
-
    - Implement notification queries and mutations
    - Create helper functions for notification creation
    - Add cron job for cleanup
 
 3. **Integration**
-
    - Update existing mutations to call notification helpers
    - Test each trigger point
 
 4. **Frontend Implementation**
-
    - Build NotificationBell, NotificationPanel, NotificationItem components
    - Create notifications page and settings page
    - Integrate bell into header/sidebar
 
 5. **Testing**
-
    - Test all notification triggers
    - Verify real-time updates
    - Test preferences
 
 6. **Deployment**
-
    - Deploy backend changes
    - Deploy frontend changes
    - Monitor for errors
@@ -1499,39 +1483,30 @@ For high-volume events like "teammate submitted", consider grouping:
 ## Open Questions
 
 1. **Should notifications be deleted after being read?**
-
    - **Recommendation:** No - keep for 90 days for audit trail and user reference
 
 2. **What's the maximum unread count to display in badge?**
-
    - **Recommendation:** Show "99+" for counts over 99
 
 3. **Should we implement browser push notifications in MVP?**
-
    - **Recommendation:** No - start with in-app, add push in Phase 3
 
 4. **How to handle notification grouping/batching?**
-
    - **Recommendation:** Start simple (individual notifications), add grouping in Phase 4
 
 5. **Should email notifications be included in MVP?**
-
    - **Recommendation:** Optional - start with in-app only, add email in Phase 2 if needed
 
 6. **What about notification sounds?**
-
    - **Recommendation:** Future enhancement - requires user preference and browser support
 
 7. **Should we track notification click/read analytics?**
-
    - **Recommendation:** Track read status only for MVP, add detailed analytics in Phase 5
 
 8. **How to notify users when they're offline?**
-
    - **Recommendation:** Notifications stored in DB, appear when they return (Convex handles this)
 
 9. **Should notifications appear for actions the user themselves triggered?**
-
    - **Recommendation:** No - don't notify users of their own actions (e.g., don't notify captain when they approve a join request)
 
 10. **What about notification snooze/reminder functionality?**

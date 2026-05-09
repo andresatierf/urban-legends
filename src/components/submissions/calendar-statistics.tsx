@@ -1,8 +1,10 @@
 "use client";
 
 import { useQuery } from "convex/react";
+
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -109,17 +111,17 @@ export function CalendarStatistics({
       <CardContent className="space-y-6">
         <div className="mb-2 flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Completion Progress</span>
-          <span className="font-semibold text-muted-foreground">
+          <span className="text-muted-foreground font-semibold">
             {statistics.daysWithSubmissions} / {statistics.totalDays} days
           </span>
         </div>
         <Progress value={statistics.completionRate} className="h-3" />
 
-        <div className="grid grid-cols-1 xs:grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="xs:grid-cols-2 grid grid-cols-1 gap-4 md:grid-cols-4">
           {stats.map((stat) => (
             <Card key={stat.label} className="bg-background/20 text-center">
               <CardContent>
-                <div className={cn("mb-1 font-bold text-2xl", stat.color)}>
+                <div className={cn("mb-1 text-2xl font-bold", stat.color)}>
                   {stat.value}
                 </div>
                 <div className="text-muted-foreground text-xs">
@@ -131,7 +133,7 @@ export function CalendarStatistics({
         </div>
 
         <div className="space-y-3">
-          <h4 className="mb-3 font-medium text-muted-foreground text-sm">
+          <h4 className="text-muted-foreground mb-3 text-sm font-medium">
             Submission Status
           </h4>
           <div className="flex gap-6">
@@ -139,8 +141,8 @@ export function CalendarStatistics({
               <div key={stat.label} className="flex items-center gap-2">
                 <div
                   className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-full font-semibold text-sm",
-                    "bg-gray-100 dark:bg-background/20",
+                    "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold",
+                    "dark:bg-background/20 bg-gray-100",
                     stat.color,
                   )}
                 >
@@ -161,7 +163,7 @@ export function CalendarStatistics({
                 key={m.message}
                 className={cn("rounded-md p-3 text-center", m.bgColor)}
               >
-                <p className={cn("font-semibold text-sm", m.textColor)}>
+                <p className={cn("text-sm font-semibold", m.textColor)}>
                   {m.message}
                 </p>
               </div>

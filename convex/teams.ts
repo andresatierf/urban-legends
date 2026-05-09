@@ -1,7 +1,8 @@
 import { v } from "convex/values";
+
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { mutation, type QueryCtx, query } from "./_generated/server";
+import { type QueryCtx, mutation, query } from "./_generated/server";
 import {
   canDeleteTeam,
   canEditTeam,

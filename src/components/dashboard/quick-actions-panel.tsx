@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { FileText, Plus, Trophy, Users } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -20,7 +21,7 @@ export function QuickActionsPanel({ hasActiveTeams }: QuickActionsPanelProps) {
           >
             <Link to="/tournaments">
               <Trophy className="h-5 w-5" />
-              <span className="text-wrap text-center text-xs">
+              <span className="text-center text-xs text-wrap">
                 Browse Tournaments
               </span>
             </Link>
@@ -32,7 +33,7 @@ export function QuickActionsPanel({ hasActiveTeams }: QuickActionsPanelProps) {
           >
             <Link to="/submissions">
               <FileText className="h-5 w-5" />
-              <span className="text-wrap text-center text-xs">
+              <span className="text-center text-xs text-wrap">
                 My Submissions
               </span>
             </Link>
@@ -44,7 +45,7 @@ export function QuickActionsPanel({ hasActiveTeams }: QuickActionsPanelProps) {
           >
             <Link to="/teams">
               <Users className="h-5 w-5" />
-              <span className="text-wrap text-center text-xs">My Teams</span>
+              <span className="text-center text-xs text-wrap">My Teams</span>
             </Link>
           </Button>
           <Button
@@ -56,14 +57,14 @@ export function QuickActionsPanel({ hasActiveTeams }: QuickActionsPanelProps) {
             {hasActiveTeams ? (
               <Link to={"/submissions/new" as never}>
                 <Plus className="h-5 w-5" />
-                <span className="text-wrap text-center text-xs">
+                <span className="text-center text-xs text-wrap">
                   New Submission
                 </span>
               </Link>
             ) : (
               <>
                 <Plus className="h-5 w-5" />
-                <span className="text-wrap text-center text-xs">
+                <span className="text-center text-xs text-wrap">
                   New Submission
                 </span>
               </>

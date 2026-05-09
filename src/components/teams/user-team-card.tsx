@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Trophy, Users } from "lucide-react";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -23,14 +24,14 @@ export function UserTeamCard({
 
   return (
     <Card>
-      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
+      <CardContent className="xs:flex-row flex flex-col items-center justify-between gap-4">
         <div className="flex flex-1 flex-col justify-between self-start">
           <div className="flex items-center gap-2">
             <CardTitle>{team.name}</CardTitle>
             {userRole === "captain" && <Badge variant="outline">Captain</Badge>}
           </div>
           <CardDescription className="space-y-1">
-            <div className="mt-2 flex items-center gap-2 text-muted-foreground text-sm">
+            <div className="text-muted-foreground mt-2 flex items-center gap-2 text-sm">
               <Trophy className="h-4 w-4" />
               <Link
                 to="/tournaments/$tournamentId"
@@ -48,7 +49,7 @@ export function UserTeamCard({
             </div>
           </CardDescription>
         </div>
-        <div className="flex xs:flex-col flex-wrap gap-2">
+        <div className="xs:flex-col flex flex-wrap gap-2">
           <Button variant="outline" asChild>
             <Link to="/teams/$teamId" params={{ teamId: team._id }}>
               View Team
@@ -63,7 +64,7 @@ export function UserTeamCard({
 export function UserTeamCardSkeleton() {
   return (
     <Card>
-      <CardContent className="flex xs:flex-row flex-col items-center justify-between gap-4">
+      <CardContent className="xs:flex-row flex flex-col items-center justify-between gap-4">
         <div className="flex flex-1 flex-col justify-between self-start">
           <div className="flex items-center gap-2">
             <CardTitle>
@@ -79,7 +80,7 @@ export function UserTeamCardSkeleton() {
             </div>
           </CardDescription>
         </div>
-        <div className="flex xs:flex-col flex-wrap gap-2">
+        <div className="xs:flex-col flex flex-wrap gap-2">
           <Skeleton className="h-9 w-36" />
           <Skeleton className="h-9 w-36" />
         </div>

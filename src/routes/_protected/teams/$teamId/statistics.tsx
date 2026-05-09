@@ -1,9 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { ArrowLeft } from "lucide-react";
+
 import { SectionHeader } from "@/components/section-header";
 import { TeamStatisticsCard } from "@/components/teams/team-statistics-card";
 import { Button } from "@/components/ui/button";
+
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
 

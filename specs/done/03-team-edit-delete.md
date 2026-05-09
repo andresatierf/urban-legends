@@ -52,7 +52,6 @@ The UI has "Edit" and "Delete" buttons in `TeamDetailsCard` component but they h
 ### Functional Requirements
 
 1. **Edit Team**
-
    - Team captains and admins can edit team details
    - Editable fields:
      - Team name (unique within tournament)
@@ -62,7 +61,6 @@ The UI has "Edit" and "Delete" buttons in `TeamDetailsCard` component but they h
    - Edit history logged (optional for MVP)
 
 2. **Delete Team**
-
    - Team captains and admins can delete teams
    - Soft delete vs hard delete options:
      - **Soft delete (recommended):** Mark team as deleted, hide from lists
@@ -72,7 +70,6 @@ The UI has "Edit" and "Delete" buttons in `TeamDetailsCard` component but they h
    - All team members removed from team
 
 3. **Permissions**
-
    - Team captain can edit/delete their team
    - Admins can edit/delete any team
    - Regular members cannot edit/delete
@@ -547,28 +544,23 @@ export function useCanEditTeam(teamId: Id<"teams">) {
 ## Edge Cases
 
 1. **Two captains try to edit simultaneously**
-
    - Last write wins (Convex handles atomicity)
    - Consider optimistic locking with version field (advanced)
 
 2. **User deletes team while viewing team page**
-
    - Query returns "Team not found"
    - Show error page with "This team has been deleted"
    - Link to browse other teams
 
 3. **Team deleted while user submitting for that team**
-
    - Submission creation fails with "Team not found"
    - User sees error message
 
 4. **Rename team to existing name**
-
    - Validation fails
    - Error: "Team name 'Dragons' already exists in this tournament"
 
 5. **Non-captain tries to edit via API**
-
    - Mutation rejects with permission error
    - 401 Unauthorized
 
@@ -608,18 +600,15 @@ export function useCanEditTeam(teamId: Id<"teams">) {
 ## Security Considerations
 
 1. **Permission Checks**
-
    - All mutations verify user is captain or admin
    - UI also hides buttons for non-authorized users
 
 2. **Name Validation**
-
    - Prevent SQL injection (not applicable with Convex)
    - Sanitize special characters
    - Length limits (max 50 characters)
 
 3. **Cascade Behavior**
-
    - Soft delete prevents data loss
    - Force delete requires admin role
    - Audit trail of who deleted what
@@ -631,26 +620,22 @@ export function useCanEditTeam(teamId: Id<"teams">) {
 ## Migration Plan
 
 1. **Schema Update**
-
    - Add `deletedAt` and `deletedBy` fields to teams table
    - Deploy schema changes (non-breaking)
 
 2. **Backend Implementation**
-
    - Implement `teams.update` mutation
    - Implement `teams.deleteTeam` mutation
    - Update existing queries to filter deleted teams
    - Test in Convex dashboard
 
 3. **Frontend Implementation**
-
    - Create EditTeamDialog component
    - Create DeleteTeamDialog component
    - Update TeamDetailsCard with working handlers
    - Test locally
 
 4. **Deployment**
-
    - Deploy backend changes first
    - Deploy frontend changes
    - Test in production with test team

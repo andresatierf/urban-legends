@@ -49,7 +49,6 @@ Currently, reviewers have no way to execute their role-specific functions, forci
 ### Functional Requirements
 
 1. **Review Queue Dashboard**
-
    - View all pending submissions across all tournaments
    - Prioritized queue (oldest first, or by tournament urgency)
    - Quick stats: pending count, reviewed today, approval rate
@@ -57,7 +56,6 @@ Currently, reviewers have no way to execute their role-specific functions, forci
    - Search submissions by content or submitter
 
 2. **Submission Review Interface**
-
    - View submission details: date, description, activity
    - View submission evidence (images, links, notes)
    - See submitter and team information
@@ -67,14 +65,12 @@ Currently, reviewers have no way to execute their role-specific functions, forci
    - Optional notes for approval (positive feedback)
 
 3. **Bulk Review Actions**
-
    - Select multiple submissions
    - Bulk approve (with confirmation)
    - Bulk reject (must provide reason)
    - Filter and bulk actions combined
 
 4. **Review History & Statistics**
-
    - Personal review statistics: total reviewed, approval rate, avg time per review
    - Recent review activity feed
    - Reviews per day/week/month chart
@@ -82,7 +78,6 @@ Currently, reviewers have no way to execute their role-specific functions, forci
    - Export review history (CSV)
 
 5. **Dispute Resolution**
-
    - Flag submissions for dispute (by teams or other reviewers)
    - View flagged submissions queue
    - Add resolution notes
@@ -115,7 +110,7 @@ submissions: defineTable({
   reviewedBy: v.optional(v.id("users")), // Who approved/rejected
   reviewedAt: v.optional(v.string()), // When reviewed
   reviewNotes: v.optional(v.string()), // Reviewer notes (for rejections or positive feedback)
-})
+});
 ```
 
 ### New Tables
@@ -201,7 +196,7 @@ export const approve = mutation({
       const assignment = await ctx.db
         .query("tournamentManagers")
         .withIndex("by_tournament_and_manager", (q) =>
-          q.eq("tournamentId", team.tournamentId).eq("managerId", user._id)
+          q.eq("tournamentId", team.tournamentId).eq("managerId", user._id),
         )
         .first();
 
@@ -300,7 +295,7 @@ export const reject = mutation({
       const assignment = await ctx.db
         .query("tournamentManagers")
         .withIndex("by_tournament_and_manager", (q) =>
-          q.eq("tournamentId", team.tournamentId).eq("managerId", user._id)
+          q.eq("tournamentId", team.tournamentId).eq("managerId", user._id),
         )
         .first();
 
@@ -357,7 +352,9 @@ export const create = mutation({
     // Check if already disputed
     const existing = await ctx.db
       .query("submissionDisputes")
-      .withIndex("by_submission", (q) => q.eq("submissionId", args.submissionId))
+      .withIndex("by_submission", (q) =>
+        q.eq("submissionId", args.submissionId),
+      )
       .filter((q) => q.neq(q.field("status"), "resolved"))
       .first();
 
@@ -496,7 +493,7 @@ export const getReviewQueue = query({
           submissions.map(async (sub) => {
             const team = await ctx.db.get(sub.teamId);
             return team?.tournamentId === args.tournamentId ? sub : null;
-          })
+          }),
         ).then((results) => results.filter((s) => s !== null))
       : submissions;
 
@@ -506,7 +503,9 @@ export const getReviewQueue = query({
         const team = await ctx.db.get(sub.teamId);
         const tournament = team ? await ctx.db.get(team.tournamentId) : null;
         const submitter = await ctx.db.get(sub.userId);
-        const reviewer = sub.reviewedBy ? await ctx.db.get(sub.reviewedBy) : null;
+        const reviewer = sub.reviewedBy
+          ? await ctx.db.get(sub.reviewedBy)
+          : null;
 
         return {
           ...sub,
@@ -536,7 +535,7 @@ export const getReviewQueue = query({
               }
             : null,
         };
-      })
+      }),
     );
 
     return enriched;
@@ -578,7 +577,8 @@ export const getStatistics = query({
 
     // Calculate stats
     const totalReviewed = reviewed.length;
-    const approvalRate = totalReviewed > 0 ? approved.length / totalReviewed : 0;
+    const approvalRate =
+      totalReviewed > 0 ? approved.length / totalReviewed : 0;
 
     // Reviews by date (for charting)
     const reviewsByDate: Record<string, number> = {};
@@ -616,7 +616,7 @@ export const getStatistics = query({
             teamName: team?.name,
             submitterName: submitter?.name,
           };
-        })
+        }),
       ),
     };
   },
@@ -633,8 +633,8 @@ export const list = query({
         v.literal("open"),
         v.literal("investigating"),
         v.literal("resolved"),
-        v.literal("escalated")
-      )
+        v.literal("escalated"),
+      ),
     ),
   },
   handler: async (ctx, args) => {
@@ -676,12 +676,14 @@ export const list = query({
               }
             : null,
           team: team ? { id: team._id, name: team.name } : null,
-          flaggedBy: flaggedBy ? { id: flaggedBy._id, name: flaggedBy.name } : null,
+          flaggedBy: flaggedBy
+            ? { id: flaggedBy._id, name: flaggedBy.name }
+            : null,
           resolvedBy: resolvedBy
             ? { id: resolvedBy._id, name: resolvedBy.name }
             : null,
         };
-      })
+      }),
     );
 
     return enriched;
@@ -782,8 +784,14 @@ interface ReviewActivityChartProps {
 ```typescript
 interface DisputeQueueListProps {
   disputes: Array<EnrichedDispute>;
-  onResolve: (disputeId: Id<"submissionDisputes">, resolution: string) => Promise<void>;
-  onEscalate: (disputeId: Id<"submissionDisputes">, notes: string) => Promise<void>;
+  onResolve: (
+    disputeId: Id<"submissionDisputes">,
+    resolution: string,
+  ) => Promise<void>;
+  onEscalate: (
+    disputeId: Id<"submissionDisputes">,
+    notes: string,
+  ) => Promise<void>;
 }
 
 // Features:

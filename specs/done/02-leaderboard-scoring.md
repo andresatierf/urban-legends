@@ -44,7 +44,6 @@ The UI displays hardcoded "0 pts" or "- pts" for teams. Submissions are tracked 
 ### Functional Requirements
 
 1. **Point Tracking**
-
    - Each tournament has it's own scoring system
      - When creating a tournament, admin sets submission value
      - There will be different tier submissions (eg. base = 2 points, advanced = 3 points)
@@ -56,7 +55,6 @@ The UI displays hardcoded "0 pts" or "- pts" for teams. Submissions are tracked 
    - Historical point tracking (point changes over time)
 
 2. **Leaderboard Display**
-
    - Show all teams in tournament ranked by points
    - Display: Rank, Team Name, Points, Members, Last Activity
    - Real-time updates as submissions are approved
@@ -64,7 +62,6 @@ The UI displays hardcoded "0 pts" or "- pts" for teams. Submissions are tracked 
    - Filter by date range (for progress tracking)
 
 3. **Team Rankings**
-
    - #1, #2, #3 with visual badges/medals
    - Tie-breaking logic (same points):
      - More recent activity wins
@@ -72,7 +69,6 @@ The UI displays hardcoded "0 pts" or "- pts" for teams. Submissions are tracked 
    - Ranking updates within 1 second of point change
 
 4. **Winner Determination**
-
    - After tournament end date: winner announced
    - Top 3 teams highlighted
    - Winner badge/trophy on team page
@@ -459,13 +455,11 @@ interface WinnerAnnouncementProps {
 ### Visual Hierarchy
 
 1. **Podium Positions (Top 3)**
-
    - Gold: Large, prominent, trophy icon
    - Silver: Medium, star icon
    - Bronze: Smaller, medal icon
 
 2. **Leaderboard Colors**
-
    - Winner: Gold background (#FFD700)
    - Top 3: Gradient backgrounds
    - Current user's team: Highlighted row
@@ -512,15 +506,12 @@ interface WinnerAnnouncementProps {
 ### Edge Cases
 
 1. **Submission re-approved after rejection**
-
    - Point is added back
 
 2. **Submission deleted after approval**
-
    - Point is subtracted
 
 3. **Multiple submissions same day**
-
    - Each counts (1 point each)
 
 4. **Team disbanded mid-tournament**
@@ -595,24 +586,20 @@ async function migrateTeamPoints(ctx) {
 ### Deployment Steps
 
 1. **Schema Update**
-
    - Add `points` and `lastActivityAt` to teams
    - Add `winnerId` and `completedAt` to tournaments
    - Deploy schema changes
 
 2. **Run Migration**
-
    - Execute data migration to populate points
    - Verify all teams have correct points
 
 3. **Backend Updates**
-
    - Deploy modified mutations (approve, reject, remove)
    - Deploy new queries (getLeaderboard, getWinner, getStatistics)
    - Test via Convex dashboard
 
 4. **Frontend Updates**
-
    - Deploy leaderboard component
    - Deploy modified team/tournament cards
    - Deploy new pages
@@ -634,16 +621,13 @@ async function migrateTeamPoints(ctx) {
 ## Open Questions
 
 1. **Should points be adjustable by admins?**
-
    - Pros: Can award bonus points for special activities
    - Cons: Could be seen as unfair
 
 2. **Display points for ended tournaments?**
-
    - Yes - show historical leaderboards
 
 3. **Allow team name on leaderboard even after team deleted?**
-
    - Yes - maintain historical record
 
 4. **Show individual contributor rankings?**

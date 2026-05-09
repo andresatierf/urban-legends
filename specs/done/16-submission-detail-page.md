@@ -22,6 +22,7 @@ This feature addresses the need for transparency in the submission approval work
 ### What Exists
 
 **Submission Schema** (`/home/andre/dev/urban-legends/convex/schema.ts`, lines 67-92):
+
 ```typescript
 submissions: defineTable({
   userId: v.id("users"),
@@ -40,10 +41,11 @@ submissions: defineTable({
   managedBy: v.optional(v.id("users")), // Admin who approved/rejected/deleted
   tier: v.union(v.literal("base"), v.literal("advanced")),
   pointsEarned: v.number(), // Calculated when approved
-})
+});
 ```
 
 **Existing Backend Functions** (`/home/andre/dev/urban-legends/convex/submissions.ts`):
+
 - `get` (line 88): Fetches a submission by ID but only returns it if the current user is the owner
 - `getById` (line 194): Fetches submission by ID with basic auth check
 - `approve` (line 311): Admin-only mutation with scoring logic
@@ -51,11 +53,13 @@ submissions: defineTable({
 - `remove` (line 203): Mutation to mark submission as deleted
 
 **Existing UI Components**:
+
 - `SubmissionsDataTable` (`/home/andre/dev/urban-legends/src/components/submissions/submissions-data-table.tsx`): Shows submissions in table format with actions
 - `DetailsCard` (`/home/andre/dev/urban-legends/src/components/details-card.tsx`): Reusable card component for displaying entity details with actions
 - `Badge` component with state variants (approved, pending, rejected, deleted)
 
 **Current Page** (`/home/andre/dev/urban-legends/src/app/(all)/submissions/[submissionId]/page.tsx`):
+
 - Currently only shows edit form via `UpsertSubmissionFormDialog`
 - Uses `api.submissions.get` query which restricts access to submission owner only
 - No comprehensive detail view implemented
@@ -74,11 +78,13 @@ submissions: defineTable({
 ### Evidence
 
 **Permission Patterns**:
+
 - Admin validation: `/home/andre/dev/urban-legends/convex/users.ts`, lines 140-147 (`validateIsAdmin`)
 - Team membership checks: `/home/andre/dev/urban-legends/convex/submissions.ts`, lines 116-126
 - Role-based access: User object includes `roleNames` array with roles like "admin"
 
 **Detail Page Patterns**:
+
 - Team detail page: `/home/andre/dev/urban-legends/src/app/(all)/teams/[teamId]/page.tsx`
   - Uses multiple queries to fetch related data
   - Displays team card with actions based on user role
@@ -88,6 +94,7 @@ submissions: defineTable({
   - Conditional rendering based on user permissions
 
 **Flexible Scoring System** (`/home/andre/dev/urban-legends/convex/submissions.ts`, lines 345-369):
+
 - Points calculated based on tier (base/advanced)
 - Team exercise detection using participation rate threshold
 - Different point values for individual vs team exercises
@@ -162,6 +169,7 @@ submissions: defineTable({
 - Related IDs: `userId`, `teamId`, `tournamentId`, `teammates`
 
 **Future Enhancement**: Consider adding these fields for richer functionality:
+
 - `managedAt: v.optional(v.string())` - Timestamp when submission was approved/rejected
 - `rejectionReason: v.optional(v.string())` - Admin's reason for rejection
 - `_creationTime` - Convex automatically provides this
@@ -175,9 +183,11 @@ submissions: defineTable({
 **Purpose:** Fetch comprehensive submission details with related entities for the detail page
 
 **Parameters:**
+
 - `submissionId: Id<"submissions">` - The submission to retrieve
 
 **Returns:**
+
 ```typescript
 {
   submission: Doc<"submissions">;
@@ -195,6 +205,7 @@ submissions: defineTable({
 ```
 
 **Permission:**
+
 - User must be authenticated
 - User must be either:
   - The submission owner (userId matches)
@@ -220,7 +231,7 @@ export const getDetail = query({
     const membership = await ctx.db
       .query("teamMembers")
       .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", submission.teamId).eq("userId", currentUser._id)
+        q.eq("teamId", submission.teamId).eq("userId", currentUser._id),
       )
       .first();
 
@@ -261,10 +272,10 @@ export const getDetail = query({
           roles,
           roleNames: roles.map(({ name }) => name),
         };
-      })
+      }),
     );
     const validTeammates = teammates.filter(
-      (t): t is NonNullable<typeof t> => t !== null
+      (t): t is NonNullable<typeof t> => t !== null,
     );
 
     // Fetch managedBy user if exists
@@ -289,7 +300,7 @@ export const getDetail = query({
     const totalTeamMembers = teamMembers.length;
     const participantCount = Math.min(
       totalTeamMembers,
-      submission.teammates.length + 1
+      submission.teammates.length + 1,
     );
     const participationRate =
       totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
@@ -328,6 +339,7 @@ export const getDetail = query({
 ```
 
 **Edge Cases:**
+
 - Submission not found: Throw error
 - Team/tournament deleted but submission exists: Handle null gracefully in UI
 - Teammates deleted from system: Filter out null users
@@ -335,6 +347,7 @@ export const getDetail = query({
 - User not authorized: Throw permission error
 
 **Helper Function Import:**
+
 ```typescript
 // Need to import or define getRolesForUser
 // This function already exists in users.ts but is not exported
@@ -348,6 +361,7 @@ export const getDetail = query({
 **Location:** `convex/submissions.ts`
 
 **Changes:**
+
 - Add the new `getDetail` query as documented above
 - Export helper function `getRolesForUser` from `users.ts` or duplicate in submissions.ts
 
@@ -360,6 +374,7 @@ export const getDetail = query({
 **Purpose:** Display comprehensive submission information in a card format similar to TeamDetailsCard and TournamentDetailsCard
 
 **Props:**
+
 ```typescript
 interface SubmissionDetailsCardProps {
   submissionId: Id<"submissions">;
@@ -368,6 +383,7 @@ interface SubmissionDetailsCardProps {
 ```
 
 **Features:**
+
 - Displays submission date, description, tier, state (badge), points earned
 - Shows team exercise classification
 - Links to team and tournament pages
@@ -377,12 +393,14 @@ interface SubmissionDetailsCardProps {
 - Uses DetailsCard component for consistent styling
 
 **UI Patterns:**
+
 - Uses `DetailsCard` from `src/components/details-card.tsx`
 - Uses `Badge` component for state display
 - Uses `Button` and `DropdownMenu` for actions
 - Follows team-details-card.tsx pattern
 
 **Code Structure:**
+
 ```typescript
 "use client";
 
@@ -609,6 +627,7 @@ export function SubmissionDetailsCard({
 ```
 
 **Accessibility:**
+
 - ARIA labels on action buttons
 - Keyboard navigation through dropdown menu
 - Screen reader announcements for state changes
@@ -621,6 +640,7 @@ export function SubmissionDetailsCard({
 **Purpose:** Display submitter and teammate information in a dedicated section
 
 **Props:**
+
 ```typescript
 interface SubmitterInfoProps {
   submitter: Doc<"users"> & { roleNames: string[] };
@@ -629,12 +649,14 @@ interface SubmitterInfoProps {
 ```
 
 **Features:**
+
 - Displays submitter name, email, and avatar (if available)
 - Lists all teammates with their details
 - Shows admin badge if submitter/teammate is admin
 - Responsive grid layout
 
 **Code Structure:**
+
 ```typescript
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -725,6 +747,7 @@ export function SubmitterInfo({ submitter, teammates }: SubmitterInfoProps) {
 **Location:** `src/app/(all)/submissions/[submissionId]/page.tsx`
 
 **Changes Needed:**
+
 - Replace the current edit-only view with comprehensive detail page
 - Use new `SubmissionDetailsCard` component
 - Add `SubmitterInfo` component
@@ -784,6 +807,7 @@ export default function SubmissionDetailsPage({ params }: Props) {
 ```
 
 **Impact:**
+
 - Provides comprehensive detail view instead of edit-only view
 - Improves user experience for reviewing submissions
 - Enables team members and admins to view submissions they didn't create
@@ -1124,6 +1148,7 @@ export default function SubmissionDetailsPage({ params }: Props) {
    - Test approve, reject, remove with detail page workflow
 
 **Acceptance Criteria:**
+
 - Query returns complete data structure
 - Permission checks work for owner, team member, admin
 - Non-authorized users get proper error
@@ -1146,6 +1171,7 @@ export default function SubmissionDetailsPage({ params }: Props) {
    - Test all user interactions
 
 **Acceptance Criteria:**
+
 - Components render correctly with mock data
 - All actions trigger correct mutations
 - Responsive on mobile/tablet/desktop
@@ -1165,6 +1191,7 @@ export default function SubmissionDetailsPage({ params }: Props) {
    - Test back navigation
 
 **Acceptance Criteria:**
+
 - Page displays complete submission information
 - All links navigate correctly
 - Actions work as expected
@@ -1187,6 +1214,7 @@ export default function SubmissionDetailsPage({ params }: Props) {
    - Check for unnecessary re-renders
 
 **Acceptance Criteria:**
+
 - All tests pass
 - No console errors or warnings
 - Smooth user experience
@@ -1207,6 +1235,7 @@ export default function SubmissionDetailsPage({ params }: Props) {
 5. Gather user feedback
 
 **Acceptance Criteria:**
+
 - Code passes review
 - Biome checks pass
 - Successfully deployed
@@ -1217,25 +1246,30 @@ export default function SubmissionDetailsPage({ params }: Props) {
 ## Success Metrics
 
 **Adoption:**
+
 - 80% of users who view submissions use the detail page within first week
 - Average time on detail page: 30-60 seconds (indicates engagement)
 
 **Performance:**
+
 - Page loads in <1 second (data fetch + render)
 - Query execution time: <200ms
 - Mutation success rate: >99%
 
 **Quality:**
+
 - Error rate: <1% of page views
 - Zero permission bypass incidents
 - Accessibility score: 100 (Lighthouse)
 
 **User Satisfaction:**
+
 - Positive feedback on submission transparency
 - Reduced confusion about submission status
 - Faster admin approval workflow
 
 **Business Impact:**
+
 - Increased submission approval rate (less confusion = more approvals)
 - Reduced support requests about submission status
 - Improved team engagement metrics

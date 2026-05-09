@@ -57,27 +57,23 @@ export const addUserRole = mutation({
 ### Functional Requirements
 
 1. **View User Roles**
-
    - Display all roles for a user (admin, user, etc.)
    - Show role assignment date
    - Show who assigned the role
 
 2. **Assign Role**
-
    - Admin can assign roles to any user
    - Select from available roles (admin, user, custom roles)
    - Confirmation dialog required
    - Audit log entry created
 
 3. **Remove Role**
-
    - Admin can remove roles from users
    - Cannot remove last "user" role (every user must have basic role)
    - Confirmation dialog required
    - Warning if removing admin from self
 
 4. **Role Management**
-
    - List all available roles
    - Create new roles (optional for MVP)
    - View role descriptions
@@ -649,17 +645,14 @@ const roleBadgeColors = {
 ## Security Considerations
 
 1. **Permission Checks**
-
    - All role mutations verify admin access
    - Frontend also hides UI from non-admins (defense in depth)
 
 2. **Audit Trail**
-
    - Who changed what, when
    - Immutable log for compliance
 
 3. **Self-Demotion**
-
    - Allowed but requires extra confirmation
    - Cannot create deadlock (always have at least one admin)
 
@@ -670,17 +663,14 @@ const roleBadgeColors = {
 ## Edge Cases
 
 1. **User deleted while editing roles**
-
    - Mutation fails with "User not found"
    - Show error, redirect to users list
 
 2. **Role deleted while user has it**
-
    - UserRole entry remains (referential integrity)
    - Consider cascade delete (advanced)
 
 3. **Concurrent role changes**
-
    - Last write wins (Convex handles atomicity)
    - Show refresh prompt if data stale
 
@@ -691,27 +681,23 @@ const roleBadgeColors = {
 ## Migration Plan
 
 1. **Schema Updates**
-
    - Add `assignedBy` and `assignedAt` to userRoles table
    - Backfill existing records with null values
    - Deploy schema changes
 
 2. **Complete Backend**
-
    - Finish `addUserRole` implementation
    - Implement `removeUserRole` mutation
    - Implement queries for role management
    - Test in Convex dashboard
 
 3. **Build UI Components**
-
    - Create RoleSelector component
    - Create AssignRoleDialog component
    - Create RemoveRoleDialog component
    - Test in isolation
 
 4. **Integrate with Pages**
-
    - Update user detail page
    - Add role management card
    - Test end-to-end flows

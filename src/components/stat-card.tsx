@@ -1,5 +1,7 @@
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps, cva } from "class-variance-authority";
+
 import { cn } from "@/lib/utils";
+
 import { Card, CardContent, CardTitle } from "./ui/card";
 
 const headerVariants = cva("pb-0 font-normal text-gray-600", {
@@ -32,7 +34,8 @@ const contentVariants = cva("", {
 });
 
 export interface StatCardProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, "color">,
+  extends
+    Omit<React.HTMLAttributes<HTMLDivElement>, "color">,
     VariantProps<typeof headerVariants>,
     VariantProps<typeof contentVariants> {
   title: string;
@@ -54,7 +57,7 @@ export function StatCard({
       <CardContent className="flex h-full items-center justify-between p-0">
         <div className="h-full">
           <CardTitle className={headerVariants({ size })}>{title}</CardTitle>
-          <p className={cn("font-bold text-2xl", contentVariants({ color }))}>
+          <p className={cn("text-2xl font-bold", contentVariants({ color }))}>
             {value}
           </p>
         </div>

@@ -150,27 +150,23 @@ type Props = {
 ### Functional Requirements
 
 1. **Consistent Data Fetching Pattern**
-
    - User story: "As a developer, I want all detail cards to use the same data fetching pattern so that the codebase is maintainable"
    - All detail cards should receive a single `data` prop from a dedicated `getDetails` query
    - All related entities should be fetched in a single backend query
    - All derived data should be calculated in the backend
 
 2. **Pre-Calculated Permissions**
-
    - User story: "As a developer, I want permissions pre-calculated in the backend so that components are simpler"
    - Each detail query should return permission flags (canEdit, canDelete, etc.)
    - No `useUser()` hooks in detail card components
    - All permission logic centralized in backend
 
 3. **Type Safety**
-
    - User story: "As a developer, I want strong TypeScript types for detail card props so that I catch errors at compile time"
    - Use `ReturnType<typeof useQuery<...>>` pattern for prop types
    - No manual type definitions that can drift from backend
 
 4. **Single Query Per Page**
-
    - User story: "As a user, I want detail pages to load quickly with minimal latency"
    - Each detail page should make a single query for the main entity details
    - No cascading queries or multiple separate queries
@@ -556,7 +552,6 @@ const data = useQuery(
 ### Phase 1: Backend Implementation (Estimated: 1 day)
 
 1. **Implement `tournaments.getDetails`** (3-4 hours)
-
    - Create query in `convex/tournaments.ts`
    - Fetch tournament, teams, members in parallel
    - Calculate status and statistics
@@ -564,7 +559,6 @@ const data = useQuery(
    - Test in Convex dashboard
 
 2. **Implement `teams.getDetails`** (3-4 hours)
-
    - Create query in `convex/teams.ts`
    - Fetch team, tournament, members in parallel
    - Enrich members with roles and membership info
@@ -591,7 +585,6 @@ const data = useQuery(
 ### Phase 2: Component Refactor (Estimated: 0.5 days)
 
 1. **Refactor `TournamentDetailsCard`** (1-2 hours)
-
    - Update props interface
    - Remove `useUser()` hook
    - Update all references to use `data` prop
@@ -599,7 +592,6 @@ const data = useQuery(
    - Test with new query
 
 2. **Refactor `TeamDetailsCard`** (1-2 hours)
-
    - Update props interface
    - Remove internal queries
    - Remove `useUser()` hook
@@ -625,7 +617,6 @@ const data = useQuery(
 ### Phase 3: Page Integration (Estimated: 0.5 days)
 
 1. **Update `/tournaments/[tournamentId]/page.tsx`** (1 hour)
-
    - Replace multiple queries with single `getDetails` query
    - Update `TournamentDetailsCard` usage
    - Update teams list rendering
@@ -633,7 +624,6 @@ const data = useQuery(
    - Test complete flow
 
 2. **Update `/teams/[teamId]/page.tsx`** (1 hour)
-
    - Replace query with `getDetails` query
    - Update `TeamDetailsCard` usage
    - Update member list rendering
@@ -656,14 +646,12 @@ const data = useQuery(
 ### Phase 4: Testing & Polish (Estimated: 0.5 days)
 
 1. **Integration Testing** (2 hours)
-
    - Test all detail pages with various user roles
    - Verify permissions work correctly
    - Test edge cases (deleted entities, missing data)
    - Check performance improvements
 
 2. **Code Quality** (1 hour)
-
    - Run Biome linting and formatting
    - Fix any type errors
    - Remove unused imports
@@ -776,47 +764,38 @@ const data = useQuery(
 ## Edge Cases
 
 1. **Tournament Not Found**
-
    - Backend throws error
    - Frontend shows error state or redirects
 
 2. **Team Not Found**
-
    - Backend throws error
    - Frontend shows error state or redirects
 
 3. **User Not Found**
-
    - Backend throws error
    - Frontend shows error state or redirects
 
 4. **Tournament Deleted But Teams Exist**
-
    - Return null for tournament
    - Display gracefully in UI
 
 5. **Team Members Deleted From System**
-
    - Filter out null users
    - Show member count based on actual users
 
 6. **User Not Member of Any Teams**
-
    - Return empty teams array
    - Show appropriate empty state
 
 7. **User Has No Submissions**
-
    - Statistics show 0 counts
    - No errors thrown
 
 8. **Tournament Dates Invalid**
-
    - Fallback to "upcoming" status
    - Log warning for admin review
 
 9. **Concurrent Updates**
-
    - Convex handles consistency
    - Real-time updates ensure latest data shown
 

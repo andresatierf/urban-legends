@@ -14,7 +14,7 @@ _Avoid_: Event, contest, league.
 A group of users participating together in exactly one **Tournament**. Carries a **JoinPolicy** that gates user-initiated **JoinRequests**.
 
 **JoinPolicy**:
-A **Team** attribute with values `open` or `closed`, controlling whether a **User** may initiate a **JoinRequest** (`initiator: "user"`). `open` permits user-initiated requests; `closed` rejects them. Captain-initiated invites (`initiator: "team"`) are unaffected by **JoinPolicy** in either state. **JoinPolicy** does *not* hide a Team from listings or hide its roster — it is purely an authorisation gate on one side of the **JoinRequest** model.
+A **Team** attribute with values `open` or `closed`, controlling whether a **User** may initiate a **JoinRequest** (`initiator: "user"`). `open` permits user-initiated requests; `closed` rejects them. Captain-initiated invites (`initiator: "team"`) are unaffected by **JoinPolicy** in either state. **JoinPolicy** does _not_ hide a Team from listings or hide its roster — it is purely an authorisation gate on one side of the **JoinRequest** model.
 _Avoid_: visibility, public/private (these terms imply concealment, which **JoinPolicy** does not provide).
 
 **TeamMember**:
@@ -70,7 +70,7 @@ _Avoid_: ACL, permissions module, auth (the latter is reserved for authenticatio
 
 The **Authority** module composes three independent axes:
 
-1. **System axis** (override): `dev` and `admin` grant *every* permission, system-wide. `organizer` is a sibling that grants only "create new **Tournament**" — it does not cascade into management of any **Tournament**.
+1. **System axis** (override): `dev` and `admin` grant _every_ permission, system-wide. `organizer` is a sibling that grants only "create new **Tournament**" — it does not cascade into management of any **Tournament**.
 2. **Tournament axis** (per-tournament, linear): `tournament_manager` > `reviewer`. A `tournament_manager` of Tournament T inherits `reviewer` privileges in T only.
 3. **Team axis** (per-team): **Captain** status, derived from `teamMembers.role`.
 
@@ -80,7 +80,7 @@ When an **Organizer** creates a **Tournament**, the **Authority** module grants 
 
 1. **Symmetric lockout**: a `rejected` **JoinRequest** blocks any future **JoinRequest** for the same (User, Team) pair, regardless of `initiator`. Captains who reject and change their mind, or Users who reject and change their mind, do not get a second attempt — the rule is intentionally strict to keep the relationship terminal.
 2. **Expiry**: every **JoinRequest** carries a required `expiresAt` of 7 days from creation, in either direction. A `pending` row past its `expiresAt` is `expired` on next observation.
-3. **Cascade on accept**: when a **JoinRequest** is `accepted` and produces a **TeamMember** in **Tournament** T, all *other* pending **JoinRequests** for the same **User** in any **Team** of T are `cancelled` — a User cannot be a **TeamMember** of two **Teams** in the same **Tournament**.
+3. **Cascade on accept**: when a **JoinRequest** is `accepted` and produces a **TeamMember** in **Tournament** T, all _other_ pending **JoinRequests** for the same **User** in any **Team** of T are `cancelled` — a User cannot be a **TeamMember** of two **Teams** in the same **Tournament**.
 
 ## Relationships
 

@@ -339,17 +339,14 @@ Minor issues that should be addressed when time permits:
 #### Phase 2: Role-Based Dashboards (9-13 days) - IN PROGRESS
 
 1. **Tournament Manager Dashboard** (3-4 days) - Enables delegation
-
    - Critical for scaling tournament operations
    - Allows tournament management without full admin access
 
 2. **Reviewer Dashboard** (2-3 days) - Improves moderation
-
    - Dedicated content moderation workflow
    - Separates review role from admin role
 
 3. **Team Captain Dashboard** (2 days) - Captain efficiency
-
    - Multi-team management
    - Consolidated pending actions
 

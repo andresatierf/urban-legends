@@ -12,6 +12,7 @@
 This specification defines a unified component architecture for submission approval across the Urban Legends tournament platform. Currently, submission review is split between `/manage/submissions` (tournament manager interface) and `/reviewer` (reviewer interface), with inconsistent UI patterns and duplicated logic. This spec consolidates these into reusable, composable components that handle both individual submissions and team submission groups, providing a consistent experience while supporting role-specific workflows.
 
 **Primary Benefits**:
+
 - **Consistency**: Unified UI patterns across admin and reviewer workflows
 - **Reusability**: Share components between multiple routes with different configurations
 - **Maintainability**: Single source of truth for submission display and approval logic
@@ -26,9 +27,11 @@ This specification defines a unified component architecture for submission appro
 ### Existing Routes
 
 #### `/manage/submissions` (Tournament Manager)
+
 **File**: `src/app/(protected)/manage/submissions/page.tsx`
 
 **Current Functionality**:
+
 - Displays all submissions across all tournaments
 - Three tabs: All, Pending, Done (resolved)
 - Search and sort functionality (by date, points)
@@ -39,14 +42,17 @@ This specification defines a unified component architecture for submission appro
 **Backend Query**: `api.tournamentManager.getSubmissions`
 
 **Current Issues**:
+
 - No image display (images array always empty in SubmissionCardList)
 - No group submission support visible in UI
 - Basic filtering only
 
 #### `/reviewer` (Reviewer Dashboard)
+
 **File**: `src/app/(protected)/reviewer/page.tsx`
 
 **Current Functionality**:
+
 - Displays pending items only (individual + groups)
 - Tournament filter dropdown
 - Unified view of individual submissions and team activity groups
@@ -57,6 +63,7 @@ This specification defines a unified component architecture for submission appro
 **Backend Query**: `api.reviewer.getPendingSubmissions`
 
 **Current Issues**:
+
 - No image display
 - No detailed view (modal/expansion)
 - Limited metadata shown
@@ -65,9 +72,11 @@ This specification defines a unified component architecture for submission appro
 ### Existing Components
 
 #### `SubmissionCard` (`src/components/submissions/submission-card.tsx`)
+
 **Purpose**: Display a single submission with image, details, and actions
 
 **Props**:
+
 ```typescript
 {
   submission: Doc<"submissions"> & { team, user }
@@ -80,22 +89,27 @@ This specification defines a unified component architecture for submission appro
 **Layout**: Horizontal card with image on left, details/actions on right
 
 **Sub-components**:
+
 - `SubmissionCardImage`: Image gallery with lightbox
 - `SubmissionCardDetails`: Badges, metadata, description
 - `SubmissionCardActions`: Action buttons (approve/reject/edit/delete)
 
 #### `SubmissionCardList` (`src/components/submissions/submission-card-list.tsx`)
+
 **Purpose**: Render array of submissions using `CardGrid`
 
 **Issues**:
+
 - Always passes empty images array
 - No support for submission groups
 - Basic wrapper around `CardGrid`
 
 #### `ReviewCard` (inline in `reviewer/page.tsx`)
+
 **Purpose**: Display submission or group for review
 
 **Issues**:
+
 - Not reusable (defined inline)
 - Duplicate logic with `SubmissionCard`
 - No image support
@@ -104,17 +118,20 @@ This specification defines a unified component architecture for submission appro
 ### Backend Functions
 
 #### Individual Submissions
+
 - `api.submissions.approve(submissionId)` - Approves individual or all in group
 - `api.submissions.reject(submissionId)` - Rejects individual
 - `api.submissions.remove(submissionId)` - Soft delete
 - `api.submissions.getDetails(submissionId)` - Full details with permissions
 
 #### Submission Groups
+
 - `api.submissionGroups.approve(groupId)` - Approves all in group
 - `api.submissionGroups.reject(groupId)` - Rejects all in group
 - `api.submissionGroups.getWithSubmissions(groupId)` - Group + submissions
 
 #### Queries
+
 - `api.tournamentManager.getSubmissions()` - All submissions with user/team
 - `api.reviewer.getPendingSubmissions({ tournamentId? })` - Unified pending items
 
@@ -131,6 +148,7 @@ This specification defines a unified component architecture for submission appro
 ### Functional Requirements
 
 #### FR1: Single Submission Display Component
+
 - Display individual submission with all metadata
 - Show submission state badge (pending/approved/rejected/deleted)
 - Display tier (base/advanced) and type (individual/team)
@@ -142,6 +160,7 @@ This specification defines a unified component architecture for submission appro
 - Expandable detail view option
 
 #### FR2: Submission Group Display Component
+
 - Display team activity group with aggregated data
 - Show group state, tier, participation metrics
 - List all participants in the group
@@ -152,6 +171,7 @@ This specification defines a unified component architecture for submission appro
 - Show submission count and participation rate
 
 #### FR3: Unified Submission List Component
+
 - Render mixed list of individuals and groups
 - Support sorting (date, points, state)
 - Support filtering (search, state, tournament, team)
@@ -161,6 +181,7 @@ This specification defines a unified component architecture for submission appro
 - Real-time updates via Convex subscriptions
 
 #### FR4: Image Gallery Component
+
 - Display up to 4 images in grid (2x2 for 4+, single for 1, side-by-side for 2-3)
 - Thumbnail strip for images beyond primary display
 - Lightbox modal for full-size viewing
@@ -170,6 +191,7 @@ This specification defines a unified component architecture for submission appro
 - Image counter badge
 
 #### FR5: Approval Action Controls
+
 - Context-aware button visibility (permissions, state)
 - Approve button (green) - only for pending items
 - Reject button (red) - only for pending items
@@ -181,6 +203,7 @@ This specification defines a unified component architecture for submission appro
 - Loading states during mutations
 
 #### FR6: Review Queue Interface
+
 - Filter by tournament
 - Show pending count
 - Display items in chronological order (newest first)
@@ -191,6 +214,7 @@ This specification defines a unified component architecture for submission appro
 ### Non-Functional Requirements
 
 #### NFR1: Performance
+
 - List rendering optimized for 100+ items
 - Image lazy loading
 - Optimistic updates for instant feedback
@@ -198,6 +222,7 @@ This specification defines a unified component architecture for submission appro
 - Efficient Convex queries (indexed)
 
 #### NFR2: Accessibility
+
 - Keyboard navigation for lists and galleries
 - ARIA labels for all interactive elements
 - Focus management in modals
@@ -205,6 +230,7 @@ This specification defines a unified component architecture for submission appro
 - Color contrast meets WCAG AA standards
 
 #### NFR3: Mobile Responsiveness
+
 - Cards stack vertically on mobile
 - Touch-friendly action buttons (min 44px target)
 - Responsive image gallery
@@ -212,6 +238,7 @@ This specification defines a unified component architecture for submission appro
 - Collapsible sections for space efficiency
 
 #### NFR4: Real-time Updates
+
 - Submissions update automatically when state changes
 - Pending counts update in real-time
 - Optimistic UI with Convex reactivity
@@ -252,7 +279,7 @@ interface SubmissionWithContext {
   tournament: Doc<"tournaments">;
   submitter: UserWithRoles;
   images: SubmissionImage[];
-  teammates?: UserWithRoles[];  // For team submissions
+  teammates?: UserWithRoles[]; // For team submissions
   managedBy?: UserWithRoles;
   isTeamExercise: boolean;
   participationRate: number;
@@ -265,7 +292,7 @@ interface GroupWithContext {
   tournament: Doc<"tournaments">;
   submissions: Array<Doc<"submissions"> & { user: Doc<"users"> }>;
   submitters: UserWithRoles[];
-  images: SubmissionImage[];  // Aggregated from all submissions
+  images: SubmissionImage[]; // Aggregated from all submissions
   managedBy?: UserWithRoles;
 }
 
@@ -309,6 +336,7 @@ interface ReviewPermissions {
 **Purpose**: Unified card component that displays either an individual submission or a group, optimized for review workflows.
 
 **Props**:
+
 ```typescript
 interface SubmissionReviewCardProps {
   item: ReviewItem;
@@ -322,6 +350,7 @@ interface SubmissionReviewCardProps {
 ```
 
 **Behavior**:
+
 - Renders different content based on `item.type`
 - For individuals: Shows submitter, single description
 - For groups: Shows participant list, participation rate, team exercise indicator
@@ -332,6 +361,7 @@ interface SubmissionReviewCardProps {
 - Optimistic updates with rollback
 
 **Layout (Compact)**:
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ [Image Grid]  │ [Badges: State, Tier, Type]                 │
@@ -342,6 +372,7 @@ interface SubmissionReviewCardProps {
 ```
 
 **Layout (Detailed)**:
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        Image Gallery                        │
@@ -366,6 +397,7 @@ interface SubmissionReviewCardProps {
 ```
 
 **Code Example**:
+
 ```typescript
 "use client";
 
@@ -584,6 +616,7 @@ export function SubmissionReviewCard({
 **Purpose**: Filterable, sortable list of review items with search and state management.
 
 **Props**:
+
 ```typescript
 interface SubmissionReviewListProps {
   items: ReviewItem[];
@@ -598,6 +631,7 @@ interface SubmissionReviewListProps {
 ```
 
 **Features**:
+
 - Search box (filters by team name, submitter name, description)
 - State filter (pending/approved/rejected/all)
 - Sort dropdown (date, points)
@@ -607,6 +641,7 @@ interface SubmissionReviewListProps {
 - Virtual scrolling for 100+ items (optional)
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ [Search: "team name..."]     [Sort: Newest First ▼]        │
@@ -626,6 +661,7 @@ interface SubmissionReviewListProps {
 **Purpose**: Display participants in a team activity group with visual indicators.
 
 **Props**:
+
 ```typescript
 interface GroupParticipantsListProps {
   submitters: UserWithRoles[];
@@ -637,6 +673,7 @@ interface GroupParticipantsListProps {
 ```
 
 **Layout**:
+
 ```
 Participants (3/5):
 Alice Johnson, Bob Smith, Charlie Davis
@@ -645,6 +682,7 @@ Alice Johnson, Bob Smith, Charlie Davis
 ```
 
 **Code Example**:
+
 ```typescript
 import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -687,6 +725,7 @@ export function GroupParticipantsList({
 **Purpose**: Reusable image gallery component with lightbox (based on existing `SubmissionCardImage`).
 
 **Changes from existing**:
+
 - Extract as standalone component
 - Add `className` prop for flexibility
 - Support configurable grid layout
@@ -694,11 +733,12 @@ export function GroupParticipantsList({
 - Add error state for failed image loads
 
 **Props**:
+
 ```typescript
 interface SubmissionImageGalleryProps {
   images: SubmissionImage[];
   layout?: "grid" | "single" | "carousel";
-  maxDisplay?: number;  // Default 4
+  maxDisplay?: number; // Default 4
   className?: string;
 }
 ```
@@ -708,6 +748,7 @@ interface SubmissionImageGalleryProps {
 **Purpose**: Reusable metadata display component for submission details.
 
 **Props**:
+
 ```typescript
 interface SubmissionMetadataProps {
   submitter: string;
@@ -719,6 +760,7 @@ interface SubmissionMetadataProps {
 ```
 
 **Layout**:
+
 ```
 Submitted by: Alice Johnson
 Date: 2025-11-28
@@ -733,12 +775,14 @@ Approved by: Admin User
 **No new backend functions required!** Existing functions are sufficient:
 
 **Existing Queries** (already implemented):
+
 - `api.submissions.getDetails(submissionId)` - Returns full context including teammates, permissions
 - `api.submissionGroups.getWithSubmissions(groupId)` - Returns group with all submissions
 - `api.reviewer.getPendingSubmissions({ tournamentId? })` - Returns unified review items
 - `api.tournamentManager.getSubmissions()` - Returns all submissions with context
 
 **Existing Mutations** (already implemented):
+
 - `api.submissions.approve(submissionId)` - Approves individual or entire group
 - `api.submissions.reject(submissionId)` - Rejects individual submission
 - `api.submissionGroups.approve(groupId)` - Approves entire group
@@ -765,7 +809,9 @@ export const getSubmissionImages = query({
   handler: async (ctx, args) => {
     const images = await ctx.db
       .query("images")
-      .withIndex("by_submission", (q) => q.eq("submissionId", args.submissionId))
+      .withIndex("by_submission", (q) =>
+        q.eq("submissionId", args.submissionId),
+      )
       .collect();
 
     return Promise.all(
@@ -775,7 +821,7 @@ export const getSubmissionImages = query({
         filename: img.filename,
         submissionId: img.submissionId,
         uploadedAt: img.uploadedAt,
-      }))
+      })),
     );
   },
 });
@@ -786,6 +832,7 @@ export const getSubmissionImages = query({
 #### Route: `/manage/submissions`
 
 **Changes**:
+
 ```typescript
 // Before
 import { SubmissionCardList } from "@/components/submissions/submission-card-list";
@@ -805,6 +852,7 @@ import { SubmissionReviewList } from "@/components/submissions/review/submission
 ```
 
 **Backend Query Enhancement**:
+
 ```typescript
 // Current: api.tournamentManager.getSubmissions returns submissions with user/team
 // Need to transform to ReviewItem[] format
@@ -821,7 +869,7 @@ const reviewItems: ReviewItem[] = useMemo(() => {
       team: s.team,
       tournament: s.tournament,
       submitter: s.user,
-      images: [],  // TODO: Fetch when storage implemented
+      images: [], // TODO: Fetch when storage implemented
       isTeamExercise: false,
       participationRate: 0,
     },
@@ -832,6 +880,7 @@ const reviewItems: ReviewItem[] = useMemo(() => {
 #### Route: `/reviewer`
 
 **Changes**:
+
 ```typescript
 // Before: Custom ReviewCard component inline
 
@@ -904,6 +953,7 @@ const reviewItems: ReviewItem[] = useMemo(() => {
 ### Phase 1: Foundation Components (Day 1 - Morning)
 
 **Tasks**:
+
 1. Create `src/components/submissions/review/types.ts` with TypeScript interfaces
 2. Create `GroupParticipantsList` component
 3. Create `SubmissionMetadata` component
@@ -911,6 +961,7 @@ const reviewItems: ReviewItem[] = useMemo(() => {
 5. Write Storybook stories for basic components (optional)
 
 **Deliverables**:
+
 - 3 new utility components
 - 1 refactored component
 - Type definitions
@@ -918,6 +969,7 @@ const reviewItems: ReviewItem[] = useMemo(() => {
 ### Phase 2: Core Review Components (Day 1 - Afternoon + Day 2 - Morning)
 
 **Tasks**:
+
 1. Create `SubmissionReviewCard` component
    - Individual submission rendering
    - Group submission rendering
@@ -930,12 +982,14 @@ const reviewItems: ReviewItem[] = useMemo(() => {
 3. Write unit tests for key logic
 
 **Deliverables**:
+
 - 2 new major components
 - Test coverage for filtering/sorting
 
 ### Phase 3: Route Integration (Day 2 - Afternoon)
 
 **Tasks**:
+
 1. Refactor `/manage/submissions` page
    - Replace `SubmissionCardList` with `SubmissionReviewList`
    - Transform data to `ReviewItem[]` format
@@ -949,12 +1003,14 @@ const reviewItems: ReviewItem[] = useMemo(() => {
 3. Update existing components to use new utilities where applicable
 
 **Deliverables**:
+
 - 2 refactored routes
 - Consistent UI across both pages
 
 ### Phase 4: Polish & Testing (Day 3)
 
 **Tasks**:
+
 1. Add loading skeletons to lists
 2. Implement optimistic updates with rollback
 3. Add keyboard shortcuts (optional)
@@ -976,6 +1032,7 @@ const reviewItems: ReviewItem[] = useMemo(() => {
 8. Update documentation
 
 **Deliverables**:
+
 - Polished, production-ready components
 - Accessibility compliance
 - Updated CLAUDE.md if needed
@@ -983,12 +1040,14 @@ const reviewItems: ReviewItem[] = useMemo(() => {
 ### Phase 5: Documentation (Day 3 - End)
 
 **Tasks**:
+
 1. Add component documentation (TSDoc)
 2. Create usage examples in comments
 3. Update CLAUDE.md with new component patterns
 4. Create migration guide for future refactors
 
 **Deliverables**:
+
 - Comprehensive documentation
 - Usage examples
 
@@ -999,11 +1058,13 @@ const reviewItems: ReviewItem[] = useMemo(() => {
 ### Backward Compatibility
 
 **Existing Components**: Keep existing components functional during transition:
+
 - `SubmissionCard` - Keep as-is, used in other routes (user submissions page)
 - `SubmissionCardList` - Can be deprecated after migration
 - `SubmissionCardImage` - Refactor to `SubmissionImageGallery` with backward-compatible wrapper
 
 **Migration Path**:
+
 1. Phase 1-2: Build new components alongside existing ones
 2. Phase 3: Migrate routes one at a time
 3. Phase 4: Deprecate old components (add comments)
@@ -1021,7 +1082,7 @@ const reviewItems: ReviewItem[] = useMemo(() => {
 export function submissionToReviewItem(
   submission: Doc<"submissions"> & { team: Doc<"teams">; user: Doc<"users"> },
   tournament: Doc<"tournaments">,
-  images: SubmissionImage[] = []
+  images: SubmissionImage[] = [],
 ): ReviewItem {
   return {
     type: "individual",
@@ -1042,7 +1103,7 @@ export function groupToReviewItem(
   team: Doc<"teams">,
   tournament: Doc<"tournaments">,
   submissions: Array<Doc<"submissions"> & { user: Doc<"users"> }>,
-  images: SubmissionImage[] = []
+  images: SubmissionImage[] = [],
 ): ReviewItem {
   return {
     type: "group",
@@ -1065,6 +1126,7 @@ export function groupToReviewItem(
 ### Unit Tests
 
 **Components to Test**:
+
 - `GroupParticipantsList` - Verify formatting, team exercise indicator
 - `SubmissionMetadata` - Verify all fields render correctly
 - Filter/sort logic in `SubmissionReviewList`
@@ -1072,6 +1134,7 @@ export function groupToReviewItem(
 **Tools**: Vitest + React Testing Library
 
 **Example Test**:
+
 ```typescript
 describe("GroupParticipantsList", () => {
   it("shows team exercise indicator when participation >= threshold", () => {
@@ -1107,6 +1170,7 @@ describe("GroupParticipantsList", () => {
 ### Integration Tests
 
 **Scenarios**:
+
 1. Reviewer approves individual submission → submission disappears from pending
 2. Admin rejects team activity → all submissions in group marked rejected
 3. Search filters list correctly
@@ -1144,6 +1208,7 @@ describe("GroupParticipantsList", () => {
 **Question**: When should image storage be implemented, and what service should be used?
 
 **Options**:
+
 1. **Convex File Storage** - Native solution, integrated with backend
 2. **Cloudinary** - CDN, image optimization, transformations
 3. **Vercel Blob** - Simple, integrated with Vercel deployment
@@ -1162,6 +1227,7 @@ describe("GroupParticipantsList", () => {
 **Use Case**: Tournament manager has 50 pending submissions from a one-day event, wants to approve all from a specific team.
 
 **Options**:
+
 1. Add checkbox selection to `SubmissionReviewList`
 2. Add "Approve All Filtered" button (dangerous)
 3. No bulk operations (review individually)
@@ -1179,6 +1245,7 @@ describe("GroupParticipantsList", () => {
 **Current State**: Submissions just marked "rejected" with no feedback.
 
 **Options**:
+
 1. Add optional rejection reason (text field)
 2. Add predefined rejection reasons (dropdown)
 3. Add both (dropdown + optional note)
@@ -1189,6 +1256,7 @@ describe("GroupParticipantsList", () => {
 **Decision Required**: Product team
 
 **Impact on Spec**:
+
 - Schema change: Add `rejectionReason?: v.string()` to submissions table
 - UI change: Show textarea on reject action
 - Display rejection reason in submission details
@@ -1198,6 +1266,7 @@ describe("GroupParticipantsList", () => {
 **Question**: Should submitters be notified when their submission is approved/rejected?
 
 **Options**:
+
 1. Email notifications (requires email service)
 2. In-app notifications (toast on next login)
 3. Notification center/bell icon
@@ -1216,6 +1285,7 @@ describe("GroupParticipantsList", () => {
 **Current State**: Any reviewer/admin can approve any submission.
 
 **Options**:
+
 1. Tournament-based assignment (reviewer assigned to specific tournaments)
 2. Team-based assignment
 3. Round-robin assignment
@@ -1359,6 +1429,7 @@ src/
 ### Dependencies
 
 **Existing (Already in Project)**:
+
 - `@tanstack/react-table` - Not used in this spec
 - `convex` - Backend queries/mutations
 - `lucide-react` - Icons
@@ -1377,7 +1448,7 @@ src/
 
 ### Design Mockups
 
-*(Include Figma/design tool links here if available)*
+_(Include Figma/design tool links here if available)_
 
 ### API Reference
 

@@ -46,6 +46,7 @@ You are an expert Software Engineer specializing in Next.js 15, React 19, TypeSc
 ## Common Patterns
 
 **Auth Check**:
+
 ```typescript
 const user = await getCurrentUserOrThrow(ctx);
 if (!user.roles.includes("admin")) {
@@ -54,6 +55,7 @@ if (!user.roles.includes("admin")) {
 ```
 
 **Convex Mutation**:
+
 ```typescript
 export const create = mutation({
   args: { name: v.string(), tournamentId: v.id("tournaments") },

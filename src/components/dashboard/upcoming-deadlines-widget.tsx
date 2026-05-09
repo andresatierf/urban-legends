@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -9,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 
 interface UpcomingDeadlinesWidgetProps {
@@ -42,13 +44,13 @@ export function UpcomingDeadlinesWidget({
                 key={tournament._id}
                 to="/tournaments/$tournamentId/leaderboard"
                 params={{ tournamentId: tournament._id }}
-                className="block rounded-md p-3 transition-colors hover:bg-muted"
+                className="hover:bg-muted block rounded-md p-3 transition-colors"
               >
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
-                    <h4 className="font-medium text-sm">{tournament.name}</h4>
+                    <h4 className="text-sm font-medium">{tournament.name}</h4>
                     <div className="flex items-center gap-2">
-                      <Clock className="h-3 w-3 text-muted-foreground" />
+                      <Clock className="text-muted-foreground h-3 w-3" />
                       <p className="text-muted-foreground text-xs">
                         Ends in {daysUntilEnd} day
                         {daysUntilEnd !== 1 ? "s" : ""}

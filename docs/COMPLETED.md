@@ -594,6 +594,7 @@ Comprehensive submission detail page providing full visibility into submission i
 **Permission Architecture:**
 
 The backend enforces strict access control:
+
 - Submission owner can always view
 - Any team member can view (not just captain)
 - Admins have full access
@@ -602,6 +603,7 @@ The backend enforces strict access control:
 **Data Enrichment:**
 
 Query fetches and enriches related data:
+
 - Submission with full details
 - Team and tournament information
 - Submitter with role information
@@ -611,6 +613,7 @@ Query fetches and enriches related data:
 **Team Exercise Detection:**
 
 Reuses existing calculation logic:
+
 - Counts teammates participating
 - Calculates participation rate vs total team size
 - Compares to tournament threshold
@@ -629,6 +632,7 @@ Reuses existing calculation logic:
 **No schema changes required.**
 
 Used existing fields:
+
 - `submissions.managedBy` - Who approved/rejected
 - `submissions.pointsEarned` - Points calculated on approval
 - `submissions.tier` - Base or advanced classification
@@ -713,6 +717,7 @@ Comprehensive refactoring of all detail card data fetching patterns to use a con
 **Query Pattern:**
 
 All getDetails queries follow the same structure:
+
 - Parallel data fetching for performance
 - Pre-calculated permissions (no client-side logic needed)
 - Type-safe return structures
@@ -749,16 +754,19 @@ All getDetails queries follow the same structure:
 ### Performance Improvements
 
 **Tournament Detail Page:**
+
 - Before: 4 serial queries (tournament, teams, userTeam, teamMembers)
 - After: 1 query with all data
 - **Improvement: ~75% faster**
 
 **Team Detail Page:**
+
 - Before: 1 query + 2 internal component queries
 - After: 1 query with all data
 - **Improvement: ~66% faster**
 
 **User Detail Page:**
+
 - Before: 1 query, client-side permission logic
 - After: 1 query with pre-calculated data
 - **Improvement: Faster rendering, simpler code**
@@ -766,6 +774,7 @@ All getDetails queries follow the same structure:
 ### Benefits
 
 **Code Quality:**
+
 - No queries inside components (moved to pages)
 - No permission logic in components (pre-calculated in backend)
 - Type-safe props derived from query return types
@@ -773,12 +782,14 @@ All getDetails queries follow the same structure:
 - Easier to test and maintain
 
 **Performance:**
+
 - Single query reduces network latency by 30-75%
 - Single loading state improves UX
 - Pre-calculated data reduces client-side processing
 - Parallel fetching in backend is faster than serial client queries
 
 **User Experience:**
+
 - Faster page loads
 - Single loading state (no cascading loads)
 - Richer information display
@@ -792,9 +803,7 @@ Components use the ReturnType pattern for type-safe props:
 
 ```typescript
 interface ComponentProps {
-  data: NonNullable<
-    ReturnType<typeof useQuery<typeof api.entity.getDetails>>
-  >;
+  data: NonNullable<ReturnType<typeof useQuery<typeof api.entity.getDetails>>>;
 }
 ```
 
@@ -803,6 +812,7 @@ This ensures props exactly match backend query return types.
 **Permission Pre-calculation:**
 
 Backend calculates all permissions based on user role and relationship:
+
 - Admins have full access
 - Owners/captains have management access
 - Members have limited access
@@ -811,6 +821,7 @@ Backend calculates all permissions based on user role and relationship:
 **Statistics Pre-calculation:**
 
 Backend calculates derived statistics:
+
 - Tournament: team counts, participant counts, averages
 - Team: points, approval rates, submission counts
 - User: team counts, submission counts, points earned
@@ -818,6 +829,7 @@ Backend calculates derived statistics:
 **Data Enrichment:**
 
 Backend enriches data with related information:
+
 - Users with their roles
 - Teams with member counts
 - Members with role information
@@ -920,12 +932,14 @@ These components had inline skeleton code that was extracted:
 ### User Experience Improvements
 
 **Before:**
+
 - Users saw blank screens during data loading
 - Flash of empty content before data appeared
 - No indication that data was being loaded
 - Jarring "pop-in" effect when data loaded
 
 **After:**
+
 - Animated skeleton placeholders during loading
 - Clear indication that data is being fetched
 - Smooth transitions from skeleton to content
@@ -935,6 +949,7 @@ These components had inline skeleton code that was extracted:
 ### Accessibility
 
 All skeleton components include proper accessibility features:
+
 - `role="status"` for screen readers
 - `aria-busy="true"` to indicate loading state
 - Semantic HTML structure
@@ -943,16 +958,19 @@ All skeleton components include proper accessibility features:
 ### Code Quality Improvements
 
 **Consistency:**
+
 - All loading states follow the same pattern
 - Reusable components reduce duplication
 - Centralized skeleton styling
 
 **Maintainability:**
+
 - Changes to skeleton styles update all usages
 - Easy to add new skeleton variants
 - Clear component naming and organization
 
 **Type Safety:**
+
 - All skeleton components are fully typed
 - Props with sensible defaults
 - Optional className for customization
@@ -962,6 +980,7 @@ All skeleton components include proper accessibility features:
 **Design Consistency:**
 
 All skeletons maintain the exact layout structure of their loaded counterparts:
+
 - Same number of elements
 - Same spacing and padding
 - Same responsive grid layouts
@@ -970,6 +989,7 @@ All skeletons maintain the exact layout structure of their loaded counterparts:
 **Animation:**
 
 All skeleton components use the existing `Skeleton` base component with:
+
 - `animate-pulse` for breathing effect
 - Consistent timing across all skeletons
 - Smooth transitions
@@ -977,6 +997,7 @@ All skeleton components use the existing `Skeleton` base component with:
 **Responsive Design:**
 
 Skeleton layouts are fully responsive:
+
 - Grid layouts adjust based on screen size
 - Proper spacing on mobile/tablet/desktop
 - Match responsive behavior of actual content
@@ -984,6 +1005,7 @@ Skeleton layouts are fully responsive:
 **Performance:**
 
 Skeleton components are lightweight:
+
 - No data fetching
 - Simple CSS animations
 - Minimal DOM nodes
@@ -1195,12 +1217,14 @@ Complete redesign of the submission system from team-based submissions (with opt
 **Data Model Redesign:**
 
 The old model relied on a single submission with a `teammates` array:
+
 - One user created submission listing other participants
 - No verification from listed teammates
 - Risk of double-counting if multiple members submitted
 - Ambiguous participation tracking
 
 The new model requires individual submissions with automatic grouping:
+
 - Each member creates their own submission
 - System automatically groups team activities by (team, date)
 - Single source of truth for points (group level)
@@ -1368,6 +1392,7 @@ All placeholder pages use consistent pattern with icon, title, and spec referenc
 **Foundation for Future Dashboards:**
 
 This implementation establishes the complete navigation structure needed for:
+
 - Spec 07: Admin Dashboard
 - Spec 11: Tournament Manager Dashboard
 - Spec 12: Reviewer Dashboard
@@ -1533,6 +1558,7 @@ Complete tournament manager role implementation allowing delegation of tournamen
 **Delegation Without Risk:**
 
 The tournament_manager role enables operational delegation while maintaining security:
+
 - Cannot delete tournaments (prevents data loss)
 - Cannot manage user roles (prevents privilege escalation)
 - Cannot access system settings (protects configuration)
@@ -1659,6 +1685,7 @@ Complete dark theme implementation with three modes (Light, Dark, System), persi
 **Storage Key:** `theme-preference` in localStorage
 
 **Theme Values:**
+
 - `"light"` - Always light theme
 - `"dark"` - Always dark theme
 - `"system"` - Follows OS preference
@@ -1770,6 +1797,7 @@ const active = isActive(item.href, item.exact);
 **Active State Styling:**
 
 The `SidebarMenuButton` component already handles active state styling via `data-[active=true]`:
+
 - Background: `bg-sidebar-accent` (neutral gray with good contrast)
 - Font weight: `font-medium` (slightly bolder text)
 - Works in both light and dark themes
@@ -1777,6 +1805,7 @@ The `SidebarMenuButton` component already handles active state styling via `data
 **Color Customization:**
 
 Updated `globals.css` to use more pronounced sidebar accent colors:
+
 - Light mode: Darker neutral gray (lightness 0.88, chroma 0.005)
 - Dark mode: Lighter neutral gray (lightness 0.32, chroma 0.008)
 - True neutral grays that maintain design consistency
@@ -1938,6 +1967,7 @@ Complete redesign of submission display from table-based layout to card-based la
 **Color Variables:**
 
 All submission card colors adapted for dark mode:
+
 - State colors (approved green, pending yellow, rejected red)
 - Background colors with proper contrast
 - Border colors visible in both themes
@@ -2206,6 +2236,7 @@ Comprehensive, role-aware unified dashboard serving as the main landing page for
 **Design Consistency:**
 
 All widgets follow shadcn/ui patterns:
+
 - Card-based layout with consistent padding
 - SectionHeader components for titles
 - Badge components for status indicators
@@ -2238,6 +2269,7 @@ All widgets follow shadcn/ui patterns:
 **Scalability Notes:**
 
 Backend includes TODO comment for admin dashboard scalability:
+
 - Current `.collect()` approach acceptable for MVP (<10k records)
 - Future optimizations documented:
   - Dedicated aggregation tables
@@ -2328,27 +2360,33 @@ Complete migration to UTC ISO format dates throughout the backend with user-conf
 Used in 14+ components across the application:
 
 **Tournament Components:**
+
 - TournamentCard, TournamentDetailsCard, UserTournamentCard
 - WinnerAnnouncement, Leaderboard pages
 
 **Submission Components:**
+
 - SubmissionCardDetails, SubmissionDetailsCard
 - SubmissionMetadata, SubmissionReviewCard
 
 **Invitation Components:**
+
 - InvitedUserCard, JoinRequestCard, TeamInvitationCard
 
 **Dashboards:**
+
 - Reviewer statistics page
 
 ### Key Features
 
 **Consistent Storage:**
+
 - All dates stored as UTC ISO strings
 - Date-only fields use UTC midnight (e.g., "2025-11-18T00:00:00.000Z")
 - Timestamp fields use full UTC timestamp
 
 **User Preferences:**
+
 - Three distinct format lengths for different contexts
 - 14+ predefined format options
 - Persistent across sessions and devices
@@ -2356,6 +2394,7 @@ Used in 14+ components across the application:
 - Defaults to US format (MM/dd/yyyy)
 
 **Date Picker Integration:**
+
 - HTML5 date inputs return YYYY-MM-DD
 - Automatic conversion to/from UTC
 - Maintains consistency with backend
@@ -2363,12 +2402,14 @@ Used in 14+ components across the application:
 ### Benefits
 
 **For Users:**
+
 - Personalized date display format
 - Consistent formatting across app
 - No timezone confusion
 - Format persists across sessions
 
 **For Platform:**
+
 - Eliminated timezone bugs
 - Simplified date comparisons
 - Improved data integrity
@@ -2376,6 +2417,7 @@ Used in 14+ components across the application:
 - Type-safe date handling
 
 **For Development:**
+
 - Single source of truth (UTC)
 - Centralized formatting logic
 - Easy to maintain and extend
@@ -2386,6 +2428,7 @@ Used in 14+ components across the application:
 **localStorage Approach:**
 
 Unlike the spec's original plan to store preferences in Convex, the implementation uses localStorage for better performance:
+
 - No network requests for format preferences
 - Works offline
 - Faster format switching
@@ -2395,6 +2438,7 @@ Unlike the spec's original plan to store preferences in Convex, the implementati
 **Migration Safety:**
 
 Migration scripts are idempotent and safe:
+
 - Can run multiple times
 - Batch processing prevents timeouts
 - Validation script verifies success
@@ -2428,16 +2472,19 @@ Action-based navigation system organizing pages by specific actions rather than 
 ### Core Principles
 
 **Action Pages, Not Role Dashboards:**
+
 - Pages focus on specific actions (e.g., "Review Queue", "Manage Submissions")
 - Multiple roles can access same page with different permissions
 - Zero code duplication between role workflows
 
 **Role-Based Sidebar Sections:**
+
 - 6 distinct sections: User, Captain, Reviewer, Tournament Manager, Admin, Viewer
 - Conditional visibility based on user roles
 - Captain section shows only if user captains teams
 
 **Flexible Permission Model:**
+
 - Permissions enforced in backend mutations/queries
 - Frontend adapts UI based on user capabilities
 - Hierarchical role system (dev > admin > manager > reviewer > player > viewer)
@@ -2465,6 +2512,7 @@ Action-based navigation system organizing pages by specific actions rather than 
 **Mutation Permissions:**
 
 All submission management mutations support multi-role access:
+
 - `submissions.approve/reject` - admin, tournament_manager, reviewer
 - `submissionGroups.approve/reject` - admin, tournament_manager, reviewer
 - Permission checks in backend, not page level
@@ -2520,17 +2568,20 @@ Six role-based sections with smart visibility:
 ### Key Features
 
 **Real-Time Badges:**
+
 - Pending submission counts
 - Join request notifications
 - Invitation alerts
 - System-wide admin badges
 
 **Permission-Based UI:**
+
 - Action buttons show only when user has permission
 - Backend validates all operations
 - Graceful error handling
 
 **Multi-Role Support:**
+
 - Users with multiple roles see all relevant sections
 - No duplicate navigation items
 - Consistent action pages across roles
@@ -2538,39 +2589,46 @@ Six role-based sections with smart visibility:
 ### Implementation Status
 
 **Phase 1 - Reviewer Dashboard:** ✅ COMPLETE
+
 - Review queue fully functional
 - Statistics page with metrics
 - Backend permission checks
 
 **Phase 2 - Captain Dashboard:** ✅ COMPLETE
+
 - Captain dashboard operational
 - Team comparison functional
 - Multi-team management
 
 **Phase 3 - Admin Dashboard:** ⚠️ PARTIAL
+
 - Tournament manager dashboard complete
 - Admin dashboard placeholder exists
 - System health page pending
 
 **Phase 4 - Viewer/Public:** ❌ NOT STARTED
+
 - Public leaderboards pending
 - Viewer dashboard pending
 
 ### Benefits
 
 **For Users:**
+
 - Clear organization by action
 - At-a-glance pending action counts
 - Consistent UI across roles
 - Reduced navigation complexity
 
 **For Development:**
+
 - Zero code duplication
 - Easy to add new roles
 - Centralized permission logic
 - Consistent patterns
 
 **For Platform:**
+
 - Scalable to 10+ roles
 - Maintainable codebase
 - Flexible permission model
@@ -2581,6 +2639,7 @@ Six role-based sections with smart visibility:
 **Action Page Routing:**
 
 Action pages use semantic URLs:
+
 - `/manage/submissions` - Submission management action
 - `/reviewer` - Review queue action
 - `/captain` - Captain operations action
@@ -2588,6 +2647,7 @@ Action pages use semantic URLs:
 **Permission Enforcement:**
 
 Three-layer permission model:
+
 1. **Backend validation** - All mutations/queries check roles
 2. **Query-level filtering** - Return only authorized data
 3. **UI adaptation** - Show/hide actions based on capabilities
@@ -2664,6 +2724,7 @@ Unified component architecture for submission approval handling both individual 
 ### Type System
 
 **ReviewItem Discriminated Union:**
+
 ```typescript
 type ReviewItem =
   | { type: "individual"; data: SubmissionWithContext }
@@ -2671,12 +2732,14 @@ type ReviewItem =
 ```
 
 **Context Types:**
+
 - `SubmissionWithContext` - submission, state, team, tournament, submitter, images
 - `GroupWithContext` - group, state, team, tournament, submissions, submitters, images
 
 ### Page Integration
 
 **Reviewer Page** (`src/app/(protected)/reviewer/page.tsx`):
+
 - Uses SubmissionReviewList with detailed variant
 - Converts API data to ReviewItem[]
 - Handles approve/reject for both types
@@ -2684,6 +2747,7 @@ type ReviewItem =
 - Real-time updates
 
 **Manage Submissions Page** (`src/app/(protected)/manage/submissions/page.tsx`):
+
 - Three SubmissionReviewList instances (All/Pending/Done tabs)
 - All use detailed variant to show images
 - Built-in search and sort
@@ -2693,12 +2757,14 @@ type ReviewItem =
 ### Key Features
 
 **Individual Submission Display:**
+
 - Submitter name, date, description
 - State badge (pending/approved/rejected/deleted)
 - Tier and points display
 - Individual submission indicator
 
 **Group Activity Display:**
+
 - Team participants with qualification status
 - Participation rate (e.g., "50% participation")
 - Team exercise qualification check
@@ -2706,12 +2772,14 @@ type ReviewItem =
 - Activity date display
 
 **Approval Actions:**
+
 - Approve/Reject buttons for pending items only
 - Loading states during mutations
 - Toast notifications for success/failure
 - Type-specific messaging
 
 **Search & Filter:**
+
 - Debounced search across team, tournament, submitter
 - Sort by date or points (ascending/descending)
 - Filter by state (All/Pending/Done)
@@ -2720,6 +2788,7 @@ type ReviewItem =
 ### Image Gallery Support
 
 **Features:**
+
 - Grid layout for multiple images
 - Lightbox modal with prev/next navigation
 - Thumbnail strip (max 4 visible)
@@ -2728,6 +2797,7 @@ type ReviewItem =
 - Responsive design
 
 **Current Status:**
+
 - Component fully implemented
 - Ready for image upload feature
 - Placeholder data currently used
@@ -2736,18 +2806,21 @@ type ReviewItem =
 ### Benefits
 
 **For Users:**
+
 - Consistent UI across workflows
 - Clear visual distinction between individuals/groups
 - Quick approval actions
 - Search/filter for efficiency
 
 **For Admins/Reviewers:**
+
 - Single interface for all review types
 - Batch operations support
 - Performance metrics tracking
 - Efficient review workflow
 
 **For Platform:**
+
 - Reusable components
 - Single source of truth
 - Easy to extend
@@ -2758,17 +2831,20 @@ type ReviewItem =
 **DTO Pattern:**
 
 Uses `convertToReviewItems()` from `src/dto/reviewer.ts`:
+
 - Transforms API responses to ReviewItem[]
 - Handles both individual and group types
 - Prepares data for component consumption
 
 **Accessibility:**
+
 - aria-labels on search and sort controls
 - Keyboard navigation support
 - Screen reader friendly
 - Proper semantic HTML
 
 **Responsive Design:**
+
 - Mobile-responsive filters
 - Flexible image layouts
 - Touch-friendly buttons
@@ -2862,18 +2938,21 @@ dev (0) > admin (1) > tournament_manager (2) > reviewer (3) > player (4) > viewe
 ### Usage Across Codebase
 
 **Role Validation:** Used in 10+ files
+
 - admin.ts, reviewer.ts, tournamentManager.ts
 - dashboard.ts, tournaments.ts, teams.ts
 - submissions.ts, submissionGroups.ts
 - joinRequests.ts, teamInvitations.ts
 
 **Data Enrichment:** Used in 10+ files
+
 - captain.ts, dashboard.ts, tournaments.ts
 - public.ts, viewer.ts, submissionGroups.ts
 - joinRequests.ts, teamInvitations.ts
 - teams.ts (enrichTeamsWithMembers removed, uses helper)
 
 **Batch Operations:** Used in 4+ files
+
 - reviewer.ts, tournaments.ts, dashboard.ts, users.ts
 
 ### Code Deduplication Results
@@ -2926,24 +3005,28 @@ common/
 ### Key Improvements
 
 **Performance:**
+
 - Batch operations reduce N+1 query problems
 - Filter queries for large batches (>5 items)
 - Parallel enrichment fetching
 - Efficient orphaned record detection
 
 **Maintainability:**
+
 - Single source of truth for common patterns
 - Consistent APIs across codebase
 - Easy to extend and modify
 - Clear separation of concerns
 
 **Type Safety:**
+
 - Advanced TypeScript generics
 - Proper type inference for enrichment
 - Discriminated union support
 - No `any` types used
 
 **Consistency:**
+
 - Uniform role validation
 - Standard enrichment patterns
 - Predictable error messages
@@ -2952,28 +3035,31 @@ common/
 ### Enrichment Examples
 
 **Many-to-One Relationship:**
+
 ```typescript
 const enriched = await enrichWithRelations(ctx, teams, {
   tournament: {
     table: "tournaments",
-    foreignKey: (team) => team.tournamentId
-  }
+    foreignKey: (team) => team.tournamentId,
+  },
 });
 // Result: { tournament: Doc<"tournaments"> | null }
 ```
 
 **One-to-Many Relationship:**
+
 ```typescript
 const enriched = await enrichWithRelations(ctx, teams, {
   members: {
     table: "teamMembers",
-    foreignKeyField: "teamId"
-  }
+    foreignKeyField: "teamId",
+  },
 });
 // Result: { members: Doc<"teamMembers">[] }
 ```
 
 **Nested Enrichment:**
+
 ```typescript
 const enriched = await enrichWithRelations(ctx, teams, {
   teamMembers: {
@@ -2982,10 +3068,10 @@ const enriched = await enrichWithRelations(ctx, teams, {
     enrich: {
       user: {
         table: "users",
-        foreignKey: (m) => m.userId
-      }
-    }
-  }
+        foreignKey: (m) => m.userId,
+      },
+    },
+  },
 });
 // Result: teams with nested user data
 ```
@@ -2993,18 +3079,21 @@ const enriched = await enrichWithRelations(ctx, teams, {
 ### Benefits
 
 **For Development:**
+
 - 45% code reduction in affected areas
 - Faster development of new features
 - Consistent patterns to follow
 - Easy to onboard new developers
 
 **For Platform:**
+
 - Improved performance
 - Better scalability
 - Reduced maintenance burden
 - Fewer bugs from duplication
 
 **For Code Quality:**
+
 - DRY principle enforced
 - Type-safe abstractions
 - Testable helper functions

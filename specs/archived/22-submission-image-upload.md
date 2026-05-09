@@ -17,6 +17,7 @@ Add mandatory image upload functionality to the submission system to ensure tour
 ### Functional Requirements
 
 **Image Upload Capabilities**:
+
 - Users MUST upload between 1 and 3 images per submission (configurable minimum/maximum)
 - Support standard image formats: JPEG, PNG, WebP, HEIC
 - Maximum file size: 10MB per image
@@ -27,12 +28,14 @@ Add mandatory image upload functionality to the submission system to ensure tour
 - Users can delete/replace images before submission is finalized
 
 **Image Management**:
+
 - Images are permanently associated with submissions (cannot be changed after approval)
 - Pending submissions can have images edited/replaced
 - Deleting a submission also deletes associated images from storage
 - Rejected submissions retain images for audit trail but can be manually deleted by admins
 
 **Admin Review Experience**:
+
 - Admins see thumbnail grid of all images when reviewing submissions
 - Clicking a thumbnail opens a full-size lightbox/modal view
 - Lightbox supports keyboard navigation (arrow keys, ESC to close)
@@ -41,11 +44,13 @@ Add mandatory image upload functionality to the submission system to ensure tour
 - Image gallery shows which team member uploaded each image (for team submissions)
 
 **Team Member Viewing**:
+
 - Team members can view submission images in read-only mode
 - Images appear on submission detail pages
 - Submission calendar shows thumbnail indicator if images are present
 
 **Validation & Error Handling**:
+
 - Frontend validates file type before upload attempt
 - Frontend validates file size before upload (prevent wasted bandwidth)
 - Backend validates file content type (not just extension - check MIME type)
@@ -59,6 +64,7 @@ Add mandatory image upload functionality to the submission system to ensure tour
 - Upload progress indicator for each image (0-100%)
 
 **Edge Cases**:
+
 - User navigates away during upload: Show confirmation dialog
 - Network interruption during upload: Allow retry with same files
 - Duplicate image uploads: Allow (no deduplication needed)
@@ -70,6 +76,7 @@ Add mandatory image upload functionality to the submission system to ensure tour
 ### Non-Functional Requirements
 
 **Performance**:
+
 - Image uploads should complete in <10 seconds on typical connections (assuming <5MB images)
 - Thumbnail generation happens on client-side before display (CSS resize)
 - Admin review page loads in <2 seconds even with 50+ submissions
@@ -77,6 +84,7 @@ Add mandatory image upload functionality to the submission system to ensure tour
 - Lazy load images in data tables (only load visible rows)
 
 **Security**:
+
 - Only authenticated users can upload images
 - Users can only upload images for their own submissions (or team submissions)
 - Image URLs are authenticated (require Convex query to retrieve)
@@ -85,6 +93,7 @@ Add mandatory image upload functionality to the submission system to ensure tour
 - Storage IDs are non-guessable (Convex-generated)
 
 **Accessibility**:
+
 - Image upload component is keyboard navigable
 - Screen reader announces upload progress
 - Alt text for images (auto-generated from submission description + date)
@@ -92,8 +101,9 @@ Add mandatory image upload functionality to the submission system to ensure tour
 - Focus management in lightbox (trap focus, restore on close)
 
 **Mobile Responsiveness**:
+
 - Touch-friendly upload button (minimum 48x48px tap target)
-- Camera integration on mobile (accept="image/*" with capture attribute)
+- Camera integration on mobile (accept="image/\*" with capture attribute)
 - Responsive image grid (1 column on mobile, 2-3 on desktop)
 - Pinch-to-zoom support in lightbox on mobile
 - Optimized upload for mobile networks (show estimated upload time)
@@ -124,6 +134,7 @@ submissionImages: defineTable({
 ```
 
 **Rationale for Separate Table**:
+
 - Allows multiple images per submission (1-to-many relationship)
 - Easier to query/filter images independently
 - Simplifies image deletion (just delete rows, not patching arrays)
@@ -131,6 +142,7 @@ submissionImages: defineTable({
 - Audit trail: track who uploaded each image in team submissions
 
 **Schema Migration Strategy**:
+
 - New table is additive (no changes to existing `submissions` table)
 - Existing submissions without images continue to work
 - No backfilling required (old submissions simply have zero related images)
@@ -189,15 +201,19 @@ export const saveImage = mutation({
         const membership = await ctx.db
           .query("teamMembers")
           .withIndex("by_team_and_user", (q) =>
-            q.eq("teamId", submission.teamId).eq("userId", user._id)
+            q.eq("teamId", submission.teamId).eq("userId", user._id),
           )
           .first();
 
         if (!membership) {
-          throw new Error("You don't have permission to upload images for this submission");
+          throw new Error(
+            "You don't have permission to upload images for this submission",
+          );
         }
       } else {
-        throw new Error("You don't have permission to upload images for this submission");
+        throw new Error(
+          "You don't have permission to upload images for this submission",
+        );
       }
     }
 
@@ -213,24 +229,35 @@ export const saveImage = mutation({
     }
 
     // Validate content type (backend validation - don't trust client)
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/heic"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+    ];
     if (!allowedTypes.includes(fileMetadata.contentType || "")) {
       // Delete invalid file from storage
       await ctx.storage.delete(args.storageId);
-      throw new Error(`Invalid file type: ${fileMetadata.contentType}. Only JPEG, PNG, WebP, and HEIC are allowed.`);
+      throw new Error(
+        `Invalid file type: ${fileMetadata.contentType}. Only JPEG, PNG, WebP, and HEIC are allowed.`,
+      );
     }
 
     // Validate file size (10MB max per image)
     const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
     if (fileMetadata.size > MAX_IMAGE_SIZE) {
       await ctx.storage.delete(args.storageId);
-      throw new Error(`Image exceeds 10MB limit (size: ${(fileMetadata.size / 1024 / 1024).toFixed(2)}MB)`);
+      throw new Error(
+        `Image exceeds 10MB limit (size: ${(fileMetadata.size / 1024 / 1024).toFixed(2)}MB)`,
+      );
     }
 
     // Check total submission image count (max 3)
     const existingImages = await ctx.db
       .query("submissionImages")
-      .withIndex("by_submission", (q) => q.eq("submissionId", args.submissionId))
+      .withIndex("by_submission", (q) =>
+        q.eq("submissionId", args.submissionId),
+      )
       .collect();
 
     if (existingImages.length >= 3) {
@@ -256,6 +283,7 @@ export const saveImage = mutation({
 ```
 
 **Validation Strategy**:
+
 - Use `ctx.db.system.get()` to verify file exists and retrieve actual metadata
 - Check MIME type from storage (server-side validation)
 - Delete files that fail validation to prevent storage bloat
@@ -279,14 +307,16 @@ export const getSubmissionImages = query({
 
     // Check if user is owner, team member, or admin
     const isOwner = submission.userId === user._id;
-    const isAdmin = user.roleNames.includes("admin") || user.roleNames.includes("tournament_manager");
+    const isAdmin =
+      user.roleNames.includes("admin") ||
+      user.roleNames.includes("tournament_manager");
 
     let isTeamMember = false;
     if (!isOwner && !isAdmin) {
       const membership = await ctx.db
         .query("teamMembers")
         .withIndex("by_team_and_user", (q) =>
-          q.eq("teamId", submission.teamId).eq("userId", user._id)
+          q.eq("teamId", submission.teamId).eq("userId", user._id),
         )
         .first();
       isTeamMember = !!membership;
@@ -299,7 +329,9 @@ export const getSubmissionImages = query({
     // Get images sorted by order
     const images = await ctx.db
       .query("submissionImages")
-      .withIndex("by_submission", (q) => q.eq("submissionId", args.submissionId))
+      .withIndex("by_submission", (q) =>
+        q.eq("submissionId", args.submissionId),
+      )
       .collect();
 
     // Generate URLs for each image and include uploader info
@@ -314,7 +346,7 @@ export const getSubmissionImages = query({
           uploaderName: uploader?.name || "Unknown",
           uploaderEmail: uploader?.email || "",
         };
-      })
+      }),
     );
 
     // Sort by order field
@@ -351,7 +383,9 @@ export const deleteImage = mutation({
 
     // Only owner or admin can delete images
     const isOwner = submission.userId === user._id;
-    const isAdmin = user.roleNames.includes("admin") || user.roleNames.includes("tournament_manager");
+    const isAdmin =
+      user.roleNames.includes("admin") ||
+      user.roleNames.includes("tournament_manager");
 
     if (!isOwner && !isAdmin) {
       throw new Error("You don't have permission to delete this image");
@@ -410,7 +444,9 @@ export const upsert = mutation({
           .collect();
 
         if (images.length < 1) {
-          throw new Error("Please upload at least 1 image as proof of activity before submitting");
+          throw new Error(
+            "Please upload at least 1 image as proof of activity before submitting",
+          );
         }
       }
     }
@@ -435,7 +471,7 @@ export const upsert = mutation({
  */
 async function deleteSubmissionImages(
   ctx: MutationCtx,
-  submissionId: Id<"submissions">
+  submissionId: Id<"submissions">,
 ): Promise<void> {
   const images = await ctx.db
     .query("submissionImages")
@@ -447,7 +483,7 @@ async function deleteSubmissionImages(
     images.map(async (img) => {
       await ctx.storage.delete(img.storageId);
       await ctx.db.delete(img._id);
-    })
+    }),
   );
 }
 
@@ -739,6 +775,7 @@ export function ImageUploader({
 ```
 
 **Key Features**:
+
 - Drag-and-drop support with visual feedback
 - File validation before upload
 - Preview images immediately
@@ -893,6 +930,7 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
 ```
 
 **Key Features**:
+
 - Thumbnail grid with hover effects
 - Full-screen lightbox modal
 - Keyboard navigation (arrow keys, ESC)
@@ -950,6 +988,7 @@ export function UpsertSubmissionFormDialog({ ... }) {
 ```
 
 **User Flow**:
+
 1. User creates submission (without images initially - draft state)
 2. User is redirected to submission detail page
 3. User uploads images using ImageUploader
@@ -1020,6 +1059,7 @@ const columns: ColumnDef<...>[] = [
 #### **Updated Routes**
 
 **Modify existing routes** (no new routes needed):
+
 - `/submissions/[submissionId]` - Display images in gallery
 - `/submissions/[submissionId]/edit` - Allow image upload/management (if using separate edit page)
 
@@ -1028,6 +1068,7 @@ const columns: ColumnDef<...>[] = [
 ### Integration Points
 
 **1. Submission Creation Flow**:
+
 ```
 User clicks "Create Submission"
   → Form dialog opens
@@ -1042,6 +1083,7 @@ User clicks "Create Submission"
 ```
 
 **2. Admin Review Flow**:
+
 ```
 Admin navigates to submission review page
   → Submission list shows image indicator
@@ -1053,6 +1095,7 @@ Admin navigates to submission review page
 ```
 
 **3. Team Member Viewing**:
+
 ```
 Team member navigates to team submissions
   → Submission calendar shows submissions
@@ -1061,6 +1104,7 @@ Team member navigates to team submissions
 ```
 
 **4. Submission Deletion**:
+
 ```
 User/Admin deletes submission
   → submissions.remove mutation called
@@ -1076,6 +1120,7 @@ User/Admin deletes submission
 ### Phase 1: Foundation (Day 1 - Morning)
 
 **Database & Backend Setup**:
+
 - [ ] Add `submissionImages` table to schema (`convex/schema.ts`)
 - [ ] Create `generateUploadUrl` mutation
 - [ ] Create `saveImage` mutation with validation
@@ -1092,6 +1137,7 @@ User/Admin deletes submission
 ### Phase 2: Business Logic (Day 1 - Afternoon)
 
 **Validation & Authorization**:
+
 - [ ] Add file type validation (MIME type checking)
 - [ ] Add file size validation (per-image and total)
 - [ ] Add maximum image count enforcement
@@ -1100,6 +1146,7 @@ User/Admin deletes submission
 - [ ] Test all validation edge cases
 
 **Error Handling**:
+
 - [ ] Handle invalid file types
 - [ ] Handle oversized files
 - [ ] Handle storage failures
@@ -1113,6 +1160,7 @@ User/Admin deletes submission
 ### Phase 3: User Interface (Day 2 - Full Day)
 
 **Image Upload Component**:
+
 - [ ] Create `ImageUploader` component with drag-and-drop
 - [ ] Implement file preview generation
 - [ ] Add upload progress tracking
@@ -1123,6 +1171,7 @@ User/Admin deletes submission
 - [ ] Test file picker, drag-and-drop, camera on mobile
 
 **Image Gallery Component**:
+
 - [ ] Create `ImageGallery` thumbnail grid
 - [ ] Implement lightbox modal
 - [ ] Add keyboard navigation (arrows, ESC)
@@ -1131,12 +1180,14 @@ User/Admin deletes submission
 - [ ] Test on various screen sizes
 
 **Form Integration**:
+
 - [ ] Update `UpsertSubmissionFormDialog` to include ImageUploader
 - [ ] Add conditional rendering (show uploader only after submission created)
 - [ ] Add validation messages
 - [ ] Update submission flow (draft → upload images → finalize)
 
 **Detail Page Integration**:
+
 - [ ] Update `SubmissionDetailsCard` to query images
 - [ ] Integrate `ImageGallery` component
 - [ ] Add "missing images" warning for pending submissions
@@ -1149,6 +1200,7 @@ User/Admin deletes submission
 ### Phase 4: Polish & Testing (Day 3)
 
 **Loading States & Error Boundaries**:
+
 - [ ] Add skeleton loaders for image gallery
 - [ ] Add retry buttons for failed uploads
 - [ ] Add confirmation dialog before deleting images
@@ -1156,6 +1208,7 @@ User/Admin deletes submission
 - [ ] Handle edge case: user navigates away during upload
 
 **Accessibility**:
+
 - [ ] Add keyboard navigation to uploader
 - [ ] Add ARIA labels to buttons
 - [ ] Add screen reader announcements for upload progress
@@ -1163,6 +1216,7 @@ User/Admin deletes submission
 - [ ] Test with screen reader (NVDA/JAWS)
 
 **Mobile Optimization**:
+
 - [ ] Test camera integration on iOS/Android
 - [ ] Test drag-and-drop on touch devices
 - [ ] Test lightbox on mobile (pinch-to-zoom)
@@ -1170,6 +1224,7 @@ User/Admin deletes submission
 - [ ] Add upload time estimates
 
 **Manual Testing Scenarios**:
+
 - [ ] Create submission → upload 1 image → finalize → verify
 - [ ] Create submission → upload 3 images → finalize → verify
 - [ ] Try to finalize submission with 0 images → expect error
@@ -1182,6 +1237,7 @@ User/Admin deletes submission
 - [ ] Mobile: use camera to capture photo → upload → verify
 
 **Documentation**:
+
 - [ ] Update CLAUDE.md with image upload patterns
 - [ ] Add code comments to complex functions
 - [ ] Document image size limits in user-facing tooltips
@@ -1366,23 +1422,27 @@ return (
 ### Gradual Rollout
 
 **Phase 1: Soft Launch** (Week 1)
+
 - Deploy image upload feature
 - Existing submissions without images continue to work (grandfathered)
 - New submissions show image uploader but DON'T enforce minimum yet
 - Monitor for errors, storage costs, performance issues
 
 **Phase 2: Enforcement** (Week 2)
+
 - Enable minimum image validation for new submissions
 - Show warning banners on old submissions without images
 - Communicate change to users via email/announcement
 
 **Phase 3: Full Deployment** (Week 3)
+
 - Image upload is mandatory for all new submissions
 - Old submissions remain grandfathered (no backfilling required)
 
 ### Rollback Plan
 
 If critical issues arise:
+
 1. Disable image validation in `submissions.upsert` (allow 0 images)
 2. Hide ImageUploader component (feature flag or comment out)
 3. Fix issues, re-deploy
@@ -1410,6 +1470,7 @@ If critical issues arise:
 ## Dependencies
 
 ### NPM Packages (Already Installed)
+
 - `convex` (^1.25.4) - File storage API
 - `react` (19.1.0) - UI framework
 - `zod` (^4.1.12) - Validation schemas
@@ -1417,9 +1478,11 @@ If critical issues arise:
 - `@radix-ui/react-dialog` (^1.1.15) - Lightbox modal
 
 ### New Dependencies Needed
+
 - None! All requirements met with existing packages.
 
 ### Browser APIs Used
+
 - `FileReader` API (image preview generation)
 - `Drag and Drop` API (file upload)
 - `fetch` API (upload to Convex)
@@ -1432,15 +1495,18 @@ If critical issues arise:
 ### Key Concepts
 
 **Storage IDs**: Unique identifiers for files (`Id<"_storage">`)
+
 - Generated by Convex when file is uploaded
 - Used to retrieve files via `ctx.storage.getUrl()` or `ctx.storage.get()`
 
 **Upload URLs**: Temporary URLs for direct client-to-storage uploads
+
 - Generated via `ctx.storage.generateUploadUrl()`
 - Expire after 1 hour
 - Client POSTs file directly to this URL
 
 **System Table**: `_storage` table tracks all uploaded files
+
 - Fields: `_id`, `sha256`, `size`, `contentType`, `_creationTime`
 - Queryable via `ctx.db.system.get()` or `ctx.db.system.query("_storage")`
 
@@ -1477,6 +1543,7 @@ await ctx.storage.delete(storageId);
 This specification provides a complete blueprint for implementing mandatory image uploads in the Urban Legends submission system. The design leverages Convex's built-in file storage, follows existing architectural patterns, and ensures tournament integrity through visual proof requirements.
 
 **Key Takeaways**:
+
 - Users upload 1-3 images per submission as proof of activity
 - Images stored in Convex with separate `submissionImages` table for metadata
 - Admin review includes full-screen image gallery with keyboard navigation
@@ -1485,6 +1552,7 @@ This specification provides a complete blueprint for implementing mandatory imag
 - No external dependencies required
 
 **Next Steps**:
+
 1. Review specification with stakeholders
 2. Clarify open questions (minimum image count, legacy submissions, etc.)
 3. Begin Phase 1 implementation (database schema + backend mutations)

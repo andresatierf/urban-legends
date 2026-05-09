@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { fetchClerkAuth } from "@/utils/auth-server";
 

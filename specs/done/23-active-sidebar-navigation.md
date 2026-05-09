@@ -37,7 +37,7 @@ Create a utility hook for determining active navigation state:
 
 ```typescript
 // src/hooks/useActiveRoute.ts
-import { usePathname } from 'next/navigation';
+import { usePathname } from "next/navigation";
 
 export function useActiveRoute() {
   const pathname = usePathname();
@@ -60,6 +60,7 @@ export function useActiveRoute() {
 Identify and document the existing navigation structure. Expected items:
 
 **Admin Routes**:
+
 - Dashboard (`/dashboard`)
 - Tournaments (`/admin/tournaments` or `/tournaments`)
 - Teams (`/admin/teams` or `/teams`)
@@ -67,6 +68,7 @@ Identify and document the existing navigation structure. Expected items:
 - Submissions (`/submissions`)
 
 **User Routes**:
+
 - Dashboard (`/dashboard`)
 - My Teams (`/teams`)
 - Tournaments (`/tournaments`)
@@ -129,15 +131,18 @@ function NavItem({ href, icon: Icon, label, exact = false }: NavItemProps) {
 ### 5. Special Cases
 
 **Dashboard Route** (`/dashboard`):
+
 - Should use **exact matching** since many routes start with `/dashboard`
 - Example: `<NavItem href="/dashboard" exact={true} ... />`
 
 **Nested Routes**:
+
 - Tournament detail pages (`/tournaments/[id]`) should highlight "Tournaments"
 - Team detail pages (`/teams/[id]`) should highlight "Teams"
 - Use partial matching (default behavior)
 
 **Route Groups**:
+
 - Since admin routes are in `(all)` group, ensure matching works correctly
 - Test with both `/tournaments` and `/admin/tournaments` patterns
 

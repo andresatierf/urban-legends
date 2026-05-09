@@ -3,7 +3,9 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { useMemo } from "react";
+
 import { useUser } from "@/hooks/useUser";
+
 import { api } from "../../convex/_generated/api";
 import { TeamInvitationsList } from "./invitations/team-invitations-list";
 import { SectionHeader } from "./section-header";
@@ -107,12 +109,12 @@ export function UserDashboard(_props: UserDashboardProps) {
                 d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
               />
             </SvgIcon>
-            <CardTitle className="font-semibold text-foreground text-xl">
+            <CardTitle className="text-foreground text-xl font-semibold">
               Admin Overview
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 py-3">
-            <div className="grid grid-cols-1 xs:grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="xs:grid-cols-2 grid grid-cols-1 gap-4 md:grid-cols-4">
               <StatCard
                 title="Total Tournaments"
                 value={adminStats.totalTournaments}
@@ -141,7 +143,7 @@ export function UserDashboard(_props: UserDashboardProps) {
             </div>
           </CardContent>
           <CardFooter className="flex-col items-start p-6 pt-0">
-            <p className="pb-2 font-medium text-gray-700 text-sm">
+            <p className="pb-2 text-sm font-medium text-gray-700">
               Admin Actions
             </p>
             <div className="flex flex-wrap gap-2">

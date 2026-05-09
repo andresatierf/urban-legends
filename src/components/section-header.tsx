@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -29,8 +30,8 @@ export function SectionHeader({
         )}
         <div>
           <Comp
-            className={cn("font-semibold text-foreground", {
-              "font-bold text-3xl": Comp === "h1",
+            className={cn("text-foreground font-semibold", {
+              "text-3xl font-bold": Comp === "h1",
               "text-lg": Comp === "h2",
             })}
           >

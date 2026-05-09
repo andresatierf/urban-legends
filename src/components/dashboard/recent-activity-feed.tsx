@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { CheckCircle, UserPlus, Users, XCircle } from "lucide-react";
+
 import {
   Card,
   CardContent,
@@ -54,11 +55,11 @@ export function RecentActivityFeed({ activities }: RecentActivityFeedProps) {
                 <Link
                   key={activityKey}
                   to={activity.link}
-                  className="flex gap-3 rounded-md p-2 transition-colors hover:bg-muted"
+                  className="hover:bg-muted flex gap-3 rounded-md p-2 transition-colors"
                 >
                   {Icon && (
                     <div className="mt-0.5">
-                      <Icon className="h-4 w-4 text-muted-foreground" />
+                      <Icon className="text-muted-foreground h-4 w-4" />
                     </div>
                   )}
                   <div className="flex-1 space-y-1">
@@ -74,7 +75,7 @@ export function RecentActivityFeed({ activities }: RecentActivityFeedProps) {
                 <div key={activityKey} className="flex gap-3 rounded-md p-2">
                   {Icon && (
                     <div className="mt-0.5">
-                      <Icon className="h-4 w-4 text-muted-foreground" />
+                      <Icon className="text-muted-foreground h-4 w-4" />
                     </div>
                   )}
                   <div className="flex-1 space-y-1">

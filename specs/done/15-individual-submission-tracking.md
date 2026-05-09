@@ -9,6 +9,7 @@
 The current submission system tracks team-based submissions with an optional "teammates" array, but it has a critical flaw: it doesn't enforce that ALL participating team members individually submit and verify their participation. This spec proposes a data model redesign that requires individual member submissions while preventing double-counting of points through a grouped submission system.
 
 **Primary Benefits:**
+
 - Ensures accountability - every participant must personally confirm their activity
 - Prevents one member from submitting on behalf of others
 - Maintains accurate participation tracking for team exercise threshold calculations
@@ -47,6 +48,7 @@ submissions: {
 ### Real-World Scenario
 
 **Current Broken Flow:**
+
 1. Alice, Bob, and Charlie do a team workout together
 2. Alice creates a submission listing Bob and Charlie as teammates
 3. Bob and Charlie never confirm they participated
@@ -54,6 +56,7 @@ submissions: {
 5. **Problem:** Bob might submit the same workout again, earning duplicate points
 
 **New Flow - Team Activity:**
+
 1. Alice, Bob, and Charlie do a team workout together
 2. Alice creates submission for 2025-01-15, selects "Team Activity"
 3. Bob creates submission for 2025-01-15, selects "Team Activity" (joins same group)
@@ -63,6 +66,7 @@ submissions: {
 7. Team gets points ONCE based on 3/3 members participating (100% = team exercise)
 
 **New Flow - Individual Activity:**
+
 1. Alice does a solo workout on 2025-01-15
 2. Alice creates submission for 2025-01-15, selects "Individual Activity"
 3. Submission remains standalone (not grouped)
@@ -71,6 +75,7 @@ submissions: {
 6. **Note:** Bob can also do a different individual workout on 2025-01-15 (multiple individual activities allowed per day)
 
 **Mixed Flow - Same Day:**
+
 1. Alice does individual workout in morning (submission type: "individual")
 2. Later that day, Alice, Bob, and Charlie do team workout together
 3. Alice, Bob, Charlie each create "Team Activity" submissions for same date
@@ -140,6 +145,7 @@ submissions: {
 ### Current Data Model
 
 **Submissions Table:**
+
 - `userId`: Creator of submission
 - `teammates`: Array of participating user IDs (optional, may be empty)
 - One row per submission
@@ -151,15 +157,15 @@ submissions: {
 const totalTeamMembers = teamMembers.length;
 const participantCount = Math.min(
   totalTeamMembers,
-  submission.teammates.length + 1,  // Submitter + listed teammates
+  submission.teammates.length + 1, // Submitter + listed teammates
 );
-const participationRate = totalTeamMembers > 0
-  ? participantCount / totalTeamMembers
-  : 0;
+const participationRate =
+  totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
 const isTeamExercise = participationRate >= scoringConfig.teamExerciseThreshold;
 ```
 
 **Issues:**
+
 - Relies on submitter's honesty about who participated
 - No verification from listed teammates
 - No mechanism to detect duplicate submissions
@@ -169,6 +175,7 @@ const isTeamExercise = participationRate >= scoringConfig.teamExerciseThreshold;
 **Location:** `src/components/form/upsert-submission-form.tsx`
 
 **Current Flow:**
+
 1. User selects team and date
 2. Optional: Adds description
 3. Selects tier (base/advanced)
@@ -176,6 +183,7 @@ const isTeamExercise = participationRate >= scoringConfig.teamExerciseThreshold;
 5. Submits
 
 **Current teammates implementation:**
+
 - Dynamic array field with combobox selection
 - Can add 0 to `teamMaxSize - 1` teammates
 - No validation that teammates also submitted
@@ -185,11 +193,13 @@ const isTeamExercise = participationRate >= scoringConfig.teamExerciseThreshold;
 **Location:** `src/components/submissions/calendar-date-cell.tsx`
 
 **Current Display:**
+
 - Shows one submission per date per user
 - Color-coded by state (pending/approved/rejected)
 - Points displayed if approved
 
 **Missing:**
+
 - No indication of team participation
 - No way to see who else submitted
 - No "awaiting team members" state
@@ -273,6 +283,7 @@ Keep current structure but add `submissionConfirmations` table.
 ### Recommended Approach: Option A (Submission Groups)
 
 **Rationale:**
+
 - Most scalable and maintainable long-term
 - Clear data model that matches domain logic
 - Best enables future features (e.g., group comments, attachments)
@@ -293,16 +304,18 @@ tournaments: defineTable({
   maxSubmissionsPerDay: v.optional(v.number()), // NEW - limit submissions per user per day
   // null/undefined = unlimited
   // Examples: 1 (one submission per day), 3 (up to three per day), etc.
-})
+});
 ```
 
 **Purpose:**
+
 - Allows tournament organizers to control activity volume
 - Prevents submission spam or gaming the system
 - Flexible: can be set to any positive number or left unlimited
 - **Default:** Unlimited (backwards compatible)
 
 **Validation:**
+
 - Must be positive integer if set
 - Recommended range: 1-10 submissions per day
 - Applied at submission creation time
@@ -313,26 +326,23 @@ tournaments: defineTable({
 // convex/schema.ts
 
 submissions: defineTable({
-  userId: v.id("users"),                    // Who submitted (UNCHANGED)
-  teamId: v.id("teams"),                    // UNCHANGED
-  tournamentId: v.id("tournaments"),        // UNCHANGED
-  date: v.string(),                         // YYYY-MM-DD (UNCHANGED)
-  description: v.optional(v.string()),      // UNCHANGED
+  userId: v.id("users"), // Who submitted (UNCHANGED)
+  teamId: v.id("teams"), // UNCHANGED
+  tournamentId: v.id("tournaments"), // UNCHANGED
+  date: v.string(), // YYYY-MM-DD (UNCHANGED)
+  description: v.optional(v.string()), // UNCHANGED
   // REMOVED: teammates field (no longer needed)
-  submissionType: v.union(
-    v.literal("individual"),
-    v.literal("team"),
-  ),                                        // NEW - indicates if activity was done alone or with team
+  submissionType: v.union(v.literal("individual"), v.literal("team")), // NEW - indicates if activity was done alone or with team
   state: v.union(
     v.literal("pending"),
     v.literal("approved"),
     v.literal("rejected"),
     v.literal("deleted"),
-  ),                                        // UNCHANGED
-  createdBy: v.id("users"),                 // UNCHANGED
-  managedBy: v.optional(v.id("users")),     // UNCHANGED
+  ), // UNCHANGED
+  createdBy: v.id("users"), // UNCHANGED
+  managedBy: v.optional(v.id("users")), // UNCHANGED
   tier: v.union(v.literal("base"), v.literal("advanced")), // UNCHANGED
-  pointsEarned: v.number(),                 // UNCHANGED - points per individual
+  pointsEarned: v.number(), // UNCHANGED - points per individual
   submissionGroupId: v.optional(v.id("submissionGroups")), // NEW - reference to group (only for team submissions)
 })
   .index("by_user", ["userId"])
@@ -343,10 +353,11 @@ submissions: defineTable({
   .index("by_tournament_and_date", ["tournamentId", "date"])
   .index("by_state", ["state"])
   .index("by_user_and_state", ["userId", "state"])
-  .index("by_group", ["submissionGroupId"])  // NEW - for group queries
+  .index("by_group", ["submissionGroupId"]); // NEW - for group queries
 ```
 
 **Key Changes:**
+
 - ❌ **Removed:** `teammates: v.array(v.id("users"))` - no longer storing participant list
 - ✅ **Added:** `submissionType` - user explicitly indicates "individual" or "team" activity
 - ✅ **Added:** `submissionGroupId` - links team submissions to their group (null for individual)
@@ -359,7 +370,7 @@ submissions: defineTable({
 submissionGroups: defineTable({
   teamId: v.id("teams"),
   tournamentId: v.id("tournaments"),
-  date: v.string(),                         // YYYY-MM-DD
+  date: v.string(), // YYYY-MM-DD
   state: v.union(
     v.literal("pending"),
     v.literal("approved"),
@@ -367,22 +378,23 @@ submissionGroups: defineTable({
     v.literal("deleted"),
   ),
   tier: v.union(v.literal("base"), v.literal("advanced")), // Derived from submissions (highest tier wins)
-  participantCount: v.number(),             // How many members submitted for this team activity
-  totalTeamMembers: v.number(),             // Team size at time of submission
-  participationRate: v.number(),            // participantCount / totalTeamMembers
-  isTeamExercise: v.boolean(),              // participationRate >= threshold
-  pointsEarned: v.number(),                 // Total points for team (calculated on approval)
-  managedBy: v.optional(v.id("users")),     // Admin who approved/rejected
-  createdAt: v.string(),                    // First submission in group
-  updatedAt: v.string(),                    // Last modification
+  participantCount: v.number(), // How many members submitted for this team activity
+  totalTeamMembers: v.number(), // Team size at time of submission
+  participationRate: v.number(), // participantCount / totalTeamMembers
+  isTeamExercise: v.boolean(), // participationRate >= threshold
+  pointsEarned: v.number(), // Total points for team (calculated on approval)
+  managedBy: v.optional(v.id("users")), // Admin who approved/rejected
+  createdAt: v.string(), // First submission in group
+  updatedAt: v.string(), // Last modification
 })
   .index("by_team", ["teamId"])
   .index("by_team_and_date", ["teamId", "date"]) // Ensures uniqueness: one group per team per date
   .index("by_tournament_and_date", ["tournamentId", "date"])
-  .index("by_state", ["state"])
+  .index("by_state", ["state"]);
 ```
 
 **Purpose:**
+
 - Represents the logical "group" of team activity submissions for a team on a specific date
 - **Only exists for team activities** - individual submissions have no group
 - **Constraint:** One group per team per date (enforced by unique index on teamId + date)
@@ -393,11 +405,13 @@ submissionGroups: defineTable({
 #### Indexes Rationale
 
 **Existing indexes maintained:**
+
 - `by_user_and_date`: Fetch user's submission for calendar view
 - `by_team_and_date`: Find all submissions for team on date (for grouping)
 - `by_state`: Admin dashboard filters
 
 **New indexes:**
+
 - `by_group`: Efficiently load all individual submissions in a group
 - `submissionGroups.by_team_and_date`: Ensure one group per team per date (uniqueness enforcement)
 
@@ -408,6 +422,7 @@ submissionGroups: defineTable({
 **Submission Lifecycle:**
 
 **For Individual Activities:**
+
 1. **User creates submission** → `submissions.upsert` with `submissionType: "individual"`
 2. **No grouping** → Submission remains standalone
 3. **Admin approves** → `submissions.approve` (individual approval)
@@ -415,6 +430,7 @@ submissionGroups: defineTable({
 5. **Team points updated** → Add individual points to team total
 
 **For Team Activities:**
+
 1. **User creates submission** → `submissions.upsert` with `submissionType: "team"`
 2. **System validates** → Check if team activity group already exists for that date
 3. **System finds or creates group** → `submissionGroups.upsertGroup` (internal)
@@ -465,19 +481,19 @@ export const upsert = mutation({
       const existingSubmissions = await ctx.db
         .query("submissions")
         .withIndex("by_user_and_date", (q) =>
-          q.eq("userId", user._id).eq("date", args.date)
+          q.eq("userId", user._id).eq("date", args.date),
         )
         .filter((q) =>
           q.and(
             q.eq(q.field("tournamentId"), team.tournamentId),
-            q.neq(q.field("state"), "deleted")
-          )
+            q.neq(q.field("state"), "deleted"),
+          ),
         )
         .collect();
 
       if (existingSubmissions.length >= tournament.maxSubmissionsPerDay) {
         throw new Error(
-          `Daily submission limit reached (${tournament.maxSubmissionsPerDay} per day). You have already submitted ${existingSubmissions.length} time(s) today.`
+          `Daily submission limit reached (${tournament.maxSubmissionsPerDay} per day). You have already submitted ${existingSubmissions.length} time(s) today.`,
         );
       }
     }
@@ -487,7 +503,7 @@ export const upsert = mutation({
       const existingGroup = await ctx.db
         .query("submissionGroups")
         .withIndex("by_team_and_date", (q) =>
-          q.eq("teamId", args.teamId).eq("date", args.date)
+          q.eq("teamId", args.teamId).eq("date", args.date),
         )
         .first();
 
@@ -495,12 +511,16 @@ export const upsert = mutation({
       if (existingGroup && !args._id) {
         const userInGroup = await ctx.db
           .query("submissions")
-          .withIndex("by_group", (q) => q.eq("submissionGroupId", existingGroup._id))
+          .withIndex("by_group", (q) =>
+            q.eq("submissionGroupId", existingGroup._id),
+          )
           .filter((q) => q.eq(q.field("userId"), user._id))
           .first();
 
         if (userInGroup) {
-          throw new Error("You have already submitted for this team activity today");
+          throw new Error(
+            "You have already submitted for this team activity today",
+          );
         }
         // Otherwise, user can join the existing group
       }
@@ -583,6 +603,7 @@ export const upsert = mutation({
 ```
 
 **Key Changes:**
+
 - ✅ **Added:** `submissionType` parameter (required) - user explicitly chooses "individual" or "team"
 - ✅ **Added:** Daily submission limit validation - checks `tournament.maxSubmissionsPerDay`
 - ✅ **Added:** Constraint validation - only one team activity group per team per date
@@ -599,23 +620,23 @@ export const upsert = mutation({
 async function upsertSubmissionGroup(
   ctx: MutationCtx,
   args: {
-    teamId: Id<"teams">,
-    tournamentId: Id<"tournaments">,
-    date: string,
-  }
+    teamId: Id<"teams">;
+    tournamentId: Id<"tournaments">;
+    date: string;
+  },
 ) {
   // Find all TEAM activity submissions for this team on this date
   // (Individual submissions are NOT grouped)
   const submissions = await ctx.db
     .query("submissions")
     .withIndex("by_team_and_date", (q) =>
-      q.eq("teamId", args.teamId).eq("date", args.date)
+      q.eq("teamId", args.teamId).eq("date", args.date),
     )
     .filter((q) =>
       q.and(
         q.eq(q.field("submissionType"), "team"),
-        q.neq(q.field("state"), "deleted")
-      )
+        q.neq(q.field("state"), "deleted"),
+      ),
     )
     .collect();
 
@@ -624,7 +645,7 @@ async function upsertSubmissionGroup(
     const existingGroup = await ctx.db
       .query("submissionGroups")
       .withIndex("by_team_and_date", (q) =>
-        q.eq("teamId", args.teamId).eq("date", args.date)
+        q.eq("teamId", args.teamId).eq("date", args.date),
       )
       .first();
 
@@ -642,9 +663,8 @@ async function upsertSubmissionGroup(
 
   const totalTeamMembers = teamMembers.length;
   const participantCount = submissions.length;
-  const participationRate = totalTeamMembers > 0
-    ? participantCount / totalTeamMembers
-    : 0;
+  const participationRate =
+    totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
 
   // Get tournament for threshold
   const tournament = await ctx.db.get(args.tournamentId);
@@ -656,7 +676,8 @@ async function upsertSubmissionGroup(
     teamExerciseThreshold: 0.5,
   };
 
-  const isTeamExercise = participationRate >= scoringConfig.teamExerciseThreshold;
+  const isTeamExercise =
+    participationRate >= scoringConfig.teamExerciseThreshold;
 
   // Determine tier - use highest tier if mixed
   const hasAdvanced = submissions.some((s) => s.tier === "advanced");
@@ -687,7 +708,7 @@ async function upsertSubmissionGroup(
   const existingGroup = await ctx.db
     .query("submissionGroups")
     .withIndex("by_team_and_date", (q) =>
-      q.eq("teamId", args.teamId).eq("date", args.date)
+      q.eq("teamId", args.teamId).eq("date", args.date),
     )
     .first();
 
@@ -739,6 +760,7 @@ async function upsertSubmissionGroup(
 ```
 
 **Purpose:**
+
 - Aggregates individual submissions into a group
 - Recalculates participation metrics
 - Determines group tier (highest tier wins)
@@ -828,6 +850,7 @@ export const approve = mutation({
 ```
 
 **Key Points:**
+
 - Approves entire group atomically
 - Calculates points at group level based on participation rate
 - Updates all individual submissions to approved state
@@ -917,7 +940,7 @@ export const list = query({
 
     if (args.tournamentId) {
       query = query.filter((q) =>
-        q.eq(q.field("tournamentId"), args.tournamentId)
+        q.eq(q.field("tournamentId"), args.tournamentId),
       );
     }
 
@@ -965,13 +988,15 @@ export const getWithSubmissions = query({
         const user = await ctx.db.get(submission.userId);
         return {
           ...submission,
-          user: user ? {
-            _id: user._id,
-            name: user.name,
-            email: user.email
-          } : null,
+          user: user
+            ? {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+              }
+            : null,
         };
-      })
+      }),
     );
 
     return {
@@ -1065,7 +1090,9 @@ export const remove = mutation({
 Add `maxSubmissionsPerDay` field to tournament creation/edit form:
 
 ```tsx
-{/* Daily Submission Limit */}
+{
+  /* Daily Submission Limit */
+}
 <form.Field
   name="maxSubmissionsPerDay"
   children={(field) => (
@@ -1083,20 +1110,21 @@ Add `maxSubmissionsPerDay` field to tournament creation/edit form:
         value={field.state.value ?? ""}
         onChange={(e) =>
           field.handleChange(
-            e.target.value ? Number(e.target.value) : undefined
+            e.target.value ? Number(e.target.value) : undefined,
           )
         }
       />
       <p className="text-muted-foreground text-xs">
-        Maximum number of submissions each user can create per day.
-        Leave empty for unlimited submissions.
+        Maximum number of submissions each user can create per day. Leave empty
+        for unlimited submissions.
       </p>
     </div>
   )}
-/>
+/>;
 ```
 
 **Schema Update:**
+
 ```typescript
 const formSchema = z.object({
   // ... existing fields ...
@@ -1105,6 +1133,7 @@ const formSchema = z.object({
 ```
 
 **Default Values:**
+
 ```typescript
 defaultValues: {
   // ... existing fields ...
@@ -1150,16 +1179,15 @@ defaultValues: {
 4. **Add submission type selector UI:**
 
 ```tsx
-{/* Submission Type Selector */}
+{
+  /* Submission Type Selector */
+}
 <form.Field
   name="submissionType"
   children={(field) => (
     <div className="space-y-2">
       <Label>Activity Type</Label>
-      <RadioGroup
-        value={field.state.value}
-        onValueChange={field.handleChange}
-      >
+      <RadioGroup value={field.state.value} onValueChange={field.handleChange}>
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="individual" id="individual" />
           <Label htmlFor="individual" className="font-normal">
@@ -1183,44 +1211,50 @@ defaultValues: {
         <Alert>
           <Users className="h-4 w-4" />
           <AlertDescription>
-            All participating teammates must submit individually.
-            Only one team activity is allowed per day.
+            All participating teammates must submit individually. Only one team
+            activity is allowed per day.
           </AlertDescription>
         </Alert>
       )}
     </div>
   )}
-/>
+/>;
 ```
 
 5. **Remove teammates UI section** - delete entire section
 6. **Add daily limit indicator before form:**
 
 ```tsx
-{/* Daily Submission Limit Indicator */}
-{tournament?.maxSubmissionsPerDay && (
-  <Alert variant={remainingSubmissions === 0 ? "destructive" : "default"}>
-    <Info className="h-4 w-4" />
-    <AlertTitle>Daily Submission Limit</AlertTitle>
-    <AlertDescription>
-      You have {remainingSubmissions} of {tournament.maxSubmissionsPerDay} submissions remaining today.
-      {remainingSubmissions === 0 && " You cannot create more submissions today."}
-    </AlertDescription>
-  </Alert>
-)}
+{
+  /* Daily Submission Limit Indicator */
+}
+{
+  tournament?.maxSubmissionsPerDay && (
+    <Alert variant={remainingSubmissions === 0 ? "destructive" : "default"}>
+      <Info className="h-4 w-4" />
+      <AlertTitle>Daily Submission Limit</AlertTitle>
+      <AlertDescription>
+        You have {remainingSubmissions} of {tournament.maxSubmissionsPerDay}{" "}
+        submissions remaining today.
+        {remainingSubmissions === 0 &&
+          " You cannot create more submissions today."}
+      </AlertDescription>
+    </Alert>
+  );
+}
 ```
 
 **Query to get remaining submissions:**
+
 ```typescript
 // In component
 const userSubmissionsToday = useQuery(
   api.submissions.getUserSubmissionsForDate,
-  { userId: user._id, date, tournamentId: tournament._id }
+  { userId: user._id, date, tournamentId: tournament._id },
 );
 
-const submissionsCount = userSubmissionsToday?.filter(
-  (s) => s.state !== "deleted"
-).length ?? 0;
+const submissionsCount =
+  userSubmissionsToday?.filter((s) => s.state !== "deleted").length ?? 0;
 
 const remainingSubmissions = tournament?.maxSubmissionsPerDay
   ? Math.max(0, tournament.maxSubmissionsPerDay - submissionsCount)
@@ -1497,12 +1531,14 @@ return submissions.reduce(
 #### User Submission Flow
 
 **Before (Old):**
+
 1. User opens calendar, clicks date
 2. Form: Select team, date, tier, **add teammates**
 3. Submit
 4. Shows as "pending"
 
 **After (New):**
+
 1. User opens calendar, clicks date
 2. Form: Select team, date, tier (simplified - no teammates)
 3. Submit
@@ -1514,12 +1550,14 @@ return submissions.reduce(
 #### Admin Approval Flow
 
 **Before (Old):**
+
 1. Admin sees list of individual submissions
 2. Approves each one individually
 3. Each approval awards points
 4. **Problem:** May approve duplicates
 
 **After (New):**
+
 1. Admin sees list of **submission groups** (one row per team per date)
 2. Expands group to see all participants
 3. Approves **entire group** with one action
@@ -1529,6 +1567,7 @@ return submissions.reduce(
 #### Calendar View Enhancement
 
 **Display Logic:**
+
 - User sees their own submission status
 - Hover shows: "You + 2 teammates submitted (3/5)"
 - Color intensity indicates participation rate:
@@ -1543,6 +1582,7 @@ return submissions.reduce(
 **Scenario:** Alice creates a team activity for Jan 1. Later, Alice tries to create another team activity for Jan 1.
 
 **Handling:**
+
 - Validation error: "A team activity already exists for this date"
 - User must choose to either:
   - Join the existing team activity (if not already joined)
@@ -1555,6 +1595,7 @@ return submissions.reduce(
 **Scenario:** Alice creates individual submission for Jan 1. Later edits it to change type to "team".
 
 **Handling:**
+
 - **Individual → Team:**
   - Check if team activity group exists for that date
   - If exists: Add submission to existing group
@@ -1571,6 +1612,7 @@ return submissions.reduce(
 **Scenario:** Alice creates 3 individual submissions for Jan 1 (morning workout, afternoon run, evening yoga).
 
 **Handling:**
+
 - **Allow:** Multiple individual submissions per user per day
 - Each submission stands alone
 - Each gets approved/rejected independently
@@ -1582,6 +1624,7 @@ return submissions.reduce(
 **Scenario:** Alice has individual submission for Jan 1. Team decides to do team workout on Jan 1. Alice creates team activity submission.
 
 **Handling:**
+
 - **Allow:** Both can coexist
 - Alice has 2 submissions for Jan 1:
   - One individual (standalone)
@@ -1594,6 +1637,7 @@ return submissions.reduce(
 **Scenario:** Team activity for Jan 1 has 3/5 members, gets approved (60% participation = team exercise, 20 pts). Dave submits late for same team activity.
 
 **Handling:**
+
 - **Option A (Recommended):** Reject late submission
   - Error: "This team activity has already been approved"
   - Prevents point recalculation confusion
@@ -1611,6 +1655,7 @@ return submissions.reduce(
 **Scenario:** Tournament has `maxSubmissionsPerDay = 3`. Alice creates 2 individual submissions and 1 team submission on Jan 1. Alice tries to create another submission.
 
 **Handling:**
+
 - Validation error: "Daily submission limit reached (3 per day). You have already submitted 3 time(s) today."
 - **Frontend:** Submit button disabled with tooltip explaining limit
 - **Backend:** Mutation throws error
@@ -1622,6 +1667,7 @@ return submissions.reduce(
 **Scenario:** Alice creates submission (1/3 used). Alice edits the same submission.
 
 **Handling:**
+
 - **Allow:** Editing existing submission does NOT count toward daily limit
 - Validation only checks limit for NEW submissions (`!args._id`)
 - Users can freely edit their submissions without penalty
@@ -1631,6 +1677,7 @@ return submissions.reduce(
 **Scenario:** Alice uses all 3 submissions on Jan 1. On Jan 2, can Alice submit again?
 
 **Handling:**
+
 - **Yes:** Limit is per-day, not cumulative
 - Jan 2 submissions are counted separately from Jan 1
 - Each calendar day has its own limit
@@ -1641,6 +1688,7 @@ return submissions.reduce(
 **Scenario:** Tournament starts with limit = 5. After 1 week, admin changes to limit = 2. Alice has already submitted 3 times today.
 
 **Handling:**
+
 - **Retroactive:** Existing submissions are not affected
 - **Future:** New submissions must respect new limit
 - Alice cannot create more submissions today (3 > 2)
@@ -1652,6 +1700,7 @@ return submissions.reduce(
 **Scenario:** Team has 4 members. They submit on Jan 1 (4/4 = 100% = team exercise). On Jan 2, 5th member joins. Now only 4/5 submit (80% = still team exercise if threshold is 50%).
 
 **Handling:**
+
 - `totalTeamMembers` is calculated at submission time (current count)
 - Historical submissions retain their original `totalTeamMembers` value
 - Group metadata is frozen once approved
@@ -1662,6 +1711,7 @@ return submissions.reduce(
 **Scenario:** Team has 5 members. On Jan 1, 3 members submit (3/5 = 60% = team exercise). On Jan 2, one member leaves. Team now has 4 members.
 
 **Handling:**
+
 - Past submissions still show 3/5 (historical record)
 - Future submissions calculate against 4 members
 - Member who left still appears in historical groups
@@ -1672,6 +1722,7 @@ return submissions.reduce(
 **Scenario:** Alice submits "base" tier, Bob submits "advanced" tier for same date.
 
 **Handling:**
+
 - Group tier = highest tier submitted (advanced)
 - Group gets advanced tier points
 - **Rationale:** Reward the team for doing harder work
@@ -1686,15 +1737,18 @@ return submissions.reduce(
 **Handling:**
 
 **Option A (Recommended):** Prevent late submission
+
 - Once group is approved, cannot add more submissions
 - Error: "This date has already been approved for your team"
 
 **Option B:** Allow but don't recalculate
+
 - Allow late submission but mark as "informational only"
 - Points already awarded, not recalculated
 - Show "⚠️ Added after approval" badge
 
 **Option C:** Allow and recalculate
+
 - Recalculate group participation (now 4/5 = 80%)
 - If points change (unlikely with same threshold), update team score
 - Admin gets notification to re-review
@@ -1706,6 +1760,7 @@ return submissions.reduce(
 **Scenario:** Group with 3/5 members approved as team exercise (60%, threshold 50%, 20 pts). One member deletes their submission. Now only 2/5 (40%).
 
 **Handling:**
+
 - Deletion triggers group recalculation
 - New participation rate: 40% < 50% threshold
 - **Exercise type changes:** Team → Individual
@@ -1719,6 +1774,7 @@ return submissions.reduce(
 **Scenario:** Entire group deletes their submissions for a date.
 
 **Handling:**
+
 - Last deletion triggers group deletion
 - All points removed
 - No orphaned group records
@@ -1728,6 +1784,7 @@ return submissions.reduce(
 **Scenario:** Alice is on Team A and Team B. She submits for Team A on Jan 1. Can she also submit for Team B on Jan 1?
 
 **Handling:**
+
 - **Yes** - submissions are per team
 - Duplicate check is scoped to `(userId, teamId, date)` tuple
 - Alice's submission for Team A doesn't prevent Team B submission
@@ -1739,6 +1796,7 @@ return submissions.reduce(
 **Scenario:** Group has 3 submissions. Admin approves 2 individually, rejects 1. What's the group state?
 
 **Handling:**
+
 - **Prevent individual approval** - only allow group-level approval
 - Remove individual `submissions.approve` and `submissions.reject` mutations
 - Force admin to use `submissionGroups.approve` and `submissionGroups.reject`
@@ -1751,6 +1809,7 @@ return submissions.reduce(
 **Scenario:** Edge case - team has no members (data inconsistency).
 
 **Handling:**
+
 - `totalTeamMembers = 0` → `participationRate = 0`
 - Group cannot be approved (validation error)
 - Admin must fix team data first
@@ -1760,6 +1819,7 @@ return submissions.reduce(
 **Scenario:** Alice creates submission for Team A on Jan 1. On Jan 2, she's removed from Team A.
 
 **Handling:**
+
 - Historical submission remains
 - Still part of group
 - Cannot edit or delete (no longer a member)
@@ -1778,9 +1838,11 @@ return submissions.reduce(
 submissions: defineTable({
   // ... existing fields ...
   teammates: v.optional(v.array(v.id("users"))), // Keep for backward compat during migration
-  submissionType: v.optional(v.union(v.literal("individual"), v.literal("team"))), // NEW - optional during migration
+  submissionType: v.optional(
+    v.union(v.literal("individual"), v.literal("team")),
+  ), // NEW - optional during migration
   submissionGroupId: v.optional(v.id("submissionGroups")), // NEW
-})
+});
 ```
 
 **Step 2:** Deploy new `submissionGroups` table
@@ -1849,9 +1911,8 @@ export const migrateSubmissionsToGroups = internalMutation({
         .collect();
 
       const totalTeamMembers = teamMembers.length;
-      const participationRate = totalTeamMembers > 0
-        ? participantCount / totalTeamMembers
-        : 0;
+      const participationRate =
+        totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
 
       // Get tournament for threshold
       const tournament = await ctx.db.get(firstSub.tournamentId);
@@ -1863,7 +1924,8 @@ export const migrateSubmissionsToGroups = internalMutation({
         teamExerciseThreshold: 0.5,
       };
 
-      const isTeamExercise = participationRate >= scoringConfig.teamExerciseThreshold;
+      const isTeamExercise =
+        participationRate >= scoringConfig.teamExerciseThreshold;
 
       // Determine tier (use first submission's tier, or highest if want advanced logic)
       const tier = subs[0].tier || "base";
@@ -1911,7 +1973,7 @@ export const migrateSubmissionsToGroups = internalMutation({
 
     return {
       submissionsProcessed: submissions.length,
-      groupsCreated: created
+      groupsCreated: created,
     };
   },
 });
@@ -1925,6 +1987,7 @@ npx convex run migrations:migrateSubmissionsToGroups
 ```
 
 **Verify:**
+
 - Check that all submissions have `submissionGroupId`
 - Check that group count matches expected
 - Spot-check points calculations
@@ -1932,6 +1995,7 @@ npx convex run migrations:migrateSubmissionsToGroups
 ### Phase 3: Backend Code Update
 
 **Deploy new backend functions:**
+
 - `submissionGroups.approve`
 - `submissionGroups.reject`
 - `submissionGroups.list`
@@ -1943,6 +2007,7 @@ npx convex run migrations:migrateSubmissionsToGroups
 ### Phase 4: Frontend Update
 
 **Deploy UI changes:**
+
 - Simplified submission form (no teammates field)
 - New admin submission groups page
 - Updated calendar view with participation indicators
@@ -1952,18 +2017,20 @@ npx convex run migrations:migrateSubmissionsToGroups
 ### Phase 5: Cleanup (After 1 week)
 
 **Remove deprecated code:**
+
 - Delete `teammates` field from schema
 - Make `submissionType` required (remove optional)
 - Remove migration scripts
 - Update documentation
 
 **Schema final state:**
+
 ```typescript
 submissions: defineTable({
   // ... other fields ...
   submissionType: v.union(v.literal("individual"), v.literal("team")), // Now required
   // teammates field removed
-})
+});
 ```
 
 **Final deployment:** Clean schema without legacy fields.
@@ -1973,12 +2040,14 @@ submissions: defineTable({
 ### Unit Tests (Backend)
 
 **Individual Activity Tests:**
+
 - [ ] Creating individual submission succeeds (no grouping)
 - [ ] Multiple individual submissions per day allowed
 - [ ] Individual submission approval awards individual points
 - [ ] Individual submission has no submissionGroupId
 
 **Team Activity Tests:**
+
 - [ ] Creating team submission creates/joins group
 - [ ] Only one team activity group per team per day enforced
 - [ ] User cannot join team activity group twice
@@ -1994,11 +2063,13 @@ submissions: defineTable({
 - [ ] Deleting all team submissions deletes group
 
 **Type Switching Tests:**
+
 - [ ] Switching individual → team creates/joins group
 - [ ] Switching team → individual removes from group
 - [ ] Cannot switch type if approved
 
 **Daily Limit Tests:**
+
 - [ ] Creating submission when limit reached fails with error
 - [ ] Editing existing submission does NOT count toward limit
 - [ ] Deleted submissions do NOT count toward limit
@@ -2011,16 +2082,19 @@ submissions: defineTable({
 ### Integration Tests
 
 **Individual Activity Flow:**
+
 - [ ] Create individual submission → approve → points awarded (no grouping)
 - [ ] Multiple individual submissions same day → each approved independently
 
 **Team Activity Flow:**
+
 - [ ] Full team submission flow: create → group → approve → points awarded once
 - [ ] Multiple users submit team activity for same date → single group created
 - [ ] Group approval is atomic (all submissions updated together)
 - [ ] Points recalculation handles participation changes
 
 **Mixed Flow:**
+
 - [ ] User has both individual and team submissions on same day → both approved
 - [ ] Migration script sets correct submissionType based on teammates array
 - [ ] Migration script creates groups only for team activities
@@ -2029,6 +2103,7 @@ submissions: defineTable({
 ### UI Tests
 
 **Submission Form:**
+
 - [ ] Submission form shows submissionType radio buttons (Individual/Team)
 - [ ] Teammates field removed
 - [ ] Warning shown when "Team Activity" selected
@@ -2039,12 +2114,14 @@ submissions: defineTable({
 - [ ] Editing submission doesn't decrease remaining count
 
 **Tournament Form:**
+
 - [ ] Tournament form shows maxSubmissionsPerDay field
 - [ ] Field is optional (can be left empty)
 - [ ] Field validates positive integers only
 - [ ] Existing tournaments load with current limit value
 
 **Calendar View:**
+
 - [ ] Individual activities show single indicator
 - [ ] Team activities show participation count (e.g., "2/5")
 - [ ] Team exercise indicator appears when threshold met
@@ -2052,6 +2129,7 @@ submissions: defineTable({
 - [ ] Points display correctly for both types
 
 **Admin View:**
+
 - [ ] Admin sees individual submissions separately
 - [ ] Admin sees grouped team submissions
 - [ ] Approving group updates all submission cards
@@ -2061,6 +2139,7 @@ submissions: defineTable({
 ### Manual Testing Scenarios
 
 **Scenario 1: Individual Activity**
+
 1. Create team with 3 members
 2. Alice submits individual activity for Jan 1
 3. Verify no group created
@@ -2072,6 +2151,7 @@ submissions: defineTable({
 9. Verify team gets additional individual points
 
 **Scenario 2: Simple Team Activity**
+
 1. Create team with 3 members
 2. All 3 submit team activity for same date
 3. Verify group shows 3/3 (100%)
@@ -2080,6 +2160,7 @@ submissions: defineTable({
 6. Verify team gets team exercise points ONCE (not individual × 3)
 
 **Scenario 3: Partial Team Participation**
+
 1. Create team with 5 members
 2. Only 2 submit team activity for same date
 3. Verify group shows 2/5 (40%)
@@ -2088,6 +2169,7 @@ submissions: defineTable({
 6. Verify team gets individual exercise points
 
 **Scenario 4: Mixed Activities Same Day**
+
 1. Create team with 3 members
 2. Alice submits individual activity for Jan 1 at 9am
 3. Later, Alice, Bob submit team activity for Jan 1
@@ -2099,6 +2181,7 @@ submissions: defineTable({
    - Team exercise points ONCE (from team group with Alice + Bob)
 
 **Scenario 5: Daily Submission Limit**
+
 1. Create tournament with `maxSubmissionsPerDay = 3`
 2. Alice creates individual submission for Jan 1 (1/3 used)
 3. Verify UI shows "2 of 3 submissions remaining today"
@@ -2111,6 +2194,7 @@ submissions: defineTable({
 10. Next day (Jan 2): Verify Alice can create new submissions (limit reset)
 
 **Scenario 3: Late Deletion**
+
 1. Create team with 4 members
 2. All 4 submit (100% = team exercise)
 3. Admin approves (team gets 20 pts)
@@ -2119,6 +2203,7 @@ submissions: defineTable({
 6. Verify points remain same (still above threshold)
 
 **Scenario 4: Threshold Boundary**
+
 1. Create team with 4 members (threshold = 50%)
 2. 2 members submit (50% = exactly threshold)
 3. Verify marked as "team exercise"
@@ -2158,6 +2243,7 @@ submissions: defineTable({
 **Question:** If a group is already approved, should new submissions be allowed?
 
 **Options:**
+
 - A) Reject late submissions (cleanest, recommended)
 - B) Allow but mark as informational (doesn't change points)
 - C) Allow and recalculate (most flexible but complex)
@@ -2171,6 +2257,7 @@ submissions: defineTable({
 **Question:** If team members submit different tiers (base vs advanced), which tier should the group use?
 
 **Options:**
+
 - A) Highest tier wins (rewards ambition)
 - B) Reject mixed tiers, require admin to decide
 - C) Average tier (not possible with base/advanced, would need numeric tiers)
@@ -2184,6 +2271,7 @@ submissions: defineTable({
 **Question:** Should there be a minimum number of participants to create a group?
 
 **Options:**
+
 - A) No minimum - even 1 person can submit
 - B) Require at least 2 people (otherwise why is it a team?)
 - C) Configurable per tournament
@@ -2197,6 +2285,7 @@ submissions: defineTable({
 **Question:** Should members be able to delete their submission after group approval?
 
 **Options:**
+
 - A) Block deletion of approved submissions (prevents point manipulation)
 - B) Allow but require admin re-approval
 - C) Allow with automatic point recalculation
@@ -2210,6 +2299,7 @@ submissions: defineTable({
 **Question:** Can users change their tier (base → advanced) after submitting?
 
 **Options:**
+
 - A) Block tier changes after submission
 - B) Allow tier changes, triggers group recalculation
 - C) Allow only before approval
@@ -2235,6 +2325,7 @@ submissions: defineTable({
 **Question:** How should we notify team members that others have submitted?
 
 **Options:**
+
 - A) No automatic notifications (users check calendar)
 - B) Daily digest email "Your team needs you! 2/5 submitted today"
 - C) Real-time push notifications
@@ -2249,6 +2340,7 @@ submissions: defineTable({
 **Question:** After migration, should old submissions show the old `teammates` data or new grouped data?
 
 **Options:**
+
 - A) Preserve old display (show teammates array)
 - B) Convert to new display (show as group even if not originally submitted that way)
 - C) Mark historical submissions differently
@@ -2262,6 +2354,7 @@ submissions: defineTable({
 **Question:** Should admins be able to approve multiple groups at once?
 
 **Options:**
+
 - A) No - review each group individually (safest)
 - B) Yes - checkbox selection with "Approve Selected"
 - C) Yes - "Approve All Pending" button with confirmation
@@ -2275,6 +2368,7 @@ submissions: defineTable({
 **Question:** If a group has 5 submissions and admin wants to reject 2 but approve 3, what happens?
 
 **Options:**
+
 - A) Not possible - all or nothing (simplest)
 - B) Allow admin to split group (complex, creates 2 new groups)
 - C) Allow admin to remove individual submissions then approve remainder
@@ -2288,6 +2382,7 @@ submissions: defineTable({
 ### Phase 1: Foundation (Days 1-2)
 
 **Backend:**
+
 - [ ] Add `submissionGroups` table to schema
 - [ ] Add `submissionGroupId` field to submissions
 - [ ] Implement `upsertSubmissionGroup` internal function
@@ -2295,6 +2390,7 @@ submissions: defineTable({
 - [ ] Write migration script
 
 **Testing:**
+
 - [ ] Unit tests for group creation
 - [ ] Test duplicate submission prevention
 
@@ -2305,6 +2401,7 @@ submissions: defineTable({
 ### Phase 2: Approval Workflow (Days 3-4)
 
 **Backend:**
+
 - [ ] Implement `submissionGroups.approve` mutation
 - [ ] Implement `submissionGroups.reject` mutation
 - [ ] Implement `submissionGroups.list` query
@@ -2312,6 +2409,7 @@ submissions: defineTable({
 - [ ] Update points calculation logic
 
 **Testing:**
+
 - [ ] Test group approval cascades to submissions
 - [ ] Test points awarded once per group
 - [ ] Test rejection removes points correctly
@@ -2323,6 +2421,7 @@ submissions: defineTable({
 ### Phase 3: UI Updates (Days 5-6)
 
 **Frontend:**
+
 - [ ] Remove teammates field from submission form
 - [ ] Create `SubmissionGroupCard` component
 - [ ] Create admin submission groups page
@@ -2330,6 +2429,7 @@ submissions: defineTable({
 - [ ] Add group info to calendar hover/tooltip
 
 **Testing:**
+
 - [ ] UI displays participation correctly
 - [ ] Cannot submit duplicate
 - [ ] Group cards show all participants
@@ -2341,6 +2441,7 @@ submissions: defineTable({
 ### Phase 4: Migration & Deployment (Day 7)
 
 **Deployment:**
+
 - [ ] Deploy schema changes (additive)
 - [ ] Run migration script on production data
 - [ ] Verify migration results
@@ -2348,6 +2449,7 @@ submissions: defineTable({
 - [ ] Deploy new frontend
 
 **Monitoring:**
+
 - [ ] Watch for errors in logs
 - [ ] Verify points calculations are correct
 - [ ] Check performance metrics
@@ -2359,6 +2461,7 @@ submissions: defineTable({
 ### Phase 5: Cleanup (Post-deployment)
 
 **After 1 week of stability:**
+
 - [ ] Remove deprecated `teammates` field from schema
 - [ ] Remove old individual approval code paths
 - [ ] Update documentation
@@ -2373,18 +2476,21 @@ submissions: defineTable({
 ### If Issues Detected Post-Deployment
 
 **Scenario 1: Migration Failed**
+
 - Rollback: Delete all `submissionGroups` records
 - Rollback: Remove `submissionGroupId` from submissions
 - Deploy: Revert to previous backend code
 - No data loss (old data still intact)
 
 **Scenario 2: Points Calculation Wrong**
+
 - Immediate: Disable group approval (feature flag)
 - Fix: Correct calculation logic
 - Run: `teams.recalculatePoints` for affected teams
 - Re-enable: Group approval after verification
 
 **Scenario 3: Performance Issues**
+
 - Add: Database indexes if missing
 - Optimize: Queries with excessive filters
 - Cache: Group metadata if needed
@@ -2400,11 +2506,13 @@ All old data is preserved during migration. Worst case, can delete new tables an
 ### User-Facing Docs
 
 **Update:** Submission guide
+
 - Document that each member must submit individually
 - Explain team exercise vs individual exercise
 - Show participation indicators
 
 **Update:** FAQ
+
 - "Why do I need to submit if my teammate already did?"
 - "How do team exercise points work?"
 - "Can I edit my submission after others submit?"
@@ -2412,11 +2520,13 @@ All old data is preserved during migration. Worst case, can delete new tables an
 ### Developer Docs
 
 **Update:** CLAUDE.md
+
 - Document new `submissionGroups` table
 - Explain grouping logic
 - Update submission flow diagrams
 
 **Create:** Migration guide
+
 - How to run migration
 - Verification steps
 - Rollback procedures
@@ -2485,12 +2595,14 @@ All old data is preserved during migration. Worst case, can delete new tables an
 ### Decision Summary
 
 **Chosen Architecture:** Option A (Submission Groups table)
+
 - Provides cleanest separation of concerns
 - Enables rich features in future
 - Maintains clear audit trail
 - Simplifies admin workflow
 
 **Key Design Principles:**
+
 1. **One source of truth:** Groups determine points, not individual submissions
 2. **Atomic operations:** Approval/rejection affects entire group
 3. **No double-counting:** Points awarded at group level only

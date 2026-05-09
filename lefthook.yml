@@ -1,10 +1,14 @@
 pre-commit:
   parallel: true
   commands:
-    biome-check:
+    oxlint:
+      glob: "*.{js,ts,jsx,tsx}"
+      exclude: "convex/_generated/**"
+      run: bun --bun oxlint {staged_files}
+    oxfmt:
       glob: "*.{js,ts,jsx,tsx,json,jsonc}"
       exclude: "convex/_generated/**"
-      run: bun --bun biome check --write --unsafe --files-ignore-unknown=true --no-errors-on-unmatched {staged_files}
+      run: bun --bun oxfmt --write {staged_files}
       stage_fixed: true
     typecheck:
       glob: "*.{js,ts,jsx,tsx}"
@@ -14,15 +18,3 @@ post-checkout:
   commands:
     install:
       run: bun install
-# pre-push:
-#   parallel: true
-#   commands:
-#     biome-check:
-#       glob: "*.{js,ts,jsx,tsx,json,jsonc}"
-#       exclude: "convex/_generated/**"
-#       run: bun --bun biome ci
-#       stage_fixed: true
-#     typecheck:
-#       glob: "*.{js,ts,jsx,tsx}"
-#       exclude: "convex/_generated/**"
-#       run: bun --bun tsc --noEmit

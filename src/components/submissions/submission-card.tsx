@@ -4,6 +4,7 @@ import type { Doc } from "@/../convex/_generated/dataModel";
 import type { UserWithRoles } from "@/../convex/users";
 import { Image } from "@/components/ui/image";
 import { useUser } from "@/hooks/useUser";
+
 import { SubmissionCardActions } from "./submission-card-actions";
 import { SubmissionCardDetails } from "./submission-card-details";
 
@@ -35,7 +36,7 @@ export function SubmissionCard({
   const isOwner = submission.userId === currentUser._id;
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-shadow hover:shadow-md md:flex-row">
+    <div className="bg-card flex flex-col gap-4 rounded-lg border p-4 shadow-sm transition-shadow hover:shadow-md md:flex-row">
       {thumbnailUrl && (
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md">
           <Image
@@ -46,7 +47,7 @@ export function SubmissionCard({
             sizes="64px"
           />
           {evidenceCount > 1 && (
-            <span className="absolute right-0 bottom-0 rounded-tl bg-black/70 px-1 font-bold text-[10px] text-white">
+            <span className="absolute right-0 bottom-0 rounded-tl bg-black/70 px-1 text-[10px] font-bold text-white">
               +{evidenceCount - 1}
             </span>
           )}

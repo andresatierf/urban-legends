@@ -105,7 +105,6 @@ As a user with administrative or management responsibilities, I need to receive 
 - **FR-001**: System MUST create notifications for the following event categories (23 types total):
 
   **Team Events (9 types):**
-
   - Team invitation received
   - Team join request received (for captains only)
   - Join request approved
@@ -118,7 +117,6 @@ As a user with administrative or management responsibilities, I need to receive 
   - Team deleted (notify all current members)
 
   **Submission Events (5 types):**
-
   - Submission approved (notify team captain and submitter)
   - Submission rejected with reason visible (notify team captain and submitter)
   - Submission group auto-created when team exercise threshold met (notify team members)
@@ -126,7 +124,6 @@ As a user with administrative or management responsibilities, I need to receive 
   - Submission flagged for review (notify assigned reviewers)
 
   **Tournament Events (6 types):**
-
   - Tournament starting in 24 hours (notify all registered participants)
   - Tournament started (notify all registered participants)
   - Tournament ending in 24 hours (notify all active participants)
@@ -135,7 +132,6 @@ As a user with administrative or management responsibilities, I need to receive 
   - Assigned as tournament manager (notify the assigned user)
 
   **Role/Admin Events (3 types):**
-
   - Role granted: admin, reviewer, tournament_manager, or viewer (notify the user)
   - Role revoked: any role removal (notify the user)
   - Pending items require attention: aggregated daily digest (notify users with pending actions)
@@ -145,7 +141,6 @@ As a user with administrative or management responsibilities, I need to receive 
 - **FR-003**: System MUST show notifications in reverse chronological order (most recent first)
 
 - **FR-004**: System MUST display the following information for each notification:
-
   - Notification title/message
   - Timestamp (relative time for recent, absolute for older)
   - Read/unread status
@@ -198,7 +193,6 @@ As a user with administrative or management responsibilities, I need to receive 
 ### Key Entities
 
 - **Notification**: A message to a user about an event. Contains:
-
   - Recipient user reference
   - Notification type (one of 23 types organized in 4 categories):
     - **Team**: team_invitation_received, team_join_request_received, join_request_approved, join_request_rejected, member_joined_team, member_left_team, removed_from_team, captain_role_transferred_to, captain_role_transferred_from, team_deleted

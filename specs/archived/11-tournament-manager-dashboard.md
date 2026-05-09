@@ -48,7 +48,6 @@ Currently, tournament managers have no way to execute their role-specific functi
 ### Functional Requirements
 
 1. **Tournament Manager Dashboard**
-
    - View all tournaments assigned to this manager
    - Tournament status overview (active/upcoming/ended)
    - Quick stats for each tournament: teams count, submissions count, pending approvals
@@ -56,14 +55,12 @@ Currently, tournament managers have no way to execute their role-specific functi
    - Quick actions: create tournament, view submissions, manage teams
 
 2. **Tournament Assignment System**
-
    - Admins can assign tournament managers to specific tournaments
    - Tournament managers can only see/manage their assigned tournaments
    - Multiple managers can be assigned to one tournament
    - Assignment audit trail (who assigned, when)
 
 3. **Tournament Management**
-
    - Create new tournaments (with approval workflow if needed)
    - Edit tournaments they manage
    - Cannot delete tournaments (admin-only)
@@ -71,7 +68,6 @@ Currently, tournament managers have no way to execute their role-specific functi
    - View tournament leaderboard and statistics
 
 4. **Submission Management**
-
    - View all submissions for their tournaments
    - Filter by tournament, team, status, date
    - Approve/reject submissions with reason
@@ -79,7 +75,6 @@ Currently, tournament managers have no way to execute their role-specific functi
    - Submission history and audit trail
 
 5. **Team Oversight**
-
    - View all teams in their tournaments
    - Monitor team sizes (flag undersized teams)
    - View team composition and member lists
@@ -176,7 +171,7 @@ export const assign = mutation({
       managerRoles.map(async (ur) => {
         const role = await ctx.db.get(ur.roleId);
         return role?.name;
-      })
+      }),
     );
 
     if (!roles.includes("tournament_manager") && !roles.includes("admin")) {
@@ -187,7 +182,7 @@ export const assign = mutation({
     const existing = await ctx.db
       .query("tournamentManagers")
       .withIndex("by_tournament_and_manager", (q) =>
-        q.eq("tournamentId", args.tournamentId).eq("managerId", args.managerId)
+        q.eq("tournamentId", args.tournamentId).eq("managerId", args.managerId),
       )
       .first();
 
@@ -226,7 +221,7 @@ export const unassign = mutation({
     const assignment = await ctx.db
       .query("tournamentManagers")
       .withIndex("by_tournament_and_manager", (q) =>
-        q.eq("tournamentId", args.tournamentId).eq("managerId", args.managerId)
+        q.eq("tournamentId", args.tournamentId).eq("managerId", args.managerId),
       )
       .first();
 
@@ -253,11 +248,16 @@ export const upsert = mutation({
     endDate: v.string(),
     teamMinSize: v.optional(v.number()),
     teamMaxSize: v.optional(v.number()),
-    scoringConfig: v.optional(v.object({
-      individualPoints: v.object({ base: v.number(), advanced: v.number() }),
-      teamExercisePoints: v.object({ base: v.number(), advanced: v.number() }),
-      teamExerciseThreshold: v.number(),
-    })),
+    scoringConfig: v.optional(
+      v.object({
+        individualPoints: v.object({ base: v.number(), advanced: v.number() }),
+        teamExercisePoints: v.object({
+          base: v.number(),
+          advanced: v.number(),
+        }),
+        teamExerciseThreshold: v.number(),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -283,7 +283,7 @@ export const upsert = mutation({
         const assignment = await ctx.db
           .query("tournamentManagers")
           .withIndex("by_tournament_and_manager", (q) =>
-            q.eq("tournamentId", args.id).eq("managerId", user._id)
+            q.eq("tournamentId", args.id).eq("managerId", user._id),
           )
           .first();
 
@@ -364,7 +364,7 @@ if (!isAdmin && isTournamentManager) {
   const assignment = await ctx.db
     .query("tournamentManagers")
     .withIndex("by_tournament_and_manager", (q) =>
-      q.eq("tournamentId", team.tournamentId).eq("managerId", user._id)
+      q.eq("tournamentId", team.tournamentId).eq("managerId", user._id),
     )
     .first();
 
@@ -407,7 +407,7 @@ export const getManagedTournaments = query({
       const tournaments = await Promise.all(
         assignments.map(async (assignment) => {
           return await ctx.db.get(assignment.tournamentId);
-        })
+        }),
       );
 
       return tournaments.filter((t) => t !== null);
@@ -425,7 +425,10 @@ export const getDashboardStats = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!user.roles.includes("tournament_manager") && !user.roles.includes("admin")) {
+    if (
+      !user.roles.includes("tournament_manager") &&
+      !user.roles.includes("admin")
+    ) {
       throw new Error("Tournament Manager or Admin access required");
     }
 
@@ -439,7 +442,7 @@ export const getDashboardStats = query({
             .collect();
 
           return await Promise.all(
-            assignments.map((a) => ctx.db.get(a.tournamentId))
+            assignments.map((a) => ctx.db.get(a.tournamentId)),
           ).then((results) => results.filter((t) => t !== null));
         })());
 
@@ -447,7 +450,7 @@ export const getDashboardStats = query({
 
     // Categorize tournaments
     const activeTournaments = tournaments.filter(
-      (t) => t.startDate <= now && t.endDate >= now
+      (t) => t.startDate <= now && t.endDate >= now,
     );
     const upcomingTournaments = tournaments.filter((t) => t.startDate > now);
     const endedTournaments = tournaments.filter((t) => t.endDate < now);
@@ -472,7 +475,9 @@ export const getDashboardStats = query({
           .collect();
 
         totalSubmissions += submissions.length;
-        pendingSubmissions += submissions.filter((s) => s.state === "pending").length;
+        pendingSubmissions += submissions.filter(
+          (s) => s.state === "pending",
+        ).length;
       }
     }
 
@@ -506,7 +511,10 @@ export const getRecentActivity = query({
     const user = await getCurrentUserOrThrow(ctx);
     const limit = args.limit || 30;
 
-    if (!user.roles.includes("tournament_manager") && !user.roles.includes("admin")) {
+    if (
+      !user.roles.includes("tournament_manager") &&
+      !user.roles.includes("admin")
+    ) {
       throw new Error("Tournament Manager or Admin access required");
     }
 
@@ -594,7 +602,9 @@ export const getAssignments = query({
     const query = args.tournamentId
       ? ctx.db
           .query("tournamentManagers")
-          .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+          .withIndex("by_tournament", (q) =>
+            q.eq("tournamentId", args.tournamentId),
+          )
       : ctx.db.query("tournamentManagers");
 
     const assignments = await query.collect();
@@ -621,7 +631,7 @@ export const getAssignments = query({
           },
           assignedAt: assignment.assignedAt,
         };
-      })
+      }),
     );
 
     return result;

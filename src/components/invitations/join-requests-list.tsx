@@ -2,7 +2,9 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+
 import { tryMutate } from "@/lib/utils";
+
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
@@ -98,7 +100,7 @@ export function JoinRequestsList({ teamId }: Props) {
       <CardContent className="space-y-4">
         {pendingRequests.length > 0 && (
           <div className="space-y-3">
-            <h3 className="font-medium text-sm">Pending Requests</h3>
+            <h3 className="text-sm font-medium">Pending Requests</h3>
             {pendingRequests.map((request) => (
               <JoinRequestCard
                 key={request._id}
@@ -113,7 +115,7 @@ export function JoinRequestsList({ teamId }: Props) {
 
         {otherRequests.length > 0 && (
           <div className="space-y-3">
-            <h3 className="font-medium text-sm">Past Requests</h3>
+            <h3 className="text-sm font-medium">Past Requests</h3>
             {otherRequests.map((request) => (
               <JoinRequestCard
                 key={request._id}

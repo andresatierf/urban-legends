@@ -1,12 +1,13 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
+
 import type { Id } from "../_generated/dataModel";
 import schema from "../schema";
 import { assertSubmissionInvariant } from "./invariants.test";
 import {
+  IllegalTransition,
   approve,
   edit,
-  IllegalTransition,
   previewIsTeamExercise,
   recompute,
   reject,

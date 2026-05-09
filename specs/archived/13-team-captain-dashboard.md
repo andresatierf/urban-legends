@@ -49,7 +49,6 @@ Currently, captains must navigate to each team's page individually to manage mem
 ### Functional Requirements
 
 1. **Captain Dashboard Overview**
-
    - View all teams where user is captain
    - Summary statistics for each team (members, points, rank)
    - Pending actions count (join requests, invitations sent)
@@ -57,7 +56,6 @@ Currently, captains must navigate to each team's page individually to manage mem
    - Filter by tournament, status (active/ended)
 
 2. **Consolidated Pending Actions**
-
    - Single feed of all pending join requests across all teams
    - Single feed of all sent invitations across all teams
    - Quick approve/reject actions without navigating to team page
@@ -65,7 +63,6 @@ Currently, captains must navigate to each team's page individually to manage mem
    - Badge counts for pending items
 
 3. **Team Performance Comparison**
-
    - Side-by-side comparison of teams user captains
    - Metrics: points, rank, member count, submission rate
    - Identify top performing and struggling teams
@@ -73,7 +70,6 @@ Currently, captains must navigate to each team's page individually to manage mem
    - Filter by tournament
 
 4. **Team Management Quick Actions**
-
    - Create new team button (prominent)
    - Invite member (select team in dialog)
    - Transfer captaincy (for when captain wants to step down)
@@ -81,7 +77,6 @@ Currently, captains must navigate to each team's page individually to manage mem
    - Disband team (if allowed)
 
 5. **Activity Feed**
-
    - Recent activity across all captain's teams
    - New members joined
    - Submissions made
@@ -173,7 +168,7 @@ export const getCaptainedTeams = query({
         const pendingRequests = await ctx.db
           .query("joinRequests")
           .withIndex("by_team_and_status", (q) =>
-            q.eq("teamId", team._id).eq("status", "pending")
+            q.eq("teamId", team._id).eq("status", "pending"),
           )
           .collect();
 
@@ -181,14 +176,16 @@ export const getCaptainedTeams = query({
         const pendingInvitations = await ctx.db
           .query("teamInvitations")
           .withIndex("by_team_and_status", (q) =>
-            q.eq("teamId", team._id).eq("status", "pending")
+            q.eq("teamId", team._id).eq("status", "pending"),
           )
           .collect();
 
         // Get team rank (from leaderboard)
         const leaderboard = await ctx.db
           .query("teams")
-          .withIndex("by_tournament", (q) => q.eq("tournamentId", team.tournamentId))
+          .withIndex("by_tournament", (q) =>
+            q.eq("tournamentId", team.tournamentId),
+          )
           .collect();
 
         const sortedTeams = leaderboard.sort((a, b) => {
@@ -213,9 +210,10 @@ export const getCaptainedTeams = query({
                 status:
                   tournament.endDate < new Date().toISOString().split("T")[0]
                     ? "ended"
-                    : tournament.startDate > new Date().toISOString().split("T")[0]
-                    ? "upcoming"
-                    : "active",
+                    : tournament.startDate >
+                        new Date().toISOString().split("T")[0]
+                      ? "upcoming"
+                      : "active",
               }
             : null,
           memberCount: members.length,
@@ -223,7 +221,7 @@ export const getCaptainedTeams = query({
           pendingInvitationsCount: pendingInvitations.length,
           rank,
         };
-      })
+      }),
     );
 
     return teams.filter((t) => t !== null);
@@ -268,7 +266,7 @@ export const getCaptainStats = query({
       const pendingRequests = await ctx.db
         .query("joinRequests")
         .withIndex("by_team_and_status", (q) =>
-          q.eq("teamId", team._id).eq("status", "pending")
+          q.eq("teamId", team._id).eq("status", "pending"),
         )
         .collect();
       totalPendingRequests += pendingRequests.length;
@@ -277,7 +275,7 @@ export const getCaptainStats = query({
       const pendingInvitations = await ctx.db
         .query("teamInvitations")
         .withIndex("by_team_and_status", (q) =>
-          q.eq("teamId", team._id).eq("status", "pending")
+          q.eq("teamId", team._id).eq("status", "pending"),
         )
         .collect();
       totalPendingInvitations += pendingInvitations.length;
@@ -325,7 +323,7 @@ export const getAllPendingJoinRequests = query({
       const requests = await ctx.db
         .query("joinRequests")
         .withIndex("by_team_and_status", (q) =>
-          q.eq("teamId", teamId).eq("status", "pending")
+          q.eq("teamId", teamId).eq("status", "pending"),
         )
         .collect();
 
@@ -341,7 +339,11 @@ export const getAllPendingJoinRequests = query({
             ? { id: tournament._id, name: tournament.name }
             : null,
           requester: requester
-            ? { id: requester._id, name: requester.name, email: requester.email }
+            ? {
+                id: requester._id,
+                name: requester.name,
+                email: requester.email,
+              }
             : null,
         });
       }
@@ -376,7 +378,7 @@ export const getAllPendingInvitations = query({
       const invitations = await ctx.db
         .query("teamInvitations")
         .withIndex("by_team_and_status", (q) =>
-          q.eq("teamId", teamId).eq("status", "pending")
+          q.eq("teamId", teamId).eq("status", "pending"),
         )
         .collect();
 

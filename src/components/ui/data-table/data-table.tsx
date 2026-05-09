@@ -4,18 +4,19 @@ import { Link } from "@tanstack/react-router";
 import {
   type ColumnDef,
   type ColumnFiltersState,
+  type Row,
+  type SortingState,
+  type TableOptions,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  type Row,
-  type SortingState,
-  type TableOptions,
   useReactTable,
-  type VisibilityState,
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
+
 import {
   Table,
   TableBody,
@@ -26,13 +27,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+
 import { Card } from "../card";
 import { Checkbox } from "../checkbox";
 import { Input } from "../input";
 import { DataTablePagination } from "./pagination";
 
-export interface DataTableProps<TData, TValue>
-  extends Partial<TableOptions<TData>> {
+export interface DataTableProps<TData, TValue> extends Partial<
+  TableOptions<TData>
+> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   enableSearch?: boolean;
@@ -123,7 +126,7 @@ export function DataTable<TData, TValue>({
       )}
       <Card className="overflow-hidden">
         <Table className="w-full border-collapse text-left">
-          <TableCaption className="m-0 flex-1 bg-muted py-2 text-muted-foreground text-sm">
+          <TableCaption className="bg-muted text-muted-foreground m-0 flex-1 py-2 text-sm">
             {table.options.enableRowSelection
               ? `${table.getFilteredSelectedRowModel().rows.length} of ${table.getFilteredRowModel().rows.length} row(s) selected`
               : `${data.length} rows`}
@@ -192,7 +195,7 @@ function InnerTableRow<TData>({ row, className }: InnerTableRowProps<TData>) {
     <TableRow
       key={row.id}
       data-state={row.getIsSelected() && "selected"}
-      className={cn("border-t transition hover:bg-muted/50", className)}
+      className={cn("hover:bg-muted/50 border-t transition", className)}
     >
       {row.getVisibleCells().map((cell) => (
         <TableCell key={cell.id} className="p-3">

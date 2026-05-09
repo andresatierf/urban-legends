@@ -2,6 +2,7 @@
 
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
+
 import { CardContent } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/useDebounce";
+
 import { SubmissionReviewCard } from "./submission-review-card";
 import { filterReviewItems, sortReviewItems } from "./transforms";
 import type { ReviewItem } from "./types";
@@ -69,7 +71,7 @@ export function SubmissionReviewList({
       {showFilters && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative max-w-md flex-1">
-            <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search by team, tournament, or submitter..."
               value={searchQuery}
@@ -108,7 +110,7 @@ export function SubmissionReviewList({
       {filteredAndSortedItems.length === 0 && (
         <div className="rounded-lg border border-dashed">
           <CardContent>
-            <Empty className="gap-3 p-6! text-muted-foreground">
+            <Empty className="text-muted-foreground gap-3 p-6!">
               <EmptyTitle>{emptyMessage}</EmptyTitle>
               {debouncedSearch && (
                 <EmptyDescription>Try a different search term</EmptyDescription>

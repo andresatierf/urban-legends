@@ -1,6 +1,7 @@
 "use client";
 
 import { Calendar, Trophy, User, Users } from "lucide-react";
+
 import type { Doc } from "@/../convex/_generated/dataModel";
 import { Badge } from "@/components/ui/badge";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
@@ -66,25 +67,25 @@ export function SubmissionCardDetails({
       </div>
 
       <div className="grid gap-2 text-sm">
-        <div className="flex items-center gap-2 text-muted-foreground">
+        <div className="text-muted-foreground flex items-center gap-2">
           <Calendar className="h-4 w-4" />
           <span>
             {submission.date ? format(submission.date, "long") : "No Date"}
           </span>
         </div>
-        <div className="flex items-center gap-2 text-muted-foreground">
+        <div className="text-muted-foreground flex items-center gap-2">
           <Users className="h-4 w-4" />
           <span>{team.name}</span>
         </div>
-        <div className="flex items-center gap-2 text-muted-foreground">
+        <div className="text-muted-foreground flex items-center gap-2">
           <User className="h-4 w-4" />
           <span>{user.name}</span>
         </div>
       </div>
 
       {submission.description && (
-        <div className="rounded-md bg-muted/50 p-3">
-          <p className="line-clamp-3 text-muted-foreground text-sm">
+        <div className="bg-muted/50 rounded-md p-3">
+          <p className="text-muted-foreground line-clamp-3 text-sm">
             {submission.description}
           </p>
         </div>

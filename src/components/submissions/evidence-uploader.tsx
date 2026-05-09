@@ -4,9 +4,11 @@ import { useAction, useMutation } from "convex/react";
 import { ImageIcon, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Image } from "@/components/ui/image";
 import { processForUpload } from "@/lib/clientImage";
+
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -113,9 +115,9 @@ export function EvidenceUploader({
 
   return (
     <div className="space-y-2">
-      <p className="font-medium text-sm">
+      <p className="text-sm font-medium">
         Evidence{" "}
-        <span className="font-normal text-muted-foreground">
+        <span className="text-muted-foreground font-normal">
           (1–5 photos required)
         </span>
       </p>
@@ -133,7 +135,7 @@ export function EvidenceUploader({
               type="button"
               variant="destructive"
               size="icon"
-              className="-right-2 -top-2 absolute h-6 w-6"
+              className="absolute -top-2 -right-2 h-6 w-6"
               onClick={() => handleRemove(item.storageId)}
               aria-label="Remove evidence"
             >
@@ -146,7 +148,7 @@ export function EvidenceUploader({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="flex h-24 w-24 flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50"
+            className="bg-muted text-muted-foreground hover:bg-muted/80 flex h-24 w-24 flex-col items-center justify-center rounded-lg border-2 border-dashed disabled:opacity-50"
             aria-label="Add evidence photo"
           >
             <ImageIcon className="h-6 w-6" />

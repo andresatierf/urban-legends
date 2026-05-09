@@ -2,7 +2,9 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
+
 import { tryMutate } from "@/lib/utils";
+
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
@@ -91,7 +93,7 @@ export function InvitedUsersList({ teamId, canCancel }: Props) {
       <CardContent className="space-y-4">
         {pendingInvitations.length > 0 && (
           <div className="space-y-3">
-            <h3 className="font-medium text-sm">Pending Invitations</h3>
+            <h3 className="text-sm font-medium">Pending Invitations</h3>
             {pendingInvitations.map((invitation) => (
               <InvitedUserCard
                 key={invitation._id}
@@ -106,7 +108,7 @@ export function InvitedUsersList({ teamId, canCancel }: Props) {
 
         {otherInvitations.length > 0 && (
           <div className="space-y-3">
-            <h3 className="font-medium text-sm">Past Invitations</h3>
+            <h3 className="text-sm font-medium">Past Invitations</h3>
             {otherInvitations.map((invitation) => (
               <InvitedUserCard
                 key={invitation._id}

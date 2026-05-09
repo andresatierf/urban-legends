@@ -25,6 +25,7 @@ This spec defines the complete sidebar structure needed to support all pending d
 ### Current State
 
 The sidebar currently has:
+
 - Single "User" group with 6 items:
   - Dashboard (`/dashboard`)
   - Tournaments (`/tournaments`)
@@ -34,6 +35,7 @@ The sidebar currently has:
   - Users (`/users`) - no role restriction currently
 
 **Issues:**
+
 1. No role-based grouping (Admin, Manager, Captain sections)
 2. Missing navigation items for new role-based dashboards
 3. No visual indicators for pending actions (join requests, approvals)
@@ -44,27 +46,32 @@ The sidebar currently has:
 ### What's Missing
 
 **For Admin Dashboard (Spec 07):**
+
 - `/admin` dashboard link
 - Proper admin section grouping
 
 **For Tournament Manager Dashboard (Spec 11):**
+
 - `/tournament-manager` dashboard link
 - Quick access to assigned tournaments
 - Submission approval queue link
 - Badge for pending approvals count
 
 **For Reviewer Dashboard (Spec 12):**
+
 - `/reviewer` dashboard link
 - Review queue link with pending count badge
 - Review statistics link
 
 **For Team Captain Dashboard (Spec 13):**
+
 - `/captain` or `/my-teams` dashboard link
 - Badge for pending join requests across all teams
 - Badge for pending invitations sent
 - Quick team management links
 
 **For Viewer Dashboard (Spec 14):**
+
 - `/viewer` dashboard link (for authenticated viewers)
 - Public leaderboards link (no auth required)
 - Favorite tournaments link
@@ -80,6 +87,7 @@ The sidebar currently has:
 Organize sidebar items into logical groups based on user roles:
 
 **User Section** (always visible)
+
 - Dashboard
 - Tournaments
 - Teams (browse all teams)
@@ -87,17 +95,20 @@ Organize sidebar items into logical groups based on user roles:
 - New Submission (quick action)
 
 **Captain Section** (visible if user captains any team)
+
 - My Teams Dashboard
 - Pending Actions (with badge count)
 - Team Comparison
 - Invite Member (quick action)
 
 **Reviewer Section** (visible if user has `reviewer` role)
+
 - Review Queue (with badge count for pending)
 - Review Statistics
 - Flagged Submissions
 
 **Tournament Manager Section** (visible if user has `tournament_manager` role)
+
 - Manager Dashboard
 - My Tournaments
 - Pending Approvals (with badge count)
@@ -105,6 +116,7 @@ Organize sidebar items into logical groups based on user roles:
 - Create Tournament (quick action)
 
 **Admin Section** (visible if user has `admin` role)
+
 - Admin Dashboard
 - Manage Tournaments
 - Manage Users
@@ -112,6 +124,7 @@ Organize sidebar items into logical groups based on user roles:
 - System Settings (future)
 
 **Viewer Section** (visible if user has `viewer` role OR unauthenticated on public pages)
+
 - Public Leaderboards
 - Favorite Tournaments
 - Tournament Discovery
@@ -121,21 +134,25 @@ Organize sidebar items into logical groups based on user roles:
 Show notification badges for pending actions:
 
 **Captain Badges:**
+
 - Join requests across all captain's teams
 - Sent invitations awaiting response
 - Total: `joinRequests + pendingInvitations`
 
 **Reviewer Badges:**
+
 - Pending submissions across all tournaments
 - Flagged submissions needing attention
 - Total: `pendingSubmissions + flaggedSubmissions`
 
 **Tournament Manager Badges:**
+
 - Pending submissions for assigned tournaments only
 - Teams needing review (undersized, inactive)
 - Total: `pendingSubmissionsForMyTournaments + flaggedTeams`
 
 **Admin Badges:**
+
 - All pending submissions system-wide
 - User accounts pending approval (if feature exists)
 - Total: `allPendingSubmissions + systemAlerts`
@@ -143,6 +160,7 @@ Show notification badges for pending actions:
 #### 3. Conditional Item Visibility
 
 Each sidebar item should specify:
+
 - **Required roles:** Array of role names (e.g., `["admin"]`, `["reviewer", "admin"]`)
 - **Required conditions:** Additional logic (e.g., user must captain at least one team)
 - **Public access:** Some items visible even without authentication (e.g., Public Leaderboards)
@@ -175,6 +193,7 @@ Each sidebar item should specify:
 #### 4. Active Route Highlighting
 
 Highlight current active route/section:
+
 - Active item should have distinct background color
 - Active section should expand by default (if collapsible)
 - Use Next.js `usePathname()` to detect current route
@@ -618,7 +637,7 @@ export const getPendingActionsCount = query({
           q.eq(q.field("status"), "pending"),
           // Check if teamId is in teamIds array
           // Note: May need to iterate and sum
-        )
+        ),
       )
       .collect();
 
@@ -645,7 +664,10 @@ export const getPendingCount = query({
     const user = await getCurrentUserOrThrow(ctx);
 
     // Validate user has reviewer or admin role
-    if (!user.roleNames.includes("reviewer") && !user.roleNames.includes("admin")) {
+    if (
+      !user.roleNames.includes("reviewer") &&
+      !user.roleNames.includes("admin")
+    ) {
       return 0;
     }
 
@@ -671,7 +693,10 @@ export const getFlaggedCount = query({
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    if (!user.roleNames.includes("reviewer") && !user.roleNames.includes("admin")) {
+    if (
+      !user.roleNames.includes("reviewer") &&
+      !user.roleNames.includes("admin")
+    ) {
       return 0;
     }
 
@@ -832,21 +857,25 @@ export const getCaptainedTeamsCount = query({
 Create placeholder pages for new routes (actual implementation in respective specs):
 
 #### Captain Routes
+
 - `/captain` - Captain dashboard (spec 13)
 - `/captain/comparison` - Team comparison view (spec 13)
 
 #### Reviewer Routes
+
 - `/reviewer` - Review queue dashboard (spec 12)
 - `/reviewer/statistics` - Review stats (spec 12)
 - `/reviewer/flagged` - Flagged submissions (spec 12)
 
 #### Tournament Manager Routes
+
 - `/tournament-manager` - Manager dashboard (spec 11)
 - `/tournament-manager/tournaments` - Assigned tournaments (spec 11)
 - `/tournament-manager/approvals` - Pending approvals (spec 11)
 - `/tournament-manager/analytics` - Tournament analytics (spec 11)
 
 #### Admin Routes
+
 - `/admin` - Admin dashboard (spec 07)
 - `/admin/tournaments` - Manage tournaments (existing as `/tournaments`)
 - `/admin/submissions` - All submissions view (spec 07)
@@ -854,6 +883,7 @@ Create placeholder pages for new routes (actual implementation in respective spe
 - `/admin/system` - System health (future)
 
 #### Viewer Routes
+
 - `/viewer` - Viewer dashboard (spec 14)
 - `/viewer/favorites` - Favorite tournaments (spec 14)
 - `/public/leaderboards` - Public leaderboards (spec 14)
@@ -1028,6 +1058,7 @@ Update `messages/en.json` with new sidebar labels:
 **Challenge:** Badge queries run on every sidebar render (frequent)
 
 **Solutions:**
+
 1. **Caching:** Convex handles caching automatically, but ensure queries are stable
 2. **Debouncing:** Only update badge counts every 5-10 seconds (not on every DB change)
 3. **Conditional Queries:** Only run badge queries for visible sections
@@ -1038,11 +1069,15 @@ Update `messages/en.json` with new sidebar labels:
 ```typescript
 // Use conditional queries based on visible sections
 const captainBadgeCount = useQuery(
-  user?.captainedTeamsCount > 0 ? api.captain.getPendingActionsCount : undefined
+  user?.captainedTeamsCount > 0
+    ? api.captain.getPendingActionsCount
+    : undefined,
 );
 
 const reviewerBadgeCount = useQuery(
-  user?.roleNames.includes("reviewer") ? api.reviewer.getPendingCount : undefined
+  user?.roleNames.includes("reviewer")
+    ? api.reviewer.getPendingCount
+    : undefined,
 );
 ```
 
@@ -1055,7 +1090,8 @@ For users with many roles, consider lazy loading section items:
 const [expandedSections, setExpandedSections] = useState<string[]>([]);
 
 // Load badge only when section is expanded or always visible
-const shouldLoadBadge = expandedSections.includes("captain") || sidebarCollapsed;
+const shouldLoadBadge =
+  expandedSections.includes("captain") || sidebarCollapsed;
 ```
 
 ---
@@ -1063,26 +1099,31 @@ const shouldLoadBadge = expandedSections.includes("captain") || sidebarCollapsed
 ## Future Enhancements (Out of Scope)
 
 ### 1. Collapsible Sections
+
 - Allow users to collapse/expand sidebar sections
 - Persist state to localStorage
 - Smooth animations
 
 ### 2. Sidebar Customization
+
 - Allow users to reorder sections
 - Pin/unpin favorite items
 - Custom shortcuts
 
 ### 3. Quick Search
+
 - Search bar at top of sidebar
 - Fuzzy search across all menu items
 - Keyboard shortcuts (Cmd+K)
 
 ### 4. Recent Items
+
 - Show recently visited pages
 - Quick access to recent teams/tournaments
 - Clear history option
 
 ### 5. Dark Mode Support
+
 - Sidebar theme variants
 - Auto-detect system theme
 - Toggle in sidebar footer
@@ -1092,12 +1133,14 @@ const shouldLoadBadge = expandedSections.includes("captain") || sidebarCollapsed
 ## Success Metrics
 
 ### Technical Metrics
+
 - Sidebar renders in <50ms
 - Badge queries execute in <100ms (p95)
 - Zero accessibility violations (axe-core)
 - 100% keyboard navigable
 
 ### User Metrics
+
 - Users can find new role-specific dashboards without help
 - Click-through rate on badge notifications >80%
 - Navigation errors <1% of total navigation events
@@ -1116,11 +1159,13 @@ This spec depends on the following features being implemented:
 5. **Spec 14:** Viewer & Public Dashboard - Provides `/viewer` and `/public` routes
 
 However, this spec can be implemented **before** those features by:
+
 - Creating placeholder routes
 - Adding "Coming Soon" pages
 - Ensuring navigation structure is in place
 
 This allows parallel development:
+
 - Frontend team implements sidebar first
 - Backend/feature teams implement dashboards
 - Integrate when dashboards are ready
@@ -1164,6 +1209,7 @@ This sidebar navigation enhancement provides the foundation for all role-based d
 ✅ Parallel development capability for dashboard features
 
 The new sidebar structure supports:
+
 - 6 distinct role contexts (User, Captain, Reviewer, Manager, Admin, Viewer)
 - 30+ navigation items across all roles
 - Real-time badge notifications for 5+ action types
