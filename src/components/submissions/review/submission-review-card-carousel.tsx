@@ -67,7 +67,11 @@ export function CarouselReviewCard({
       />
 
       <MetaFooter
-        teamName={facts.teamName}
+        primaryLabel={
+          item.type === "individual"
+            ? item.data.submitter.name.trim() || item.data.submitter.email
+            : facts.teamName
+        }
         tournamentName={facts.tournamentName}
         date={facts.date}
         pointsEarned={facts.pointsEarned}
@@ -146,12 +150,12 @@ function FloatingBadges({
 }
 
 function MetaFooter({
-  teamName,
+  primaryLabel,
   tournamentName,
   date,
   pointsEarned,
 }: {
-  teamName: string;
+  primaryLabel: string;
   tournamentName: string;
   date: string;
   pointsEarned: number;
@@ -161,7 +165,7 @@ function MetaFooter({
     <div className="space-y-1 px-3 py-2.5">
       <div className="flex items-baseline justify-between gap-2">
         <p className="truncate font-semibold text-sm leading-tight">
-          {teamName}
+          {primaryLabel}
         </p>
         {pointsEarned > 0 && (
           <span className="shrink-0 font-heading font-medium text-emerald-600 text-xs">
