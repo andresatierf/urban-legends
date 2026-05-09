@@ -168,8 +168,9 @@ function MetaFooter({
           </span>
         )}
       </div>
+      <p className="truncate text-muted-foreground text-xs">{tournamentName}</p>
       <p className="truncate text-muted-foreground text-xs">
-        {tournamentName} &middot; {format(date, "short")}
+        {format(date, "short")}
       </p>
     </div>
   );
