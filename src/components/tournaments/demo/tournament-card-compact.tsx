@@ -15,41 +15,25 @@ import type { TournamentWithAuthority } from "../../../../convex/tournaments";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent } from "../../ui/card";
+import {
+  type TournamentStatus,
+  daysUntil,
+  formatShortDate,
+  getStatus,
+} from "./tournament-card-utils";
 
 type Props = {
   tournament: TournamentWithAuthority;
 };
 
-function getStatus(t: { startDate: string; endDate: string }) {
-  const now = Date.now();
-  const start = new Date(t.startDate).getTime();
-  const end = new Date(t.endDate).getTime();
-  if (start > now) return "upcoming" as const;
-  if (end < now) return "ended" as const;
-  return "active" as const;
-}
-
-function daysUntil(iso: string) {
-  return Math.ceil(
-    (new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-  );
-}
-
-function formatShort(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-  });
-}
-
-const BORDER_COLOR = {
+const BORDER_COLOR: Record<TournamentStatus, string> = {
   active: "border-l-primary",
   upcoming: "border-l-muted-foreground/40",
   ended: "border-l-muted-foreground/20",
-} as const;
+};
 
 const STATUS_BADGE: Record<
-  ReturnType<typeof getStatus>,
+  TournamentStatus,
   { label: string; variant: "default" | "outline" | "secondary" }
 > = {
   active: { label: "Active", variant: "default" },
@@ -62,12 +46,10 @@ export function TournamentCardCompact({ tournament }: Props) {
   const { authority, teamCount } = tournament;
   const badge = STATUS_BADGE[status];
 
-  const countdown =
-    status === "active"
-      ? `${daysUntil(tournament.endDate)}d left`
-      : status === "upcoming"
-        ? `Starts in ${daysUntil(tournament.startDate)}d`
-        : null;
+  let countdown: string | null = null;
+  if (status === "active") countdown = `${daysUntil(tournament.endDate)}d left`;
+  else if (status === "upcoming")
+    countdown = `Starts in ${daysUntil(tournament.startDate)}d`;
 
   return (
     <Card className={cn("border-l-4", BORDER_COLOR[status])}>
@@ -97,8 +79,8 @@ export function TournamentCardCompact({ tournament }: Props) {
           </span>
           <span className="flex items-center gap-1">
             <Calendar className="h-3.5 w-3.5" />
-            {formatShort(tournament.startDate)} –{" "}
-            {formatShort(tournament.endDate)}
+            {formatShortDate(tournament.startDate)} –{" "}
+            {formatShortDate(tournament.endDate)}
           </span>
           {countdown && (
             <span className="flex items-center gap-1 font-medium">

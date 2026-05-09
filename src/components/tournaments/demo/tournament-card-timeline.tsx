@@ -15,62 +15,42 @@ import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent } from "../../ui/card";
 import { Progress } from "../../ui/progress";
+import {
+  type TournamentStatus,
+  daysUntil,
+  formatShortDate,
+  getProgress,
+  getStatus,
+} from "./tournament-card-utils";
 
 type Props = {
   tournament: TournamentWithAuthority;
 };
 
-type Status = "active" | "upcoming" | "ended";
-
-function getStatus(t: { startDate: string; endDate: string }): Status {
-  const now = Date.now();
-  const start = new Date(t.startDate).getTime();
-  const end = new Date(t.endDate).getTime();
-  if (start > now) return "upcoming";
-  if (end < now) return "ended";
-  return "active";
-}
-
-function getProgress(t: { startDate: string; endDate: string }): number {
-  const now = Date.now();
-  const start = new Date(t.startDate).getTime();
-  const end = new Date(t.endDate).getTime();
-  if (now <= start) return 0;
-  if (now >= end) return 100;
-  return Math.round(((now - start) / (end - start)) * 100);
-}
-
-function daysUntil(iso: string) {
-  return Math.ceil(
-    (new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-  );
-}
-
-function formatShort(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-const STATUS_CONFIG = {
+const STATUS_CONFIG: Record<
+  TournamentStatus,
+  {
+    label: string;
+    badgeVariant: "default" | "outline" | "secondary";
+    progressClass: string;
+  }
+> = {
   active: {
     label: "Active",
-    badgeVariant: "default" as const,
+    badgeVariant: "default",
     progressClass: "",
   },
   upcoming: {
     label: "Upcoming",
-    badgeVariant: "outline" as const,
+    badgeVariant: "outline",
     progressClass: "[&>[data-slot=progress-indicator]]:bg-muted-foreground/30",
   },
   ended: {
     label: "Ended",
-    badgeVariant: "secondary" as const,
+    badgeVariant: "secondary",
     progressClass: "[&>[data-slot=progress-indicator]]:bg-muted-foreground/40",
   },
-} as const;
+};
 
 export function TournamentCardTimeline({ tournament }: Props) {
   const status = getStatus(tournament);
@@ -78,12 +58,13 @@ export function TournamentCardTimeline({ tournament }: Props) {
   const { authority, teamCount } = tournament;
   const config = STATUS_CONFIG[status];
 
-  const timeLabel =
-    status === "active"
-      ? `${daysUntil(tournament.endDate)} days remaining`
-      : status === "upcoming"
-        ? `Starts ${formatShort(tournament.startDate)}`
-        : `Ended ${formatShort(tournament.endDate)}`;
+  let timeLabel: string;
+  if (status === "active")
+    timeLabel = `${daysUntil(tournament.endDate)} days remaining`;
+  else if (status === "upcoming")
+    timeLabel = `Starts ${formatShortDate(tournament.startDate, { year: true })}`;
+  else
+    timeLabel = `Ended ${formatShortDate(tournament.endDate, { year: true })}`;
 
   return (
     <Card>
@@ -110,7 +91,7 @@ export function TournamentCardTimeline({ tournament }: Props) {
           />
           <div className="flex items-center justify-between text-[0.625rem]">
             <span className="text-muted-foreground">
-              {formatShort(tournament.startDate)}
+              {formatShortDate(tournament.startDate, { year: true })}
             </span>
             <span
               className={cn(
@@ -121,7 +102,7 @@ export function TournamentCardTimeline({ tournament }: Props) {
               {timeLabel}
             </span>
             <span className="text-muted-foreground">
-              {formatShort(tournament.endDate)}
+              {formatShortDate(tournament.endDate, { year: true })}
             </span>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 import type { TournamentWithAuthority } from "../../convex/tournaments";
+import type { TournamentStatus } from "./tournaments/demo/tournament-card-utils";
 
-type TournamentStatus = "active" | "upcoming" | "ended";
 type PlayerContext = "none" | "member" | "captain";
 
 export type TournamentDemoItem = {
@@ -18,23 +18,20 @@ function dateStr(offset: number): string {
   return new Date(now.getTime() + offset * dayMs).toISOString().slice(0, 10);
 }
 
+const DATE_OFFSETS: Record<TournamentStatus, { start: number; end: number }> = {
+  active: { start: -30, end: 30 },
+  upcoming: { start: 14, end: 75 },
+  ended: { start: -90, end: -10 },
+};
+
 function makeTournament(
   idx: number,
   name: string,
   status: TournamentStatus,
 ): Doc<"tournaments"> {
-  const startDate =
-    status === "active"
-      ? dateStr(-30)
-      : status === "upcoming"
-        ? dateStr(14)
-        : dateStr(-90);
-  const endDate =
-    status === "active"
-      ? dateStr(30)
-      : status === "upcoming"
-        ? dateStr(75)
-        : dateStr(-10);
+  const offsets = DATE_OFFSETS[status];
+  const startDate = dateStr(offsets.start);
+  const endDate = dateStr(offsets.end);
 
   return {
     _id: `demo-tour-${idx}` as Id<"tournaments">,
@@ -128,8 +125,6 @@ const TOURNAMENT_NAMES = [
   "Summer City Challenge",
 ];
 
-let counter = 0;
-
 const MATRIX: Array<{
   status: TournamentStatus;
   ctx: PlayerContext;
@@ -148,8 +143,7 @@ const MATRIX: Array<{
 ];
 
 export const DEMO_TOURNAMENT_ITEMS: TournamentDemoItem[] = MATRIX.map(
-  ({ status, ctx, teams, pending }) => {
-    const idx = counter++;
+  ({ status, ctx, teams, pending }, idx) => {
     const name = TOURNAMENT_NAMES[idx % TOURNAMENT_NAMES.length];
     return makeItem(idx, name, status, ctx, teams, pending);
   },

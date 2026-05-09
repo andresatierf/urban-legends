@@ -17,55 +17,42 @@ import type { TournamentWithAuthority } from "../../../../convex/tournaments";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card } from "../../ui/card";
+import {
+  type TournamentStatus,
+  daysUntil,
+  formatShortDate,
+  getStatus,
+} from "./tournament-card-utils";
 
 type Props = {
   tournament: TournamentWithAuthority;
 };
 
-function getStatus(t: { startDate: string; endDate: string }) {
-  const now = Date.now();
-  const start = new Date(t.startDate).getTime();
-  const end = new Date(t.endDate).getTime();
-  if (start > now) return "upcoming" as const;
-  if (end < now) return "ended" as const;
-  return "active" as const;
-}
-
-function daysUntil(iso: string) {
-  return Math.ceil(
-    (new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-  );
-}
-
-function formatShort(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-  });
-}
-
-const HEADER_BG = {
+const HEADER_BG: Record<TournamentStatus, string> = {
   active: "bg-primary text-primary-foreground",
   upcoming: "bg-muted text-muted-foreground",
   ended: "bg-secondary text-secondary-foreground",
-} as const;
+};
 
-const STATUS_LABEL = {
+const STATUS_LABEL: Record<TournamentStatus, string> = {
   active: "Active",
   upcoming: "Upcoming",
   ended: "Ended",
-} as const;
+};
+
+const DAYS_LABEL: Record<TournamentStatus, string> = {
+  active: "Left",
+  upcoming: "Until start",
+  ended: "Ended",
+};
 
 export function TournamentCardStats({ tournament }: Props) {
   const status = getStatus(tournament);
   const { authority, teamCount } = tournament;
 
-  const daysLeft =
-    status === "active"
-      ? daysUntil(tournament.endDate)
-      : status === "upcoming"
-        ? daysUntil(tournament.startDate)
-        : 0;
+  let daysLeft = 0;
+  if (status === "active") daysLeft = daysUntil(tournament.endDate);
+  else if (status === "upcoming") daysLeft = daysUntil(tournament.startDate);
 
   return (
     <Card className="gap-0 py-0">
@@ -81,8 +68,8 @@ export function TournamentCardStats({ tournament }: Props) {
         </span>
         <span className="flex items-center gap-1 text-xs">
           <Calendar className="h-3 w-3" />
-          {formatShort(tournament.startDate)} –{" "}
-          {formatShort(tournament.endDate)}
+          {formatShortDate(tournament.startDate)} –{" "}
+          {formatShortDate(tournament.endDate)}
         </span>
       </div>
 
@@ -110,13 +97,7 @@ export function TournamentCardStats({ tournament }: Props) {
           <StatCell
             Icon={Clock}
             value={status === "ended" ? "—" : `${daysLeft}d`}
-            label={
-              status === "active"
-                ? "Left"
-                : status === "upcoming"
-                  ? "Until start"
-                  : "Ended"
-            }
+            label={DAYS_LABEL[status]}
           />
           <StatCell
             Icon={Trophy}
