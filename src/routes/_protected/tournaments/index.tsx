@@ -5,11 +5,10 @@ import { useState } from "react";
 import { UpsertTournamentFormDialog } from "@/components/form/upsert-tournament-form";
 import { SectionHeader } from "@/components/section-header";
 import {
-  TournamentWithAuthorityCard,
-  TournamentWithAuthorityCardSkeleton,
-} from "@/components/tournaments/tournament-with-authority-card";
+  TournamentListing,
+  TournamentListingSkeleton,
+} from "@/components/tournaments/tournament-listing";
 import { Button } from "@/components/ui/button";
-import { CardGrid } from "@/components/ui/card-grid";
 import { useUser } from "@/hooks/useUser";
 
 import { api } from "../../../../convex/_generated/api";
@@ -30,17 +29,13 @@ function TournamentsPage() {
         <SectionHeader as="h1" title="Tournaments">
           {canCreate && <UpsertTournamentFormDialog />}
         </SectionHeader>
-        <CardGrid data={Array.from({ length: 6 })}>
-          {(_, i) => <TournamentWithAuthorityCardSkeleton key={i} />}
-        </CardGrid>
+        <TournamentListingSkeleton />
       </>
     );
   }
 
-  const { yours, discover } = data;
-  const hasYours = yours.length > 0;
-  const hasDiscover = discover.length > 0;
-  const isEmpty = !hasYours && !hasDiscover;
+  const tournaments = [...data.yours, ...data.discover];
+  const isEmpty = tournaments.length === 0;
 
   return (
     <>
@@ -57,7 +52,7 @@ function TournamentsPage() {
         </div>
       </SectionHeader>
 
-      {isEmpty && (
+      {isEmpty ? (
         <div className="rounded-lg border border-dashed p-12 text-center">
           <p className="text-muted-foreground">No tournaments yet</p>
           {canCreate && (
@@ -66,34 +61,8 @@ function TournamentsPage() {
             </div>
           )}
         </div>
-      )}
-
-      {hasYours && (
-        <>
-          {hasDiscover && <SectionHeader title="Your Tournaments" />}
-          <CardGrid data={yours}>
-            {(tournament) => (
-              <TournamentWithAuthorityCard
-                key={tournament._id}
-                tournament={tournament}
-              />
-            )}
-          </CardGrid>
-        </>
-      )}
-
-      {hasDiscover && (
-        <>
-          {hasYours && <SectionHeader title="Discover Tournaments" />}
-          <CardGrid data={discover}>
-            {(tournament) => (
-              <TournamentWithAuthorityCard
-                key={tournament._id}
-                tournament={tournament}
-              />
-            )}
-          </CardGrid>
-        </>
+      ) : (
+        <TournamentListing tournaments={tournaments} />
       )}
     </>
   );

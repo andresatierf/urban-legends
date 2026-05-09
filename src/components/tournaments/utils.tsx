@@ -1,22 +1,9 @@
 import type { Doc } from "../../../convex/_generated/dataModel";
+import type { TournamentWithAuthority } from "../../../convex/tournaments";
 import { Badge } from "../ui/badge";
 
 export const getStatusBadge = (tournament: Doc<"tournaments">) => {
-  const now = new Date();
-  const startDate = new Date(tournament.startDate);
-  const endDate = new Date(tournament.endDate);
-
-  const isActive = startDate <= now && now <= endDate;
-  const isEnded = endDate < now;
-  const isUpcoming = startDate > now;
-
-  const status = isActive
-    ? "active"
-    : isUpcoming
-      ? "upcoming"
-      : isEnded
-        ? "ended"
-        : "unknown";
+  const status = getTournamentStatus(tournament);
 
   switch (status) {
     case "upcoming":
@@ -25,7 +12,49 @@ export const getStatusBadge = (tournament: Doc<"tournaments">) => {
       return <Badge variant="default">Active</Badge>;
     case "ended":
       return <Badge variant="secondary">Ended</Badge>;
-    default:
-      return <Badge>{status}</Badge>;
   }
 };
+
+export function getTournamentStatus(t: { startDate: string; endDate: string }) {
+  const now = new Date().toISOString();
+  if (t.startDate <= now && t.endDate >= now) return "active" as const;
+  if (t.startDate > now) return "upcoming" as const;
+  return "ended" as const;
+}
+
+export function daysUntil(dateStr: string) {
+  const diff = new Date(dateStr).getTime() - Date.now();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+export function tournamentProgress(t: { startDate: string; endDate: string }) {
+  const start = new Date(t.startDate).getTime();
+  const end = new Date(t.endDate).getTime();
+  const now = Date.now();
+  if (now < start) return 0;
+  if (now > end) return 100;
+  return Math.round(((now - start) / (end - start)) * 100);
+}
+
+export function partitionTournaments(tournaments: TournamentWithAuthority[]) {
+  const now = new Date().toISOString();
+  const active: TournamentWithAuthority[] = [];
+  const upcoming: TournamentWithAuthority[] = [];
+  const ended: TournamentWithAuthority[] = [];
+  const yours: TournamentWithAuthority[] = [];
+  const discover: TournamentWithAuthority[] = [];
+
+  for (const t of tournaments) {
+    if (t.startDate <= now && t.endDate >= now) active.push(t);
+    else if (t.startDate > now) upcoming.push(t);
+    else ended.push(t);
+
+    if (t.authority.team || t.authority.canManage || t.authority.canReview) {
+      yours.push(t);
+    } else {
+      discover.push(t);
+    }
+  }
+
+  return { active, upcoming, ended, yours, discover, all: tournaments };
+}

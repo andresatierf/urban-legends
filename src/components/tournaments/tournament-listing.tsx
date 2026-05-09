@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Calendar,
@@ -10,7 +11,6 @@ import {
   Users,
 } from "lucide-react";
 
-import { SectionHeader } from "@/components/section-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,30 +21,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useFormattedDate } from "@/hooks/useFormattedDate";
 
 import type { TournamentWithAuthority } from "../../../convex/tournaments";
 import {
-  DEMO_TOURNAMENTS,
   daysUntil,
   getTournamentStatus,
   partitionTournaments,
   tournamentProgress,
-} from "./tournament-listing-fixtures";
+} from "./utils";
 
 function FeaturedCard({ tournament }: { tournament: TournamentWithAuthority }) {
-  const status = getTournamentStatus(tournament);
+  const { format } = useFormattedDate();
   const progress = tournamentProgress(tournament);
   const { authority, teamCount } = tournament;
-
-  const startDate = new Date(tournament.startDate).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-  });
-  const endDate = new Date(tournament.endDate).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
 
   return (
     <Card className="border-primary/20 from-primary/5 border-2 bg-gradient-to-br to-transparent">
@@ -69,7 +60,8 @@ function FeaturedCard({ tournament }: { tournament: TournamentWithAuthority }) {
             </span>
             <span className="flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5" />
-              {startDate} – {endDate}
+              {format(tournament.startDate, "short")} –{" "}
+              {format(tournament.endDate, "short")}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
@@ -87,7 +79,11 @@ function FeaturedCard({ tournament }: { tournament: TournamentWithAuthority }) {
 
         <div className="flex flex-col items-end gap-2 sm:min-w-[160px]">
           {authority.team && (
-            <div className="bg-card w-full rounded-lg border p-3 text-center">
+            <Link
+              to="/teams/$teamId"
+              params={{ teamId: authority.team._id }}
+              className="bg-card hover:bg-muted/50 w-full rounded-lg border p-3 text-center transition-colors"
+            >
               <p className="text-muted-foreground text-xs">Your team</p>
               <p className="mt-0.5 flex items-center justify-center gap-1 text-sm font-medium">
                 {authority.team.name}
@@ -105,19 +101,45 @@ function FeaturedCard({ tournament }: { tournament: TournamentWithAuthority }) {
                 {authority.team.approvedSubmissions}/
                 {authority.team.totalSubmissions} approved
               </p>
-            </div>
+            </Link>
           )}
 
-          {authority.canReview && authority.pendingReviewCount > 0 && (
-            <Button variant="outline" size="sm" className="w-full gap-1">
-              <Trophy className="h-3 w-3" />
-              Review ({authority.pendingReviewCount})
+          {authority.canManage && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-1"
+              asChild
+            >
+              <Link to={`/admin/tournaments?edit=${tournament._id}` as never}>
+                <Edit className="h-3 w-3" />
+                Manage
+              </Link>
             </Button>
           )}
 
-          <Button size="sm" className="w-full">
-            {authority.team ? "View Tournament" : "Browse Teams"}
-            <ArrowRight className="h-3 w-3" />
+          {authority.canReview && authority.pendingReviewCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-1"
+              asChild
+            >
+              <Link to="/reviewer">
+                <Trophy className="h-3 w-3" />
+                Review ({authority.pendingReviewCount})
+              </Link>
+            </Button>
+          )}
+
+          <Button size="sm" className="w-full gap-1" asChild>
+            <Link
+              to="/tournaments/$tournamentId"
+              params={{ tournamentId: tournament._id }}
+            >
+              {authority.team ? "View Tournament" : "Browse Teams"}
+              <ArrowRight className="h-3 w-3" />
+            </Link>
           </Button>
         </div>
       </CardContent>
@@ -126,13 +148,9 @@ function FeaturedCard({ tournament }: { tournament: TournamentWithAuthority }) {
 }
 
 function CompactCard({ tournament }: { tournament: TournamentWithAuthority }) {
+  const { format } = useFormattedDate();
   const status = getTournamentStatus(tournament);
   const { authority, teamCount } = tournament;
-
-  const startDate = new Date(tournament.startDate).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-  });
 
   const statusConfig = {
     active: { label: "Active", variant: "default" as const },
@@ -143,7 +161,7 @@ function CompactCard({ tournament }: { tournament: TournamentWithAuthority }) {
   let dateLabel: string;
   switch (status) {
     case "upcoming":
-      dateLabel = `Starts ${startDate}`;
+      dateLabel = `Starts ${format(tournament.startDate, "short")}`;
       break;
     case "active":
       dateLabel = `${daysUntil(tournament.endDate)}d left`;
@@ -197,8 +215,10 @@ function CompactCard({ tournament }: { tournament: TournamentWithAuthority }) {
 
       <CardFooter className="gap-2 border-t pt-3">
         {authority.canManage && (
-          <Button variant="ghost" size="icon-sm">
-            <Edit className="h-3 w-3" />
+          <Button variant="ghost" size="icon-sm" asChild>
+            <Link to={`/admin/tournaments?edit=${tournament._id}` as never}>
+              <Edit className="h-3 w-3" />
+            </Link>
           </Button>
         )}
         {authority.canReview && authority.pendingReviewCount > 0 && (
@@ -207,9 +227,14 @@ function CompactCard({ tournament }: { tournament: TournamentWithAuthority }) {
             {authority.pendingReviewCount}
           </Badge>
         )}
-        <Button size="sm" variant="outline" className="ml-auto gap-1">
-          {authority.team ? "View" : "Explore"}
-          <ChevronRight className="h-3 w-3" />
+        <Button size="sm" variant="outline" className="ml-auto gap-1" asChild>
+          <Link
+            to="/tournaments/$tournamentId"
+            params={{ tournamentId: tournament._id }}
+          >
+            {authority.team ? "View" : "Explore"}
+            <ChevronRight className="h-3 w-3" />
+          </Link>
         </Button>
       </CardFooter>
     </Card>
@@ -217,15 +242,15 @@ function CompactCard({ tournament }: { tournament: TournamentWithAuthority }) {
 }
 
 function EndedRow({ tournament }: { tournament: TournamentWithAuthority }) {
+  const { format } = useFormattedDate();
   const { authority, teamCount } = tournament;
-  const endDate = new Date(tournament.endDate).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
 
   return (
-    <div className="text-muted-foreground flex items-center gap-3 py-2 text-xs">
+    <Link
+      to="/tournaments/$tournamentId/leaderboard"
+      params={{ tournamentId: tournament._id }}
+      className="text-muted-foreground hover:bg-muted/30 flex items-center gap-3 rounded-md px-2 py-2 text-xs transition-colors"
+    >
       <span className="text-foreground/70 min-w-0 flex-1 truncate font-medium">
         {tournament.name}
       </span>
@@ -234,29 +259,27 @@ function EndedRow({ tournament }: { tournament: TournamentWithAuthority }) {
           {authority.team.name} · {authority.team.points} pts
         </Badge>
       )}
-      <span className="flex shrink-0 items-center gap-1">
+      <span className="hidden shrink-0 items-center gap-1 sm:flex">
         <Users className="h-3 w-3" />
         {teamCount}
       </span>
-      <span className="shrink-0">{endDate}</span>
-      <Button variant="ghost" size="icon-sm">
-        <ChevronRight className="h-3 w-3" />
-      </Button>
-    </div>
+      <span className="hidden shrink-0 sm:inline">
+        {format(tournament.endDate, "short")}
+      </span>
+      <ChevronRight className="h-3 w-3 shrink-0" />
+    </Link>
   );
 }
 
-export function TournamentListingVariantC() {
-  const { active, upcoming, ended } = partitionTournaments(DEMO_TOURNAMENTS);
+export function TournamentListing({
+  tournaments,
+}: {
+  tournaments: TournamentWithAuthority[];
+}) {
+  const { active, upcoming, ended } = partitionTournaments(tournaments);
 
   return (
     <div className="space-y-8">
-      <SectionHeader
-        as="h1"
-        title="Tournaments"
-        description="Variant C — Magazine layout: active tournaments are featured heroes, upcoming as a card grid, ended as a compact list."
-      />
-
       {active.length > 0 && (
         <section className="space-y-3">
           <h3 className="text-muted-foreground flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
@@ -291,13 +314,65 @@ export function TournamentListingVariantC() {
             <span className="bg-muted-foreground/40 inline-block h-1.5 w-1.5 rounded-full" />
             Past tournaments
           </h3>
-          <div className="divide-y rounded-lg border px-4">
-            {ended.map((t) => (
-              <EndedRow key={t._id} tournament={t} />
-            ))}
+          <div className="rounded-lg border p-1">
+            <div className="divide-y">
+              {ended.map((t) => (
+                <EndedRow key={t._id} tournament={t} />
+              ))}
+            </div>
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+export function TournamentListingSkeleton() {
+  return (
+    <div className="space-y-8">
+      <section className="space-y-3">
+        <Skeleton className="h-3 w-24" />
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Card key={i} className="border-2">
+              <CardContent className="flex flex-col gap-4 sm:flex-row sm:gap-6">
+                <div className="flex min-w-0 flex-1 flex-col gap-3">
+                  <Skeleton className="h-6 w-2/3" />
+                  <Skeleton className="h-4 w-full" />
+                  <div className="flex gap-3">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                  <Skeleton className="h-2 w-full" />
+                </div>
+                <div className="flex flex-col gap-2 sm:min-w-[160px]">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <Skeleton className="h-3 w-24" />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="flex flex-col gap-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-1/2" />
+              </CardContent>
+              <CardFooter className="gap-2 border-t pt-3">
+                <Skeleton className="ml-auto h-7 w-16" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
