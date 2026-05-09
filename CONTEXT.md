@@ -35,6 +35,10 @@ _Avoid_: photo, attachment, proof.
 **SubmissionGroup**:
 The aggregation of all **Submissions** by one **Team** on one date — used to compute team-exercise rollups.
 
+**SubmissionView**:
+The composed read-model of a **Submission** as it appears on the detail screen — bundles the **Submission** with its **Team**, **Tournament**, **Submitter**, **Teammates** (for team-typed Submissions in non-terminal state), the **User** who managed the review (`managedBy`), the derived `isTeamExercise` flag, **Evidence** with resolved storage URLs, and the viewer's per-action permission flags. A single read returns the **SubmissionView**; UI components do not assemble it piecewise.
+_Avoid_: SubmissionDetails, submission-with-context.
+
 **JoinRequest**:
 An outstanding intent for a **User** to become a **TeamMember** of a **Team**. Created by either `request` (User-initiated) or `invite` (Team-initiated); both produce the same row shape, distinguished by an `initiator` field. Resolved by `accept` (recipient — produces a **TeamMember**), `reject` (recipient), `cancel` (initiator), or `expire` (timeout).
 _Avoid_: invitation, application, membership offer (these described the two halves separately before unification).
