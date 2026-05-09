@@ -53,7 +53,7 @@ function SubmissionVariantSection({
       <SectionHeader as="h2" title={title} />
 
       <div className="mt-4">
-        <h3 className="mb-3 font-medium text-muted-foreground text-sm">
+        <h3 className="text-muted-foreground mb-3 text-sm font-medium">
           Individual submissions (1–5 evidence images)
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -69,7 +69,7 @@ function SubmissionVariantSection({
       </div>
 
       <div className="mt-6">
-        <h3 className="mb-3 font-medium text-muted-foreground text-sm">
+        <h3 className="text-muted-foreground mb-3 text-sm font-medium">
           Team activity (1–5 submitters)
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

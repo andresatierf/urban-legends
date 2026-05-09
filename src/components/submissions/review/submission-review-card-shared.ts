@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+
 import type { BadgeProps } from "@/components/ui/badge";
 import { tryMutate } from "@/lib/utils";
+
 import type { ReviewItem } from "./types";
 
 export type SubmissionState = "pending" | "approved" | "rejected" | "deleted";
