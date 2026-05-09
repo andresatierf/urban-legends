@@ -10,6 +10,7 @@ export interface EvidenceImage {
 export interface SubmitterEvidence {
   userId: string;
   submitterName: string;
+  submitterImageUrl?: string;
   evidence: EvidenceImage[];
 }
 

@@ -202,6 +202,7 @@ export const getPendingSubmissions = query({
               return {
                 userId: sub.userId as string,
                 submitterName: submitter?.name ?? "Unknown",
+                submitterImageUrl: submitter?.imageUrl,
                 evidence: evidenceResolved.filter(
                   (e): e is NonNullable<typeof e> => e !== null,
                 ),

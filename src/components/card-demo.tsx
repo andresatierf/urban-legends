@@ -1,4 +1,11 @@
 import { SectionHeader } from "./section-header";
+import {
+  DEMO_GROUP_ITEMS,
+  DEMO_INDIVIDUAL_ITEMS,
+} from "./submission-card-demo-fixtures";
+import { CarouselReviewCard } from "./submissions/review/submission-review-card-carousel";
+import { MosaicReviewCard } from "./submissions/review/submission-review-card-mosaic";
+import type { SubmissionReviewCardProps } from "./submissions/review/submission-review-card-shared";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -8,6 +15,19 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
+
+const SUBMISSION_VARIANTS = [
+  {
+    id: "mosaic",
+    title: "Mosaic — Landscape lead, mosaic groups, footer actions",
+    Component: MosaicReviewCard,
+  },
+  {
+    id: "carousel",
+    title: "Carousel — Portrait lead, submitter strip groups, split footer",
+    Component: CarouselReviewCard,
+  },
+] as const;
 
 const CARD_VARIANTS = [
   "default",
@@ -23,7 +43,7 @@ export function CardDemo() {
       <SectionHeader as="h1" title="Card Demo" />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {CARD_VARIANTS.map((variant) => (
-          <Card key={variant} variant={variant}>
+          <Card key={variant}>
             <CardHeader>
               <CardTitle className="capitalize">
                 {variant === "tournament_manager"
@@ -55,7 +75,7 @@ export function CardDemo() {
         <SectionHeader as="h2" title="Card with Different Content" />
         <div className="grid gap-6 md:grid-cols-2">
           {CARD_VARIANTS.map((variant) => (
-            <Card key={`${variant}-alt`} variant={variant}>
+            <Card key={`${variant}-alt`}>
               <CardHeader>
                 <CardTitle className="capitalize">
                   {variant === "tournament_manager"
@@ -94,7 +114,7 @@ export function CardDemo() {
         <SectionHeader as="h2" title="Minimal Cards" />
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {CARD_VARIANTS.map((variant) => (
-            <Card key={`${variant}-minimal`} variant={variant}>
+            <Card key={`${variant}-minimal`}>
               <CardContent className="flex min-h-[100px] items-center justify-center p-6">
                 <p className="text-center font-medium capitalize">
                   {variant === "tournament_manager" ? "TM" : variant}
@@ -104,6 +124,69 @@ export function CardDemo() {
           ))}
         </div>
       </div>
+
+      <section className="mt-12">
+        <SectionHeader
+          as="h1"
+          title="Submission"
+          description="The two evidence-led review card variants used by /submissions. Each renders the same 20-card state matrix (individual + group × four states × evidence-count variability)."
+        />
+
+        {SUBMISSION_VARIANTS.map(({ id, title, Component }) => (
+          <SubmissionVariantSection
+            key={id}
+            title={title}
+            Component={Component}
+          />
+        ))}
+      </section>
     </>
+  );
+}
+
+function SubmissionVariantSection({
+  title,
+  Component,
+}: {
+  title: string;
+  Component: (props: SubmissionReviewCardProps) => React.JSX.Element;
+}) {
+  const noop = async () => {};
+  return (
+    <div className="mt-8">
+      <SectionHeader as="h2" title={title} />
+
+      <div className="mt-4">
+        <h3 className="mb-3 font-medium text-muted-foreground text-sm">
+          Individual submissions (1–5 evidence images)
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {DEMO_INDIVIDUAL_ITEMS.map((item) => (
+            <Component
+              key={item.data.submission._id}
+              item={item}
+              onApprove={noop}
+              onReject={noop}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <h3 className="mb-3 font-medium text-muted-foreground text-sm">
+          Team activity (1–5 submitters)
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {DEMO_GROUP_ITEMS.map((item) => (
+            <Component
+              key={item.data.group._id}
+              item={item}
+              onApprove={noop}
+              onReject={noop}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

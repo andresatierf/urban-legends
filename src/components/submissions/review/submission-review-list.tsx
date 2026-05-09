@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/useDebounce";
 
-import { SubmissionReviewCard } from "./submission-review-card";
+import { CarouselReviewCard } from "./submission-review-card-carousel";
 import { filterReviewItems, sortReviewItems } from "./transforms";
 import type { ReviewItem } from "./types";
 
@@ -26,7 +26,6 @@ export interface SubmissionReviewListProps {
   showFilters?: boolean;
   defaultSortBy?: "date-desc" | "date-asc" | "points-desc" | "points-asc";
   emptyMessage?: string;
-  variant?: "compact" | "detailed";
 }
 
 /**
@@ -40,7 +39,6 @@ export function SubmissionReviewList({
   showFilters = true,
   defaultSortBy = "date-desc",
   emptyMessage = "No submissions to display",
-  variant = "compact",
 }: SubmissionReviewListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<
@@ -120,8 +118,8 @@ export function SubmissionReviewList({
         </div>
       )}
 
-      {/* Submissions list */}
-      <div className="space-y-4">
+      {/* Submissions grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filteredAndSortedItems.map((item) => {
           const key =
             item.type === "individual"
@@ -129,10 +127,9 @@ export function SubmissionReviewList({
               : `group-${item.data.group._id}`;
 
           return (
-            <SubmissionReviewCard
+            <CarouselReviewCard
               key={key}
               item={item}
-              variant={variant}
               onApprove={() => onApprove(item)}
               onReject={() => onReject(item)}
             />

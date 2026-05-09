@@ -143,6 +143,7 @@ export const upsertFromClerk = internalMutation({
       email: data.email_addresses[0].email_address,
       name: `${data.first_name} ${data.last_name}`,
       externalId: data.id,
+      imageUrl: data.image_url,
     };
 
     const user = await userByExternalId(ctx, data.id);
