@@ -69,6 +69,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@ai-hero/sandcastle": "^0.5.10",
     "@biomejs/biome": "2.2.6",
     "@fontsource-variable/geist": "^5.2.8",
     "@fontsource-variable/geist-mono": "^5.2.7",
