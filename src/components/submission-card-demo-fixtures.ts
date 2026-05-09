@@ -1,71 +1,28 @@
-export type DemoSubmissionState =
-  | "pending"
-  | "approved"
-  | "rejected"
-  | "deleted";
+import type {
+  EvidenceImage,
+  ReviewItem,
+  SubmitterEvidence,
+} from "@/components/submissions/review/types";
+import type { Doc, Id } from "../../convex/_generated/dataModel";
+import type { UserWithRoles } from "../../convex/users";
 
-export type DemoSubmissionTier = "base" | "advanced";
+type State = "pending" | "approved" | "rejected" | "deleted";
+type Tier = "base" | "advanced";
 
-export type DemoEvidence = {
-  id: string;
-  url: string;
-  filename: string;
-};
+type IndividualReviewItem = Extract<ReviewItem, { type: "individual" }>;
+type GroupReviewItem = Extract<ReviewItem, { type: "group" }>;
 
-export type DemoSubmitter = {
-  id: string;
-  name: string;
-  avatarUrl: string;
-};
-
-export type DemoTeam = { id: string; name: string };
-export type DemoTournament = { id: string; name: string };
-
-export type DemoIndividualSubmission = {
-  id: string;
-  type: "individual";
-  state: DemoSubmissionState;
-  tier: DemoSubmissionTier;
-  pointsEarned: number;
-  date: string;
-  team: DemoTeam;
-  tournament: DemoTournament;
-  submitter: DemoSubmitter;
-  evidence: DemoEvidence[];
-};
-
-export type DemoSubmitterEvidence = {
-  submitter: DemoSubmitter;
-  evidence: DemoEvidence[];
-};
-
-export type DemoGroupSubmission = {
-  id: string;
-  type: "group";
-  state: DemoSubmissionState;
-  tier: DemoSubmissionTier;
-  pointsEarned: number;
-  date: string;
-  team: DemoTeam;
-  tournament: DemoTournament;
-  participantCount: number;
-  totalTeamMembers: number;
-  submitterEvidence: DemoSubmitterEvidence[];
-};
-
-export type DemoCardItem = DemoIndividualSubmission | DemoGroupSubmission;
-
-const TEAMS: DemoTeam[] = [
-  { id: "team-1", name: "404 shape not found" },
-  { id: "team-2", name: "Urban Divas ✨" },
-  { id: "team-3", name: "Sedentários em Revolução" },
-  { id: "team-4", name: "Booldozers" },
-  { id: "team-5", name: "Legends on Tap" },
+const TEAM_NAMES = [
+  "404 shape not found",
+  "Urban Divas ✨",
+  "Sedentários em Revolução",
+  "Booldozers",
+  "Legends on Tap",
 ];
 
-const TOURNAMENTS: DemoTournament[] = [
-  { id: "tour-1", name: "Urban Legends Tournament 2026" },
-  { id: "tour-2", name: "Urban Legends Captains Cup 2026" },
+const TOURNAMENT_NAMES = [
+  "Urban Legends Tournament 2026",
+  "Urban Legends Captains Cup 2026",
 ];
 
 const SUBMITTER_NAMES = [
@@ -86,119 +43,159 @@ const SUBMITTER_NAMES = [
   "Diogo Baptista",
 ];
 
-function evidenceImage(seed: string, idx: number): DemoEvidence {
+function evidenceImage(seed: string, idx: number): EvidenceImage {
   return {
-    id: `${seed}-ev-${idx}`,
+    _id: `${seed}-ev-${idx}`,
     url: `https://picsum.photos/seed/${seed}-${idx}/800/600`,
     filename: `evidence-${idx + 1}.jpg`,
   };
 }
 
-function submitter(idx: number): DemoSubmitter {
+function makeUser(idx: number): UserWithRoles {
   const name = SUBMITTER_NAMES[idx % SUBMITTER_NAMES.length];
   return {
-    id: `sub-${idx}`,
+    _id: `user-${idx}` as Id<"users">,
+    _creationTime: 0,
     name,
-    avatarUrl: `https://picsum.photos/seed/avatar-${idx}/96/96`,
+    email: `${name.toLowerCase().replace(/\s+/g, ".")}@example.com`,
+    externalId: `ext-${idx}`,
+    imageUrl: `https://picsum.photos/seed/avatar-${idx}/96/96`,
+    roles: [],
+    roleNames: [],
   };
 }
 
-function pointsFor(state: DemoSubmissionState, tier: DemoSubmissionTier) {
+function makeTeam(idx: number): Doc<"teams"> {
+  return {
+    _id: `team-${idx}` as Id<"teams">,
+    _creationTime: 0,
+    name: TEAM_NAMES[idx % TEAM_NAMES.length],
+    tournamentId: `tour-${idx % TOURNAMENT_NAMES.length}` as Id<"tournaments">,
+    createdBy: `user-${idx}` as Id<"users">,
+    joinPolicy: "open",
+    points: 0,
+  };
+}
+
+function makeTournament(idx: number): Doc<"tournaments"> {
+  return {
+    _id: `tour-${idx}` as Id<"tournaments">,
+    _creationTime: 0,
+    name: TOURNAMENT_NAMES[idx % TOURNAMENT_NAMES.length],
+    description: "",
+    startDate: "2026-01-01",
+    endDate: "2026-12-31",
+    createdBy: `user-${idx}` as Id<"users">,
+    scoringConfig: {
+      individualPoints: { base: 10, advanced: 30 },
+      teamExercisePoints: { base: 20, advanced: 50 },
+      teamExerciseThreshold: 0.5,
+    },
+  };
+}
+
+function pointsFor(state: State, tier: Tier) {
   if (state === "approved") return tier === "advanced" ? 30 : 10;
   return 0;
 }
 
-type EvidenceCount = 1 | 2 | 3 | 4 | 5;
-type SubmitterCount = 1 | 2 | 3 | 4 | 5;
-
 let individualCounter = 0;
 function makeIndividual(
-  state: DemoSubmissionState,
-  evidenceCount: EvidenceCount,
-): DemoIndividualSubmission {
-  const tier: DemoSubmissionTier = evidenceCount >= 4 ? "advanced" : "base";
+  state: State,
+  evidenceCount: number,
+): IndividualReviewItem {
+  const tier: Tier = evidenceCount >= 4 ? "advanced" : "base";
   const idx = individualCounter++;
-  const team = TEAMS[idx % TEAMS.length];
-  const tournament = TOURNAMENTS[idx % TOURNAMENTS.length];
-  const sub = submitter(idx);
   const seed = `ind-${idx}`;
   const evidence = Array.from({ length: evidenceCount }, (_, i) =>
     evidenceImage(seed, i),
   );
   const date = new Date(2026, 3, 8 + idx).toISOString();
-  return {
-    id: `individual-${state}-${evidenceCount}`,
-    type: "individual",
+  const submission: Doc<"submissions"> = {
+    _id: `sub-${idx}` as Id<"submissions">,
+    _creationTime: 0,
+    userId: `user-${idx}` as Id<"users">,
+    teamId: `team-${idx}` as Id<"teams">,
+    tournamentId: `tour-${idx}` as Id<"tournaments">,
+    date,
+    submissionType: "individual",
     state,
+    createdBy: `user-${idx}` as Id<"users">,
     tier,
     pointsEarned: pointsFor(state, tier),
-    date,
-    team,
-    tournament,
-    submitter: sub,
-    evidence,
+  };
+  return {
+    type: "individual",
+    data: {
+      submission,
+      state,
+      team: makeTeam(idx),
+      tournament: makeTournament(idx),
+      submitter: makeUser(idx),
+      evidence,
+    },
   };
 }
 
 let groupCounter = 0;
-function makeGroup(
-  state: DemoSubmissionState,
-  submitterCount: SubmitterCount,
-): DemoGroupSubmission {
-  const tier: DemoSubmissionTier = submitterCount >= 4 ? "advanced" : "base";
+function makeGroup(state: State, submitterCount: number): GroupReviewItem {
+  const tier: Tier = submitterCount >= 4 ? "advanced" : "base";
   const idx = groupCounter++;
-  const team = TEAMS[idx % TEAMS.length];
-  const tournament = TOURNAMENTS[idx % TOURNAMENTS.length];
   const seed = `grp-${idx}`;
-  const submitterEvidence: DemoSubmitterEvidence[] = Array.from(
-    { length: submitterCount },
-    (_, i) => {
-      const perSubmitter = ((idx + i) % 3) + 2;
-      return {
-        submitter: submitter(idx * 3 + i + 20),
-        evidence: Array.from({ length: perSubmitter }, (_, j) =>
-          evidenceImage(`${seed}-s${i}`, j),
-        ),
-      };
-    },
+  const submitters = Array.from({ length: submitterCount }, (_, i) =>
+    makeUser(idx * 5 + i + 20),
   );
+  const submitterEvidence: SubmitterEvidence[] = submitters.map((user, i) => {
+    const perSubmitter = ((idx + i) % 3) + 2;
+    return {
+      userId: user._id,
+      submitterName: user.name,
+      submitterImageUrl: user.imageUrl,
+      evidence: Array.from({ length: perSubmitter }, (_, j) =>
+        evidenceImage(`${seed}-s${i}`, j),
+      ),
+    };
+  });
   const totalTeamMembers = Math.max(submitterCount + 1, 6);
+  const participationRate = submitterCount / totalTeamMembers;
   const date = new Date(2026, 3, 12 + idx).toISOString();
-  return {
-    id: `group-${state}-${submitterCount}`,
-    type: "group",
+  const group: Doc<"submissionGroups"> = {
+    _id: `group-${idx}` as Id<"submissionGroups">,
+    _creationTime: 0,
+    teamId: `team-${idx}` as Id<"teams">,
+    tournamentId: `tour-${idx}` as Id<"tournaments">,
+    date,
     state,
     tier,
-    pointsEarned: pointsFor(state, tier),
-    date,
-    team,
-    tournament,
     participantCount: submitterCount,
     totalTeamMembers,
-    submitterEvidence,
+    participationRate,
+    isTeamExercise: participationRate >= 0.5,
+    pointsEarned: pointsFor(state, tier),
+    createdAt: date,
+    updatedAt: date,
+  };
+  return {
+    type: "group",
+    data: {
+      group,
+      state,
+      team: makeTeam(idx),
+      tournament: makeTournament(idx),
+      submissions: [],
+      submitters,
+      submitterEvidence,
+    },
   };
 }
 
-const STATES: DemoSubmissionState[] = [
-  "pending",
-  "approved",
-  "rejected",
-  "deleted",
-];
+const STATES: State[] = ["pending", "approved", "rejected", "deleted"];
+const COUNTS = [1, 2, 3, 4, 5];
 
-const EVIDENCE_COUNTS: EvidenceCount[] = [1, 2, 3, 4, 5];
-const SUBMITTER_COUNTS: SubmitterCount[] = [1, 2, 3, 4, 5];
-
-export const DEMO_INDIVIDUAL_SUBMISSIONS: DemoIndividualSubmission[] =
-  STATES.flatMap((state) =>
-    EVIDENCE_COUNTS.map((count) => makeIndividual(state, count)),
-  );
-
-export const DEMO_GROUP_SUBMISSIONS: DemoGroupSubmission[] = STATES.flatMap(
-  (state) => SUBMITTER_COUNTS.map((count) => makeGroup(state, count)),
+export const DEMO_INDIVIDUAL_ITEMS: IndividualReviewItem[] = STATES.flatMap(
+  (state) => COUNTS.map((count) => makeIndividual(state, count)),
 );
 
-export const DEMO_CARD_ITEMS: DemoCardItem[] = [
-  ...DEMO_INDIVIDUAL_SUBMISSIONS,
-  ...DEMO_GROUP_SUBMISSIONS,
-];
+export const DEMO_GROUP_ITEMS: GroupReviewItem[] = STATES.flatMap((state) =>
+  COUNTS.map((count) => makeGroup(state, count)),
+);

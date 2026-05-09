@@ -1,11 +1,11 @@
 import { SectionHeader } from "./section-header";
 import {
-  DEMO_GROUP_SUBMISSIONS,
-  DEMO_INDIVIDUAL_SUBMISSIONS,
-  type DemoCardItem,
+  DEMO_GROUP_ITEMS,
+  DEMO_INDIVIDUAL_ITEMS,
 } from "./submission-card-demo-fixtures";
-import { SubmissionCardVariantA } from "./submission-card-variant-a";
-import { SubmissionCardVariantC } from "./submission-card-variant-c";
+import { CarouselReviewCard } from "./submissions/review/submission-review-card-carousel";
+import { MosaicReviewCard } from "./submissions/review/submission-review-card-mosaic";
+import type { ReviewItem } from "./submissions/review/types";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -16,16 +16,16 @@ import {
   CardTitle,
 } from "./ui/card";
 
-const VARIANTS = [
+const SUBMISSION_VARIANTS = [
   {
-    id: "a",
-    title: "Variant A — Landscape lead, mosaic groups, footer actions",
-    Component: SubmissionCardVariantA,
+    id: "mosaic",
+    title: "Mosaic — Landscape lead, mosaic groups, footer actions",
+    Component: MosaicReviewCard,
   },
   {
-    id: "c",
-    title: "Variant C — Portrait lead, submitter strip groups, split footer",
-    Component: SubmissionCardVariantC,
+    id: "carousel",
+    title: "Carousel — Portrait lead, submitter strip groups, split footer",
+    Component: CarouselReviewCard,
   },
 ] as const;
 
@@ -129,10 +129,10 @@ export function CardDemo() {
         <SectionHeader
           as="h1"
           title="Submission"
-          description="Three evidence-led card prototypes for the future review grid. Each variant renders the same 16-card state matrix (individual + group × four states × evidence-count variability)."
+          description="The two evidence-led review card variants used by /submissions. Each renders the same 20-card state matrix (individual + group × four states × evidence-count variability)."
         />
 
-        {VARIANTS.map(({ id, title, Component }) => (
+        {SUBMISSION_VARIANTS.map(({ id, title, Component }) => (
           <SubmissionVariantSection
             key={id}
             title={title}
@@ -149,7 +149,7 @@ function SubmissionVariantSection({
   Component,
 }: {
   title: string;
-  Component: (props: { item: DemoCardItem }) => React.JSX.Element;
+  Component: (props: { item: ReviewItem }) => React.JSX.Element;
 }) {
   return (
     <div className="mt-8">
@@ -160,8 +160,8 @@ function SubmissionVariantSection({
           Individual submissions (1–5 evidence images)
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {DEMO_INDIVIDUAL_SUBMISSIONS.map((item) => (
-            <Component key={item.id} item={item} />
+          {DEMO_INDIVIDUAL_ITEMS.map((item) => (
+            <Component key={item.data.submission._id} item={item} />
           ))}
         </div>
       </div>
@@ -171,8 +171,8 @@ function SubmissionVariantSection({
           Team activity (1–5 submitters)
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {DEMO_GROUP_SUBMISSIONS.map((item) => (
-            <Component key={item.id} item={item} />
+          {DEMO_GROUP_ITEMS.map((item) => (
+            <Component key={item.data.group._id} item={item} />
           ))}
         </div>
       </div>

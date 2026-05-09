@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -49,6 +49,7 @@ export function CarouselReviewCard({
         <IndividualPortrait
           evidence={item.data.evidence}
           submitterName={item.data.submitter.name}
+          submitterImageUrl={item.data.submitter.imageUrl}
         />
       ) : (
         <GroupPortraitWithStrip
@@ -177,9 +178,11 @@ function MetaFooter({
 function IndividualPortrait({
   evidence,
   submitterName,
+  submitterImageUrl,
 }: {
   evidence: EvidenceImage[];
   submitterName: string;
+  submitterImageUrl?: string;
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   if (evidence.length === 0) {
@@ -225,6 +228,9 @@ function IndividualPortrait({
         )}
         <div className="absolute right-2 bottom-2 left-2 flex items-center gap-2">
           <Avatar size="sm" className="ring-2 ring-background">
+            {submitterImageUrl && (
+              <AvatarImage src={submitterImageUrl} alt={submitterName} />
+            )}
             <AvatarFallback>{initials(submitterName)}</AvatarFallback>
           </Avatar>
           <span className="truncate rounded bg-black/60 px-1.5 py-0.5 text-white text-xs backdrop-blur">
@@ -384,6 +390,12 @@ function SubmitterStrip({
                 size="sm"
                 className="-bottom-1 -right-1 absolute size-5 ring-2 ring-background"
               >
+                {se.submitterImageUrl && (
+                  <AvatarImage
+                    src={se.submitterImageUrl}
+                    alt={se.submitterName}
+                  />
+                )}
                 <AvatarFallback>{initials(se.submitterName)}</AvatarFallback>
               </Avatar>
             </div>

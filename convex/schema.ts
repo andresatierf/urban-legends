@@ -135,6 +135,7 @@ export default defineSchema({
     email: v.string(),
     name: v.string(),
     externalId: v.string(),
+    imageUrl: v.optional(v.string()),
   })
     .index("by_external_id", ["externalId"])
     .index("by_email", ["email"]),
