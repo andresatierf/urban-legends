@@ -15,7 +15,8 @@
     "routes:generate": "node scripts/generate-routes.mjs",
     "pretypecheck": "bun --bun run routes:generate",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "sandcastle": "bun --bun .sandcastle/main.ts"
   },
   "dependencies": {
     "@auth/core": "^0.37.0",

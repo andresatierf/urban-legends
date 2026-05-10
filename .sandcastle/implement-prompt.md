@@ -32,20 +32,27 @@ where the issue is testable.
 
 # FEEDBACK LOOPS
 
-Before committing, run and pass:
+A `lefthook` pre-commit hook runs `oxlint`, `oxfmt`, and `tsc` on staged files —
+don't re-run those manually. If the hook fails, fix the underlying issue and
+re-stage; never bypass with `--no-verify`.
 
-- `bun run typecheck`
-- `bun run lint`
-- `bun run format`
-- `bun run test`
+Tests are NOT in the pre-commit hook. If the issue is testable, run
+`bun run test` yourself before opening the PR.
 
 # COMMIT
 
-Make a commit. The body must include `Closes #{{TASK_ID}}` so the PR auto-closes the issue on merge.
+Group changes into logical commits — one commit per coherent unit of work
+(e.g. schema change, then the query using it, then the UI consuming it). A
+single squashable commit is fine for small issues; for anything bigger, split
+so each commit tells a self-contained story and could in principle be reverted
+on its own.
+
+The PR body (not every commit) must include `Closes #{{TASK_ID}}` so the PR
+auto-closes the issue on merge.
 
 # PUSH AND OPEN A PR
 
-After committing:
+Only after the issue is fully implemented and tests pass:
 
 ```
 git push -u agent-origin {{BRANCH}}
@@ -58,17 +65,25 @@ EOF
 )"
 ```
 
+# PARTIAL PROGRESS
+
 If you cannot complete the issue in this run (blocked, scope grew, prerequisite
 missing, etc.):
 
 1. Commit any meaningful progress with `Refs #{{TASK_ID}}` (NOT `Closes`).
-2. Leave a comment: `gh issue comment {{TASK_ID}} --body "Progress: …  Remaining: …"`.
-3. Do NOT open a PR.
+2. Push the branch: `git push -u agent-origin {{BRANCH}}`.
+3. Leave a comment: `gh issue comment {{TASK_ID}} --body "Progress: …  Remaining: …"`.
+4. Do NOT open a PR.
+5. Do NOT output the completion signal below — the work is not done.
 
 # DONE
 
-When the PR is open (or you've left progress notes for a partial), output the
-completion signal exactly:
+Only output the completion signal when the PR is open AND the work is actually
+finished (issue acceptance criteria met, tests pass, no known follow-ups owed
+to this issue). A partial run, a PR opened on incomplete work, or unresolved
+TODOs in the diff all mean the work is NOT done — skip the signal.
+
+When (and only when) the work is truly complete, output exactly:
 
 <promise>COMPLETE</promise>
 

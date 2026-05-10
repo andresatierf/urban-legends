@@ -46,10 +46,19 @@ Review the code changes on branch `{{BRANCH}}` and improve code clarity, consist
 
 If you find improvements to make:
 
-1. Make the changes directly on this branch
-2. Run tests and type checking to ensure nothing is broken
-3. Commit describing the refinements
+1. Make the changes directly on this branch.
+2. Run `bun run test` if the issue is testable. Lint, format, and typecheck are
+   handled by the pre-commit hook — don't re-run them manually, and never
+   bypass the hook with `--no-verify`.
+3. Group changes into logical commits (one per coherent refactor); for small
+   touch-ups a single commit is fine.
+4. Push so the open PR picks up the improvements:
 
-If the code is already clean and well-structured, do nothing.
+   ```
+   git push agent-origin {{BRANCH}}
+   ```
+
+If the code is already clean and well-structured, do nothing (no commit, no
+push).
 
 Once complete, output <promise>COMPLETE</promise>.
