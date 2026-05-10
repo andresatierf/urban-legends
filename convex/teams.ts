@@ -764,13 +764,13 @@ export const getStatistics = query({
     const currentDate = today > endDate ? endDate : today;
 
     const tournamentDays =
-      Math.ceil(
+      Math.floor(
         (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
       ) + 1;
     const daysSoFar =
       today < startDate
         ? 0
-        : Math.ceil(
+        : Math.floor(
             (currentDate.getTime() - startDate.getTime()) /
               (1000 * 60 * 60 * 24),
           ) + 1;

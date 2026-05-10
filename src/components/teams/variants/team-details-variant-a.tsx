@@ -42,6 +42,12 @@ function Sidebar({ data }: { data: TeamDetailsFixture }) {
   const { team, tournament, stats, permissions, userMembership } = data;
   const isFull =
     team.maxMembers !== null && stats.memberCount >= team.maxMembers;
+  const hasActions =
+    permissions.canInvite ||
+    permissions.canEdit ||
+    permissions.canTransferCaptaincy ||
+    permissions.canLeave ||
+    permissions.canDelete;
 
   return (
     <div className="flex flex-col gap-4">
@@ -121,70 +127,65 @@ function Sidebar({ data }: { data: TeamDetailsFixture }) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          {permissions.canInvite && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-            >
-              <UserPlus className="h-4 w-4" />
-              Invite Member
-            </Button>
-          )}
-          {permissions.canEdit && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-            >
-              <Pencil className="h-4 w-4" />
-              Edit Team
-            </Button>
-          )}
-          {permissions.canTransferCaptaincy && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-            >
-              <Crown className="h-4 w-4" />
-              Transfer Captaincy
-            </Button>
-          )}
-          {permissions.canLeave && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-            >
-              <DoorOpen className="h-4 w-4" />
-              Leave Team
-            </Button>
-          )}
-          {permissions.canDelete && (
-            <Button
-              variant="destructive"
-              size="sm"
-              className="w-full justify-start"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete Team
-            </Button>
-          )}
-          {!permissions.canEdit &&
-            !permissions.canLeave &&
-            !permissions.canInvite && (
-              <p className="text-muted-foreground text-xs">
-                No actions available
-              </p>
+      {hasActions && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {permissions.canInvite && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
+                <UserPlus className="h-4 w-4" />
+                Invite Member
+              </Button>
             )}
-        </CardContent>
-      </Card>
+            {permissions.canEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit Team
+              </Button>
+            )}
+            {permissions.canTransferCaptaincy && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
+                <Crown className="h-4 w-4" />
+                Transfer Captaincy
+              </Button>
+            )}
+            {permissions.canLeave && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
+                <DoorOpen className="h-4 w-4" />
+                Leave Team
+              </Button>
+            )}
+            {permissions.canDelete && (
+              <Button
+                variant="destructive"
+                size="sm"
+                className="w-full justify-start"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Team
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

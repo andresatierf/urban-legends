@@ -24,15 +24,15 @@ import { SectionHeader } from "../section-header";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
 import { Separator } from "../ui/separator";
+import {
+  SidebarCard,
+  type SidebarCardAction,
+  type SidebarCardBadge,
+  type SidebarCardStat,
+} from "../ui/sidebar-card";
 import {
   Table,
   TableBody,
@@ -48,17 +48,6 @@ type TournamentDetails = NonNullable<
 >;
 type Team = TournamentDetails["teams"][number];
 
-function StatusBadge({ status }: { status: TournamentDetails["status"] }) {
-  switch (status) {
-    case "active":
-      return <Badge variant="default">Active</Badge>;
-    case "upcoming":
-      return <Badge variant="outline">Upcoming</Badge>;
-    case "ended":
-      return <Badge variant="secondary">Ended</Badge>;
-  }
-}
-
 function TournamentTimeline({ data }: { data: TournamentDetails }) {
   const { format } = useFormattedDate();
   const start = new Date(data.tournament.startDate).getTime();
@@ -69,7 +58,7 @@ function TournamentTimeline({ data }: { data: TournamentDetails }) {
   const elapsed = Math.max(0, Math.min(now - start, total));
   const pct = total > 0 ? Math.round((elapsed / total) * 100) : 0;
   const daysLeft = Math.max(0, Math.ceil((end - now) / msPerDay));
-  const totalDays = Math.max(1, Math.ceil(total / msPerDay));
+  const totalDays = Math.max(1, Math.floor(total / msPerDay) + 1);
   const currentDay = Math.min(totalDays, Math.floor(elapsed / msPerDay) + 1);
 
   return (
@@ -197,6 +186,47 @@ export function TournamentDetailsLayout({ data, tournamentId }: Props) {
   const [editTournamentDialogOpen, setEditTournamentDialogOpen] =
     useState(false);
 
+  const sidebarBadges: SidebarCardBadge[] = [
+    {
+      label:
+        data.status === "active"
+          ? "Active"
+          : data.status === "upcoming"
+            ? "Upcoming"
+            : "Ended",
+      variant:
+        data.status === "active"
+          ? "default"
+          : data.status === "upcoming"
+            ? "outline"
+            : "secondary",
+    },
+  ];
+
+  const sidebarStats: SidebarCardStat[] = [
+    { label: "Teams", value: String(data.statistics.totalTeams) },
+    { label: "Players", value: String(data.statistics.totalParticipants) },
+  ];
+
+  const sidebarActions: SidebarCardAction[] = [];
+  if (data.canViewLeaderboard) {
+    sidebarActions.push({
+      label: "Leaderboard",
+      icon: Trophy,
+      link: {
+        to: "/tournaments/$tournamentId/leaderboard",
+        params: { tournamentId },
+      },
+    });
+  }
+  if (data.canEdit) {
+    sidebarActions.push({
+      label: "Edit Tournament",
+      icon: Pencil,
+      onClick: () => setEditTournamentDialogOpen(true),
+    });
+  }
+
   return (
     <>
       <UpsertTournamentFormDialog
@@ -206,69 +236,16 @@ export function TournamentDetailsLayout({ data, tournamentId }: Props) {
       />
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Swords className="text-primary h-5 w-5" />
-                <StatusBadge status={data.status} />
-              </div>
-              <CardTitle className="text-lg">{data.tournament.name}</CardTitle>
-              <CardDescription className="line-clamp-3">
-                {data.tournament.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <TournamentTimeline data={data} />
-              <Separator />
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="text-center">
-                  <div className="text-lg font-bold">
-                    {data.statistics.totalTeams}
-                  </div>
-                  <div className="text-muted-foreground text-xs">Teams</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-bold">
-                    {data.statistics.totalParticipants}
-                  </div>
-                  <div className="text-muted-foreground text-xs">Players</div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                {data.canViewLeaderboard && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    asChild
-                  >
-                    <Link
-                      to="/tournaments/$tournamentId/leaderboard"
-                      params={{ tournamentId }}
-                    >
-                      <Trophy className="h-4 w-4" />
-                      Leaderboard
-                    </Link>
-                  </Button>
-                )}
-                {data.canEdit && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setEditTournamentDialogOpen(true)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                    Edit Tournament
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <SidebarCard
+            icon={Swords}
+            badges={sidebarBadges}
+            title={data.tournament.name}
+            description={data.tournament.description}
+            stats={sidebarStats}
+            actions={sidebarActions}
+          >
+            <TournamentTimeline data={data} />
+          </SidebarCard>
 
           {data.userTeam && (
             <Card className="border-card-info-border">
