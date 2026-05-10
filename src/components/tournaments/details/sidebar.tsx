@@ -1,3 +1,4 @@
+import { linkOptions } from "@tanstack/react-router";
 import { Pencil, Swords, Trophy } from "lucide-react";
 import { useState } from "react";
 
@@ -50,10 +51,10 @@ export function Sidebar({ data, tournamentId }: Props) {
     actions.push({
       label: "Leaderboard",
       icon: Trophy,
-      link: {
+      link: linkOptions({
         to: "/tournaments/$tournamentId/leaderboard",
         params: { tournamentId },
-      },
+      }),
     });
   }
   if (data.canEdit) {

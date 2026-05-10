@@ -1,3 +1,4 @@
+import { linkOptions } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import {
   Crown,
@@ -158,17 +159,17 @@ export function Sidebar({ data }: { data: TeamDetails }) {
         descriptionIcon={Trophy}
         descriptionLink={
           tournament
-            ? {
+            ? linkOptions({
                 to: "/tournaments/$tournamentId",
                 params: { tournamentId: team.tournamentId },
-              }
+              })
             : undefined
         }
         stats={stats}
         actions={actions}
       />
 
-      <PerformanceCard teamId={team._id} tournamentId={team.tournamentId} />
+      <PerformanceCard teamId={team._id} />
     </>
   );
 }

@@ -763,6 +763,8 @@ export const getStatistics = query({
     const today = new Date();
     const currentDate = today > endDate ? endDate : today;
 
+    // Inclusive day count: matches `getUserStatistics` in convex/submissions.ts,
+    // where both startDate and endDate count as full days.
     const tournamentDays =
       Math.floor(
         (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
@@ -820,6 +822,16 @@ export const getStatistics = query({
       .size;
     const completionRate = daysSoFar > 0 ? uniqueSubmissionDays / daysSoFar : 0;
 
+    const rankedTeams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament_and_points", (q) =>
+        q.eq("tournamentId", team.tournamentId),
+      )
+      .order("desc")
+      .collect();
+    const totalTeams = rankedTeams.length;
+    const rank = rankedTeams.findIndex((t) => t._id === args.teamId) + 1;
+
     return {
       totalSubmissions: allSubmissions.length,
       approvedSubmissions: approvedSubmissions.length,
@@ -832,6 +844,8 @@ export const getStatistics = query({
       completionRate,
       tournamentDays,
       daysSoFar,
+      rank,
+      totalTeams,
     };
   },
 });

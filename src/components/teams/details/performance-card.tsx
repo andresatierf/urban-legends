@@ -14,18 +14,12 @@ import { SidebarCard } from "../../ui/sidebar-card";
 
 type Props = {
   teamId: Id<"teams">;
-  tournamentId: Id<"tournaments">;
 };
 
-export function PerformanceCard({ teamId, tournamentId }: Props) {
+export function PerformanceCard({ teamId }: Props) {
   const stats = useQuery(api.teams.getStatistics, { teamId });
-  const tournamentTeams = useQuery(api.teams.list, { tournamentId });
 
-  if (!stats || !tournamentTeams) return null;
-
-  const ranked = [...tournamentTeams].sort((a, b) => b.points - a.points);
-  const rank = ranked.findIndex((t) => t._id === teamId) + 1;
-  const totalTeams = ranked.length;
+  if (!stats) return null;
 
   return (
     <SidebarCard
@@ -37,7 +31,7 @@ export function PerformanceCard({ teamId, tournamentId }: Props) {
             icon: Trophy,
             iconColor: "text-amber-500",
             label: "Rank",
-            value: `#${rank} / ${totalTeams}`,
+            value: `#${stats.rank} / ${stats.totalTeams}`,
           },
           {
             icon: Flame,

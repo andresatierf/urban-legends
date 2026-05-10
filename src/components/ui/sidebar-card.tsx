@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, type LinkComponentProps } from "@tanstack/react-router";
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import { type ComponentProps, Fragment, type ReactNode } from "react";
 
@@ -28,12 +28,11 @@ export type SidebarCardStat = {
   iconColor?: string;
 };
 
-export type SidebarCardLink = {
-  to: string;
-  params?: Record<string, unknown>;
-  search?: Record<string, unknown>;
-  hash?: string;
-};
+/**
+ * Link options accepted by SidebarCard. Construct with `linkOptions({...})`
+ * from `@tanstack/react-router` at the call site to get full route validation.
+ */
+export type SidebarCardLink = LinkComponentProps;
 
 export type SidebarCardAction = {
   label: string;
@@ -119,7 +118,6 @@ export function SidebarCard({
           {hasStats && <Separator />}
           {hasStats &&
             groups.map((group, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: groups are static
               <Fragment key={i}>
                 {i > 0 && <Separator />}
                 <StatGroup stats={group} useRowLayout={useRowLayout} />
@@ -157,7 +155,7 @@ function ActionButton({ action }: { action: SidebarCardAction }) {
         disabled={action.disabled}
         asChild
       >
-        <Link {...(action.link as ComponentProps<typeof Link>)}>{content}</Link>
+        <Link {...action.link}>{content}</Link>
       </Button>
     );
   }
@@ -187,7 +185,7 @@ function DescriptionContent({
   if (link) {
     return (
       <Link
-        {...(link as ComponentProps<typeof Link>)}
+        {...link}
         className="hover:text-foreground flex items-center gap-1.5 transition-colors"
       >
         {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
@@ -206,7 +204,7 @@ function DescriptionContent({
     );
   }
 
-  return text;
+  return <span>{text}</span>;
 }
 
 function normalizeGroups(
