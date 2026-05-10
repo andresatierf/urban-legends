@@ -17,6 +17,7 @@ Review the code changes on branch `{{BRANCH}}` and improve code clarity, consist
 1. **Understand the change**: Read the diff and commits above to understand the intent.
 
 2. **Analyze for improvements**: Look for opportunities to:
+
    - Reduce unnecessary complexity and nesting
    - Eliminate redundant code and abstractions
    - Improve readability through clear variable and function names
@@ -26,12 +27,14 @@ Review the code changes on branch `{{BRANCH}}` and improve code clarity, consist
    - Choose clarity over brevity - explicit code is often better than overly compact code
 
 3. **Check correctness**:
+
    - Does the implementation match the intent? Are edge cases handled?
    - Are new/changed behaviours covered by tests?
    - Are there unsafe casts, `any` types, or unchecked assumptions?
    - Does the change introduce injection vulnerabilities, credential leaks, or other security issues?
 
 4. **Maintain balance**: Avoid over-simplification that could:
+
    - Reduce code clarity or maintainability
    - Create overly clever solutions that are hard to understand
    - Combine too many concerns into single functions or components
@@ -58,7 +61,9 @@ If you find improvements to make:
    git push agent-origin {{BRANCH}}
    ```
 
-If the code is already clean and well-structured, do nothing (no commit, no
-push).
+If the code is already clean and well-structured, do nothing — no commit, no
+push. The orchestrator detects "no commits this round" as the convergence
+signal and stops looping. Only commit when there is a concrete, worthwhile
+improvement; reaching for trivial nits keeps the loop spinning without value.
 
 Once complete, output <promise>COMPLETE</promise>.

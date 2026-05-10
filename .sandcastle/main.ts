@@ -3,12 +3,13 @@
 //   Phase 1 (Plan):    Opus reads ready-for-agent issues, applies the
 //                      `## Blocked by` rule, picks an unblocked batch, outputs
 //                      a <plan> JSON block.
-//   Phase 2 (Execute + Review): One pipeline per picked issue, all running
-//                      concurrently. Each pipeline:
+//   Phase 2 (Execute + Review loop): One pipeline per picked issue, all
+//                      running concurrently. Each pipeline:
 //                        a) implementer (Opus, up to 100 iters) writes code,
 //                           commits, pushes, opens a PR
-//                        b) reviewer (Opus, 1 iter) tightens the diff in the
-//                           same sandbox before the human reviews it
+//                        b) reviewer (Opus, 1 iter/round) tightens the diff
+//                           and pushes; repeat up to MAX_REVIEW_ROUNDS rounds
+//                           or until a round produces no commits
 //
 // There is no merge phase: each issue ends as a PR for human review. To
 // pick up newly-unblocked issues, merge some PRs and re-run this script.
@@ -102,8 +103,12 @@ for (const issue of issues) {
 }
 
 // ---------------------------------------------------------------------------
-// Phase 2: Execute + Review (parallel, one PR per issue)
+// Phase 2: Execute + Review loop (parallel, one PR per issue)
 // ---------------------------------------------------------------------------
+
+// Hard cap so a reviewer that keeps finding nits can't loop forever. Each
+// round is reviewer (1 iter) → break when it produces no commits.
+const MAX_REVIEW_ROUNDS = 3;
 
 const settled = await Promise.allSettled(
   issues.map(async (issue) => {
@@ -130,9 +135,14 @@ const settled = await Promise.allSettled(
       });
 
       // Only review if the implementer produced commits.
-      if (implement.commits.length > 0) {
+      if (implement.commits.length === 0) {
+        return implement;
+      }
+
+      const reviewCommits: { sha: string }[] = [];
+      for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
         const review = await sb.run({
-          name: `review-${issue.id}`,
+          name: `review-${issue.id}-r${round}`,
           maxIterations: 1,
           completionSignal: "<promise>COMPLETE</promise>",
           agent: sandcastle.claudeCode("claude-opus-4-6"),
@@ -142,13 +152,17 @@ const settled = await Promise.allSettled(
           },
         });
 
-        return {
-          ...review,
-          commits: [...implement.commits, ...review.commits],
-        };
+        if (review.commits.length === 0) {
+          // Reviewer converged — nothing left to fix.
+          break;
+        }
+        reviewCommits.push(...review.commits);
       }
 
-      return implement;
+      return {
+        ...implement,
+        commits: [...implement.commits, ...reviewCommits],
+      };
     } finally {
       await sb.close();
     }

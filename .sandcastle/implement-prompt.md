@@ -55,7 +55,7 @@ auto-closes the issue on merge.
 Only after the issue is fully implemented and tests pass:
 
 ```
-git push -u agent-origin {{BRANCH}}
+git push agent-origin {{BRANCH}}
 gh pr create --head {{BRANCH}} --title "<short title>" --body "$(cat <<'EOF'
 ## Summary
 <1-3 bullets describing what changed and why>
@@ -65,13 +65,18 @@ EOF
 )"
 ```
 
+Push goes through `agent-origin` (the only remote the container is
+authenticated against), but the branch's upstream config is set to `origin` so
+the human's clone tracks the branch against their normal remote. Never use
+`git push -u agent-origin` — `-u` would pin upstream to `agent-origin`.
+
 # PARTIAL PROGRESS
 
 If you cannot complete the issue in this run (blocked, scope grew, prerequisite
 missing, etc.):
 
 1. Commit any meaningful progress with `Refs #{{TASK_ID}}` (NOT `Closes`).
-2. Push the branch: `git push -u agent-origin {{BRANCH}}`.
+2. Push the branch: `git push agent-origin {{BRANCH}}`.
 3. Leave a comment: `gh issue comment {{TASK_ID}} --body "Progress: …  Remaining: …"`.
 4. Do NOT open a PR.
 5. Do NOT output the completion signal below — the work is not done.
