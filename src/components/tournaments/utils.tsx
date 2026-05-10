@@ -15,11 +15,16 @@ export const getStatusBadge = (tournament: Doc<"tournaments">) => {
   }
 };
 
-export function getTournamentStatus(t: { startDate: string; endDate: string }) {
+export type TournamentStatus = "active" | "upcoming" | "ended";
+
+export function getTournamentStatus(t: {
+  startDate: string;
+  endDate: string;
+}): TournamentStatus {
   const now = new Date().toISOString();
-  if (t.startDate <= now && t.endDate >= now) return "active" as const;
-  if (t.startDate > now) return "upcoming" as const;
-  return "ended" as const;
+  if (t.startDate <= now && t.endDate >= now) return "active";
+  if (t.startDate > now) return "upcoming";
+  return "ended";
 }
 
 export function daysUntil(dateStr: string) {

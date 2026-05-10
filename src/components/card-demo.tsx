@@ -6,13 +6,8 @@ import {
 import { CarouselReviewCard } from "./submissions/review/submission-review-card-carousel";
 import { MosaicReviewCard } from "./submissions/review/submission-review-card-mosaic";
 import type { SubmissionReviewCardProps } from "./submissions/review/submission-review-card-shared";
-import {
-  DEMO_TOURNAMENT_ITEMS,
-  type TournamentDemoItem,
-} from "./tournament-card-demo-fixtures";
-import { TournamentCardCompact } from "./tournaments/demo/tournament-card-compact";
-import { TournamentCardStats } from "./tournaments/demo/tournament-card-stats";
-import { TournamentCardTimeline } from "./tournaments/demo/tournament-card-timeline";
+import { DEMO_TOURNAMENT_ITEMS } from "./tournament-card-demo-fixtures";
+import { TournamentOverviewCard } from "./tournaments/tournament-overview-card";
 
 const SUBMISSION_VARIANTS = [
   {
@@ -27,27 +22,6 @@ const SUBMISSION_VARIANTS = [
   },
 ] as const;
 
-const TOURNAMENT_VARIANTS = [
-  {
-    id: "compact",
-    title:
-      "Compact — Status-colored left border, inline metadata row, dense list feel",
-    Component: TournamentCardCompact,
-  },
-  {
-    id: "stats",
-    title:
-      "Stats Dashboard — Colored header band, stat counters grid, structured team block",
-    Component: TournamentCardStats,
-  },
-  {
-    id: "timeline",
-    title:
-      "Timeline — Progress bar showing tournament duration, highlighted team block, tray actions",
-    Component: TournamentCardTimeline,
-  },
-] as const;
-
 export function CardDemo() {
   return (
     <div className="space-y-16">
@@ -56,16 +30,19 @@ export function CardDemo() {
         <SectionHeader
           as="h1"
           title="Tournament"
-          description="Three layout variants for tournament cards. Each renders the same 9-card state matrix (active/upcoming/ended × no-team/member/captain) so they can be compared fairly."
+          description="The production tournament listing card across the 9-state matrix (active/upcoming/ended × no-team/member/captain)."
         />
 
-        {TOURNAMENT_VARIANTS.map(({ id, title, Component }) => (
-          <TournamentVariantSection
-            key={id}
-            title={title}
-            Component={Component}
-          />
-        ))}
+        <div className="mt-8 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {DEMO_TOURNAMENT_ITEMS.map((item) => (
+            <div key={item.tournament._id}>
+              <TournamentOverviewCard tournament={item.tournament} />
+              <p className="text-muted-foreground mt-1 text-center text-[0.625rem]">
+                {item.label}
+              </p>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ── Submission cards ──────────────────────────────────── */}
@@ -84,33 +61,6 @@ export function CardDemo() {
           />
         ))}
       </section>
-    </div>
-  );
-}
-
-function TournamentVariantSection({
-  title,
-  Component,
-}: {
-  title: string;
-  Component: (props: {
-    tournament: TournamentDemoItem["tournament"];
-  }) => React.JSX.Element;
-}) {
-  return (
-    <div className="mt-8">
-      <SectionHeader as="h2" title={title} />
-
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {DEMO_TOURNAMENT_ITEMS.map((item) => (
-          <div key={item.tournament._id}>
-            <Component tournament={item.tournament} />
-            <p className="text-muted-foreground mt-1 text-center text-[0.625rem]">
-              {item.label}
-            </p>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
