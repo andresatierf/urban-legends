@@ -32,7 +32,7 @@ export function tournamentProgress(t: { startDate: string; endDate: string }) {
   const end = new Date(t.endDate).getTime();
   const now = Date.now();
   if (now < start) return 0;
-  if (now > end) return 100;
+  if (now >= end) return 100;
   return Math.round(((now - start) / (end - start)) * 100);
 }
 
@@ -41,20 +41,12 @@ export function partitionTournaments(tournaments: TournamentWithAuthority[]) {
   const active: TournamentWithAuthority[] = [];
   const upcoming: TournamentWithAuthority[] = [];
   const ended: TournamentWithAuthority[] = [];
-  const yours: TournamentWithAuthority[] = [];
-  const discover: TournamentWithAuthority[] = [];
 
   for (const t of tournaments) {
     if (t.startDate <= now && t.endDate >= now) active.push(t);
     else if (t.startDate > now) upcoming.push(t);
     else ended.push(t);
-
-    if (t.authority.team || t.authority.canManage || t.authority.canReview) {
-      yours.push(t);
-    } else {
-      discover.push(t);
-    }
   }
 
-  return { active, upcoming, ended, yours, discover, all: tournaments };
+  return { active, upcoming, ended };
 }

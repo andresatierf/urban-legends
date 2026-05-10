@@ -25,12 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 
 import type { TournamentWithAuthority } from "../../../convex/tournaments";
-import {
-  daysUntil,
-  getTournamentStatus,
-  partitionTournaments,
-  tournamentProgress,
-} from "./utils";
+import { daysUntil, partitionTournaments, tournamentProgress } from "./utils";
 
 function FeaturedCard({ tournament }: { tournament: TournamentWithAuthority }) {
   const { format } = useFormattedDate();
@@ -147,29 +142,9 @@ function FeaturedCard({ tournament }: { tournament: TournamentWithAuthority }) {
   );
 }
 
-function CompactCard({ tournament }: { tournament: TournamentWithAuthority }) {
+function UpcomingCard({ tournament }: { tournament: TournamentWithAuthority }) {
   const { format } = useFormattedDate();
-  const status = getTournamentStatus(tournament);
   const { authority, teamCount } = tournament;
-
-  const statusConfig = {
-    active: { label: "Active", variant: "default" as const },
-    upcoming: { label: "Upcoming", variant: "outline" as const },
-    ended: { label: "Ended", variant: "secondary" as const },
-  }[status];
-
-  let dateLabel: string;
-  switch (status) {
-    case "upcoming":
-      dateLabel = `Starts ${format(tournament.startDate, "short")}`;
-      break;
-    case "active":
-      dateLabel = `${daysUntil(tournament.endDate)}d left`;
-      break;
-    case "ended":
-      dateLabel = "Ended";
-      break;
-  }
 
   return (
     <Card>
@@ -178,8 +153,8 @@ function CompactCard({ tournament }: { tournament: TournamentWithAuthority }) {
           <CardTitle className="text-sm leading-snug">
             {tournament.name}
           </CardTitle>
-          <Badge variant={statusConfig.variant} className="shrink-0">
-            {statusConfig.label}
+          <Badge variant="outline" className="shrink-0">
+            Upcoming
           </Badge>
         </div>
 
@@ -196,7 +171,7 @@ function CompactCard({ tournament }: { tournament: TournamentWithAuthority }) {
           </span>
           <span className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            {dateLabel}
+            Starts {format(tournament.startDate, "short")}
           </span>
         </div>
 
@@ -206,9 +181,6 @@ function CompactCard({ tournament }: { tournament: TournamentWithAuthority }) {
             {authority.team.isCaptain && (
               <Shield className="text-muted-foreground h-3 w-3" />
             )}
-            <span className="ml-auto font-semibold tabular-nums">
-              {authority.team.points} pts
-            </span>
           </div>
         )}
       </CardContent>
@@ -220,12 +192,6 @@ function CompactCard({ tournament }: { tournament: TournamentWithAuthority }) {
               <Edit className="h-3 w-3" />
             </Link>
           </Button>
-        )}
-        {authority.canReview && authority.pendingReviewCount > 0 && (
-          <Badge variant="destructive" className="gap-0.5 text-[0.6rem]">
-            <Trophy className="h-2.5 w-2.5" />
-            {authority.pendingReviewCount}
-          </Badge>
         )}
         <Button size="sm" variant="outline" className="ml-auto gap-1" asChild>
           <Link
@@ -246,28 +212,38 @@ function EndedRow({ tournament }: { tournament: TournamentWithAuthority }) {
   const { authority, teamCount } = tournament;
 
   return (
-    <Link
-      to="/tournaments/$tournamentId/leaderboard"
-      params={{ tournamentId: tournament._id }}
-      className="text-muted-foreground hover:bg-muted/30 flex items-center gap-3 rounded-md px-2 py-2 text-xs transition-colors"
-    >
-      <span className="text-foreground/70 min-w-0 flex-1 truncate font-medium">
-        {tournament.name}
-      </span>
-      {authority.team && (
-        <Badge variant="secondary" className="text-[0.6rem]">
-          {authority.team.name} · {authority.team.points} pts
-        </Badge>
+    <div className="text-muted-foreground hover:bg-muted/30 flex items-center gap-3 rounded-md px-2 py-2 text-xs transition-colors">
+      <Link
+        to="/tournaments/$tournamentId/leaderboard"
+        params={{ tournamentId: tournament._id }}
+        className="flex min-w-0 flex-1 items-center gap-3"
+      >
+        <span className="text-foreground/70 min-w-0 flex-1 truncate font-medium">
+          {tournament.name}
+        </span>
+        {authority.team && (
+          <Badge variant="secondary" className="text-[0.6rem]">
+            {authority.team.name} · {authority.team.points} pts
+          </Badge>
+        )}
+        <span className="hidden shrink-0 items-center gap-1 sm:flex">
+          <Users className="h-3 w-3" />
+          {teamCount}
+        </span>
+        <span className="hidden shrink-0 sm:inline">
+          {format(tournament.endDate, "short")}
+        </span>
+      </Link>
+      {authority.canManage ? (
+        <Button variant="ghost" size="icon-sm" asChild>
+          <Link to={`/admin/tournaments?edit=${tournament._id}` as never}>
+            <Edit className="h-3 w-3" />
+          </Link>
+        </Button>
+      ) : (
+        <ChevronRight className="h-3 w-3 shrink-0" />
       )}
-      <span className="hidden shrink-0 items-center gap-1 sm:flex">
-        <Users className="h-3 w-3" />
-        {teamCount}
-      </span>
-      <span className="hidden shrink-0 sm:inline">
-        {format(tournament.endDate, "short")}
-      </span>
-      <ChevronRight className="h-3 w-3 shrink-0" />
-    </Link>
+    </div>
   );
 }
 
@@ -302,7 +278,7 @@ export function TournamentListing({
           </h3>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {upcoming.map((t) => (
-              <CompactCard key={t._id} tournament={t} />
+              <UpcomingCard key={t._id} tournament={t} />
             ))}
           </div>
         </section>
