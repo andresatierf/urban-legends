@@ -6,8 +6,32 @@ import {
 import { CarouselReviewCard } from "./submissions/review/submission-review-card-carousel";
 import { MosaicReviewCard } from "./submissions/review/submission-review-card-mosaic";
 import type { SubmissionReviewCardProps } from "./submissions/review/submission-review-card-shared";
+import type { TeamDemoItem } from "./team-card-demo-fixtures";
+import { DEMO_TEAM_ITEMS } from "./team-card-demo-fixtures";
+import { TeamCardVariantA } from "./teams/team-card-variant-a";
+import { TeamCardVariantB } from "./teams/team-card-variant-b";
+import { TeamCardVariantC } from "./teams/team-card-variant-c";
 import { DEMO_TOURNAMENT_ITEMS } from "./tournament-card-demo-fixtures";
 import { TournamentOverviewCard } from "./tournaments/tournament-overview-card";
+
+const TEAM_VARIANTS = [
+  {
+    id: "a",
+    title: "A — Avatar strip, inline badges, compact actions",
+    Component: TeamCardVariantA,
+  },
+  {
+    id: "b",
+    title: "B — Stats dashboard, colored header band, member roster list",
+    Component: TeamCardVariantB,
+  },
+  {
+    id: "c",
+    title:
+      "C — Profile card, team avatar, divided member list, personal banner",
+    Component: TeamCardVariantC,
+  },
+] as const;
 
 const SUBMISSION_VARIANTS = [
   {
@@ -45,6 +69,19 @@ export function CardDemo() {
         </div>
       </section>
 
+      {/* ── Team cards ────────────────────────────────────────── */}
+      <section>
+        <SectionHeader
+          as="h1"
+          title="Team"
+          description="Three layout variants for the team card across the 9-state matrix (open/closed/full × outsider/member/captain). Each renders the same data so variants can be compared on merit."
+        />
+
+        {TEAM_VARIANTS.map(({ id, title, Component }) => (
+          <TeamVariantSection key={id} title={title} Component={Component} />
+        ))}
+      </section>
+
       {/* ── Submission cards ──────────────────────────────────── */}
       <section>
         <SectionHeader
@@ -61,6 +98,31 @@ export function CardDemo() {
           />
         ))}
       </section>
+    </div>
+  );
+}
+
+function TeamVariantSection({
+  title,
+  Component,
+}: {
+  title: string;
+  Component: (props: { item: TeamDemoItem }) => React.JSX.Element;
+}) {
+  return (
+    <div className="mt-8">
+      <SectionHeader as="h2" title={title} />
+
+      <div className="mt-4 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {DEMO_TEAM_ITEMS.map((item) => (
+          <div key={item.team._id}>
+            <Component item={item} />
+            <p className="text-muted-foreground mt-1 text-center text-[0.625rem]">
+              {item.label}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
