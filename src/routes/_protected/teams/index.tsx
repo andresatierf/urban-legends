@@ -2,15 +2,15 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { Trophy } from "lucide-react";
 
-import { SectionHeader } from "@/components/section-header";
-import { JoinTeamCard } from "@/components/teams/join-team-card";
-import { TeamCard, TeamCardSkeleton } from "@/components/teams/team-card";
+import {
+  TeamListing,
+  TeamListingSkeleton,
+} from "@/components/teams/team-listing";
 import { Button } from "@/components/ui/button";
-import { CardGrid } from "@/components/ui/card-grid";
 import { useUser } from "@/hooks/useUser";
 
 import { api } from "../../../../convex/_generated/api";
-import type { Id } from "../../../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
 export const Route = createFileRoute("/_protected/teams/")({
   component: TeamsPage,
@@ -26,70 +26,37 @@ function TeamsPage() {
     api.tournaments.list,
     tournamentIds.length > 0 ? { tournamentIds } : "skip",
   );
-  const tournamentMap = tournaments
-    ? tournaments.reduce<
-        Record<Id<"tournaments">, (typeof tournaments)[number]>
-      >((acc, t) => {
-        acc[t._id] = t;
-        return acc;
-      }, {})
-    : {};
 
-  if (userTeams === undefined) {
-    return (
-      <>
-        <SectionHeader as="h1" title="Teams" />
-        <CardGrid data={Array.from({ length: 6 })}>
-          {() => <TeamCardSkeleton />}
-        </CardGrid>
-      </>
-    );
+  const headerActions = (
+    <Button asChild variant="outline" size="sm">
+      <Link to="/tournaments">
+        <Trophy />
+        View Tournaments
+      </Link>
+    </Button>
+  );
+
+  if (
+    userTeams === undefined ||
+    allTeams === undefined ||
+    (tournamentIds.length > 0 && tournaments === undefined)
+  ) {
+    return <TeamListingSkeleton headerActions={headerActions} />;
   }
 
+  const tournamentMap = (tournaments ?? []).reduce<
+    Record<Id<"tournaments">, Doc<"tournaments">>
+  >((acc, t) => {
+    acc[t._id] = t;
+    return acc;
+  }, {});
+
   return (
-    <>
-      <SectionHeader as="h1" title="Teams">
-        <Button asChild variant="outline">
-          <Link to="/tournaments">
-            <Trophy />
-            View Tournaments
-          </Link>
-        </Button>
-      </SectionHeader>
-
-      {allTeams && allTeams.length !== 0 && (
-        <>
-          <SectionHeader title="Your teams" />
-          <CardGrid data={userTeams ?? []} empty={<JoinTeamCard />}>
-            {(team) => (
-              <TeamCard
-                key={team._id}
-                team={team}
-                tournament={tournamentMap?.[team.tournamentId]}
-                memberCount={team.members.length}
-                isUserMember={true}
-                isUserInTeam={true}
-                members={team.members}
-              />
-            )}
-          </CardGrid>
-        </>
-      )}
-
-      <SectionHeader title="All teams" />
-      <CardGrid data={allTeams ?? []} empty={<JoinTeamCard first />}>
-        {(team) => (
-          <TeamCard
-            key={team._id}
-            team={team}
-            tournament={tournamentMap?.[team.tournamentId]}
-            memberCount={team.members.length}
-            isUserMember={true}
-            isUserInTeam={true}
-            members={team.members}
-          />
-        )}
-      </CardGrid>
-    </>
+    <TeamListing
+      userTeams={userTeams}
+      allTeams={allTeams}
+      tournamentMap={tournamentMap}
+      headerActions={headerActions}
+    />
   );
 }
