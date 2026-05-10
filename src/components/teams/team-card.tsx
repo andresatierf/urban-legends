@@ -12,7 +12,14 @@ import {
 } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
 
 type MemberPreview = {
@@ -51,96 +58,115 @@ export function TeamCard({
 }: Props) {
   if (!team) return <TeamCardSkeleton />;
 
-  const isFull = team.maxMembers && memberCount >= team.maxMembers;
+  const isFull = team.maxMembers != null && memberCount >= team.maxMembers;
+  const fillPct = team.maxMembers
+    ? Math.min(100, (memberCount / team.maxMembers) * 100)
+    : 0;
 
-  const showRoster = members && members.length > 0;
-
-  const sortedMembers = showRoster
+  const sortedMembers = members
     ? [...members].sort((a, b) =>
         a.memberRole === "captain" ? -1 : b.memberRole === "captain" ? 1 : 0,
       )
     : [];
-
+  const captain = sortedMembers.find((m) => m.memberRole === "captain");
   const visibleMembers = sortedMembers.slice(0, MAX_VISIBLE_AVATARS);
   const overflow = sortedMembers.length - visibleMembers.length;
 
   return (
-    <Card key={team._id}>
-      <CardContent className="xs:flex-row flex flex-col items-center justify-between gap-4">
-        <div className="flex flex-1 flex-col justify-between self-start">
-          <div className="flex items-center gap-2">
-            <CardTitle>{team.name}</CardTitle>
-            <Badge
-              variant={team.joinPolicy === "open" ? "default" : "secondary"}
-            >
-              {team.joinPolicy === "open" ? "Open" : "Closed"}
-            </Badge>
-            {isFull && <Badge variant="destructive">Full</Badge>}
-          </div>
-          <CardDescription className="mt-2">
-            {tournament && (
-              <div className="text-muted-foreground mt-2 flex items-center gap-2 text-sm">
-                <Trophy className="h-4 w-4" />
-                <Link
-                  to="/tournaments/$tournamentId"
-                  params={{ tournamentId: tournament._id }}
-                  className="hover:underline"
-                >
-                  {tournament.name}
-                </Link>
-                {getStatusBadge(tournament)}
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              {memberCount}
-              {team.maxMembers ? ` / ${team.maxMembers} ` : " "}
-              members
-            </div>
-            {showRoster && (
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <AvatarGroup>
-                  {visibleMembers.map((m) => (
-                    <Avatar key={m._id} size="sm">
-                      <AvatarFallback>{getInitials(m.name)}</AvatarFallback>
-                    </Avatar>
-                  ))}
-                  {overflow > 0 && (
-                    <AvatarGroupCount>+{overflow}</AvatarGroupCount>
-                  )}
-                </AvatarGroup>
-                <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-                  {sortedMembers.map((m) => (
-                    <span
-                      key={m._id}
-                      className="flex items-center gap-1 text-xs"
-                    >
-                      <span className="max-w-[8rem] truncate">{m.name}</span>
-                      {m.memberRole === "captain" && (
-                        <Crown className="h-3 w-3 shrink-0 text-amber-500" />
-                      )}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardDescription>
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap items-center gap-2">
+          <CardTitle className="text-base">{team.name}</CardTitle>
+          <Badge variant={team.joinPolicy === "open" ? "default" : "secondary"}>
+            {team.joinPolicy === "open" ? "Open" : "Closed"}
+          </Badge>
+          {isFull && <Badge variant="destructive">Full</Badge>}
         </div>
-        <div className="xs:flex-col flex flex-wrap gap-2">
-          <JoinTeamFormButton
-            teamId={team._id}
-            team={team}
-            currentMemberCount={memberCount}
-            isUserMember={isUserMember}
-            isUserInTeam={isUserInTeam}
-          />
-          <Button variant="outline" asChild>
+        <CardAction>
+          <span className="text-muted-foreground text-right text-xs tabular-nums">
+            {team.points.toLocaleString()} pts
+          </span>
+        </CardAction>
+      </CardHeader>
+
+      <CardContent className="flex flex-col gap-3">
+        {tournament && (
+          <div className="text-muted-foreground flex items-center gap-2 text-xs">
+            <Trophy className="size-3.5 shrink-0" />
+            <Link
+              to="/tournaments/$tournamentId"
+              params={{ tournamentId: tournament._id }}
+              className="truncate hover:underline"
+            >
+              {tournament.name}
+            </Link>
+            <span className="ml-auto shrink-0">
+              {getStatusBadge(tournament)}
+            </span>
+          </div>
+        )}
+
+        <div className="text-muted-foreground flex items-center gap-2 text-xs">
+          <Users className="size-3.5 shrink-0" />
+          <span>
+            {memberCount}
+            {team.maxMembers ? ` / ${team.maxMembers}` : ""} members
+          </span>
+          {team.maxMembers && (
+            <div className="bg-muted ml-auto h-1.5 w-16 overflow-hidden rounded-full">
+              <div
+                className={`h-full rounded-full ${isFull ? "bg-destructive" : "bg-primary"}`}
+                style={{ width: `${fillPct}%` }}
+              />
+            </div>
+          )}
+        </div>
+
+        {sortedMembers.length > 0 && (
+          <div className="flex items-center gap-2">
+            <AvatarGroup>
+              {visibleMembers.map((m) => (
+                <Avatar key={m._id} size="sm">
+                  <AvatarFallback>{getInitials(m.name)}</AvatarFallback>
+                </Avatar>
+              ))}
+              {overflow > 0 && <AvatarGroupCount>+{overflow}</AvatarGroupCount>}
+            </AvatarGroup>
+            {captain && (
+              <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                <Crown className="size-3 text-amber-500" />
+                <span className="max-w-24 truncate">{captain.name}</span>
+              </span>
+            )}
+          </div>
+        )}
+      </CardContent>
+
+      <CardFooter className="gap-2">
+        {isUserMember ? (
+          <Button variant="outline" size="sm" className="flex-1" asChild>
             <Link to="/teams/$teamId" params={{ teamId: team._id }}>
-              View
+              Manage
             </Link>
           </Button>
-        </div>
-      </CardContent>
+        ) : (
+          <>
+            <JoinTeamFormButton
+              teamId={team._id}
+              team={team}
+              currentMemberCount={memberCount}
+              isUserMember={isUserMember}
+              isUserInTeam={isUserInTeam}
+              size="sm"
+            />
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/teams/$teamId" params={{ teamId: team._id }}>
+                View
+              </Link>
+            </Button>
+          </>
+        )}
+      </CardFooter>
     </Card>
   );
 }
@@ -148,27 +174,26 @@ export function TeamCard({
 export function TeamCardSkeleton() {
   return (
     <Card>
-      <CardContent className="xs:flex-row flex flex-col items-center justify-between gap-4">
-        <div className="flex flex-1 flex-col justify-between self-start">
-          <div className="flex items-center gap-2">
-            <CardTitle>
-              <Skeleton className="h-6 w-40" />
-            </CardTitle>
-          </div>
-          <CardDescription className="mt-2 flex flex-col gap-1">
-            <div className="flex items-center gap-1">
-              <Skeleton className="h-4 w-24" />
-            </div>
-            <div className="flex items-center gap-1">
-              <Skeleton className="h-4 w-32" />
-            </div>
-          </CardDescription>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-base">
+            <Skeleton className="h-5 w-32" />
+          </CardTitle>
+          <Skeleton className="h-4 w-12" />
         </div>
-        <div className="xs:flex-col flex flex-wrap gap-2">
-          <Skeleton className="h-9 w-36" />
-          <Skeleton className="h-9 w-36" />
-        </div>
+        <CardAction>
+          <Skeleton className="h-4 w-12" />
+        </CardAction>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-6 w-32" />
       </CardContent>
+      <CardFooter className="gap-2">
+        <Skeleton className="h-7 flex-1" />
+        <Skeleton className="h-7 w-16" />
+      </CardFooter>
     </Card>
   );
 }
