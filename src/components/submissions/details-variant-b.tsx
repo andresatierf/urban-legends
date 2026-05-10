@@ -1,5 +1,4 @@
 import {
-  CalendarDays,
   Check,
   ImageIcon,
   Pencil,
@@ -15,13 +14,7 @@ import { SectionHeader } from "@/components/section-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Image } from "@/components/ui/image";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,7 +22,10 @@ import { getInitials } from "@/components/users/utils";
 import { cn } from "@/lib/utils";
 
 import type { SubmissionDetailsData } from "./details-demo-fixtures";
-import { stateBadgeVariant } from "./review/submission-review-card-shared";
+import {
+  managedByLabel,
+  stateBadgeVariant,
+} from "./review/submission-review-card-shared";
 
 const STATE_COLORS: Record<string, string> = {
   pending: "bg-yellow-500/10 border-yellow-500/30",
@@ -260,11 +256,7 @@ export function SubmissionDetailsVariantB({
                   <Separator />
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground">
-                      {submission.state === "approved"
-                        ? "Approved by"
-                        : submission.state === "rejected"
-                          ? "Rejected by"
-                          : "Managed by"}
+                      {managedByLabel(submission.state)}
                     </span>
                     <Avatar className="h-5 w-5">
                       <AvatarImage src={managedByUser.imageUrl} />

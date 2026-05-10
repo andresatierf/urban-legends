@@ -17,7 +17,6 @@ import { DetailsPageLayout } from "@/components/details-page-layout";
 import { SectionHeader } from "@/components/section-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -26,14 +25,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Image } from "@/components/ui/image";
-import { Separator } from "@/components/ui/separator";
 import { SidebarCard } from "@/components/ui/sidebar-card";
 import { getInitials } from "@/components/users/utils";
-import { cn } from "@/lib/utils";
 
 import type { SubmissionDetailsData } from "./details-demo-fixtures";
-import { EvidenceGallery } from "./display/evidence-gallery";
-import { stateBadgeVariant } from "./review/submission-review-card-shared";
+import {
+  managedByLabel,
+  stateBadgeVariant,
+} from "./review/submission-review-card-shared";
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-GB", {
@@ -158,11 +157,7 @@ export function SubmissionDetailsVariantA({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">
-              {submission.state === "approved"
-                ? "Approved by"
-                : submission.state === "rejected"
-                  ? "Rejected by"
-                  : "Managed by"}
+              {managedByLabel(submission.state)}
             </CardTitle>
           </CardHeader>
           <CardContent>

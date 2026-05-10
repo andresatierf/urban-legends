@@ -1,8 +1,6 @@
 import {
-  CalendarDays,
   Check,
   ChevronRight,
-  Crown,
   ImageIcon,
   Pencil,
   RefreshCw,
@@ -33,7 +31,10 @@ import { getInitials } from "@/components/users/utils";
 import { cn } from "@/lib/utils";
 
 import type { SubmissionDetailsData } from "./details-demo-fixtures";
-import { stateBadgeVariant } from "./review/submission-review-card-shared";
+import {
+  managedByLabel,
+  stateBadgeVariant,
+} from "./review/submission-review-card-shared";
 
 const STATE_ACCENT: Record<string, string> = {
   pending: "border-l-yellow-500",
@@ -238,11 +239,7 @@ export function SubmissionDetailsVariantC({
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-muted-foreground">
-                      {submission.state === "approved"
-                        ? "Approved by"
-                        : submission.state === "rejected"
-                          ? "Rejected by"
-                          : "Managed by"}
+                      {managedByLabel(submission.state)}
                     </span>
                     <span className="font-medium">{managedByUser.name}</span>
                   </div>
@@ -264,7 +261,7 @@ export function SubmissionDetailsVariantC({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-0 divide-y">
+                <div className="divide-y">
                   {teammates.map((t) => (
                     <div key={t._id} className="flex items-center gap-3 py-2.5">
                       <Avatar className="h-8 w-8">
