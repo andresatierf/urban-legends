@@ -6,7 +6,7 @@ pre-commit:
       exclude: "convex/_generated/**"
       run: bun --bun oxlint {staged_files}
     oxfmt:
-      glob: "*.{js,ts,jsx,tsx,json,jsonc}"
+      glob: "*.{js,ts,jsx,tsx}"
       exclude: "convex/_generated/**"
       run: bun --bun oxfmt --write {staged_files}
       stage_fixed: true

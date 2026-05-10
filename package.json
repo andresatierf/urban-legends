@@ -9,8 +9,11 @@
     "start": "node .output/server/index.mjs",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "format": "oxfmt --check",
-    "format:fix": "oxfmt --write",
+    "format": "oxfmt --check 'src/**/*.{ts,tsx,js,jsx}' 'convex/**/*.{ts,tsx,js,jsx}'",
+    "format:fix": "oxfmt --write 'src/**/*.{ts,tsx,js,jsx}' 'convex/**/*.{ts,tsx,js,jsx}'",
+    "ci": "bun --bun run lint && bun --bun run format",
+    "routes:generate": "node scripts/generate-routes.mjs",
+    "pretypecheck": "bun --bun run routes:generate",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
