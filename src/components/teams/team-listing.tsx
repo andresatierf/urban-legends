@@ -1,15 +1,14 @@
 import type { FunctionReturnType } from "convex/server";
 import { Trophy, Users } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { SectionHeader } from "@/components/section-header";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import type { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
-import { getTournamentStatus } from "../tournaments/utils";
+import { getStatusBadge, getTournamentStatus } from "../tournaments/utils";
 import { Skeleton } from "../ui/skeleton";
 import { JoinTeamCard } from "./join-team-card";
 import { TeamCard, TeamCardSkeleton } from "./team-card";
@@ -38,6 +37,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
         "rounded-full border px-3 py-1 text-xs transition-colors",
         active
@@ -111,7 +111,7 @@ function TournamentGroup({
       <div className="flex flex-wrap items-center gap-2">
         <Trophy className="text-muted-foreground size-3.5 shrink-0" />
         <span className="text-sm font-medium">{tournament.name}</span>
-        <Badge variant="outline">{getTournamentStatus(tournament)}</Badge>
+        {getStatusBadge(tournament)}
         <span className="text-muted-foreground text-xs">
           {teams.length} team{teams.length === 1 ? "" : "s"}
         </span>
@@ -145,46 +145,75 @@ export function TeamListing({
   const [filter, setFilter] = useState<string>("all");
   const [includeEnded, setIncludeEnded] = useState(false);
 
-  const userTeamIds = new Set(userTeams.map((t) => t._id));
-  const userTournamentIds = new Set(userTeams.map((t) => t.tournamentId));
-
-  const tournamentsWithTeams = Array.from(
-    new Set(allTeams.map((t) => t.tournamentId)),
-  )
-    .map((id) => tournamentMap[id])
-    .filter((t): t is Doc<"tournaments"> => Boolean(t))
-    .sort((a, b) => {
-      const sa = STATUS_ORDER[getTournamentStatus(a)];
-      const sb = STATUS_ORDER[getTournamentStatus(b)];
-      if (sa !== sb) return sa - sb;
-      return b.startDate.localeCompare(a.startDate);
-    });
-
-  const visibleTournaments = tournamentsWithTeams.filter(
-    (t) => includeEnded || getTournamentStatus(t) !== "ended",
+  const userTeamIds = useMemo(
+    () => new Set(userTeams.map((t) => t._id)),
+    [userTeams],
+  );
+  const userTournamentIds = useMemo(
+    () => new Set(userTeams.map((t) => t.tournamentId)),
+    [userTeams],
   );
 
-  const filterIsHidden =
-    filter !== "all" && !visibleTournaments.some((t) => t._id === filter);
-  const effectiveFilter = filterIsHidden ? "all" : filter;
-
-  const isEndedTeam = (team: TeamWithMembers) => {
-    const t = tournamentMap[team.tournamentId];
-    return t ? getTournamentStatus(t) === "ended" : false;
-  };
-
-  const matchesFilter = (team: TeamWithMembers) =>
-    effectiveFilter === "all"
-      ? includeEnded || !isEndedTeam(team)
-      : team.tournamentId === effectiveFilter;
-
-  const filteredYourTeams = userTeams.filter(matchesFilter);
-  const filteredOtherTeams = allTeams.filter(
-    (t) => !userTeamIds.has(t._id) && matchesFilter(t),
+  const tournamentsWithTeams = useMemo(
+    () =>
+      Array.from(new Set(allTeams.map((t) => t.tournamentId)))
+        .map((id) => tournamentMap[id])
+        .filter((t): t is Doc<"tournaments"> => Boolean(t))
+        .sort((a, b) => {
+          const sa = STATUS_ORDER[getTournamentStatus(a)];
+          const sb = STATUS_ORDER[getTournamentStatus(b)];
+          if (sa !== sb) return sa - sb;
+          return b.startDate.localeCompare(a.startDate);
+        }),
+    [allTeams, tournamentMap],
   );
 
-  const otherTournaments = visibleTournaments.filter((t) =>
-    filteredOtherTeams.some((team) => team.tournamentId === t._id),
+  const visibleTournaments = useMemo(
+    () =>
+      tournamentsWithTeams.filter(
+        (t) => includeEnded || getTournamentStatus(t) !== "ended",
+      ),
+    [tournamentsWithTeams, includeEnded],
+  );
+
+  const effectiveFilter = useMemo(() => {
+    const hidden =
+      filter !== "all" && !visibleTournaments.some((t) => t._id === filter);
+    return hidden ? "all" : filter;
+  }, [filter, visibleTournaments]);
+
+  const { filteredYourTeams, filteredOtherTeams } = useMemo(() => {
+    const isEndedTeam = (team: TeamWithMembers) => {
+      const t = tournamentMap[team.tournamentId];
+      return t ? getTournamentStatus(t) === "ended" : false;
+    };
+
+    const matchesFilter = (team: TeamWithMembers) =>
+      effectiveFilter === "all"
+        ? includeEnded || !isEndedTeam(team)
+        : team.tournamentId === effectiveFilter;
+
+    return {
+      filteredYourTeams: userTeams.filter(matchesFilter),
+      filteredOtherTeams: allTeams.filter(
+        (t) => !userTeamIds.has(t._id) && matchesFilter(t),
+      ),
+    };
+  }, [
+    userTeams,
+    allTeams,
+    tournamentMap,
+    userTeamIds,
+    effectiveFilter,
+    includeEnded,
+  ]);
+
+  const otherTournaments = useMemo(
+    () =>
+      visibleTournaments.filter((t) =>
+        filteredOtherTeams.some((team) => team.tournamentId === t._id),
+      ),
+    [visibleTournaments, filteredOtherTeams],
   );
 
   const hasAnyTeams = allTeams.length > 0;
