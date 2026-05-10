@@ -17,6 +17,12 @@ export const getStatusBadge = (tournament: Doc<"tournaments">) => {
 
 export type TournamentStatus = "active" | "upcoming" | "ended";
 
+export const STATUS_LABEL: Record<TournamentStatus, string> = {
+  active: "Active",
+  upcoming: "Upcoming",
+  ended: "Ended",
+};
+
 export function getTournamentStatus(t: {
   startDate: string;
   endDate: string;
