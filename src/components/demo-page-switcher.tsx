@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils";
 const DEMO_PAGES = [
   { to: "/dev/button-demo", label: "Buttons" },
   { to: "/dev/card-demo", label: "Cards" },
+  { to: "/dev/dashboard-variant-a", label: "Dashboard A" },
+  { to: "/dev/dashboard-variant-b", label: "Dashboard B" },
+  { to: "/dev/dashboard-variant-c", label: "Dashboard C" },
 ] as const;
 
 export function DemoPageSwitcher() {
