@@ -1,10 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
-import type { TournamentWithAuthority } from "../../../convex/tournaments";
-import { TournamentOverviewCard } from "./tournament-overview-card";
-import { partitionTournaments } from "./utils";
+import type { TournamentWithAuthority } from "../../../../convex/tournaments";
+import { partitionTournaments } from "../utils";
+import { TournamentSection } from "./section";
 
 export function TournamentListing({
   tournaments,
@@ -39,32 +38,6 @@ export function TournamentListing({
         />
       )}
     </div>
-  );
-}
-
-function TournamentSection({
-  dotClass,
-  label,
-  tournaments,
-}: {
-  dotClass: string;
-  label: string;
-  tournaments: TournamentWithAuthority[];
-}) {
-  return (
-    <section className="space-y-3">
-      <h3 className="text-muted-foreground flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
-        <span
-          className={cn("inline-block h-1.5 w-1.5 rounded-full", dotClass)}
-        />
-        {label}
-      </h3>
-      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {tournaments.map((t) => (
-          <TournamentOverviewCard key={t._id} tournament={t} />
-        ))}
-      </div>
-    </section>
   );
 }
 

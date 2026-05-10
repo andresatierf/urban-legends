@@ -12,7 +12,7 @@ import { TeamCardVariantA } from "./teams/team-card-variant-a";
 import { TeamCardVariantB } from "./teams/team-card-variant-b";
 import { TeamCardVariantC } from "./teams/team-card-variant-c";
 import { DEMO_TOURNAMENT_ITEMS } from "./tournament-card-demo-fixtures";
-import { TournamentOverviewCard } from "./tournaments/tournament-overview-card";
+import { TournamentOverviewCard } from "./tournaments/card/layout";
 
 const TEAM_VARIANTS = [
   {
@@ -60,7 +60,7 @@ export function CardDemo() {
         <div className="mt-8 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {DEMO_TOURNAMENT_ITEMS.map((item) => (
             <div key={item.tournament._id}>
-              <TournamentOverviewCard tournament={item.tournament} />
+              <TournamentOverviewCard data={item.tournament} />
               <p className="text-muted-foreground mt-1 text-center text-[0.625rem]">
                 {item.label}
               </p>
