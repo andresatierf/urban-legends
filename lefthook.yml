@@ -15,7 +15,7 @@ pre-commit:
       exclude:
         - "convex/_generated/**"
         - ".sandcastle/**"
-      run: bun --bun tsc-files --noEmit {staged_files}
+      run: bun --bun tsc-files --noEmit {staged_files} src/routeTree.gen.ts
 post-checkout:
   commands:
     install:
