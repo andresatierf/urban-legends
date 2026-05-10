@@ -1,11 +1,8 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import { ArrowLeft } from "lucide-react";
 
-import { SectionHeader } from "@/components/section-header";
-import { TournamentDetailsLayout } from "@/components/tournaments/tournament-details-layout";
-import { Button } from "@/components/ui/button";
-import { DetailsCardSkeleton } from "@/components/ui/details-card-skeleton";
+import { TournamentDetailsLayout } from "@/components/tournaments/details/layout";
+import { PageSkeleton } from "@/components/ui/page-skeleton";
 
 import { api } from "../../../../../convex/_generated/api";
 import type { Id } from "../../../../../convex/_generated/dataModel";
@@ -21,25 +18,14 @@ function TournamentDetailsPage() {
     tournamentId: tournamentId as Id<"tournaments">,
   });
 
-  return (
-    <>
-      <SectionHeader as="h1" title="Tournament Details">
-        <Button variant="outline" asChild>
-          <Link to="/tournaments">
-            <ArrowLeft />
-            Back
-          </Link>
-        </Button>
-      </SectionHeader>
+  if (!data) {
+    return <PageSkeleton headerTitle="Tournament Details" sections={3} />;
+  }
 
-      {data ? (
-        <TournamentDetailsLayout
-          data={data}
-          tournamentId={tournamentId as Id<"tournaments">}
-        />
-      ) : (
-        <DetailsCardSkeleton detailsCount={6} />
-      )}
-    </>
+  return (
+    <TournamentDetailsLayout
+      data={data}
+      tournamentId={tournamentId as Id<"tournaments">}
+    />
   );
 }
