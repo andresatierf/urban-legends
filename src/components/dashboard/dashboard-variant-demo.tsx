@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { DashboardVariantA } from "./dashboard-variant-a";
 import { DashboardVariantB } from "./dashboard-variant-b";

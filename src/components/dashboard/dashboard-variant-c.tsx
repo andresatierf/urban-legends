@@ -1,10 +1,8 @@
 "use client";
 
 import {
-  ArrowRight,
   Bell,
   Calendar,
-  CheckCircle,
   Clock,
   Crown,
   FileText,
@@ -14,7 +12,6 @@ import {
   Trophy,
   UserPlus,
   Users,
-  XCircle,
   Zap,
 } from "lucide-react";
 
@@ -28,13 +25,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
 import type {
   DashboardFixtureData,
   DemoActivity,
 } from "./dashboard-variant-fixtures";
+import { ActivityIcon, formatRelative } from "./dashboard-variant-shared";
 
 /**
  * Variant C — Activity Stream (Feed-First)
@@ -581,25 +578,4 @@ function GlanceStat({
       </div>
     </div>
   );
-}
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  "check-circle": CheckCircle,
-  "x-circle": XCircle,
-  users: Users,
-  "user-plus": UserPlus,
-};
-
-function ActivityIcon({ icon }: { icon: string }) {
-  const Icon = ICON_MAP[icon] ?? Clock;
-  return <Icon className="text-muted-foreground mt-0.5 size-3.5 shrink-0" />;
-}
-
-function formatRelative(timestamp: number): string {
-  const diff = Date.now() - timestamp;
-  const hours = Math.floor(diff / 3_600_000);
-  if (hours < 1) return "just now";
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
 }

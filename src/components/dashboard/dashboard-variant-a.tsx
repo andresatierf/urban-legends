@@ -15,7 +15,6 @@ import {
   Trophy,
   UserPlus,
   Users,
-  XCircle,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import type { DashboardFixtureData } from "./dashboard-variant-fixtures";
+import { ActivityIcon, formatRelative } from "./dashboard-variant-shared";
 
 /**
  * Variant A — Command Center (Action-First)
@@ -41,6 +41,7 @@ import type { DashboardFixtureData } from "./dashboard-variant-fixtures";
  * lands, clears their queue, and moves on.
  */
 export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
+  const today = new Date().toISOString().slice(0, 10);
   const urgentDeadlines = data.deadlines.filter((d) => d.daysUntilEnd <= 3);
   const hasUrgent =
     urgentDeadlines.length > 0 ||
@@ -252,13 +253,11 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
           </div>
           <div className="space-y-3">
             {data.teams
-              .filter((t) => {
-                const nowStr = new Date().toISOString().slice(0, 10);
-                return (
-                  t.tournament.startDate <= nowStr &&
-                  t.tournament.endDate >= nowStr
-                );
-              })
+              .filter(
+                (t) =>
+                  t.tournament.startDate <= today &&
+                  t.tournament.endDate >= today,
+              )
               .map((t) => (
                 <Card key={t.tournament._id} size="sm">
                   <CardHeader>
@@ -409,29 +408,4 @@ function MiniStat({
       {sub && <p className="text-muted-foreground text-[0.65rem]">{sub}</p>}
     </div>
   );
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  "check-circle": CheckCircle,
-  "x-circle": XCircle,
-  users: Users,
-  "user-plus": UserPlus,
-};
-
-function ActivityIcon({ icon }: { icon: string }) {
-  const Icon = ICON_MAP[icon] ?? Clock;
-  return <Icon className="text-muted-foreground mt-0.5 size-3.5 shrink-0" />;
-}
-
-function formatRelative(timestamp: number): string {
-  const diff = Date.now() - timestamp;
-  const hours = Math.floor(diff / 3_600_000);
-  if (hours < 1) return "just now";
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
 }
