@@ -17,9 +17,10 @@
 //   - Claude: ~/.claude and ~/.claude.json are bind-mounted, so the container's
 //     `claude` CLI uses the host's logged-in subscription session.
 //   - GitHub: the host gh token (extracted from the OS keyring) is injected as
-//     GH_TOKEN. The onSandboxReady hooks switch the worktree's origin to HTTPS
-//     and wire gh's git credential helper, so pushes work without mounting SSH
-//     keys.
+//     GH_TOKEN. The host repo is expected to already have an `agent-origin`
+//     HTTPS remote (added once with `git remote add agent-origin <https-url>`);
+//     onSandboxReady wires gh's git credential helper so pushes through it work
+//     without mounting SSH keys and without touching the existing `origin`.
 //   - Git author: read once from the host gitconfig and passed as env vars.
 //
 // Run with:
@@ -36,7 +37,6 @@ const sh = (cmd: string) => execSync(cmd, { encoding: "utf8" }).trim();
 const ghToken = sh("gh auth token");
 const gitName = sh("git config user.name");
 const gitEmail = sh("git config user.email");
-const repoUrl = sh("gh repo view --json url --jq .url"); // https://github.com/owner/repo
 
 const sandbox = docker({
   mounts: [
@@ -55,9 +55,9 @@ const sandbox = docker({
 const hooks = {
   sandbox: {
     onSandboxReady: [
-      // Switch the worktree's origin to HTTPS so GH_TOKEN can auth the push.
-      { command: `git remote set-url origin ${repoUrl}.git` },
-      // Wire gh's git credential helper into the container's gitconfig.
+      // Wire gh's git credential helper into the container's gitconfig so
+      // pushes via the host-configured `agent-origin` HTTPS remote can auth
+      // with GH_TOKEN.
       { command: "gh auth setup-git" },
       // Refresh platform-specific deps after node_modules is copied in.
       { command: "bun install" },

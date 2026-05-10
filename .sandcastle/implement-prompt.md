@@ -48,7 +48,7 @@ Make a commit. The body must include `Closes #{{TASK_ID}}` so the PR auto-closes
 After committing:
 
 ```
-git push -u origin {{BRANCH}}
+git push -u agent-origin {{BRANCH}}
 gh pr create --head {{BRANCH}} --title "<short title>" --body "$(cat <<'EOF'
 ## Summary
 <1-3 bullets describing what changed and why>
