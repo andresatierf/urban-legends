@@ -6,6 +6,8 @@ import {
 import { CarouselReviewCard } from "./submissions/review/submission-review-card-carousel";
 import { MosaicReviewCard } from "./submissions/review/submission-review-card-mosaic";
 import type { SubmissionReviewCardProps } from "./submissions/review/submission-review-card-shared";
+import { DEMO_TOURNAMENT_ITEMS } from "./tournament-card-demo-fixtures";
+import { TournamentOverviewCard } from "./tournaments/tournament-overview-card";
 
 const SUBMISSION_VARIANTS = [
   {
@@ -22,21 +24,44 @@ const SUBMISSION_VARIANTS = [
 
 export function CardDemo() {
   return (
-    <section className="mt-12">
-      <SectionHeader
-        as="h1"
-        title="Submission"
-        description="The two evidence-led review card variants used by /submissions. Each renders the same 20-card state matrix (individual + group × four states × evidence-count variability)."
-      />
-
-      {SUBMISSION_VARIANTS.map(({ id, title, Component }) => (
-        <SubmissionVariantSection
-          key={id}
-          title={title}
-          Component={Component}
+    <div className="space-y-16">
+      {/* ── Tournament cards ─────────────────────────────────── */}
+      <section className="mt-12">
+        <SectionHeader
+          as="h1"
+          title="Tournament"
+          description="The production tournament listing card across the 9-state matrix (active/upcoming/ended × no-team/member/captain)."
         />
-      ))}
-    </section>
+
+        <div className="mt-8 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {DEMO_TOURNAMENT_ITEMS.map((item) => (
+            <div key={item.tournament._id}>
+              <TournamentOverviewCard tournament={item.tournament} />
+              <p className="text-muted-foreground mt-1 text-center text-[0.625rem]">
+                {item.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Submission cards ──────────────────────────────────── */}
+      <section>
+        <SectionHeader
+          as="h1"
+          title="Submission"
+          description="The two evidence-led review card variants used by /submissions. Each renders the same 20-card state matrix (individual + group × four states × evidence-count variability)."
+        />
+
+        {SUBMISSION_VARIANTS.map(({ id, title, Component }) => (
+          <SubmissionVariantSection
+            key={id}
+            title={title}
+            Component={Component}
+          />
+        ))}
+      </section>
+    </div>
   );
 }
 
