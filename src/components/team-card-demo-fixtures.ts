@@ -15,7 +15,6 @@ export type TeamDemoItem = {
   memberCount: number;
   viewerContext: ViewerContext;
   isUserMember: boolean;
-  isUserInTeam: boolean;
   userRole: "captain" | "member" | null;
   label: string;
 };
@@ -230,7 +229,6 @@ export const DEMO_TEAM_ITEMS: TeamDemoItem[] = MATRIX.map((entry, idx) => {
   const members = makeMembers(idx, entry.memberCount, 0);
 
   const isUserMember = entry.viewerContext !== "outsider";
-  const isUserInTeam = isUserMember;
   const userRole =
     entry.viewerContext === "captain"
       ? ("captain" as const)
@@ -247,7 +245,6 @@ export const DEMO_TEAM_ITEMS: TeamDemoItem[] = MATRIX.map((entry, idx) => {
     memberCount: entry.memberCount,
     viewerContext: entry.viewerContext,
     isUserMember,
-    isUserInTeam,
     userRole,
     label,
   };

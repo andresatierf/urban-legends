@@ -1,12 +1,4 @@
-import {
-  Crown,
-  LogOut,
-  Settings,
-  Star,
-  Trophy,
-  UserPlus,
-  Users,
-} from "lucide-react";
+import { Crown, LogOut, Settings, Star, Trophy, UserPlus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -15,15 +7,7 @@ import { getTournamentStatus } from "../tournaments/utils";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
+import { getInitials } from "../users/utils";
 
 const STATUS_COLORS: Record<string, string> = {
   active: "bg-emerald-500",

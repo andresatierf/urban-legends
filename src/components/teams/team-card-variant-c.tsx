@@ -22,15 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
+import { getInitials } from "../users/utils";
 
 export function TeamCardVariantC({ item }: { item: TeamDemoItem }) {
   const { team, tournament, members, memberCount, isUserMember, userRole } =
