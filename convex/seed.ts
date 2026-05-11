@@ -451,6 +451,86 @@ async function insertSubmission(ctx: MutationCtx, s: SubmissionSeed) {
   });
 }
 
+interface TeamGroupSeed {
+  teamId: Id<"teams">;
+  tournamentId: Id<"tournaments">;
+  /** Subset of team members that submitted into this group. */
+  memberIds: Id<"users">[];
+  /** Total team headcount, used for the participation rate. */
+  totalTeamMembers: number;
+  date: string;
+  state: "pending" | "approved" | "rejected";
+  tier: "base" | "advanced";
+  description?: string;
+  /** Reviewer for approved/rejected groups. */
+  managedBy?: Id<"users">;
+  scoringConfig: Doc<"tournaments">["scoringConfig"];
+}
+
+/**
+ * Inserts a `submissionGroups` row plus the participating per-user team
+ * submissions that reference it. Mirrors what `lifecycle/submissions.ts`
+ * does on real submit/approve, so seeded data lines up with what the
+ * review queue and details page expect.
+ */
+async function insertTeamGroup(
+  ctx: MutationCtx,
+  s: TeamGroupSeed,
+): Promise<Id<"submissionGroups">> {
+  const now = nowUTC();
+  const participantCount = s.memberIds.length;
+  const participationRate =
+    s.totalTeamMembers > 0 ? participantCount / s.totalTeamMembers : 0;
+  const isTeamExercise =
+    participationRate >= s.scoringConfig.teamExerciseThreshold;
+  const groupPoints =
+    s.state === "approved"
+      ? isTeamExercise
+        ? s.scoringConfig.teamExercisePoints[s.tier]
+        : s.scoringConfig.individualPoints[s.tier]
+      : 0;
+
+  const groupId = await ctx.db.insert("submissionGroups", {
+    teamId: s.teamId,
+    tournamentId: s.tournamentId,
+    date: s.date,
+    state: s.state,
+    tier: s.tier,
+    participantCount,
+    totalTeamMembers: s.totalTeamMembers,
+    participationRate,
+    isTeamExercise,
+    pointsEarned: groupPoints,
+    managedBy: s.managedBy,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  const pointsPerSubmission =
+    s.state === "approved" && participantCount > 0
+      ? groupPoints / participantCount
+      : 0;
+
+  for (const userId of s.memberIds) {
+    await ctx.db.insert("submissions", {
+      userId,
+      teamId: s.teamId,
+      tournamentId: s.tournamentId,
+      date: s.date,
+      description: s.description,
+      submissionType: "team",
+      state: s.state,
+      createdBy: userId,
+      tier: s.tier,
+      pointsEarned: pointsPerSubmission,
+      submissionGroupId: groupId,
+      managedBy: s.managedBy,
+    });
+  }
+
+  return groupId;
+}
+
 /**
  * Seed mutation: an upcoming tournament with full teams and no submissions.
  * Useful for testing upcoming-status badges, registration views, and
@@ -612,6 +692,12 @@ export const seedActiveWithSubmissions = internalMutation({
 
     const admin = await getOrCreateSeedAdmin(ctx);
 
+    const scoringConfig = {
+      individualPoints: { base: 2, advanced: 3 },
+      teamExercisePoints: { base: 20, advanced: 30 },
+      teamExerciseThreshold: 0.5,
+    };
+
     const tournamentId = await ctx.db.insert("tournaments", {
       name: tournamentName,
       description: "Active tournament with submissions in every state",
@@ -620,11 +706,7 @@ export const seedActiveWithSubmissions = internalMutation({
       teamMinSize: 3,
       teamMaxSize: 5,
       createdBy: admin._id,
-      scoringConfig: {
-        individualPoints: { base: 2, advanced: 3 },
-        teamExercisePoints: { base: 20, advanced: 30 },
-        teamExerciseThreshold: 0.5,
-      },
+      scoringConfig,
     });
 
     const teams = await addTeamsToTournament(ctx, {
@@ -634,10 +716,10 @@ export const seedActiveWithSubmissions = internalMutation({
       pointSpread: true,
     });
 
-    const submissionPlan: Array<{
+    const individualPlan: Array<{
       state: SubmissionSeed["state"];
       tier: SubmissionSeed["tier"];
-      type: SubmissionSeed["type"];
+      type: "individual";
       date: string;
       description: string;
     }> = [
@@ -647,13 +729,6 @@ export const seedActiveWithSubmissions = internalMutation({
         type: "individual",
         date: "2026-05-01",
         description: "Pending base individual",
-      },
-      {
-        state: "pending",
-        tier: "advanced",
-        type: "team",
-        date: "2026-05-02",
-        description: "Pending advanced team exercise",
       },
       {
         state: "approved",
@@ -687,7 +762,7 @@ export const seedActiveWithSubmissions = internalMutation({
 
     let submissionCount = 0;
     for (const team of teams) {
-      for (const plan of submissionPlan) {
+      for (const plan of individualPlan) {
         const userId = team.memberIds[submissionCount % team.memberIds.length];
         await insertSubmission(ctx, {
           teamId: team.teamId,
@@ -699,11 +774,74 @@ export const seedActiveWithSubmissions = internalMutation({
       }
     }
 
+    // Three team groups per team to exercise the group review surface in
+    // every state. Headcounts pick the participation rate so each lands on
+    // a sensible isTeamExercise verdict for its tier.
+    const teamGroupPlan: Array<{
+      state: "pending" | "approved" | "rejected";
+      tier: "base" | "advanced";
+      date: string;
+      description: string;
+      memberCount: number;
+      managedByAdmin: boolean;
+    }> = [
+      {
+        state: "pending",
+        tier: "advanced",
+        date: "2026-05-02",
+        description: "Pending advanced team activity — full team workout",
+        memberCount: 4,
+        managedByAdmin: false,
+      },
+      {
+        state: "approved",
+        tier: "base",
+        date: "2026-04-25",
+        description: "Approved base team activity — group run",
+        memberCount: 3,
+        managedByAdmin: true,
+      },
+      {
+        state: "rejected",
+        tier: "advanced",
+        date: "2026-04-12",
+        description: "Rejected team activity — too few participants logged",
+        memberCount: 2,
+        managedByAdmin: true,
+      },
+    ];
+
+    let groupsCreated = 0;
+    for (const team of teams) {
+      for (const plan of teamGroupPlan) {
+        const memberIds = team.memberIds.slice(
+          0,
+          Math.min(plan.memberCount, team.memberIds.length),
+        );
+        if (memberIds.length === 0) continue;
+        await insertTeamGroup(ctx, {
+          teamId: team.teamId,
+          tournamentId,
+          memberIds,
+          totalTeamMembers: team.memberIds.length,
+          date: plan.date,
+          state: plan.state,
+          tier: plan.tier,
+          description: plan.description,
+          managedBy: plan.managedByAdmin ? admin._id : undefined,
+          scoringConfig,
+        });
+        groupsCreated++;
+        submissionCount += memberIds.length;
+      }
+    }
+
     return {
       tournamentId,
       tournamentName,
       teamsCreated: teams.length,
       submissionsCreated: submissionCount,
+      groupsCreated,
     };
   },
 });
@@ -1531,6 +1669,12 @@ async function runSeedEnded(ctx: MutationCtx) {
 }
 
 async function runSeedActiveWithSubmissions(ctx: MutationCtx) {
+  const admin = await getOrCreateSeedAdmin(ctx);
+  const scoringConfig = {
+    individualPoints: { base: 2, advanced: 3 },
+    teamExercisePoints: { base: 20, advanced: 30 },
+    teamExerciseThreshold: 0.5,
+  };
   const tournamentId = await ctx.db.insert("tournaments", {
     name: "Urban Legends Live Cup 2026",
     description: "Active tournament with submissions in every state",
@@ -1538,12 +1682,8 @@ async function runSeedActiveWithSubmissions(ctx: MutationCtx) {
     endDate: new Date("2026-08-31").toISOString(),
     teamMinSize: 3,
     teamMaxSize: 5,
-    createdBy: (await getOrCreateSeedAdmin(ctx))._id,
-    scoringConfig: {
-      individualPoints: { base: 2, advanced: 3 },
-      teamExercisePoints: { base: 20, advanced: 30 },
-      teamExerciseThreshold: 0.5,
-    },
+    createdBy: admin._id,
+    scoringConfig,
   });
   const teams = await addTeamsToTournament(ctx, {
     tournamentId,
@@ -1551,10 +1691,11 @@ async function runSeedActiveWithSubmissions(ctx: MutationCtx) {
     joinPolicy: "open",
     pointSpread: true,
   });
-  const submissionPlan: Array<{
+
+  const individualPlan: Array<{
     state: SubmissionSeed["state"];
     tier: SubmissionSeed["tier"];
-    type: SubmissionSeed["type"];
+    type: "individual";
     date: string;
     description: string;
   }> = [
@@ -1564,13 +1705,6 @@ async function runSeedActiveWithSubmissions(ctx: MutationCtx) {
       type: "individual",
       date: "2026-05-01",
       description: "Pending base individual",
-    },
-    {
-      state: "pending",
-      tier: "advanced",
-      type: "team",
-      date: "2026-05-02",
-      description: "Pending advanced team exercise",
     },
     {
       state: "approved",
@@ -1601,9 +1735,10 @@ async function runSeedActiveWithSubmissions(ctx: MutationCtx) {
       description: "Withdrawn submission",
     },
   ];
+
   let submissionCount = 0;
   for (const team of teams) {
-    for (const plan of submissionPlan) {
+    for (const plan of individualPlan) {
       await insertSubmission(ctx, {
         teamId: team.teamId,
         tournamentId,
@@ -1613,10 +1748,71 @@ async function runSeedActiveWithSubmissions(ctx: MutationCtx) {
       submissionCount++;
     }
   }
+
+  const teamGroupPlan: Array<{
+    state: "pending" | "approved" | "rejected";
+    tier: "base" | "advanced";
+    date: string;
+    description: string;
+    memberCount: number;
+    managedByAdmin: boolean;
+  }> = [
+    {
+      state: "pending",
+      tier: "advanced",
+      date: "2026-05-02",
+      description: "Pending advanced team activity — full team workout",
+      memberCount: 4,
+      managedByAdmin: false,
+    },
+    {
+      state: "approved",
+      tier: "base",
+      date: "2026-04-25",
+      description: "Approved base team activity — group run",
+      memberCount: 3,
+      managedByAdmin: true,
+    },
+    {
+      state: "rejected",
+      tier: "advanced",
+      date: "2026-04-12",
+      description: "Rejected team activity — too few participants logged",
+      memberCount: 2,
+      managedByAdmin: true,
+    },
+  ];
+
+  let groupsCreated = 0;
+  for (const team of teams) {
+    for (const plan of teamGroupPlan) {
+      const memberIds = team.memberIds.slice(
+        0,
+        Math.min(plan.memberCount, team.memberIds.length),
+      );
+      if (memberIds.length === 0) continue;
+      await insertTeamGroup(ctx, {
+        teamId: team.teamId,
+        tournamentId,
+        memberIds,
+        totalTeamMembers: team.memberIds.length,
+        date: plan.date,
+        state: plan.state,
+        tier: plan.tier,
+        description: plan.description,
+        managedBy: plan.managedByAdmin ? admin._id : undefined,
+        scoringConfig,
+      });
+      groupsCreated++;
+      submissionCount += memberIds.length;
+    }
+  }
+
   return {
     tournamentId,
     teamsCreated: teams.length,
     submissionsCreated: submissionCount,
+    groupsCreated,
   };
 }
 
