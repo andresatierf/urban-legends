@@ -470,6 +470,7 @@ async function addTeams(
       tournamentId: options.tournamentId,
       createdBy: captainUser._id,
       joinPolicy,
+      maxMembers: 5,
       points,
     });
 

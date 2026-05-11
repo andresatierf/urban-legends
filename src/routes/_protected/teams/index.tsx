@@ -5,7 +5,7 @@ import { Trophy } from "lucide-react";
 import {
   TeamListing,
   TeamListingSkeleton,
-} from "@/components/teams/team-listing";
+} from "@/components/teams/listing/layout";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 

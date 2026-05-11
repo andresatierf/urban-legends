@@ -1,6 +1,6 @@
-import type { Doc, Id } from "../../convex/_generated/dataModel";
-import type { TournamentWithAuthority } from "../../convex/tournaments";
-import type { TournamentStatus } from "./tournaments/utils";
+import type { Doc, Id } from "../../../convex/_generated/dataModel";
+import type { TournamentWithAuthority } from "../../../convex/tournaments";
+import type { TournamentStatus } from "../tournaments/utils";
 
 type PlayerContext = "none" | "member" | "captain";
 
