@@ -1,6 +1,7 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useMutation } from "convex/react";
 import {
-  CalendarDays,
+  ArrowLeft,
   Check,
   ChevronRight,
   Clock,
@@ -14,11 +15,18 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { useCallback, useState } from "react";
 
 import { DetailsPageLayout } from "@/components/details-page-layout";
+import { UpsertSubmissionFormDialog } from "@/components/form/upsert-submission-form";
 import { SectionHeader } from "@/components/section-header";
+import {
+  managedByLabel,
+  stateBadgeVariant,
+} from "@/components/submissions/review/submission-review-card-shared";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Image } from "@/components/ui/image";
 import { Separator } from "@/components/ui/separator";
@@ -37,12 +45,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getInitials } from "@/components/users/utils";
+import { tryMutate } from "@/lib/utils";
 
-import type { SubmissionDetailsData } from "./details-demo-fixtures";
-import {
-  managedByLabel,
-  stateBadgeVariant,
-} from "./review/submission-review-card-shared";
+import { api } from "../../../../convex/_generated/api";
+import type { SubmissionDetailsData } from "./types";
 
 function formatDate(input: string | number): string {
   return new Date(input).toLocaleDateString("en-GB", {
@@ -61,25 +67,57 @@ function formatLongDate(input: string | number): string {
   });
 }
 
-export function SubmissionDetailsVariantD({
+export function SubmissionDetailsLayout({
   data,
 }: {
   data: SubmissionDetailsData;
 }) {
   const { submission, team, tournament, submitter, teammates, managedByUser } =
     data;
+  const navigate = useNavigate();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  const approveSubmission = useMutation(api.submissions.approve);
+  const rejectSubmission = useMutation(api.submissions.reject);
+  const removeSubmission = useMutation(api.submissions.remove);
+
+  const handleApprove = useCallback(() => {
+    void tryMutate({
+      fn: () => approveSubmission({ submissionId: submission._id }),
+      successToast: "Submission approved successfully",
+      defaultFailureToast: "Failed to approve submission",
+    });
+  }, [approveSubmission, submission._id]);
+
+  const handleReject = useCallback(() => {
+    void tryMutate({
+      fn: () => rejectSubmission({ submissionId: submission._id }),
+      successToast: "Submission rejected successfully",
+      defaultFailureToast: "Failed to reject submission",
+    });
+  }, [rejectSubmission, submission._id]);
+
+  const handleDelete = useCallback(() => {
+    void tryMutate({
+      fn: () => removeSubmission({ submissionId: submission._id }),
+      onSuccess: () => {
+        navigate({ to: "/submissions" });
+      },
+      successToast: "Submission deleted successfully",
+      defaultFailureToast: "Failed to delete submission",
+    });
+  }, [removeSubmission, submission._id, navigate]);
+
   const participants = [
     { ...submitter, isSubmitter: true as const },
     ...teammates.map((t) => ({ ...t, isSubmitter: false as const })),
   ];
   const share = participants.length > 0 ? 100 / participants.length : 0;
 
-  // Pick which entity headlines this submission.
   const isTeamSubmission = submission.submissionType === "team";
   const headlineTitle = isTeamSubmission ? team.name : submitter.name;
   const headlineIcon = isTeamSubmission ? Users : User;
 
-  // Scoring: only show the row matching the submission type.
   const scoringTiers = isTeamSubmission
     ? tournament.scoringConfig.teamExercisePoints
     : tournament.scoringConfig.individualPoints;
@@ -110,7 +148,7 @@ export function SubmissionDetailsVariantD({
       label: "Approve",
       icon: Check,
       variant: "default",
-      onClick: () => {},
+      onClick: handleApprove,
     });
   }
   if (data.canReject) {
@@ -118,14 +156,14 @@ export function SubmissionDetailsVariantD({
       label: "Reject",
       icon: X,
       variant: "destructive",
-      onClick: () => {},
+      onClick: handleReject,
     });
   }
   if (data.canEdit) {
     actions.push({
       label: submission.state === "rejected" ? "Resubmit" : "Edit",
       icon: submission.state === "rejected" ? RefreshCw : Pencil,
-      onClick: () => {},
+      onClick: () => setEditDialogOpen(true),
     });
   }
   if (data.canDelete) {
@@ -133,11 +171,10 @@ export function SubmissionDetailsVariantD({
       label: "Delete",
       icon: Trash2,
       variant: "outline",
-      onClick: () => {},
+      onClick: handleDelete,
     });
   }
 
-  // Plain 2x2 tile grid (no icons) — values borrowed from variant E.
   const stats: SidebarCardStat[] = [
     { label: "Points", value: `${submission.pointsEarned}` },
     { label: "Evidence", value: `${data.evidence.length}` },
@@ -183,8 +220,8 @@ export function SubmissionDetailsVariantD({
         </div>
 
         {/* Review timeline — explicit timestamps, no progress bar.
-            Reviewed timestamp is approximated from _creationTime until issue
-            #124 adds a dedicated reviewedAt field. */}
+            Reviewed timestamp falls back to _creationTime until #124 adds a
+            dedicated reviewedAt field. */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm font-medium">
             <Clock className="h-4 w-4" />
@@ -205,7 +242,6 @@ export function SubmissionDetailsVariantD({
         </div>
       </SidebarCard>
 
-      {/* Scoring rules (mirrors RulesCard) — only the relevant submission type */}
       <Card>
         <CardHeader>
           <CardTitle>Scoring</CardTitle>
@@ -236,8 +272,6 @@ export function SubmissionDetailsVariantD({
         </CardContent>
       </Card>
 
-      {/* Submitter highlight (mirrors YourTeamCard) — only for team submissions,
-          where the SidebarCard headline is the team, not the submitter. */}
       {isTeamSubmission && (
         <Card className="border-card-info-border">
           <CardHeader>
@@ -266,119 +300,140 @@ export function SubmissionDetailsVariantD({
   );
 
   return (
-    <DetailsPageLayout title="Submission Details" sidebar={sidebar}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            {formatLongDate(submission.date)}
-          </CardTitle>
-        </CardHeader>
-        {submission.description && (
-          <CardContent>
-            <p className="text-muted-foreground text-sm">
-              {submission.description}
-            </p>
-          </CardContent>
-        )}
-      </Card>
-
-      {isTeamSubmission && (
-        <>
-          <SectionHeader as="h2" title="Contributions" Icon={Users} />
-          <Card>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12 text-center">#</TableHead>
-                    <TableHead>Player</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Share</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {participants.map((p, i) => (
-                    <TableRow
-                      key={p._id}
-                      className={
-                        p.isSubmitter ? "bg-card-info-from/40" : undefined
-                      }
-                    >
-                      <TableCell className="text-muted-foreground w-12 text-center">
-                        #{i + 1}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar size="sm">
-                            <AvatarImage src={p.imageUrl} />
-                            <AvatarFallback>
-                              {getInitials(p.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{p.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {p.isSubmitter ? (
-                          <Badge variant="secondary">Submitter</Badge>
-                        ) : (
-                          <Badge variant="outline">Member</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
-                            <div
-                              className="bg-primary h-full rounded-full"
-                              style={{ width: `${share}%` }}
-                            />
-                          </div>
-                          <span className="w-12 text-right text-xs">
-                            {share.toFixed(0)}%
-                          </span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </Card>
-        </>
+    <>
+      {data.canEdit && (
+        <UpsertSubmissionFormDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          submission={submission}
+        />
       )}
 
-      <SectionHeader as="h2" title="Evidence" Icon={ImageIcon} />
-      {data.evidence.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {data.evidence.map((img, idx) => (
-            <Card key={img._id} size="sm" className="overflow-hidden p-0">
-              <Image
-                src={img.url}
-                alt={img.filename ?? `Evidence ${idx + 1}`}
-                width={400}
-                height={300}
-                className="aspect-video w-full object-cover"
-                loading="lazy"
-              />
-              <CardContent className="flex items-center justify-between gap-2 py-2">
-                <span className="truncate text-xs font-medium">
-                  {img.filename ?? `Evidence ${idx + 1}`}
-                </span>
-                <Badge variant="outline" className="shrink-0 text-xs">
-                  #{idx + 1}
-                </Badge>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
+      <DetailsPageLayout
+        title="Submission Details"
+        headerActions={
+          <Button variant="outline" asChild>
+            <Link to="/submissions">
+              <ArrowLeft />
+              Back
+            </Link>
+          </Button>
+        }
+        sidebar={sidebar}
+      >
         <Card>
-          <CardContent className="text-muted-foreground flex items-center gap-3 py-6 text-sm">
-            <ImageIcon className="h-4 w-4" />
-            No evidence attached.
-          </CardContent>
+          <CardHeader>
+            <CardTitle className="text-base">
+              {formatLongDate(submission.date)}
+            </CardTitle>
+          </CardHeader>
+          {submission.description && (
+            <CardContent>
+              <p className="text-muted-foreground text-sm">
+                {submission.description}
+              </p>
+            </CardContent>
+          )}
         </Card>
-      )}
-    </DetailsPageLayout>
+
+        {isTeamSubmission && (
+          <>
+            <SectionHeader as="h2" title="Contributions" Icon={Users} />
+            <Card>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12 text-center">#</TableHead>
+                      <TableHead>Player</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Share</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {participants.map((p, i) => (
+                      <TableRow
+                        key={p._id}
+                        className={
+                          p.isSubmitter ? "bg-card-info-from/40" : undefined
+                        }
+                      >
+                        <TableCell className="text-muted-foreground w-12 text-center">
+                          #{i + 1}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Avatar size="sm">
+                              <AvatarImage src={p.imageUrl} />
+                              <AvatarFallback>
+                                {getInitials(p.name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">{p.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {p.isSubmitter ? (
+                            <Badge variant="secondary">Submitter</Badge>
+                          ) : (
+                            <Badge variant="outline">Member</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
+                              <div
+                                className="bg-primary h-full rounded-full"
+                                style={{ width: `${share}%` }}
+                              />
+                            </div>
+                            <span className="w-12 text-right text-xs">
+                              {share.toFixed(0)}%
+                            </span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </Card>
+          </>
+        )}
+
+        <SectionHeader as="h2" title="Evidence" Icon={ImageIcon} />
+        {data.evidence.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {data.evidence.map((img, idx) => (
+              <Card key={img._id} size="sm" className="overflow-hidden p-0">
+                <Image
+                  src={img.url}
+                  alt={img.filename ?? `Evidence ${idx + 1}`}
+                  width={400}
+                  height={300}
+                  className="aspect-video w-full object-cover"
+                  loading="lazy"
+                />
+                <CardContent className="flex items-center justify-between gap-2 py-2">
+                  <span className="truncate text-xs font-medium">
+                    {img.filename ?? `Evidence ${idx + 1}`}
+                  </span>
+                  <Badge variant="outline" className="shrink-0 text-xs">
+                    #{idx + 1}
+                  </Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="text-muted-foreground flex items-center gap-3 py-6 text-sm">
+              <ImageIcon className="h-4 w-4" />
+              No evidence attached.
+            </CardContent>
+          </Card>
+        )}
+      </DetailsPageLayout>
+    </>
   );
 }

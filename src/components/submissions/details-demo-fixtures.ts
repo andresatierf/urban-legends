@@ -1,20 +1,8 @@
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import type { UserWithRoles } from "../../../convex/users";
+import type { SubmissionDetailsData } from "./details/types";
 
-export type SubmissionDetailsData = {
-  submission: Doc<"submissions">;
-  team: Doc<"teams">;
-  tournament: Doc<"tournaments">;
-  submitter: UserWithRoles;
-  teammates: UserWithRoles[];
-  managedByUser: UserWithRoles | null;
-  isTeamExercise: boolean;
-  evidence: Array<{ _id: string; url: string; filename?: string }>;
-  canEdit: boolean;
-  canApprove: boolean;
-  canReject: boolean;
-  canDelete: boolean;
-};
+export type { SubmissionDetailsData };
 
 function makeUser(idx: number, name: string, email: string): UserWithRoles {
   return {

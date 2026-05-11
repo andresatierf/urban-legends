@@ -336,6 +336,7 @@ export const getDetails = query({
       });
     }
 
+    if (!team) throw new Error("Team not found");
     if (!tournament) throw new Error("Tournament not found");
 
     const teamMembers = await ctx.db

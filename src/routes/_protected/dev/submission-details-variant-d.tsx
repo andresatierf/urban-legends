@@ -6,7 +6,7 @@ import {
   ALL_SCENARIOS,
   type SubmissionDetailsData,
 } from "@/components/submissions/details-demo-fixtures";
-import { SubmissionDetailsVariantD } from "@/components/submissions/details-variant-d";
+import { SubmissionDetailsLayout } from "@/components/submissions/details/layout";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute(
@@ -34,7 +34,7 @@ function SubmissionDetailsVariantDPage() {
           </Button>
         ))}
       </div>
-      <SubmissionDetailsVariantD data={active} />
+      <SubmissionDetailsLayout data={active} />
     </>
   );
 }
