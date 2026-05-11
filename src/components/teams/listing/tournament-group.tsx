@@ -2,7 +2,7 @@ import { Trophy } from "lucide-react";
 
 import type { Doc } from "../../../../convex/_generated/dataModel";
 import { getStatusBadge } from "../../tournaments/utils";
-import { TeamCard } from "../card/layout";
+import { TeamCardContainer } from "../card/container";
 import type { TeamWithMembers } from "./types";
 
 type Props = {
@@ -30,7 +30,7 @@ export function TournamentGroup({
       </div>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {teams.map((team) => (
-          <TeamCard
+          <TeamCardContainer
             key={team._id}
             data={{
               team,

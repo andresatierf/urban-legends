@@ -1,5 +1,5 @@
 import type { Id } from "../../../../convex/_generated/dataModel";
-import { TeamCard } from "../card/layout";
+import { TeamCardContainer } from "../card/container";
 import { SectionLabel } from "./section-label";
 import type { TeamWithMembers, TournamentMap } from "./types";
 
@@ -33,7 +33,7 @@ export function YourTeams({
                   ?.memberRole ?? null)
               : null;
             return (
-              <TeamCard
+              <TeamCardContainer
                 key={team._id}
                 data={{
                   team,

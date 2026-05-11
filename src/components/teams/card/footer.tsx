@@ -1,29 +1,21 @@
 import { Link } from "@tanstack/react-router";
-import { useMutation } from "convex/react";
 import { LogOut, Settings } from "lucide-react";
 
-import { tryMutate } from "@/lib/utils";
-
-import { api } from "../../../../convex/_generated/api";
-import { JoinTeamFormButton } from "../../form/join-team-form-button";
 import { Button } from "../../ui/button";
 import { CardFooter } from "../../ui/card";
 import type { TeamCardData } from "./types";
 
-export function Footer({ data }: { data: TeamCardData }) {
-  const { team, memberCount, isUserMember, isUserInTeam, userRole } = data;
-  const leaveTeam = useMutation(api.teams.leaveTeam);
+type Props = {
+  data: TeamCardData;
+  onLeave?: () => void;
+  joinSlot?: React.ReactNode;
+};
+
+export function Footer({ data, onLeave, joinSlot }: Props) {
+  const { team, memberCount, isUserMember, userRole } = data;
 
   const canLeave =
     userRole === "member" || (userRole === "captain" && memberCount === 1);
-
-  const handleLeave = () => {
-    void tryMutate({
-      fn: () => leaveTeam({ teamId: team._id }),
-      successToast: "Successfully left the team",
-      defaultFailureToast: "Failed to leave team",
-    });
-  };
 
   return (
     <CardFooter className="gap-2 px-4 py-3">
@@ -35,8 +27,8 @@ export function Footer({ data }: { data: TeamCardData }) {
               Manage
             </Link>
           </Button>
-          {canLeave && (
-            <Button variant="ghost" size="sm" onClick={handleLeave}>
+          {canLeave && onLeave && (
+            <Button variant="ghost" size="sm" onClick={onLeave}>
               <LogOut className="size-3.5" />
               Leave
             </Button>
@@ -44,14 +36,7 @@ export function Footer({ data }: { data: TeamCardData }) {
         </>
       ) : (
         <>
-          <JoinTeamFormButton
-            teamId={team._id}
-            team={team}
-            currentMemberCount={memberCount}
-            isUserMember={isUserMember}
-            isUserInTeam={isUserInTeam}
-            size="sm"
-          />
+          {joinSlot}
           <Button variant="outline" size="sm" asChild>
             <Link to="/teams/$teamId" params={{ teamId: team._id }}>
               View

@@ -8,7 +8,13 @@ import { StatsGrid } from "./stats-grid";
 import { TournamentBand } from "./tournament-band";
 import type { TeamCardData } from "./types";
 
-export function TeamCard({ data }: { data: TeamCardData }) {
+type Props = {
+  data: TeamCardData;
+  onLeave?: () => void;
+  joinSlot?: React.ReactNode;
+};
+
+export function TeamCard({ data, onLeave, joinSlot }: Props) {
   return (
     <Card className="gap-0 overflow-hidden py-0">
       <TournamentBand data={data} />
@@ -18,7 +24,7 @@ export function TeamCard({ data }: { data: TeamCardData }) {
         <MemberRoster data={data} />
         <RoleBanner data={data} />
       </CardContent>
-      <Footer data={data} />
+      <Footer data={data} onLeave={onLeave} joinSlot={joinSlot} />
     </Card>
   );
 }
