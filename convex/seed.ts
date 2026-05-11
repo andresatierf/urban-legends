@@ -1,9 +1,30 @@
 import { v } from "convex/values";
 
+import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { type MutationCtx, internalMutation } from "./_generated/server";
+import {
+  type MutationCtx,
+  internalAction,
+  internalMutation,
+} from "./_generated/server";
 import { rolesToCreate, teamsData } from "./data";
 import { nowUTC } from "./lib/dates";
+
+/**
+ * Public domain placeholder images used to populate seed submissions with
+ * evidence. Picsum returns a fresh JPEG for each seed; the seeds below are
+ * stable so repeated runs land on the same pictures.
+ */
+const DEMO_EVIDENCE_URLS = [
+  "https://picsum.photos/seed/run-1/800/600.jpg",
+  "https://picsum.photos/seed/yoga-2/800/600.jpg",
+  "https://picsum.photos/seed/cycling-3/800/600.jpg",
+  "https://picsum.photos/seed/hike-4/800/600.jpg",
+  "https://picsum.photos/seed/gym-5/800/600.jpg",
+  "https://picsum.photos/seed/swim-6/800/600.jpg",
+  "https://picsum.photos/seed/team-7/800/600.jpg",
+  "https://picsum.photos/seed/sprint-8/800/600.jpg",
+] as const;
 
 /**
  * Seed mutation to populate the database with sample tournament and teams.
@@ -1094,6 +1115,128 @@ export const seedAll = internalMutation({
 });
 
 /**
+ * Attach a pool of evidence storage IDs to every seeded submission that has
+ * no evidence yet (and is not deleted). Each submission gets 1–3 IDs cycled
+ * from the pool so seeded data renders nicely in the evidence gallery.
+ */
+export const attachSeededEvidence = internalMutation({
+  args: {
+    storageIds: v.array(v.id("_storage")),
+  },
+  handler: async (ctx, args) => {
+    if (args.storageIds.length === 0) {
+      return { evidenceAttached: 0, eligible: 0 };
+    }
+
+    const seedUsers = (await ctx.db.query("users").collect()).filter((u) =>
+      u.externalId.startsWith("seed_"),
+    );
+    const seedUserIds = new Set(seedUsers.map((u) => u._id));
+    const seedTeamIds = new Set(
+      (await ctx.db.query("teams").collect())
+        .filter((t) => seedUserIds.has(t.createdBy))
+        .map((t) => t._id),
+    );
+
+    const eligible = (await ctx.db.query("submissions").collect()).filter(
+      (s) =>
+        seedTeamIds.has(s.teamId) &&
+        s.state !== "deleted" &&
+        (s.evidenceStorageIds === undefined ||
+          s.evidenceStorageIds.length === 0),
+    );
+
+    let updated = 0;
+    for (let i = 0; i < eligible.length; i++) {
+      const submission = eligible[i];
+      const count = (i % 3) + 1;
+      const startIdx = i % args.storageIds.length;
+      const ids: Id<"_storage">[] = [];
+      for (let j = 0; j < count; j++) {
+        ids.push(args.storageIds[(startIdx + j) % args.storageIds.length]);
+      }
+      await ctx.db.patch(submission._id, { evidenceStorageIds: ids });
+      updated++;
+    }
+
+    return { evidenceAttached: updated, eligible: eligible.length };
+  },
+});
+
+/**
+ * Fetch the demo image set, store each blob in Convex storage, and patch
+ * the resulting storage IDs onto every eligible seeded submission. Safe to
+ * run after `seedAll` (or `seedAllWithEvidence`) to backfill images on
+ * submissions that don't have any yet.
+ */
+export const attachEvidenceToSeeds = internalAction({
+  args: {},
+  handler: async (
+    ctx,
+  ): Promise<{
+    storageIdsCreated: number;
+    evidenceAttached: number;
+    eligible: number;
+  }> => {
+    const storageIds: Id<"_storage">[] = [];
+    for (const url of DEMO_EVIDENCE_URLS) {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const blob = await res.blob();
+      const storageId = await ctx.storage.store(blob);
+      storageIds.push(storageId);
+    }
+
+    if (storageIds.length === 0) {
+      return { storageIdsCreated: 0, evidenceAttached: 0, eligible: 0 };
+    }
+
+    const { evidenceAttached, eligible } = await ctx.runMutation(
+      internal.seed.attachSeededEvidence,
+      { storageIds },
+    );
+
+    return {
+      storageIdsCreated: storageIds.length,
+      evidenceAttached,
+      eligible,
+    };
+  },
+});
+
+/**
+ * Convenience orchestrator: run `seedAll` and then `attachEvidenceToSeeds`
+ * so every seeded submission ends up with a couple of preview images.
+ *
+ * Explicit return annotation breaks the inference cycle that would otherwise
+ * appear because both `seedAll` and `attachEvidenceToSeeds` live in this same
+ * module (`internal.seed.*`).
+ */
+export const seedAllWithEvidence = internalAction({
+  args: {},
+  handler: async (
+    ctx,
+  ): Promise<{
+    base: Record<string, unknown>;
+    evidence: {
+      storageIdsCreated: number;
+      evidenceAttached: number;
+      eligible: number;
+    };
+  }> => {
+    const base: Record<string, unknown> = await ctx.runMutation(
+      internal.seed.seedAll,
+      {},
+    );
+    const evidence = await ctx.runAction(
+      internal.seed.attachEvidenceToSeeds,
+      {},
+    );
+    return { base, evidence };
+  },
+});
+
+/**
  * Clear every tournament whose teams were created by seeded users, plus
  * all related teams, members, submissions, submission groups, join requests,
  * notifications, and seed_-prefixed users. Use with care — destroys all
@@ -1117,6 +1260,7 @@ export const clearAllSeeded = internalMutation({
     let submissionsDeleted = 0;
     let submissionGroupsDeleted = 0;
     let joinRequestsDeleted = 0;
+    const evidenceStorageIds = new Set<Id<"_storage">>();
 
     for (const tournamentId of seedTournamentIds) {
       const teams = await ctx.db
@@ -1139,6 +1283,9 @@ export const clearAllSeeded = internalMutation({
           .withIndex("by_team", (q) => q.eq("teamId", team._id))
           .collect();
         for (const s of submissions) {
+          for (const sid of s.evidenceStorageIds ?? []) {
+            evidenceStorageIds.add(sid);
+          }
           await ctx.db.delete(s._id);
           submissionsDeleted++;
         }
@@ -1202,6 +1349,19 @@ export const clearAllSeeded = internalMutation({
       await ctx.db.delete(user._id);
     }
 
+    // Drop the evidence blobs we attached via attachSeededEvidence. Wrapped
+    // in try/catch because a manual delete or test fixture may have already
+    // removed the underlying blob.
+    let evidenceBlobsDeleted = 0;
+    for (const sid of evidenceStorageIds) {
+      try {
+        await ctx.storage.delete(sid);
+        evidenceBlobsDeleted++;
+      } catch {
+        // already gone — ignore
+      }
+    }
+
     return {
       tournamentsDeleted: seedTournamentIds.length,
       teamsDeleted: seedTeams.length,
@@ -1213,6 +1373,7 @@ export const clearAllSeeded = internalMutation({
       notificationPrefsDeleted,
       userRolesDeleted,
       usersDeleted: seedUsers.length,
+      evidenceBlobsDeleted,
     };
   },
 });
