@@ -14,6 +14,13 @@
 // There is no merge phase: each issue ends as a PR for human review. To
 // pick up newly-unblocked issues, merge some PRs and re-run this script.
 //
+// Worktree ownership: we use the two-step `createWorktree` + `worktree
+// .createSandbox` API so the sandbox handle's `close()` only tears down the
+// container. The worktree handle (which would remove a clean worktree on its
+// own `close()`) is intentionally never closed, so worktrees stay under
+// `.sandcastle/worktrees/` for inspection after the run. They survive
+// subsequent `pruneStale` calls because git still tracks them.
+//
 // Auth model:
 //   - Claude: ~/.claude and ~/.claude.json are bind-mounted, so the container's
 //     `claude` CLI uses the host's logged-in subscription session.
@@ -112,12 +119,14 @@ const MAX_REVIEW_ROUNDS = 3;
 
 const settled = await Promise.allSettled(
   issues.map(async (issue) => {
-    const sb = await sandcastle.createSandbox({
-      branch: issue.branch,
-      sandbox,
-      hooks,
+    // Split ownership: createWorktree owns the worktree, wt.createSandbox
+    // owns the container. We only close the sandbox below, so the worktree
+    // is preserved on disk for human inspection.
+    const wt = await sandcastle.createWorktree({
+      branchStrategy: { type: "branch", branch: issue.branch },
       copyToWorktree,
     });
+    const sb = await wt.createSandbox({ sandbox, hooks });
 
     try {
       const implement = await sb.run({
