@@ -103,7 +103,7 @@ export function CarouselReviewCard({
       )}
 
       {showActions && (canApprove || canReject) && (
-        <div className="flex gap-0 border-t">
+        <div className="mt-auto flex gap-0 border-t">
           {canApprove && (
             <Button
               size="sm"
