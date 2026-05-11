@@ -1,5 +1,6 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { capitalize } from "lodash";
 import {
   Check,
@@ -46,6 +47,26 @@ export function CarouselReviewCard({
   const canApprove = isPending && !!onApprove;
   const canReject = isPending && !!onReject;
 
+  // For group items the details page reads its team context from any one of
+  // the group's submissions, so we link to the first non-rejected entry.
+  const detailsSubmissionId =
+    item.type === "individual"
+      ? item.data.submission._id
+      : item.data.submissions[0]?._id;
+
+  const metaFooter = (
+    <MetaFooter
+      primaryLabel={
+        item.type === "individual"
+          ? item.data.submitter.name.trim() || item.data.submitter.email
+          : facts.teamName
+      }
+      tournamentName={facts.tournamentName}
+      date={facts.date}
+      pointsEarned={facts.pointsEarned}
+    />
+  );
+
   return (
     <Card className="relative gap-0 overflow-hidden p-0">
       {item.type === "individual" ? (
@@ -68,16 +89,18 @@ export function CarouselReviewCard({
         isGroup={facts.isGroup}
       />
 
-      <MetaFooter
-        primaryLabel={
-          item.type === "individual"
-            ? item.data.submitter.name.trim() || item.data.submitter.email
-            : facts.teamName
-        }
-        tournamentName={facts.tournamentName}
-        date={facts.date}
-        pointsEarned={facts.pointsEarned}
-      />
+      {detailsSubmissionId ? (
+        <Link
+          to="/submissions/$submissionId"
+          params={{ submissionId: detailsSubmissionId }}
+          className="hover:bg-muted/40 block transition-colors"
+          aria-label="View submission details"
+        >
+          {metaFooter}
+        </Link>
+      ) : (
+        metaFooter
+      )}
 
       {showActions && (canApprove || canReject) && (
         <div className="flex gap-0 border-t">
