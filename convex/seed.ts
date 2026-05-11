@@ -56,6 +56,7 @@ export const seedTournamentAndTeams = internalMutation({
         tournamentId,
         createdBy: captainUser._id,
         joinPolicy: "open",
+        maxMembers: 5,
         points: 0,
       });
 
@@ -147,6 +148,7 @@ export const seedTournamentAndTeams2026 = internalMutation({
         tournamentId,
         createdBy: captainUser._id,
         joinPolicy: "open",
+        maxMembers: 5,
         points: 0,
       });
 
@@ -238,6 +240,7 @@ export const seedTournamentAndCaptains = internalMutation({
         tournamentId,
         createdBy: captainUser._id,
         joinPolicy: "open",
+        maxMembers: 5,
         points: 0,
       });
 
@@ -361,6 +364,7 @@ async function addTeamsToTournament(
       tournamentId: options.tournamentId,
       createdBy: captainUser._id,
       joinPolicy,
+      maxMembers: 5,
       points,
     });
 
@@ -742,6 +746,7 @@ export const seedMixedTeams = internalMutation({
         tournamentId,
         createdBy: captainUser._id,
         joinPolicy,
+        maxMembers: 5,
         points: 0,
       });
 
@@ -1489,6 +1494,7 @@ async function runSeedMixedTeams(ctx: MutationCtx) {
       tournamentId,
       createdBy: captainUser._id,
       joinPolicy,
+      maxMembers: 5,
       points: 0,
     });
     await ctx.db.insert("teamMembers", {
