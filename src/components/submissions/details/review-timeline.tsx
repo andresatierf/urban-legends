@@ -35,9 +35,7 @@ export function ReviewTimeline({ submission, managedByUser }: Props) {
         </div>
         <div className="flex justify-between">
           <span>{reviewedLabel}</span>
-          <span>
-            {managedByUser ? formatDate(submission._creationTime) : "—"}
-          </span>
+          <span>{managedByUser?.name ?? "—"}</span>
         </div>
       </div>
     </div>
