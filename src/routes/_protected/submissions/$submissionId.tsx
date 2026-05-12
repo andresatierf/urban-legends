@@ -1,11 +1,7 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
-import { ArrowLeft } from "lucide-react";
 
-import { SectionHeader } from "@/components/section-header";
-import { SubmissionDetailsCard } from "@/components/submissions/submission-details-card";
-import { SubmitterInfo } from "@/components/submissions/submitter-info";
-import { Button } from "@/components/ui/button";
+import { SubmissionDetailsLayout } from "@/components/submissions/details/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { api } from "../../../../convex/_generated/api";
@@ -23,43 +19,8 @@ function SubmissionDetailsPage() {
   );
 
   if (!data) {
-    return <SubmissionDetailsPageSkeleton />;
+    return <Skeleton className="h-screen w-full" />;
   }
 
-  return (
-    <>
-      <SectionHeader as="h1" title="Submission Details">
-        <Button variant="outline" asChild>
-          <Link to="/submissions">
-            <ArrowLeft />
-            Back to Submissions
-          </Link>
-        </Button>
-      </SectionHeader>
-
-      <SubmissionDetailsCard data={data} />
-
-      <SectionHeader title="Participants" />
-      <SubmitterInfo submitter={data.submitter} teammates={data.teammates} />
-    </>
-  );
-}
-
-function SubmissionDetailsPageSkeleton() {
-  return (
-    <>
-      <SectionHeader as="h1" title="Submission Details">
-        <Button variant="outline" asChild>
-          <Link to="/submissions">
-            <ArrowLeft />
-            Back to Submissions
-          </Link>
-        </Button>
-      </SectionHeader>
-      <Skeleton className="h-96 w-full" />
-
-      <SectionHeader title="Participants" />
-      <Skeleton className="h-64 w-full" />
-    </>
-  );
+  return <SubmissionDetailsLayout data={data} />;
 }

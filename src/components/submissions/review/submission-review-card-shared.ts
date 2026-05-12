@@ -24,6 +24,12 @@ export function stateBadgeVariant(
   return "outline";
 }
 
+export function managedByLabel(state: SubmissionState): string {
+  if (state === "approved") return "Approved by";
+  if (state === "rejected") return "Rejected by";
+  return "Managed by";
+}
+
 export function initials(name: string) {
   return name
     .split(" ")
