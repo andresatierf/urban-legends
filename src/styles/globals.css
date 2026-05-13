@@ -8,6 +8,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-white: var(--white);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: "Instrument Sans Variable", sans-serif;
@@ -134,9 +135,19 @@
   --radius-3xl: calc(var(--radius) * 2.2);
 
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* LogActivityFab / RaceChart tokens (indirected so .dark overrides apply) */
+  --color-fab-bg: var(--fab-bg);
+  --color-fab-ink: var(--fab-ink);
+  --color-fab-gold: var(--fab-gold);
+  --color-fab-grid: var(--fab-grid);
+  --color-fab-shadow: var(--fab-shadow);
+  --color-fab-shadow-soft: var(--fab-shadow-soft);
+  --color-fab-surface: var(--fab-surface);
 }
 
 :root {
+  --white: #ffffff;
   --radius: 0.45rem;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -270,23 +281,33 @@
   --background: oklch(1 0 0);
 
   --foreground: oklch(0.145 0 0);
+
+  /* LogActivityFab / RaceChart — light mode */
+  --fab-bg: #ff7a45;
+  --fab-ink: #2a1f1a;
+  --fab-gold: #ffc847;
+  --fab-grid: rgba(42, 31, 26, 0.22);
+  --fab-shadow: rgba(42, 31, 26, 0.12);
+  --fab-shadow-soft: rgba(42, 31, 26, 0.06);
+  --fab-surface: #ffffff;
 }
 
 .dark {
+  --white: #c4cad2;
   --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
+  --foreground: #c4cad2;
   --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
+  --card-foreground: #c4cad2;
   --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --popover-foreground: #c4cad2;
   --primary: oklch(0.438 0.218 303.724);
   --primary-foreground: oklch(0.977 0.014 308.299);
   --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
+  --secondary-foreground: #c4cad2;
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent-foreground: #c4cad2;
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
@@ -297,11 +318,11 @@
   --chart-4: oklch(0.527 0.154 150.069);
   --chart-5: oklch(0.448 0.119 151.328);
   --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-foreground: #c4cad2;
   --sidebar-primary: oklch(0.627 0.265 303.9);
   --sidebar-primary-foreground: oklch(0.977 0.014 308.299);
   --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-accent-foreground: #c4cad2;
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 
@@ -403,6 +424,14 @@
   --calendar-disabled-text: oklch(0.5 0.01 270);
 
   --calendar-today-ring: oklch(0.7 0.15 250);
+
+  /* LogActivityFab / RaceChart — flip ink to cool grey, surface to dark, shadow to soft highlight */
+  --fab-bg: #d65a2e;
+  --fab-ink: #c4cad2;
+  --fab-grid: rgba(196, 202, 210, 0.22);
+  --fab-shadow: rgba(196, 202, 210, 0.22);
+  --fab-shadow-soft: rgba(196, 202, 210, 0.1);
+  --fab-surface: oklch(0.205 0 0);
 }
 
 @layer base {

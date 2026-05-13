@@ -1,27 +1,11 @@
 "use client";
 
-import { ArrowRight, PencilLine } from "lucide-react";
 import { useState } from "react";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ReferenceLine,
-  XAxis,
-  YAxis,
-} from "recharts";
-
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
 
 import type { DashboardFixtureData } from "./dashboard-variant-fixtures";
 import { formatRelative } from "./dashboard-variant-shared";
+import { LogActivityFab } from "./log-activity-fab";
+import { RaceChart } from "./race-chart";
 
 /**
  * Variant A — Field Day, tightened. Iterated from N: dot-grid notebook
@@ -300,29 +284,10 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
 
           {/* Submit CTA overlapping the hero's bottom-right corner */}
           {selectedTour && isSelectedActive && selectedUserTeam && (
-            <button
-              type="button"
-              className="mt-5 grid w-full max-w-none cursor-pointer grid-cols-[1fr_auto] grid-rows-[auto_auto] items-center gap-x-[0.9rem] gap-y-[0.15rem] rounded-[14px] border-2 border-[var(--va-ink)] bg-[var(--va-sunset)] px-[1.05rem] pt-3 pb-[0.85rem] text-left font-['Lexend',sans-serif] text-white shadow-[5px_5px_0_var(--va-shadow)] transition-[transform,box-shadow] duration-[120ms] ease-out hover:-translate-x-[3px] hover:-translate-y-[3px] hover:shadow-[7px_7px_0_rgba(42,31,26,0.06)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_var(--va-shadow)] sm:absolute sm:right-5 sm:bottom-[-38px] sm:z-[3] sm:mt-0 sm:w-auto sm:max-w-[min(420px,88%)] sm:-rotate-[1.5deg]"
-            >
-              <span className="col-span-2 inline-flex items-center gap-[0.4rem] font-['Funnel_Display',sans-serif] text-[0.78rem] font-extrabold tracking-[0.1em] uppercase opacity-95">
-                <PencilLine className="size-[14px]" strokeWidth={2.5} />
-                Log today&apos;s activity
-              </span>
-              <span className="text-[0.95rem] leading-[1.15]">
-                <strong className="font-bold">
-                  {selectedUserTeam.team.name}
-                </strong>
-                <span className="text-[0.85rem] opacity-85">
-                  {" "}
-                  · {selectedTour.name}
-                </span>
-              </span>
-              <ArrowRight
-                className="row-start-2 size-4 self-center"
-                strokeWidth={1.5}
-                aria-hidden
-              />
-            </button>
+            <LogActivityFab
+              teamName={selectedUserTeam.team.name}
+              tournamentName={selectedTour.name}
+            />
           )}
         </section>
 
@@ -480,7 +445,7 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
             style={{ animationDelay: "250ms" }}
           >
             <RibbonBanner label="THE RACE" small />
-            <RaceChartShadcn
+            <RaceChart
               days={chartData.days}
               series={chartData.series}
               userTeamId={selectedUserTeam?.team._id}
@@ -1103,7 +1068,7 @@ function MedalSvg({ type }: { type: "gold" | "silver" | "bronze" }) {
         cy="34"
         r="16"
         fill={c}
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="2"
       />
       <circle
@@ -1111,7 +1076,7 @@ function MedalSvg({ type }: { type: "gold" | "silver" | "bronze" }) {
         cy="34"
         r="11"
         fill="none"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="1.5"
         opacity="0.3"
       />
@@ -1132,7 +1097,7 @@ function TrophySvg() {
       {/* Cup body */}
       <path
         d="M16 8 H48 V36 C48 48 16 48 16 36 Z"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="2.5"
         fill="rgba(255,200,71,0.25)"
         strokeLinejoin="round"
@@ -1140,14 +1105,14 @@ function TrophySvg() {
       {/* Handles */}
       <path
         d="M16 16 C8 16 8 28 16 28"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="2.5"
         fill="none"
         strokeLinecap="round"
       />
       <path
         d="M48 16 C56 16 56 28 48 28"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="2.5"
         fill="none"
         strokeLinecap="round"
@@ -1158,7 +1123,7 @@ function TrophySvg() {
         y1="48"
         x2="32"
         y2="60"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="2.5"
         strokeLinecap="round"
       />
@@ -1169,7 +1134,7 @@ function TrophySvg() {
         width="24"
         height="5"
         rx="2"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="2"
         fill="rgba(255,200,71,0.3)"
       />
@@ -1177,7 +1142,7 @@ function TrophySvg() {
       <path
         d="M32 18 L33.5 23 L38.5 23 L34.5 26 L36 31 L32 28 L28 31 L29.5 26 L25.5 23 L30.5 23 Z"
         fill="#ffc847"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="1"
       />
     </svg>
@@ -1199,19 +1164,19 @@ function WhistleSvg() {
         cx="9"
         cy="14"
         r="5"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="2"
         fill="rgba(255,122,69,0.15)"
       />
       <path
         d="M14 14 L20 8"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="2"
         strokeLinecap="round"
       />
       <path
         d="M17 6 L22 6"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="2"
         strokeLinecap="round"
       />
@@ -1220,7 +1185,7 @@ function WhistleSvg() {
         y1="9"
         x2="9"
         y2="11"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -1264,7 +1229,7 @@ function WhistleSvgSmall() {
 }
 
 function StopwatchSvg({ urgent }: { urgent: boolean }) {
-  const stroke = urgent ? "#e53e3e" : "#2a1f1a";
+  const stroke = urgent ? "#e53e3e" : "var(--va-ink)";
   return (
     <svg
       aria-hidden
@@ -1337,40 +1302,40 @@ function RunnerSvg({ progress }: { progress: number }) {
         cx="9"
         cy="4"
         r="3"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="1.5"
         fill="rgba(93,199,122,0.4)"
       />
       {/* Body */}
       <path
         d="M9 7 L9 16"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
       {/* Arms */}
       <path
         d="M9 10 L5 13"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
       <path
         d="M9 10 L13 8"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
       {/* Legs */}
       <path
         d="M9 16 L6 22"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
       <path
         d="M9 16 L13 20"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -1395,7 +1360,7 @@ function CheckboxSvg({ checked }: { checked?: boolean }) {
         width="20"
         height="20"
         rx="4"
-        stroke="#2a1f1a"
+        stroke="var(--va-ink)"
         strokeWidth="2"
         fill={checked ? "rgba(93,199,122,0.3)" : "rgba(122,106,92,0.1)"}
       />
@@ -1477,181 +1442,6 @@ function MedallionSvg({ number }: { number: number }) {
         {String(number).padStart(2, "0")}
       </text>
     </svg>
-  );
-}
-
-const RACE_COLORS = [
-  "var(--va-sunset)",
-  "var(--va-sky)",
-  "var(--va-grass)",
-  "var(--va-plum)",
-  "var(--va-gold)",
-  "var(--va-bronze)",
-];
-
-// Shadcn / Recharts version — same data, library defaults + ReferenceLine for "YOU"
-function RaceChartShadcn({
-  days,
-  series,
-  userTeamId,
-}: {
-  days: number[];
-  series: Array<{
-    teamId: string;
-    teamName: string;
-    points: number[];
-    total: number;
-  }>;
-  userTeamId?: string;
-}) {
-  // Pivot: one row per day, one numeric key per team
-  const data = days.map((ms, i) => {
-    const d = new Date(ms);
-    const row: Record<string, number | string> = {
-      day: `${d.getMonth() + 1}/${d.getDate()}`,
-    };
-    for (const s of series) {
-      row[s.teamId] = Math.round(s.points[i] ?? 0);
-    }
-    return row;
-  });
-
-  const config: ChartConfig = Object.fromEntries(
-    series.map((s, idx) => [
-      s.teamId,
-      {
-        label: <span className="font-medium">{s.teamName}</span>,
-        color: RACE_COLORS[idx % RACE_COLORS.length],
-      },
-    ]),
-  );
-
-  const userSeries = userTeamId
-    ? series.find((s) => s.teamId === userTeamId)
-    : undefined;
-
-  return (
-    <div className="va-chart-shadcn-card">
-      <ChartContainer config={config} className="h-[520px] w-full">
-        <LineChart
-          data={data}
-          margin={{ top: 12, right: 56, left: 0, bottom: 0 }}
-        >
-          <CartesianGrid
-            vertical={false}
-            strokeDasharray="3 4"
-            stroke="rgba(42,31,26,0.22)"
-          />
-          <XAxis
-            dataKey="day"
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
-            minTickGap={32}
-          />
-          <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} />
-          <ChartTooltip
-            content={
-              <ChartTooltipContent className="min-w-44 !rounded-[14px] border-2 border-[var(--va-ink)] bg-white text-[var(--va-ink)] !shadow-[4px_4px_0_var(--va-shadow)] [&_.justify-between]:!gap-4 [&_.shrink-0]:!h-3 [&_.shrink-0]:!w-3 [&_.shrink-0]:!rounded-[4px] [&_.shrink-0]:!border-2 [&_.shrink-0]:!border-[var(--va-ink)]" />
-            }
-          />
-          <ChartLegend
-            content={
-              <ChartLegendContent className="mt-3 flex-wrap !justify-start gap-x-4 gap-y-2 !pt-0 text-[0.82rem] text-[var(--va-ink)] [&>div]:!gap-1.5 [&>div>div]:!h-3 [&>div>div]:!w-3 [&>div>div]:!rounded-[4px] [&>div>div]:border-2 [&>div>div]:border-[var(--va-ink)]" />
-            }
-          />
-          {userSeries && (
-            <ReferenceLine
-              y={userSeries.total}
-              stroke="var(--va-ink)"
-              strokeDasharray="5 4"
-              strokeOpacity={0.55}
-              label={(props: {
-                viewBox?: {
-                  x: number;
-                  y: number;
-                  width: number;
-                  height: number;
-                };
-              }) => {
-                const vb = props.viewBox;
-                if (!vb) return <g />;
-                const rightX = vb.x + vb.width;
-                const flagX = rightX + 4;
-                const flagW = 48;
-                const cy = vb.y;
-                const points = `${flagX},${cy} ${flagX + 6},${cy - 11} ${flagX + flagW},${cy - 11} ${flagX + flagW},${cy + 11} ${flagX + 6},${cy + 11}`;
-                return (
-                  <g>
-                    <polygon
-                      points={points}
-                      fill="var(--va-gold)"
-                      stroke="var(--va-ink)"
-                      strokeWidth={1.5}
-                      strokeLinejoin="round"
-                    />
-                    <text
-                      x={flagX + 11}
-                      y={cy - 1}
-                      fontFamily="'Funnel Display', sans-serif"
-                      fontWeight={800}
-                      fontSize={9.5}
-                      letterSpacing="1.1"
-                      fill="var(--va-ink)"
-                    >
-                      YOU
-                    </text>
-                    <text
-                      x={flagX + 11}
-                      y={cy + 9}
-                      fontFamily="'DM Mono', monospace"
-                      fontSize={10}
-                      fill="var(--va-ink)"
-                    >
-                      {userSeries.total}
-                    </text>
-                  </g>
-                );
-              }}
-            />
-          )}
-          {series.map((s) => {
-            const lastIdx = data.length - 1;
-            return (
-              <Line
-                key={s.teamId}
-                dataKey={s.teamId}
-                type="linear"
-                stroke={`var(--color-${s.teamId})`}
-                strokeWidth={2.5}
-                dot={(props) => {
-                  const { cx, cy, index, stroke } = props as {
-                    cx?: number;
-                    cy?: number;
-                    index?: number;
-                    stroke?: string;
-                  };
-                  if (index !== lastIdx || cx == null || cy == null) {
-                    return <g />;
-                  }
-                  return (
-                    <circle
-                      cx={cx}
-                      cy={cy}
-                      r={4}
-                      fill={stroke}
-                      stroke="var(--va-ink)"
-                      strokeWidth={1.5}
-                    />
-                  );
-                }}
-                activeDot={{ r: 4 }}
-              />
-            );
-          })}
-        </LineChart>
-      </ChartContainer>
-    </div>
   );
 }
 
@@ -1773,7 +1563,9 @@ function VariantAStyles() {
 .variant-a {
   --va-paper:       #fffaf0;
   --va-paper-deep:  #fbf3df;
+  --va-card:        #ffffff;
   --va-ink:         #2a1f1a;
+  --va-ink-rgb:     42,31,26;
   --va-mute:        #7a6a5c;
   --va-sunset:      #ff7a45;
   --va-grass:       #5dc77a;
@@ -1782,7 +1574,7 @@ function VariantAStyles() {
   --va-gold:        #ffc847;
   --va-silver:      #c5cdd6;
   --va-bronze:      #cd9352;
-  --va-shadow:      rgba(42,31,26,0.12);
+  --va-shadow:      rgba(var(--va-ink-rgb), 0.12);
 
   position: relative;
   overflow: hidden;
@@ -1793,6 +1585,15 @@ function VariantAStyles() {
   min-height: 100vh;
 }
 .variant-a > * { position: relative; z-index: 1; }
+.dark .variant-a {
+  --va-paper:      oklch(0.145 0 0);
+  --va-paper-deep: oklch(0.22 0 0);
+  --va-card:       oklch(0.205 0 0);
+  --va-ink:        #c4cad2;
+  --va-ink-rgb:    196,202,210;
+  --va-mute:       #8a7d70;
+  --va-dot:        rgba(244, 236, 226, 0.08);
+}
 
 /* ── Dot-grid notebook background (borrowed from variant H) ────────── */
 .va-dotgrid {
@@ -1801,7 +1602,7 @@ function VariantAStyles() {
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(circle, rgba(42,31,26,0.10) 1px, transparent 1.4px);
+    radial-gradient(circle, var(--va-dot, rgba(var(--va-ink-rgb), 0.10)) 1px, transparent 1.4px);
   background-size: 18px 18px;
   background-position: 0 0;
   mask-image: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.3));
@@ -1869,7 +1670,7 @@ function VariantAStyles() {
   align-items: stretch;
   width: fit-content;
   margin: 0 auto 1.5rem;
-  color: var(--va-ink);
+  color: #2a1f1a;
   background: var(--va-gold);
   min-height: 3rem;
   position: relative;
@@ -1903,7 +1704,7 @@ function VariantAStyles() {
 /* ── Hero ──────────────────────────────────────────────────────────── */
 .va-hero {
   position: relative;
-  background: #ffffff;
+  background: var(--va-card);
   border: 2px solid var(--va-ink);
   border-radius: 22px;
   box-shadow: 6px 6px 0 var(--va-shadow);
@@ -2023,7 +1824,7 @@ function VariantAStyles() {
   gap: 1rem;
 }
 .va-tour-card {
-  background: #ffffff;
+  background: var(--va-card);
   border: 2px solid var(--va-ink);
   border-radius: 18px;
   box-shadow: 5px 5px 0 var(--va-shadow);
@@ -2057,18 +1858,9 @@ function VariantAStyles() {
 .va-tour-pill--ended { background: var(--va-paper-deep); color: var(--va-mute); }
 .va-tr--mine { background: rgba(255,200,71,0.12); }
 
-/* ── Race chart ────────────────────────────────────────────────────── */
-.va-chart-shadcn-card {
-  background: #ffffff;
-  border: 2px solid var(--va-ink);
-  border-radius: 18px;
-  box-shadow: 5px 5px 0 var(--va-shadow);
-  padding: 1rem 1.25rem 1.1rem;
-}
-
 /* ── Podium ────────────────────────────────────────────────────────── */
 .va-podium-wrap {
-  background: #ffffff;
+  background: var(--va-card);
   border: 2px solid var(--va-ink);
   border-radius: 22px;
   box-shadow: 6px 6px 0 var(--va-shadow);
@@ -2187,7 +1979,7 @@ function VariantAStyles() {
 /* Inside a narrow grid cell we want a single column so cards breathe */
 .va-grid-cell .va-squads-grid { grid-template-columns: 1fr !important; }
 .va-team-card {
-  background: #ffffff;
+  background: var(--va-card);
   border: 2px solid var(--va-ink);
   border-radius: 22px;
   box-shadow: 6px 6px 0 var(--va-shadow);
@@ -2251,7 +2043,7 @@ function VariantAStyles() {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--va-card);
   box-shadow: 0 0 0 1.5px var(--va-ink);
 }
 .va-av-grass  { background: var(--va-grass); }
@@ -2328,7 +2120,7 @@ function VariantAStyles() {
 
 /* ── RSVP cards ────────────────────────────────────────────────────── */
 .va-rsvp-card {
-  background: #ffffff;
+  background: var(--va-card);
   border: 2px solid var(--va-ink);
   border-radius: 16px;
   box-shadow: 4px 4px 0 var(--va-shadow);
@@ -2387,7 +2179,7 @@ function VariantAStyles() {
 /* ── Pending + deadline cards ──────────────────────────────────────── */
 .va-pending-card,
 .va-deadline-card {
-  background: #ffffff;
+  background: var(--va-card);
   border: 2px solid var(--va-ink);
   border-radius: 16px;
   box-shadow: 4px 4px 0 var(--va-shadow);
@@ -2426,7 +2218,7 @@ function VariantAStyles() {
 
 /* ── Activity timeline ─────────────────────────────────────────────── */
 .va-timeline {
-  background: #ffffff;
+  background: var(--va-card);
   border: 2px solid var(--va-ink);
   border-radius: 22px;
   box-shadow: 6px 6px 0 var(--va-shadow);
@@ -2440,7 +2232,7 @@ function VariantAStyles() {
   bottom: 1.5rem;
   left: 1.85rem;
   width: 0;
-  border-left: 2px dashed rgba(42,31,26,0.2);
+  border-left: 2px dashed rgba(var(--va-ink-rgb), 0.2);
 }
 .va-timeline-row {
   display: grid;
@@ -2457,7 +2249,7 @@ function VariantAStyles() {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--va-card);
   box-shadow: 0 0 0 2px var(--va-ink);
 }
 .va-dot--grass  { background: var(--va-grass); }
@@ -2496,7 +2288,7 @@ function VariantAStyles() {
   .va-coach-grid { grid-template-columns: repeat(4, 1fr); }
 }
 .va-coach-stat {
-  background: #ffffff;
+  background: var(--va-card);
   border: 2px solid var(--va-ink);
   border-radius: 14px;
   box-shadow: 3px 3px 0 var(--va-shadow);
@@ -2594,7 +2386,7 @@ function VariantAStyles() {
 /* When the metrics block sits inside a narrow grid cell, force 2×2 */
 .va-metrics-grid--2x2 { grid-template-columns: repeat(2, 1fr) !important; }
 .va-metric-tile {
-  background: #ffffff;
+  background: var(--va-card);
   border: 2px solid var(--va-ink);
   border-radius: 16px;
   box-shadow: 5px 5px 0 var(--va-shadow);
@@ -2658,7 +2450,7 @@ function VariantAStyles() {
 }
 .va-rosette-card {
   flex: 1;
-  background: #ffffff;
+  background: var(--va-card);
   border: 2px solid var(--va-ink);
   border-radius: 22px;
   box-shadow: 6px 6px 0 var(--va-shadow);
@@ -2742,7 +2534,7 @@ function VariantAStyles() {
 
 /* ── Full standings table ──────────────────────────────────────────── */
 .va-standings-wrap {
-  background: #ffffff;
+  background: var(--va-card);
   border: 2px solid var(--va-ink);
   border-radius: 22px;
   box-shadow: 6px 6px 0 var(--va-shadow);
@@ -2781,7 +2573,7 @@ function VariantAStyles() {
   border-bottom: 2px solid var(--va-ink);
 }
 .va-tr {
-  border-bottom: 1.5px solid rgba(42,31,26,0.1);
+  border-bottom: 1.5px solid rgba(var(--va-ink-rgb), 0.1);
   transition: background 80ms ease;
 }
 .va-tr:hover { background: var(--va-paper-deep); }
@@ -2868,7 +2660,7 @@ function VariantAStyles() {
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  background: #ffffff;
+  background: var(--va-card);
   border: 2px solid var(--va-ink);
   border-radius: 14px;
   box-shadow: 4px 4px 0 var(--va-shadow);
@@ -2940,7 +2732,7 @@ function VariantAStyles() {
 .va-footer-ribbon {
   display: flex;
   align-items: stretch;
-  color: var(--va-ink);
+  color: #2a1f1a;
   background: var(--va-sunset);
   min-height: 2.5rem;
 }
