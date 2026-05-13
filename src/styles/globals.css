@@ -13,6 +13,8 @@
   --color-foreground: var(--foreground);
   --font-sans: "Instrument Sans Variable", sans-serif;
   --font-mono: "Geist Mono Variable", monospace;
+  --font-fd-display: "Funnel Display", sans-serif;
+  --font-fd-body: "Lexend", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -144,6 +146,23 @@
   --color-fab-shadow: var(--fab-shadow);
   --color-fab-shadow-soft: var(--fab-shadow-soft);
   --color-fab-surface: var(--fab-surface);
+
+  /* Field Day theme — resolved at usage site from the scoped
+     --fd-* vars defined on .variant-a in dashboard-variant-a.tsx. */
+  --color-fd-paper: var(--fd-paper);
+  --color-fd-paper-deep: var(--fd-paper-deep);
+  --color-fd-card: var(--fd-card);
+  --color-fd-ink: var(--fd-ink);
+  --color-fd-mute: var(--fd-mute);
+  --color-fd-sunset: var(--fd-sunset);
+  --color-fd-grass: var(--fd-grass);
+  --color-fd-sky: var(--fd-sky);
+  --color-fd-plum: var(--fd-plum);
+  --color-fd-gold: var(--fd-gold);
+  --color-fd-silver: var(--fd-silver);
+  --color-fd-bronze: var(--fd-bronze);
+  --color-fd-shadow: var(--fd-shadow);
+  --color-fd-chip: var(--fd-chip);
 }
 
 :root {
@@ -290,6 +309,23 @@
   --fab-shadow: rgba(42, 31, 26, 0.12);
   --fab-shadow-soft: rgba(42, 31, 26, 0.06);
   --fab-surface: #ffffff;
+
+  /* Field Day theme — light mode */
+  --fd-paper: #fffaf0;
+  --fd-paper-deep: #fbf3df;
+  --fd-card: #ffffff;
+  --fd-ink: #2a1f1a;
+  --fd-ink-rgb: 42, 31, 26;
+  --fd-mute: #7a6a5c;
+  --fd-sunset: #ff7a45;
+  --fd-grass: #5dc77a;
+  --fd-sky: #5db9f5;
+  --fd-plum: #a166d4;
+  --fd-gold: #ffc847;
+  --fd-silver: #c5cdd6;
+  --fd-bronze: #cd9352;
+  --fd-shadow: rgba(42, 31, 26, 0.12);
+  --fd-chip: #fbf3df;
 }
 
 .dark {
@@ -432,6 +468,16 @@
   --fab-shadow: rgba(196, 202, 210, 0.22);
   --fab-shadow-soft: rgba(196, 202, 210, 0.1);
   --fab-surface: oklch(0.205 0 0);
+
+  /* Field Day theme — dark mode */
+  --fd-paper: oklch(0.145 0 0);
+  --fd-paper-deep: oklch(0.22 0 0);
+  --fd-card: oklch(0.205 0 0);
+  --fd-ink: #c4cad2;
+  --fd-ink-rgb: 196, 202, 210;
+  --fd-mute: #8a7d70;
+  --fd-shadow: rgba(196, 202, 210, 0.22);
+  --fd-chip: oklch(0.28 0 0);
 }
 
 @layer base {

@@ -2,10 +2,14 @@
 
 import { useState } from "react";
 
-import type { DashboardFixtureData } from "./dashboard-variant-fixtures";
+import type {
+  DashboardFixtureData,
+  DemoTeam,
+} from "./dashboard-variant-fixtures";
 import { formatRelative } from "./dashboard-variant-shared";
 import { LogActivityFab } from "./log-activity-fab";
-import { RaceChart } from "./race-chart";
+import { StandingsRaceCard } from "./standings-race-card";
+import { TournamentSwitcher } from "./tournament-switcher";
 
 /**
  * Variant A — Field Day, tightened. Iterated from N: dot-grid notebook
@@ -13,7 +17,22 @@ import { RaceChart } from "./race-chart";
  * stacked sections re-organised into a CSS grid with side-by-side
  * panels so the page wastes less vertical space.
  */
-export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
+export type VariantASquadsSlotContext = {
+  data: DashboardFixtureData;
+  selectedTournamentTeams: DemoTeam[];
+  selectedUserTeam: DemoTeam | null;
+  selectedTournamentName: string | null;
+  isSelectedActive: boolean;
+  activities: DashboardFixtureData["activities"];
+};
+
+export function DashboardVariantA({
+  data,
+  renderSquadsSection,
+}: {
+  data: DashboardFixtureData;
+  renderSquadsSection?: (ctx: VariantASquadsSlotContext) => React.ReactNode;
+}) {
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
   const dateLabel = today.toLocaleDateString("en-US", {
@@ -246,8 +265,18 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
         <div className="va-dotgrid" aria-hidden />
 
         {/* ── 1. HERO ── */}
-        <section className="va-hero">
+        <section className="va-hero mt-3">
           <Confetti />
+          {selectedTour && (
+            <div className="mb-6 -mt-4 flex justify-center sm:mb-0">
+              <TournamentSwitcher
+                tournaments={standingsGroups.map((g) => g.tournament)}
+                selectedTournamentId={selectedTour._id}
+                onSelect={setSelectedTourId}
+                className="sm:absolute sm:-top-5 sm:left-5 sm:z-[3]"
+              />
+            </div>
+          )}
           <RibbonBanner label={`WEEK ${weekNo} · FIELD DAY`} />
           <h1 className="va-hero-greeting">
             Welcome to the field, {data.userName} 🎽
@@ -287,33 +316,40 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
             <LogActivityFab
               teamName={selectedUserTeam.team.name}
               tournamentName={selectedTour.name}
+              className="sm:absolute sm:right-5 sm:bottom-[-38px] sm:z-[3]"
             />
           )}
         </section>
 
-        {/* ── Tournament switcher (only when user is in more than one) ── */}
-        {standingsGroups.length > 1 && selectedTour && (
-          <div className="va-tour-switcher">
-            <label htmlFor="va-tour-select" className="va-tour-switcher-label">
-              Viewing
-            </label>
-            <select
-              id="va-tour-select"
-              className="va-tour-switcher-select"
-              value={selectedTour._id}
-              onChange={(e) => setSelectedTourId(e.target.value)}
+        {/* ── 2a. COMBINED STANDINGS + RACE (3 design variants) ── */}
+        {selectedGroup && (
+          <>
+            <RibbonBanner label="Standings" />
+            <section
+              className="va-section va-section--fadein"
+              style={{ animationDelay: "120ms" }}
             >
-              {standingsGroups.map((g) => (
-                <option key={g.tournament._id} value={g.tournament._id}>
-                  {g.tournament.name}
-                </option>
-              ))}
-            </select>
-          </div>
+              <StandingsRaceCard
+                group={selectedGroup}
+                isActive={isSelectedActive}
+                chartData={chartData}
+                userTeamId={selectedUserTeam?.team._id}
+              />
+            </section>
+          </>
         )}
 
-        {/* ── 3. MY SQUADS (rich, full width) ── */}
-        {data.teams.length > 0 && (
+        {/* ── 3. SQUADS / RIVALS slot ── */}
+        {renderSquadsSection ? (
+          renderSquadsSection({
+            data,
+            selectedTournamentTeams: selectedGroup?.teams ?? [],
+            selectedUserTeam,
+            selectedTournamentName: selectedTour?.name ?? null,
+            isSelectedActive,
+            activities: data.activities,
+          })
+        ) : data.teams.length > 0 ? (
           <section className="va-section">
             <RibbonBanner label="MY SQUADS" small />
             <div className="va-squads-grid">
@@ -341,117 +377,7 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
               })}
             </div>
           </section>
-        )}
-
-        {/* ── 4. STANDINGS (single tournament) ── */}
-        {selectedGroup && (
-          <section
-            className="va-section va-section--fadein"
-            style={{ animationDelay: "200ms" }}
-          >
-            <RibbonBanner label="TOURNAMENT STANDINGS" small />
-            <div className="va-tour-standings">
-              <div className="va-tour-card">
-                <div className="va-tour-head">
-                  <span className="va-tour-name">
-                    {selectedGroup.tournament.name}
-                  </span>
-                  <span
-                    className={`va-tour-pill ${
-                      isSelectedActive
-                        ? "va-tour-pill--active"
-                        : "va-tour-pill--ended"
-                    }`}
-                  >
-                    {isSelectedActive ? "ACTIVE" : "ENDED"}
-                  </span>
-                </div>
-                {selectedGroup.teams.length >= 1 && (
-                  <div className="va-podium-wrap va-podium-wrap--embedded">
-                    <Podium teams={selectedGroup.teams.slice(0, 3)} />
-                  </div>
-                )}
-                <div className="va-candy-rule" aria-hidden />
-                <table className="va-standings-table">
-                  <thead>
-                    <tr>
-                      <th className="va-th">#</th>
-                      <th className="va-th">TEAM</th>
-                      <th className="va-th">ROLE</th>
-                      <th className="va-th">MBR</th>
-                      <th className="va-th">POINTS</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedGroup.teams.map((t, i) => {
-                      const rankEmojis = ["🥇", "🥈", "🥉"];
-                      const rank =
-                        i < 3 ? rankEmojis[i] : String(i + 1).padStart(2, "0");
-                      const barPct = Math.round(
-                        (t.team.points / selectedGroup.maxPts) * 100,
-                      );
-                      return (
-                        <tr
-                          key={t.team._id}
-                          className={`va-tr ${i < 3 ? "va-tr--top" : ""}`}
-                        >
-                          <td className="va-td va-td-rank">{rank}</td>
-                          <td className="va-td va-td-team">
-                            {i === 0 && <StarSvgSmall />}
-                            <span className="va-td-team-name">
-                              {t.team.name}
-                            </span>
-                            {t.userRole === "captain" && (
-                              <span className="va-captain-badge">
-                                <WhistleSvgSmall />
-                                Captain
-                              </span>
-                            )}
-                          </td>
-                          <td className="va-td">
-                            <span className="va-role-badge">
-                              {t.userRole.toUpperCase()}
-                            </span>
-                          </td>
-                          <td className="va-td va-td-num">
-                            {String(t.memberCount).padStart(2, "0")}
-                          </td>
-                          <td className="va-td va-td-bar">
-                            <div className="va-bar">
-                              <div
-                                className="va-bar-fill va-bar-fill--anim"
-                                style={{ width: `${barPct}%` }}
-                              />
-                              <span className="va-bar-num">
-                                {t.team.points}
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                <div className="va-candy-rule" aria-hidden />
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ── 4b. RACE CHART (cumulative points per team) ── */}
-        {chartData && chartData.series.length > 0 && (
-          <section
-            className="va-section va-section--fadein"
-            style={{ animationDelay: "250ms" }}
-          >
-            <RibbonBanner label="THE RACE" small />
-            <RaceChart
-              days={chartData.days}
-              series={chartData.series}
-              userTeamId={selectedUserTeam?.team._id}
-            />
-          </section>
-        )}
+        ) : null}
 
         {/* ── 5. TALE OF THE TAPE + SQUAD OF THE DAY ── */}
         <div className="va-grid va-grid--6-6">
@@ -464,8 +390,8 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
                   <svg aria-hidden width="56" height="56" viewBox="0 0 56 56">
                     <path
                       d="M4 4 L52 4 L52 52 L4 52 Z"
-                      fill="var(--va-gold)"
-                      stroke="var(--va-ink)"
+                      fill="var(--fd-gold)"
+                      stroke="var(--fd-ink)"
                       strokeWidth="2"
                       strokeLinejoin="round"
                       transform="rotate(45 28 28) scale(0.68) translate(8 8)"
@@ -540,7 +466,7 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
                 label="STREAK"
                 value={streakDays}
                 unit="DAYS"
-                color="var(--va-sky)"
+                color="var(--fd-sky)"
                 sparkline={last7
                   .slice()
                   .reverse()
@@ -550,21 +476,21 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
                 label="THIS WEEK"
                 value={weekApproved}
                 unit="APPROVED"
-                color="var(--va-grass)"
+                color="var(--fd-grass)"
                 sparkline={sparkline}
               />
               <MetricTile
                 label="TODAY"
                 value={todayApproved}
                 unit="LOGGED"
-                color="var(--va-sunset)"
+                color="var(--fd-sunset)"
                 sparkline={sparkline}
               />
               <MetricTile
                 label="SQUAD RANK"
                 value={squadRank}
                 unit={`OF ${Math.max(standings.length, 1)}`}
-                color="var(--va-plum)"
+                color="var(--fd-plum)"
                 sparkline={[3, 2, 3, 2, 1, 2, squadRank]}
               />
             </div>
@@ -779,7 +705,13 @@ function activityDotClass(type: string): string {
 // Subcomponents
 // ---------------------------------------------------------------------------
 
-function RibbonBanner({ label, small }: { label: string; small?: boolean }) {
+export function RibbonBanner({
+  label,
+  small,
+}: {
+  label: string;
+  small?: boolean;
+}) {
   return (
     <div className={`va-ribbon${small ? " va-ribbon--small" : ""}`}>
       {/* Left notch */}
@@ -1068,7 +1000,7 @@ function MedalSvg({ type }: { type: "gold" | "silver" | "bronze" }) {
         cy="34"
         r="16"
         fill={c}
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="2"
       />
       <circle
@@ -1076,7 +1008,7 @@ function MedalSvg({ type }: { type: "gold" | "silver" | "bronze" }) {
         cy="34"
         r="11"
         fill="none"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="1.5"
         opacity="0.3"
       />
@@ -1097,7 +1029,7 @@ function TrophySvg() {
       {/* Cup body */}
       <path
         d="M16 8 H48 V36 C48 48 16 48 16 36 Z"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="2.5"
         fill="rgba(255,200,71,0.25)"
         strokeLinejoin="round"
@@ -1105,14 +1037,14 @@ function TrophySvg() {
       {/* Handles */}
       <path
         d="M16 16 C8 16 8 28 16 28"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="2.5"
         fill="none"
         strokeLinecap="round"
       />
       <path
         d="M48 16 C56 16 56 28 48 28"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="2.5"
         fill="none"
         strokeLinecap="round"
@@ -1123,7 +1055,7 @@ function TrophySvg() {
         y1="48"
         x2="32"
         y2="60"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="2.5"
         strokeLinecap="round"
       />
@@ -1134,7 +1066,7 @@ function TrophySvg() {
         width="24"
         height="5"
         rx="2"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="2"
         fill="rgba(255,200,71,0.3)"
       />
@@ -1142,7 +1074,7 @@ function TrophySvg() {
       <path
         d="M32 18 L33.5 23 L38.5 23 L34.5 26 L36 31 L32 28 L28 31 L29.5 26 L25.5 23 L30.5 23 Z"
         fill="#ffc847"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="1"
       />
     </svg>
@@ -1164,19 +1096,19 @@ function WhistleSvg() {
         cx="9"
         cy="14"
         r="5"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="2"
         fill="rgba(255,122,69,0.15)"
       />
       <path
         d="M14 14 L20 8"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="2"
         strokeLinecap="round"
       />
       <path
         d="M17 6 L22 6"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="2"
         strokeLinecap="round"
       />
@@ -1185,7 +1117,7 @@ function WhistleSvg() {
         y1="9"
         x2="9"
         y2="11"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -1229,7 +1161,7 @@ function WhistleSvgSmall() {
 }
 
 function StopwatchSvg({ urgent }: { urgent: boolean }) {
-  const stroke = urgent ? "#e53e3e" : "var(--va-ink)";
+  const stroke = urgent ? "#e53e3e" : "var(--fd-ink)";
   return (
     <svg
       aria-hidden
@@ -1302,40 +1234,40 @@ function RunnerSvg({ progress }: { progress: number }) {
         cx="9"
         cy="4"
         r="3"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="1.5"
         fill="rgba(93,199,122,0.4)"
       />
       {/* Body */}
       <path
         d="M9 7 L9 16"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
       {/* Arms */}
       <path
         d="M9 10 L5 13"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
       <path
         d="M9 10 L13 8"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
       {/* Legs */}
       <path
         d="M9 16 L6 22"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
       <path
         d="M9 16 L13 20"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -1360,7 +1292,7 @@ function CheckboxSvg({ checked }: { checked?: boolean }) {
         width="20"
         height="20"
         rx="4"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="2"
         fill={checked ? "rgba(93,199,122,0.3)" : "rgba(122,106,92,0.1)"}
       />
@@ -1394,8 +1326,8 @@ function StarSvgSmall() {
     >
       <path
         d="M7 1 L8.5 5 L13 5 L9.5 7.5 L11 12 L7 9.5 L3 12 L4.5 7.5 L1 5 L5.5 5 Z"
-        fill="var(--va-gold)"
-        stroke="var(--va-ink)"
+        fill="var(--fd-gold)"
+        stroke="var(--fd-ink)"
         strokeWidth="1"
         strokeLinejoin="round"
       />
@@ -1417,8 +1349,8 @@ function MedallionSvg({ number }: { number: number }) {
         cx="16"
         cy="16"
         r="14"
-        fill="var(--va-paper-deep)"
-        stroke="var(--va-ink)"
+        fill="var(--fd-paper-deep)"
+        stroke="var(--fd-ink)"
         strokeWidth="2"
       />
       <circle
@@ -1426,7 +1358,7 @@ function MedallionSvg({ number }: { number: number }) {
         cy="16"
         r="10"
         fill="none"
-        stroke="var(--va-ink)"
+        stroke="var(--fd-ink)"
         strokeWidth="1"
         opacity="0.2"
       />
@@ -1437,7 +1369,7 @@ function MedallionSvg({ number }: { number: number }) {
         fontFamily="'DM Mono', monospace"
         fontSize="11"
         fontWeight="500"
-        fill="var(--va-ink)"
+        fill="var(--fd-ink)"
       >
         {String(number).padStart(2, "0")}
       </text>
@@ -1521,7 +1453,7 @@ function MetricTile({
   return (
     <div
       className="va-metric-tile"
-      style={{ "--va-metric-accent": color } as React.CSSProperties}
+      style={{ "--fd-metric-accent": color } as React.CSSProperties}
     >
       <div className="va-metric-accent-rule" aria-hidden />
       <span className="va-metric-label">{label}</span>
@@ -1559,40 +1491,19 @@ function VariantAStyles() {
         __html: `
 @import url('https://fonts.googleapis.com/css2?family=Funnel+Display:wght@700;800&family=Lexend:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
-/* ── Token map ─────────────────────────────────────────────────────── */
+/* ── Layout root (tokens live at :root / .dark in globals.css) ───── */
 .variant-a {
-  --va-paper:       #fffaf0;
-  --va-paper-deep:  #fbf3df;
-  --va-card:        #ffffff;
-  --va-ink:         #2a1f1a;
-  --va-ink-rgb:     42,31,26;
-  --va-mute:        #7a6a5c;
-  --va-sunset:      #ff7a45;
-  --va-grass:       #5dc77a;
-  --va-sky:         #5db9f5;
-  --va-plum:        #a166d4;
-  --va-gold:        #ffc847;
-  --va-silver:      #c5cdd6;
-  --va-bronze:      #cd9352;
-  --va-shadow:      rgba(var(--va-ink-rgb), 0.12);
-
   position: relative;
   overflow: hidden;
   font-family: 'Lexend', sans-serif;
-  background: var(--va-paper);
-  color: var(--va-ink);
+  background: var(--fd-paper);
+  color: var(--fd-ink);
   padding: 1.5rem 1.5rem 2.5rem;
   min-height: 100vh;
 }
 .variant-a > * { position: relative; z-index: 1; }
 .dark .variant-a {
-  --va-paper:      oklch(0.145 0 0);
-  --va-paper-deep: oklch(0.22 0 0);
-  --va-card:       oklch(0.205 0 0);
-  --va-ink:        #c4cad2;
-  --va-ink-rgb:    196,202,210;
-  --va-mute:       #8a7d70;
-  --va-dot:        rgba(244, 236, 226, 0.08);
+  --fd-dot: rgba(244, 236, 226, 0.08);
 }
 
 /* ── Dot-grid notebook background (borrowed from variant H) ────────── */
@@ -1602,7 +1513,7 @@ function VariantAStyles() {
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(circle, var(--va-dot, rgba(var(--va-ink-rgb), 0.10)) 1px, transparent 1.4px);
+    radial-gradient(circle, var(--fd-dot, rgba(var(--fd-ink-rgb), 0.10)) 1px, transparent 1.4px);
   background-size: 18px 18px;
   background-position: 0 0;
   mask-image: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.9) 80%, rgba(0,0,0,0.3));
@@ -1639,11 +1550,11 @@ function VariantAStyles() {
   pointer-events: none;
   z-index: 0;
 }
-.va-c-grass  { background: var(--va-grass); }
-.va-c-sunset { background: var(--va-sunset); }
-.va-c-sky    { background: var(--va-sky); }
-.va-c-plum   { background: var(--va-plum); }
-.va-c-gold   { background: var(--va-gold); }
+.va-c-grass  { background: var(--fd-grass); }
+.va-c-sunset { background: var(--fd-sunset); }
+.va-c-sky    { background: var(--fd-sky); }
+.va-c-plum   { background: var(--fd-plum); }
+.va-c-gold   { background: var(--fd-gold); }
 
 .va-confetti-1  { top: 4%;  left: 8%;  width: 10px; height: 10px; opacity: 0.55; }
 .va-confetti-2  { top: 7%;  left: 22%; width: 7px;  height: 7px;  opacity: 0.4;  }
@@ -1671,7 +1582,7 @@ function VariantAStyles() {
   width: fit-content;
   margin: 0 auto 1.5rem;
   color: #2a1f1a;
-  background: var(--va-gold);
+  background: var(--fd-gold);
   min-height: 3rem;
   position: relative;
 }
@@ -1681,7 +1592,7 @@ function VariantAStyles() {
 }
 .va-ribbon-tail {
   display: block;
-  color: var(--va-gold);
+  color: var(--fd-gold);
   flex-shrink: 0;
   height: 3rem;
 }
@@ -1704,10 +1615,10 @@ function VariantAStyles() {
 /* ── Hero ──────────────────────────────────────────────────────────── */
 .va-hero {
   position: relative;
-  background: var(--va-card);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-card);
+  border: 2px solid var(--fd-ink);
   border-radius: 22px;
-  box-shadow: 6px 6px 0 var(--va-shadow);
+  box-shadow: 6px 6px 0 var(--fd-shadow);
   padding: 2.25rem 2rem 2rem;
   margin-inline: 1rem;
   text-align: center;
@@ -1721,13 +1632,13 @@ function VariantAStyles() {
   font-size: clamp(1.75rem, 4vw, 2.8rem);
   line-height: 1.1;
   margin: 1rem 0 0.45rem;
-  color: var(--va-ink);
+  color: var(--fd-ink);
 }
 .va-hero-sub {
   font-family: 'Lexend', sans-serif;
   font-weight: 400;
   font-size: 1.05rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   margin: 0 0 1.75rem;
 }
 
@@ -1741,23 +1652,23 @@ function VariantAStyles() {
   .va-stat-strip { grid-template-columns: repeat(4, 1fr); }
 }
 .va-stat-chip {
-  background: var(--va-paper-deep);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-paper-deep);
+  border: 2px solid var(--fd-ink);
   border-radius: 14px;
-  box-shadow: 4px 4px 0 var(--va-shadow);
+  box-shadow: 4px 4px 0 var(--fd-shadow);
   padding: 1rem 0.75rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
 }
-.va-stat-chip--accent { background: rgba(255,122,69,0.12); border-color: var(--va-sunset); }
+.va-stat-chip--accent { background: rgba(255,122,69,0.12); border-color: var(--fd-sunset); }
 .va-stat-num {
   font-family: 'DM Mono', monospace;
   font-weight: 500;
   font-size: 2.2rem;
   line-height: 1;
-  color: var(--va-ink);
+  color: var(--fd-ink);
   font-variant-aumeric: tabular-nums;
 }
 .va-stat-label {
@@ -1766,7 +1677,7 @@ function VariantAStyles() {
   font-size: 0.62rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--va-mute);
+  color: var(--fd-mute);
 }
 
 /* ── Hero stat chip suffix ─────────────────────────────────────────── */
@@ -1774,7 +1685,7 @@ function VariantAStyles() {
   font-family: 'DM Mono', monospace;
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   margin-left: 0.2rem;
   letter-spacing: 0.04em;
 }
@@ -1785,38 +1696,6 @@ function VariantAStyles() {
   .va-hero { padding-bottom: 4.5rem; margin-bottom: 1.25rem; }
 }
 
-/* ── Tournament switcher ───────────────────────────────────────────── */
-.va-tour-switcher {
-  margin-top: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.55rem 0.9rem;
-  background: var(--va-paper-deep);
-  border: 2px solid var(--va-ink);
-  border-radius: 999px;
-  box-shadow: 3px 3px 0 var(--va-shadow);
-  width: fit-content;
-}
-.va-tour-switcher-label {
-  font-family: 'Funnel Display', sans-serif;
-  font-weight: 800;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--va-mute);
-}
-.va-tour-switcher-select {
-  font-family: 'Lexend', sans-serif;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--va-ink);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding-right: 1rem;
-}
-
 /* ── Tournament standings card ─────────────────────────────────────── */
 .va-tour-standings {
   display: grid;
@@ -1824,10 +1703,10 @@ function VariantAStyles() {
   gap: 1rem;
 }
 .va-tour-card {
-  background: var(--va-card);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-card);
+  border: 2px solid var(--fd-ink);
   border-radius: 18px;
-  box-shadow: 5px 5px 0 var(--va-shadow);
+  box-shadow: 5px 5px 0 var(--fd-shadow);
   padding: 1rem 1.25rem 1.25rem;
 }
 .va-tour-head {
@@ -1851,19 +1730,19 @@ function VariantAStyles() {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   padding: 0.2rem 0.6rem;
-  border: 2px solid var(--va-ink);
+  border: 2px solid var(--fd-ink);
   border-radius: 999px;
 }
-.va-tour-pill--active { background: var(--va-grass); color: var(--va-ink); }
-.va-tour-pill--ended { background: var(--va-paper-deep); color: var(--va-mute); }
+.va-tour-pill--active { background: var(--fd-grass); color: var(--fd-ink); }
+.va-tour-pill--ended { background: var(--fd-paper-deep); color: var(--fd-mute); }
 .va-tr--mine { background: rgba(255,200,71,0.12); }
 
 /* ── Podium ────────────────────────────────────────────────────────── */
 .va-podium-wrap {
-  background: var(--va-card);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-card);
+  border: 2px solid var(--fd-ink);
   border-radius: 22px;
-  box-shadow: 6px 6px 0 var(--va-shadow);
+  box-shadow: 6px 6px 0 var(--fd-shadow);
   padding: 2rem 1.5rem 0;
   overflow: hidden;
 }
@@ -1901,14 +1780,14 @@ function VariantAStyles() {
   font-family: 'DM Mono', monospace;
   font-size: 1.1rem;
   font-weight: 500;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   margin-bottom: 0.5rem;
   font-variant-aumeric: tabular-nums;
 }
 .va-podium-block {
   width: 100%;
   border-radius: 8px 8px 0 0;
-  border: 2px solid var(--va-ink);
+  border: 2px solid var(--fd-ink);
   border-bottom: none;
   display: flex;
   align-items: flex-start;
@@ -1923,16 +1802,16 @@ function VariantAStyles() {
   font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.1em;
-  color: var(--va-ink);
+  color: var(--fd-ink);
   opacity: 0.7;
 }
 
 /* ── MVP card ──────────────────────────────────────────────────────── */
 .va-mvp-card {
-  background: var(--va-grass);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-grass);
+  border: 2px solid var(--fd-ink);
   border-radius: 22px;
-  box-shadow: 6px 6px 0 var(--va-shadow);
+  box-shadow: 6px 6px 0 var(--fd-shadow);
   padding: 2rem 2rem;
   display: flex;
   gap: 2rem;
@@ -1948,7 +1827,7 @@ function VariantAStyles() {
   font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--va-ink);
+  color: var(--fd-ink);
   opacity: 0.75;
   margin-bottom: 0.4rem;
 }
@@ -1956,14 +1835,14 @@ function VariantAStyles() {
   font-family: 'Funnel Display', sans-serif;
   font-weight: 800;
   font-size: clamp(1.6rem, 4vw, 2.4rem);
-  color: var(--va-ink);
+  color: var(--fd-ink);
   line-height: 1.1;
   margin-bottom: 0.45rem;
 }
 .va-mvp-detail {
   font-family: 'Lexend', sans-serif;
   font-size: 0.95rem;
-  color: var(--va-ink);
+  color: var(--fd-ink);
   opacity: 0.8;
   margin: 0;
   line-height: 1.5;
@@ -1979,10 +1858,10 @@ function VariantAStyles() {
 /* Inside a narrow grid cell we want a single column so cards breathe */
 .va-grid-cell .va-squads-grid { grid-template-columns: 1fr !important; }
 .va-team-card {
-  background: var(--va-card);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-card);
+  border: 2px solid var(--fd-ink);
   border-radius: 22px;
-  box-shadow: 6px 6px 0 var(--va-shadow);
+  box-shadow: 6px 6px 0 var(--fd-shadow);
   padding: 1.5rem;
 }
 .va-team-head {
@@ -2009,10 +1888,10 @@ function VariantAStyles() {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   background: rgba(255,200,71,0.3);
-  border: 1.5px solid var(--va-gold);
+  border: 1.5px solid var(--fd-gold);
   border-radius: 100px;
   padding: 0.15rem 0.5rem;
-  color: var(--va-ink);
+  color: var(--fd-ink);
   margin-top: 0.35rem;
   margin-left: 0.35rem;
 }
@@ -2020,7 +1899,7 @@ function VariantAStyles() {
   font-family: 'DM Mono', monospace;
   font-weight: 500;
   font-size: 1.6rem;
-  color: var(--va-ink);
+  color: var(--fd-ink);
   font-variant-aumeric: tabular-nums;
   line-height: 1;
   flex-shrink: 0;
@@ -2029,7 +1908,7 @@ function VariantAStyles() {
   font-family: 'Lexend', sans-serif;
   font-style: italic;
   font-size: 0.82rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   margin-bottom: 0.85rem;
 }
 .va-team-members {
@@ -2043,18 +1922,18 @@ function VariantAStyles() {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  border: 2px solid var(--va-card);
-  box-shadow: 0 0 0 1.5px var(--va-ink);
+  border: 2px solid var(--fd-card);
+  box-shadow: 0 0 0 1.5px var(--fd-ink);
 }
-.va-av-grass  { background: var(--va-grass); }
-.va-av-sky    { background: var(--va-sky); }
-.va-av-sunset { background: var(--va-sunset); }
-.va-av-plum   { background: var(--va-plum); }
-.va-av-gold   { background: var(--va-gold); }
+.va-av-grass  { background: var(--fd-grass); }
+.va-av-sky    { background: var(--fd-sky); }
+.va-av-sunset { background: var(--fd-sunset); }
+.va-av-plum   { background: var(--fd-plum); }
+.va-av-gold   { background: var(--fd-gold); }
 .va-avatar-more {
   font-family: 'DM Mono', monospace;
   font-size: 0.7rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   margin-left: 0.25rem;
 }
 
@@ -2062,8 +1941,8 @@ function VariantAStyles() {
 .va-progress-track {
   position: relative;
   height: 10px;
-  background: var(--va-paper-deep);
-  border: 1.5px solid var(--va-ink);
+  background: var(--fd-paper-deep);
+  border: 1.5px solid var(--fd-ink);
   border-radius: 100px;
   overflow: visible;
   margin-bottom: 0.3rem;
@@ -2073,7 +1952,7 @@ function VariantAStyles() {
   top: 0;
   left: 0;
   height: 100%;
-  background: var(--va-grass);
+  background: var(--fd-grass);
   border-radius: 100px;
   transition: width 0.4s ease;
 }
@@ -2087,7 +1966,7 @@ function VariantAStyles() {
   justify-content: space-between;
   font-family: 'DM Mono', monospace;
   font-size: 0.6rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   letter-spacing: 0.08em;
 }
 
@@ -2110,9 +1989,9 @@ function VariantAStyles() {
 .va-queue-empty {
   font-family: 'Lexend', sans-serif;
   font-size: 0.85rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   padding: 1.25rem;
-  border: 2px dashed var(--va-mute);
+  border: 2px dashed var(--fd-mute);
   border-radius: 14px;
   text-align: center;
   opacity: 0.7;
@@ -2120,10 +1999,10 @@ function VariantAStyles() {
 
 /* ── RSVP cards ────────────────────────────────────────────────────── */
 .va-rsvp-card {
-  background: var(--va-card);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-card);
+  border: 2px solid var(--fd-ink);
   border-radius: 16px;
-  box-shadow: 4px 4px 0 var(--va-shadow);
+  box-shadow: 4px 4px 0 var(--fd-shadow);
   padding: 1.1rem 1.25rem;
 }
 .va-rsvp-tag {
@@ -2134,14 +2013,14 @@ function VariantAStyles() {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   background: rgba(255,200,71,0.35);
-  border: 1.5px solid var(--va-gold);
+  border: 1.5px solid var(--fd-gold);
   border-radius: 100px;
   padding: 0.15rem 0.6rem;
   margin-bottom: 0.5rem;
 }
 .va-rsvp-tag--plum {
   background: rgba(161,102,212,0.15);
-  border-color: var(--va-plum);
+  border-color: var(--fd-plum);
 }
 .va-rsvp-team {
   font-family: 'Funnel Display', sans-serif;
@@ -2152,13 +2031,13 @@ function VariantAStyles() {
 .va-rsvp-meta {
   font-family: 'Lexend', sans-serif;
   font-size: 0.82rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   margin-bottom: 0.2rem;
 }
 .va-rsvp-time {
   font-family: 'DM Mono', monospace;
   font-size: 0.7rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   margin-bottom: 0.75rem;
 }
 .va-rsvp-actions { display: flex; gap: 0.5rem; }
@@ -2166,23 +2045,23 @@ function VariantAStyles() {
   font-family: 'Lexend', sans-serif;
   font-weight: 600;
   font-size: 0.82rem;
-  border: 2px solid var(--va-ink);
+  border: 2px solid var(--fd-ink);
   border-radius: 100px;
   padding: 0.35rem 1rem;
   cursor: pointer;
   transition: box-shadow 80ms ease, transform 80ms ease;
 }
-.va-btn:hover { box-shadow: 3px 3px 0 var(--va-ink); transform: translate(-1px,-1px); }
-.va-btn--yes   { background: var(--va-sunset); color: #ffffff; }
-.va-btn--maybe { background: var(--va-paper-deep); color: var(--va-ink); }
+.va-btn:hover { box-shadow: 3px 3px 0 var(--fd-ink); transform: translate(-1px,-1px); }
+.va-btn--yes   { background: var(--fd-sunset); color: #ffffff; }
+.va-btn--maybe { background: var(--fd-paper-deep); color: var(--fd-ink); }
 
 /* ── Pending + deadline cards ──────────────────────────────────────── */
 .va-pending-card,
 .va-deadline-card {
-  background: var(--va-card);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-card);
+  border: 2px solid var(--fd-ink);
   border-radius: 16px;
-  box-shadow: 4px 4px 0 var(--va-shadow);
+  box-shadow: 4px 4px 0 var(--fd-shadow);
   padding: 1rem 1.25rem;
   display: flex;
   gap: 0.85rem;
@@ -2203,13 +2082,13 @@ function VariantAStyles() {
 .va-pending-tour {
   font-family: 'Lexend', sans-serif;
   font-size: 0.8rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   margin-bottom: 0.2rem;
 }
 .va-pending-note, .va-deadline-note {
   font-family: 'DM Mono', monospace;
   font-size: 0.72rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
 }
 .va-deadline-note--urgent {
   color: #e53e3e;
@@ -2218,10 +2097,10 @@ function VariantAStyles() {
 
 /* ── Activity timeline ─────────────────────────────────────────────── */
 .va-timeline {
-  background: var(--va-card);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-card);
+  border: 2px solid var(--fd-ink);
   border-radius: 22px;
-  box-shadow: 6px 6px 0 var(--va-shadow);
+  box-shadow: 6px 6px 0 var(--fd-shadow);
   padding: 1.5rem 1.5rem 1.5rem 2rem;
   position: relative;
 }
@@ -2232,7 +2111,7 @@ function VariantAStyles() {
   bottom: 1.5rem;
   left: 1.85rem;
   width: 0;
-  border-left: 2px dashed rgba(var(--va-ink-rgb), 0.2);
+  border-left: 2px dashed rgba(var(--fd-ink-rgb), 0.2);
 }
 .va-timeline-row {
   display: grid;
@@ -2249,18 +2128,18 @@ function VariantAStyles() {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  border: 2px solid var(--va-card);
-  box-shadow: 0 0 0 2px var(--va-ink);
+  border: 2px solid var(--fd-card);
+  box-shadow: 0 0 0 2px var(--fd-ink);
 }
-.va-dot--grass  { background: var(--va-grass); }
-.va-dot--sky    { background: var(--va-sky); }
-.va-dot--plum   { background: var(--va-plum); }
-.va-dot--sunset { background: var(--va-sunset); }
-.va-dot--mute   { background: var(--va-mute); }
+.va-dot--grass  { background: var(--fd-grass); }
+.va-dot--sky    { background: var(--fd-sky); }
+.va-dot--plum   { background: var(--fd-plum); }
+.va-dot--sunset { background: var(--fd-sunset); }
+.va-dot--mute   { background: var(--fd-mute); }
 .va-timeline-time {
   font-family: 'DM Mono', monospace;
   font-size: 0.68rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   padding-top: 0.1rem;
   white-space: nowrap;
 }
@@ -2268,15 +2147,15 @@ function VariantAStyles() {
   font-family: 'Lexend', sans-serif;
   font-size: 0.9rem;
   line-height: 1.4;
-  color: var(--va-ink);
+  color: var(--fd-ink);
 }
 
 /* ── Coach clipboard ───────────────────────────────────────────────── */
 .va-coach-card {
-  background: var(--va-paper-deep);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-paper-deep);
+  border: 2px solid var(--fd-ink);
   border-radius: 22px;
-  box-shadow: 6px 6px 0 var(--va-shadow);
+  box-shadow: 6px 6px 0 var(--fd-shadow);
   padding: 1.75rem;
 }
 .va-coach-grid {
@@ -2288,10 +2167,10 @@ function VariantAStyles() {
   .va-coach-grid { grid-template-columns: repeat(4, 1fr); }
 }
 .va-coach-stat {
-  background: var(--va-card);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-card);
+  border: 2px solid var(--fd-ink);
   border-radius: 14px;
-  box-shadow: 3px 3px 0 var(--va-shadow);
+  box-shadow: 3px 3px 0 var(--fd-shadow);
   padding: 1rem;
   display: flex;
   gap: 0.75rem;
@@ -2303,7 +2182,7 @@ function VariantAStyles() {
   font-family: 'Lexend', sans-serif;
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 0.2rem;
@@ -2320,7 +2199,7 @@ function VariantAStyles() {
 .va-coach-stat-sub {
   font-family: 'Lexend', sans-serif;
   font-size: 0.72rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
 }
 
 /* ── Keyframe animations ───────────────────────────────────────────── */
@@ -2370,7 +2249,7 @@ function VariantAStyles() {
 .va-metric-tile:hover,
 .va-rosette-card:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 8px 8px 0 var(--va-shadow);
+  box-shadow: 8px 8px 0 var(--fd-shadow);
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
@@ -2386,10 +2265,10 @@ function VariantAStyles() {
 /* When the metrics block sits inside a narrow grid cell, force 2×2 */
 .va-metrics-grid--2x2 { grid-template-columns: repeat(2, 1fr) !important; }
 .va-metric-tile {
-  background: var(--va-card);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-card);
+  border: 2px solid var(--fd-ink);
   border-radius: 16px;
-  box-shadow: 5px 5px 0 var(--va-shadow);
+  box-shadow: 5px 5px 0 var(--fd-shadow);
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -2401,8 +2280,8 @@ function VariantAStyles() {
   height: 4px;
   background: repeating-linear-gradient(
     90deg,
-    var(--va-metric-accent, var(--va-gold)) 0px,
-    var(--va-metric-accent, var(--va-gold)) 8px,
+    var(--fd-metric-accent, var(--fd-gold)) 0px,
+    var(--fd-metric-accent, var(--fd-gold)) 8px,
     transparent 8px,
     transparent 14px
   );
@@ -2418,14 +2297,14 @@ function VariantAStyles() {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--va-mute);
+  color: var(--fd-mute);
 }
 .va-metric-value {
   font-family: 'Funnel Display', sans-serif;
   font-weight: 800;
   font-size: 2.4rem;
   line-height: 1;
-  color: var(--va-ink);
+  color: var(--fd-ink);
   font-variant-aumeric: tabular-nums;
 }
 .va-metric-unit {
@@ -2434,7 +2313,7 @@ function VariantAStyles() {
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   margin-bottom: 0.4rem;
 }
 .va-metric-sparkline { margin-top: auto; }
@@ -2450,10 +2329,10 @@ function VariantAStyles() {
 }
 .va-rosette-card {
   flex: 1;
-  background: var(--va-card);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-card);
+  border: 2px solid var(--fd-ink);
   border-radius: 22px;
-  box-shadow: 6px 6px 0 var(--va-shadow);
+  box-shadow: 6px 6px 0 var(--fd-shadow);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -2463,7 +2342,7 @@ function VariantAStyles() {
 }
 .va-rosette-card--highlight {
   background: rgba(255,200,71,0.15);
-  border-color: var(--va-gold);
+  border-color: var(--fd-gold);
 }
 .va-rosette-label {
   font-family: 'DM Mono', monospace;
@@ -2471,7 +2350,7 @@ function VariantAStyles() {
   font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   margin-bottom: 0.35rem;
 }
 .va-rosette-name {
@@ -2479,25 +2358,25 @@ function VariantAStyles() {
   font-weight: 800;
   font-size: 1.3rem;
   line-height: 1.2;
-  color: var(--va-ink);
+  color: var(--fd-ink);
   margin-bottom: 0.35rem;
 }
 .va-rosette-pts {
   font-family: 'DM Mono', monospace;
   font-size: 2rem;
   font-weight: 500;
-  color: var(--va-ink);
+  color: var(--fd-ink);
   font-variant-aumeric: tabular-nums;
   line-height: 1;
 }
 .va-rosette-pts-unit {
   font-size: 0.9rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
 }
 .va-rosette-meta {
   font-family: 'Lexend', sans-serif;
   font-size: 0.78rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   margin-top: 0.25rem;
 }
 .va-rival-vs {
@@ -2513,7 +2392,7 @@ function VariantAStyles() {
   font-family: 'Funnel Display', sans-serif;
   font-weight: 800;
   font-size: 1.1rem;
-  color: var(--va-ink);
+  color: var(--fd-ink);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -2527,31 +2406,31 @@ function VariantAStyles() {
   text-transform: uppercase;
   border-radius: 100px;
   padding: 0.2rem 0.6rem;
-  border: 1.5px solid var(--va-ink);
+  border: 1.5px solid var(--fd-ink);
 }
 .va-rival-delta--ahead { background: rgba(93,199,122,0.25); }
 .va-rival-delta--behind { background: rgba(255,122,69,0.2); }
 
 /* ── Full standings table ──────────────────────────────────────────── */
 .va-standings-wrap {
-  background: var(--va-card);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-card);
+  border: 2px solid var(--fd-ink);
   border-radius: 22px;
-  box-shadow: 6px 6px 0 var(--va-shadow);
+  box-shadow: 6px 6px 0 var(--fd-shadow);
   overflow: hidden;
 }
 .va-candy-rule {
   height: 6px;
   background: repeating-linear-gradient(
     90deg,
-    var(--va-sunset) 0px,
-    var(--va-sunset) 12px,
-    var(--va-gold) 12px,
-    var(--va-gold) 24px,
-    var(--va-grass) 24px,
-    var(--va-grass) 36px,
-    var(--va-sky) 36px,
-    var(--va-sky) 48px
+    var(--fd-sunset) 0px,
+    var(--fd-sunset) 12px,
+    var(--fd-gold) 12px,
+    var(--fd-gold) 24px,
+    var(--fd-grass) 24px,
+    var(--fd-grass) 36px,
+    var(--fd-sky) 36px,
+    var(--fd-sky) 48px
   );
 }
 .va-standings-table {
@@ -2566,17 +2445,17 @@ function VariantAStyles() {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   padding: 0.6rem 0.85rem;
   text-align: left;
-  background: var(--va-paper-deep);
-  border-bottom: 2px solid var(--va-ink);
+  background: var(--fd-paper-deep);
+  border-bottom: 2px solid var(--fd-ink);
 }
 .va-tr {
-  border-bottom: 1.5px solid rgba(var(--va-ink-rgb), 0.1);
+  border-bottom: 1.5px solid rgba(var(--fd-ink-rgb), 0.1);
   transition: background 80ms ease;
 }
-.va-tr:hover { background: var(--va-paper-deep); }
+.va-tr:hover { background: var(--fd-paper-deep); }
 .va-tr--top { background: rgba(255,200,71,0.06); }
 .va-td {
   padding: 0.65rem 0.85rem;
@@ -2597,14 +2476,14 @@ function VariantAStyles() {
 .va-td-tour {
   font-family: 'Lexend', sans-serif;
   font-size: 0.8rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   font-style: italic;
 }
 .va-td-num {
   font-family: 'DM Mono', monospace;
   font-size: 0.82rem;
   font-weight: 500;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   text-align: center;
 }
 .va-role-badge {
@@ -2615,7 +2494,7 @@ function VariantAStyles() {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   background: rgba(93,185,245,0.2);
-  border: 1.5px solid var(--va-sky);
+  border: 1.5px solid var(--fd-sky);
   border-radius: 100px;
   padding: 0.1rem 0.5rem;
 }
@@ -2623,8 +2502,8 @@ function VariantAStyles() {
 .va-bar {
   position: relative;
   height: 20px;
-  background: var(--va-paper-deep);
-  border: 1.5px solid var(--va-ink);
+  background: var(--fd-paper-deep);
+  border: 1.5px solid var(--fd-ink);
   border-radius: 4px;
   overflow: hidden;
   display: flex;
@@ -2635,7 +2514,7 @@ function VariantAStyles() {
   top: 0;
   left: 0;
   height: 100%;
-  background: linear-gradient(90deg, var(--va-grass), var(--va-sky));
+  background: linear-gradient(90deg, var(--fd-grass), var(--fd-sky));
   border-radius: 4px 0 0 4px;
   transition: width 0.5s ease;
 }
@@ -2645,7 +2524,7 @@ function VariantAStyles() {
   font-family: 'DM Mono', monospace;
   font-size: 0.72rem;
   font-weight: 500;
-  color: var(--va-ink);
+  color: var(--fd-ink);
   padding-left: 0.5rem;
   font-variant-aumeric: tabular-nums;
 }
@@ -2660,16 +2539,16 @@ function VariantAStyles() {
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  background: var(--va-card);
-  border: 2px solid var(--va-ink);
+  background: var(--fd-card);
+  border: 2px solid var(--fd-ink);
   border-radius: 14px;
-  box-shadow: 4px 4px 0 var(--va-shadow);
+  box-shadow: 4px 4px 0 var(--fd-shadow);
   padding: 0.75rem 1rem;
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
 .va-lineup-row:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 var(--va-shadow);
+  box-shadow: 6px 6px 0 var(--fd-shadow);
 }
 .va-lineup-num { flex-shrink: 0; }
 .va-lineup-info {
@@ -2687,7 +2566,7 @@ function VariantAStyles() {
 .va-lineup-tour {
   font-family: 'Lexend', sans-serif;
   font-size: 0.75rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   font-style: italic;
 }
 .va-lineup-role {
@@ -2697,7 +2576,7 @@ function VariantAStyles() {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   background: rgba(93,185,245,0.2);
-  border: 1.5px solid var(--va-sky);
+  border: 1.5px solid var(--fd-sky);
   border-radius: 100px;
   padding: 0.2rem 0.6rem;
   white-space: nowrap;
@@ -2705,19 +2584,19 @@ function VariantAStyles() {
 }
 .va-lineup-role--captain {
   background: rgba(255,200,71,0.3);
-  border-color: var(--va-gold);
+  border-color: var(--fd-gold);
 }
 .va-lineup-pts {
   font-family: 'DM Mono', monospace;
   font-weight: 500;
   font-size: 1.3rem;
-  color: var(--va-ink);
+  color: var(--fd-ink);
   font-variant-aumeric: tabular-nums;
   flex-shrink: 0;
 }
 .va-lineup-pts-unit {
   font-size: 0.65rem;
-  color: var(--va-mute);
+  color: var(--fd-mute);
   margin-left: 0.1rem;
 }
 .va-lineup-members {
@@ -2733,12 +2612,12 @@ function VariantAStyles() {
   display: flex;
   align-items: stretch;
   color: #2a1f1a;
-  background: var(--va-sunset);
+  background: var(--fd-sunset);
   min-height: 2.5rem;
 }
 .va-footer-tail {
   display: block;
-  color: var(--va-sunset);
+  color: var(--fd-sunset);
   flex-shrink: 0;
   height: 2.5rem;
 }

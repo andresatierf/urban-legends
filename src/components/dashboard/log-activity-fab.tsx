@@ -28,7 +28,7 @@ export function LogActivityFab({
       variant="field-day"
       {...buttonProps}
       className={cn(
-        "mt-5 grid h-auto w-full max-w-none grid-cols-[1fr_auto] grid-rows-[auto_auto] items-center gap-x-[0.9rem] gap-y-[0.15rem] px-[1.05rem] pt-3 pb-[0.85rem] text-left whitespace-normal sm:absolute sm:right-5 sm:bottom-[-38px] sm:z-[3] sm:mt-0 sm:w-auto sm:max-w-[min(420px,88%)] sm:-rotate-[1.5deg]",
+        "mt-5 grid h-auto w-full max-w-none grid-cols-[1fr_auto] grid-rows-[auto_auto] items-center gap-x-[0.9rem] gap-y-[0.15rem] px-[1.05rem] pt-3 pb-[0.85rem] text-left whitespace-normal sm:mt-0 sm:w-auto sm:max-w-[min(420px,88%)]",
         className,
       )}
     >
@@ -36,15 +36,17 @@ export function LogActivityFab({
         <PencilLine className="size-[14px]" strokeWidth={2.5} />
         Log today&apos;s activity
       </span>
-      <span className="text-[0.95rem] leading-[1.15]">
-        <strong className="font-bold">{teamName}</strong>
-        <span className="text-[0.85rem] opacity-85"> · {tournamentName}</span>
+      <span className="flex gap-1 justify-end">
+        <ArrowRight
+          className="row-start-2 size-4 self-center"
+          strokeWidth={1.5}
+          aria-hidden
+        />
+        <span className="text-[0.95rem] leading-[1.15]">
+          <strong className="font-bold">{teamName}</strong>
+          <span className="text-[0.85rem] opacity-85"> · {tournamentName}</span>
+        </span>
       </span>
-      <ArrowRight
-        className="row-start-2 size-4 self-center"
-        strokeWidth={1.5}
-        aria-hidden
-      />
     </Button>
   );
 }
