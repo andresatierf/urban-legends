@@ -706,7 +706,7 @@ function TeamSticker({
   tournament: string;
   points: number;
   members: number;
-  role: "captain" | "member";
+  role: "captain" | "member" | "rival";
   palette: Palette;
   rotate: number;
 }) {
@@ -785,7 +785,7 @@ function RisoCard({
 }: {
   label: string;
   name: string;
-  role: "captain" | "member";
+  role: "captain" | "member" | "rival";
   members: number;
   points: number;
   progress: number;

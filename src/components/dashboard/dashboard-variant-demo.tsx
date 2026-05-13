@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { DashboardVariantA } from "./dashboard-variant-a";
 import { DashboardVariantE } from "./dashboard-variant-e";
 import { DashboardVariantF } from "./dashboard-variant-f";
 import {
@@ -19,7 +20,7 @@ import { DashboardVariantP } from "./dashboard-variant-p";
 import { DashboardVariantT } from "./dashboard-variant-t";
 import { DashboardVariantU } from "./dashboard-variant-u";
 
-type VariantKey = "e" | "f" | "h" | "m" | "n" | "p" | "t" | "u";
+type VariantKey = "a" | "e" | "f" | "h" | "m" | "n" | "p" | "t" | "u";
 
 export function DashboardVariantDemo({ variant }: { variant: VariantKey }) {
   const [persona, setPersona] = useState<"user" | "admin">("admin");
@@ -55,6 +56,7 @@ const VARIANT_MAP: Record<
   VariantKey,
   (props: { data: DashboardFixtureData }) => React.ReactNode
 > = {
+  a: DashboardVariantA,
   e: DashboardVariantE,
   f: DashboardVariantF,
   h: DashboardVariantH,
@@ -66,6 +68,7 @@ const VARIANT_MAP: Record<
 };
 
 const VARIANT_LABELS: Record<VariantKey, string> = {
+  a: "Variant A — Field Day, tightened (dot-grid + side-by-side rows)",
   e: "Variant E — Aurora Glass (Dark Editorial Luxury)",
   f: "Variant F — Riso Pop Zine (Playful Memphis)",
   h: "Variant H — Sketchnote (Hand-Drawn Notebook)",

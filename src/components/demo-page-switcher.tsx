@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 const DEMO_PAGES = [
   { to: "/dev/button-demo", label: "Buttons" },
   { to: "/dev/card-demo", label: "Cards" },
+  { to: "/dev/dashboard-variant-a", label: "Dashboard A" },
   { to: "/dev/dashboard-variant-e", label: "Dashboard E" },
   { to: "/dev/dashboard-variant-f", label: "Dashboard F" },
   { to: "/dev/dashboard-variant-h", label: "Dashboard H" },

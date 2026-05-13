@@ -8,7 +8,7 @@ export type DemoTeam = {
   team: Doc<"teams">;
   tournament: Doc<"tournaments">;
   memberCount: number;
-  userRole: "captain" | "member";
+  userRole: "captain" | "member" | "rival";
 };
 
 export type DemoActivity = {
@@ -68,6 +68,7 @@ export type DashboardFixtureData = {
   userName: string;
   isAdmin: boolean;
   teams: DemoTeam[];
+  competingTeams: DemoTeam[];
   activeTournamentsCount: number;
   pendingSubmissionsCount: number;
   invitationsCount: number;
@@ -194,6 +195,104 @@ const teams: DemoTeam[] = [
   },
 ];
 
+// Competitor teams per tournament (rivals — user is not on these)
+const COMPETITORS: Array<{
+  tourIdx: number;
+  name: string;
+  points: number;
+  count: number;
+  memberCount: number;
+}> = [
+  { tourIdx: 0, name: "Beach Bears", points: 280, count: 14, memberCount: 5 },
+  { tourIdx: 0, name: "Track Stars", points: 195, count: 11, memberCount: 4 },
+  { tourIdx: 0, name: "Cardio Cartel", points: 120, count: 7, memberCount: 3 },
+  {
+    tourIdx: 0,
+    name: "404 Shape Not Found",
+    points: 65,
+    count: 4,
+    memberCount: 5,
+  },
+  { tourIdx: 1, name: "Iron Hearts", points: 215, count: 12, memberCount: 5 },
+  { tourIdx: 1, name: "The Plankers", points: 140, count: 8, memberCount: 4 },
+  { tourIdx: 1, name: "Night Runners", points: 95, count: 6, memberCount: 3 },
+  { tourIdx: 3, name: "Foggy Bottoms", points: 470, count: 23, memberCount: 6 },
+  { tourIdx: 3, name: "Park Pacers", points: 405, count: 20, memberCount: 5 },
+  {
+    tourIdx: 3,
+    name: "Cobblestone Crew",
+    points: 310,
+    count: 16,
+    memberCount: 4,
+  },
+];
+
+const competingTeams: DemoTeam[] = COMPETITORS.map((c, i) => ({
+  team: makeTeam(100 + i, c.name, tournaments[c.tourIdx]._id, c.points),
+  tournament: tournaments[c.tourIdx],
+  memberCount: c.memberCount,
+  userRole: "rival",
+}));
+
+// Seeded pseudo-random for deterministic jitter across renders
+let _seed = 1337;
+function rand(): number {
+  _seed = (_seed * 9301 + 49297) % 233_280;
+  return _seed / 233_280;
+}
+
+function genApprovedActivities(
+  teamName: string,
+  count: number,
+  startOffsetDays: number,
+  endOffsetDays: number,
+): DemoActivity[] {
+  if (count <= 0) return [];
+  const span = endOffsetDays - startOffsetDays;
+  const acts: DemoActivity[] = [];
+  for (let i = 0; i < count; i++) {
+    const base = startOffsetDays + (span * (i + 0.5)) / count;
+    const jitter = (rand() - 0.5) * (span / count) * 0.7;
+    const offsetDays = base + jitter;
+    acts.push({
+      type: "submission_approved",
+      description: `${teamName} logged an approved activity`,
+      timestamp: now.getTime() + offsetDays * dayMs,
+      icon: "check-circle",
+    });
+  }
+  return acts;
+}
+
+// User-team submissions distributed across each tournament's span (so chart line is rich)
+const USER_TEAM_DISTRIBUTIONS: Array<{
+  teamName: string;
+  count: number;
+  startOffset: number;
+  endOffset: number;
+}> = [
+  { teamName: TEAM_NAMES[0], count: 17, startOffset: -28, endOffset: -1 }, // Urban Divas (active)
+  { teamName: TEAM_NAMES[1], count: 10, startOffset: -14, endOffset: -1 }, // Booldozers (active)
+  { teamName: TEAM_NAMES[3], count: 28, startOffset: -88, endOffset: -11 }, // Legends on Tap (ended)
+];
+
+const generatedActivities: DemoActivity[] = [
+  ...USER_TEAM_DISTRIBUTIONS.flatMap((d) =>
+    genApprovedActivities(d.teamName, d.count, d.startOffset, d.endOffset),
+  ),
+  ...COMPETITORS.flatMap((c) => {
+    const t = tournaments[c.tourIdx];
+    const startOffset =
+      (new Date(t.startDate).getTime() - now.getTime()) / dayMs;
+    const endOffsetRaw =
+      (new Date(t.endDate).getTime() - now.getTime()) / dayMs;
+    // Don't generate activities past today for active tournaments
+    const endOffset = Math.min(endOffsetRaw, -1);
+    if (endOffset <= startOffset) return [];
+    return genApprovedActivities(c.name, c.count, startOffset, endOffset);
+  }),
+];
+
 const activities: DemoActivity[] = [
   {
     type: "submission_approved",
@@ -251,6 +350,7 @@ const activities: DemoActivity[] = [
     icon: "users",
     link: "/teams/demo-team-0",
   },
+  ...generatedActivities,
 ];
 
 const deadlines: DemoDeadline[] = [
@@ -329,6 +429,7 @@ export const DASHBOARD_USER_FIXTURE: DashboardFixtureData = {
   userName: "André",
   isAdmin: false,
   teams,
+  competingTeams,
   activeTournamentsCount: 2,
   pendingSubmissionsCount: pendingSubmissions.length,
   invitationsCount: invitations.length,
@@ -344,6 +445,7 @@ export const DASHBOARD_ADMIN_FIXTURE: DashboardFixtureData = {
   userName: "André",
   isAdmin: true,
   teams,
+  competingTeams,
   activeTournamentsCount: 2,
   pendingSubmissionsCount: pendingSubmissions.length,
   invitationsCount: invitations.length,
