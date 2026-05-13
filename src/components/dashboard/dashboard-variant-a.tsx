@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight, PencilLine } from "lucide-react";
 import { useState } from "react";
 import {
   CartesianGrid,
@@ -83,11 +84,10 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
   const mvpDisplayCount = mvpCountToday > 0 ? mvpCountToday : mvpCountTotal;
 
   const urgentDeadlines = data.deadlines.filter((d) => d.daysUntilEnd <= 3);
-  const totalQueue =
-    data.invitations.length +
-    data.joinRequests.length +
-    data.pendingSubmissions.length;
-
+  const nextDeadlineDays =
+    data.deadlines.length > 0
+      ? Math.min(...data.deadlines.map((d) => d.daysUntilEnd))
+      : null;
   // ── Metric card derivations ──
   const last7 = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today);
@@ -274,17 +274,56 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
 
           <div className="va-stat-strip">
             <StatChip
-              label="ACTIVE CHALLENGES"
-              value={data.activeTournamentsCount}
+              label="DAY STREAK"
+              value={streakDays}
+              accent={streakDays >= 3}
             />
-            <StatChip label="YOUR TEAMS" value={data.teams.length} />
-            <StatChip label="IN THE QUEUE" value={totalQueue} />
+            <StatChip label="APPROVED TODAY" value={todayApproved} />
             <StatChip
-              label="WHISTLES BLOWN"
-              value={data.deadlines.length}
-              accent={urgentDeadlines.length > 0}
+              label="YOUR BEST RANK"
+              value={squadRank}
+              suffix={`/${Math.max(standings.length, 1)}`}
+            />
+            <StatChip
+              label="NEXT WHISTLE"
+              value={nextDeadlineDays ?? "—"}
+              suffix={
+                nextDeadlineDays != null
+                  ? nextDeadlineDays === 1
+                    ? "DAY"
+                    : "DAYS"
+                  : undefined
+              }
+              accent={nextDeadlineDays != null && nextDeadlineDays <= 3}
             />
           </div>
+
+          {/* Submit CTA overlapping the hero's bottom-right corner */}
+          {selectedTour && isSelectedActive && selectedUserTeam && (
+            <button
+              type="button"
+              className="mt-5 grid w-full max-w-none cursor-pointer grid-cols-[1fr_auto] grid-rows-[auto_auto] items-center gap-x-[0.9rem] gap-y-[0.15rem] rounded-[14px] border-2 border-[var(--va-ink)] bg-[var(--va-sunset)] px-[1.05rem] pt-3 pb-[0.85rem] text-left font-['Lexend',sans-serif] text-white shadow-[5px_5px_0_var(--va-shadow)] transition-[transform,box-shadow] duration-[120ms] ease-out hover:-translate-x-[3px] hover:-translate-y-[3px] hover:shadow-[7px_7px_0_rgba(42,31,26,0.06)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_var(--va-shadow)] sm:absolute sm:right-5 sm:bottom-[-38px] sm:z-[3] sm:mt-0 sm:w-auto sm:max-w-[min(420px,88%)] sm:-rotate-[1.5deg]"
+            >
+              <span className="col-span-2 inline-flex items-center gap-[0.4rem] font-['Funnel_Display',sans-serif] text-[0.78rem] font-extrabold tracking-[0.1em] uppercase opacity-95">
+                <PencilLine className="size-[14px]" strokeWidth={2.5} />
+                Log today&apos;s activity
+              </span>
+              <span className="text-[0.95rem] leading-[1.15]">
+                <strong className="font-bold">
+                  {selectedUserTeam.team.name}
+                </strong>
+                <span className="text-[0.85rem] opacity-85">
+                  {" "}
+                  · {selectedTour.name}
+                </span>
+              </span>
+              <ArrowRight
+                className="row-start-2 size-4 self-center"
+                strokeWidth={1.5}
+                aria-hidden
+              />
+            </button>
+          )}
         </section>
 
         {/* ── Tournament switcher (only when user is in more than one) ── */}
@@ -306,32 +345,6 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
               ))}
             </select>
           </div>
-        )}
-
-        {/* ── 2. SUBMIT TODAY'S ACTIVITY (primary CTA, single-tournament) ── */}
-        {selectedTour && isSelectedActive && selectedUserTeam && (
-          <section className="va-section va-submit-section">
-            <div className="va-submit-card">
-              <div className="va-submit-head">
-                <div className="va-submit-head-left">
-                  <WhistleSvgSmall />
-                  <span className="va-submit-title">
-                    Log today&apos;s activity
-                  </span>
-                </div>
-                <span className="va-submit-date">{dateLabel}</span>
-              </div>
-              <button className="va-submit-btn va-submit-btn--solo">
-                <span className="va-submit-btn-tour">{selectedTour.name}</span>
-                <span className="va-submit-btn-team">
-                  as <strong>{selectedUserTeam.team.name}</strong>
-                </span>
-                <span className="va-submit-btn-arrow" aria-hidden>
-                  →
-                </span>
-              </button>
-            </div>
-          </section>
         )}
 
         {/* ── 3. MY SQUADS (rich, full width) ── */}
@@ -388,6 +401,11 @@ export function DashboardVariantA({ data }: { data: DashboardFixtureData }) {
                     {isSelectedActive ? "ACTIVE" : "ENDED"}
                   </span>
                 </div>
+                {selectedGroup.teams.length >= 1 && (
+                  <div className="va-podium-wrap va-podium-wrap--embedded">
+                    <Podium teams={selectedGroup.teams.slice(0, 3)} />
+                  </div>
+                )}
                 <div className="va-candy-rule" aria-hidden />
                 <table className="va-standings-table">
                   <thead>
@@ -862,14 +880,19 @@ function StatChip({
   label,
   value,
   accent,
+  suffix,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   accent?: boolean;
+  suffix?: string;
 }) {
   return (
     <div className={`va-stat-chip${accent ? " va-stat-chip--accent" : ""}`}>
-      <span className="va-stat-num">{value}</span>
+      <span className="va-stat-num">
+        {value}
+        {suffix ? <span className="va-stat-suffix">{suffix}</span> : null}
+      </span>
       <span className="va-stat-label">{label}</span>
     </div>
   );
@@ -1885,8 +1908,11 @@ function VariantAStyles() {
   border-radius: 22px;
   box-shadow: 6px 6px 0 var(--va-shadow);
   padding: 2.25rem 2rem 2rem;
+  margin-inline: 1rem;
   text-align: center;
-  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .va-hero { margin-inline: 2rem; }
 }
 .va-hero-greeting {
   font-family: 'Funnel Display', sans-serif;
@@ -1942,82 +1968,20 @@ function VariantAStyles() {
   color: var(--va-mute);
 }
 
-/* ── Submit CTA ────────────────────────────────────────────────────── */
-.va-submit-card {
-  background: #ffffff;
-  border: 2px solid var(--va-ink);
-  border-radius: 18px;
-  box-shadow: 5px 5px 0 var(--va-shadow);
-  padding: 1.25rem 1.4rem 1.4rem;
-}
-.va-submit-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.85rem;
-  gap: 0.75rem;
-}
-.va-submit-head-left {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-.va-submit-title {
-  font-family: 'Funnel Display', sans-serif;
-  font-weight: 800;
-  font-size: 1rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.va-submit-date {
+/* ── Hero stat chip suffix ─────────────────────────────────────────── */
+.va-stat-suffix {
   font-family: 'DM Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
+  font-weight: 500;
   color: var(--va-mute);
-}
-.va-submit-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  width: 100%;
-  text-align: left;
-  background: var(--va-sunset);
-  color: #ffffff;
-  border: 2px solid var(--va-ink);
-  border-radius: 14px;
-  box-shadow: 4px 4px 0 var(--va-shadow);
-  padding: 1rem 1.2rem;
-  cursor: pointer;
-  font-family: 'Lexend', sans-serif;
-  transition: transform 120ms ease, box-shadow 120ms ease;
-}
-.va-submit-btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0 var(--va-shadow);
-}
-.va-submit-btn:active {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 var(--va-shadow);
-}
-.va-submit-btn-tour {
-  font-family: 'Funnel Display', sans-serif;
-  font-weight: 800;
-  font-size: 1.05rem;
+  margin-left: 0.2rem;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
-  flex: 0 0 auto;
 }
-.va-submit-btn-team {
-  flex: 1 1 auto;
-  font-size: 0.92rem;
-  opacity: 0.92;
-}
-.va-submit-btn-team strong {
-  font-weight: 600;
-}
-.va-submit-btn-arrow {
-  font-family: 'Funnel Display', sans-serif;
-  font-size: 1.5rem;
-  flex: 0 0 auto;
+
+/* ── Submit CTA hero spacing (FAB itself styled via Tailwind) ─────── */
+.va-hero { padding-bottom: 2rem; }
+@media (min-width: 640px) {
+  .va-hero { padding-bottom: 4.5rem; margin-bottom: 1.25rem; }
 }
 
 /* ── Tournament switcher ───────────────────────────────────────────── */
@@ -2110,6 +2074,13 @@ function VariantAStyles() {
   box-shadow: 6px 6px 0 var(--va-shadow);
   padding: 2rem 1.5rem 0;
   overflow: hidden;
+}
+.va-podium-wrap--embedded {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0.5rem 0 0.75rem;
+  background: transparent;
 }
 .va-podium {
   display: flex;
