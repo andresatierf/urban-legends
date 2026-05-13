@@ -7,6 +7,9 @@ const DEMO_PAGES = [
   { to: "/dev/button-demo", label: "Buttons" },
   { to: "/dev/card-demo", label: "Cards" },
   { to: "/dev/dashboard-variant-a", label: "Dashboard A" },
+  { to: "/dev/dashboard-variant-a1", label: "Dashboard A1" },
+  { to: "/dev/dashboard-variant-a2", label: "Dashboard A2" },
+  { to: "/dev/dashboard-variant-a3", label: "Dashboard A3" },
   { to: "/dev/dashboard-variant-e", label: "Dashboard E" },
   { to: "/dev/dashboard-variant-f", label: "Dashboard F" },
   { to: "/dev/dashboard-variant-h", label: "Dashboard H" },
@@ -23,7 +26,7 @@ export function DemoPageSwitcher() {
   return (
     <nav
       aria-label="Demo pages"
-      className="bg-muted text-muted-foreground inline-flex h-8 w-fit items-center gap-0.5 rounded-lg p-[3px]"
+      className="bg-muted text-muted-foreground flex w-fit max-w-full flex-wrap items-center gap-0.5 rounded-lg p-[3px]"
     >
       {DEMO_PAGES.map(({ to, label }) => {
         const active = isActive(to, true);
@@ -33,7 +36,7 @@ export function DemoPageSwitcher() {
             to={to}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "hover:text-foreground inline-flex h-full items-center justify-center rounded-md border border-transparent px-2.5 text-xs font-medium whitespace-nowrap transition-colors",
+              "hover:text-foreground inline-flex h-7 items-center justify-center rounded-md border border-transparent px-2.5 text-xs font-medium whitespace-nowrap transition-colors",
               active && "bg-background text-foreground shadow-sm",
             )}
           >

@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { DashboardVariantA } from "./dashboard-variant-a";
+import { DashboardVariantA1 } from "./dashboard-variant-a1";
+import { DashboardVariantA2 } from "./dashboard-variant-a2";
+import { DashboardVariantA3 } from "./dashboard-variant-a3";
 import { DashboardVariantE } from "./dashboard-variant-e";
 import { DashboardVariantF } from "./dashboard-variant-f";
 import {
@@ -20,7 +23,19 @@ import { DashboardVariantP } from "./dashboard-variant-p";
 import { DashboardVariantT } from "./dashboard-variant-t";
 import { DashboardVariantU } from "./dashboard-variant-u";
 
-type VariantKey = "a" | "e" | "f" | "h" | "m" | "n" | "p" | "t" | "u";
+type VariantKey =
+  | "a"
+  | "a1"
+  | "a2"
+  | "a3"
+  | "e"
+  | "f"
+  | "h"
+  | "m"
+  | "n"
+  | "p"
+  | "t"
+  | "u";
 
 export function DashboardVariantDemo({ variant }: { variant: VariantKey }) {
   const [persona, setPersona] = useState<"user" | "admin">("admin");
@@ -57,6 +72,9 @@ const VARIANT_MAP: Record<
   (props: { data: DashboardFixtureData }) => React.ReactNode
 > = {
   a: DashboardVariantA,
+  a1: DashboardVariantA1,
+  a2: DashboardVariantA2,
+  a3: DashboardVariantA3,
   e: DashboardVariantE,
   f: DashboardVariantF,
   h: DashboardVariantH,
@@ -69,6 +87,9 @@ const VARIANT_MAP: Record<
 
 const VARIANT_LABELS: Record<VariantKey, string> = {
   a: "Variant A — Field Day, tightened (dot-grid + side-by-side rows)",
+  a1: "Variant A1 — Field Day, Rivals Threat Board (grid of delta-chip cards)",
+  a2: "Variant A2 — Field Day, Versus Ledger (tug-of-war rows)",
+  a3: "Variant A3 — Field Day, Scouting Report (primary rival dossier)",
   e: "Variant E — Aurora Glass (Dark Editorial Luxury)",
   f: "Variant F — Riso Pop Zine (Playful Memphis)",
   h: "Variant H — Sketchnote (Hand-Drawn Notebook)",

@@ -77,7 +77,7 @@ export function RaceChart({
   return (
     <div
       className={cn(
-        "rounded-[18px] border-2 border-fab-ink bg-fab-surface px-5 pt-4 pb-[1.1rem] shadow-[5px_5px_0_var(--color-fab-shadow)]",
+        "border-fab-ink bg-fab-surface rounded-[18px] border-2 px-5 pt-4 pb-[1.1rem] shadow-[5px_5px_0_var(--color-fab-shadow)]",
         className,
       )}
     >
@@ -108,12 +108,12 @@ export function RaceChart({
           />
           <ChartTooltip
             content={
-              <ChartTooltipContent className="border-fab-ink text-fab-ink min-w-44 !rounded-[14px] border-2 bg-fab-surface !shadow-[4px_4px_0_var(--color-fab-shadow)] [&_.justify-between]:!gap-4 [&_.shrink-0]:!h-3 [&_.shrink-0]:!w-3 [&_.shrink-0]:!rounded-[4px] [&_.shrink-0]:!border-2 [&_.shrink-0]:!border-fab-ink" />
+              <ChartTooltipContent className="border-fab-ink text-fab-ink bg-fab-surface [&_.shrink-0]:!border-fab-ink min-w-44 !rounded-[14px] border-2 !shadow-[4px_4px_0_var(--color-fab-shadow)] [&_.justify-between]:!gap-4 [&_.shrink-0]:!h-3 [&_.shrink-0]:!w-3 [&_.shrink-0]:!rounded-[4px] [&_.shrink-0]:!border-2" />
             }
           />
           <ChartLegend
             content={
-              <ChartLegendContent className="text-fab-ink mt-3 flex-wrap !justify-start gap-x-4 gap-y-2 !pt-0 text-[0.82rem] [&>div]:!gap-1.5 [&>div>div]:!h-3 [&>div>div]:!w-3 [&>div>div]:!rounded-[4px] [&>div>div]:border-2 [&>div>div]:border-fab-ink" />
+              <ChartLegendContent className="text-fab-ink [&>div>div]:border-fab-ink mt-3 flex-wrap !justify-start gap-x-4 gap-y-2 !pt-0 text-[0.82rem] [&>div]:!gap-1.5 [&>div>div]:!h-3 [&>div>div]:!w-3 [&>div>div]:!rounded-[4px] [&>div>div]:border-2" />
             }
           />
           {userSeries && (
@@ -141,7 +141,7 @@ export function RaceChart({
                   <g>
                     <polygon
                       points={points}
-                      className="fill-fab-gold stroke-[#2a1f1a] [stroke-linejoin:round] [stroke-width:1.5]"
+                      className="fill-fab-gold stroke-[#2a1f1a] [stroke-width:1.5] [stroke-linejoin:round]"
                     />
                     <text
                       x={flagX + 11}

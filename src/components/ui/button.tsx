@@ -20,7 +20,7 @@ const buttonVariants = cva(
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 dark:hover:bg-destructive/30",
         link: "text-primary underline-offset-4 hover:underline",
         "field-day":
-          "rounded-[14px] border-2 border-fab-ink bg-fab-bg text-white shadow-[5px_5px_0_var(--color-fab-shadow)] transition-[transform,box-shadow] duration-[120ms] ease-out hover:-translate-x-[3px] hover:-translate-y-[3px] hover:shadow-[7px_7px_0_var(--color-fab-shadow-soft)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_var(--color-fab-shadow)]",
+          "border-fab-ink bg-fab-bg rounded-[14px] border-2 text-white shadow-[5px_5px_0_var(--color-fab-shadow)] transition-[transform,box-shadow] duration-[120ms] ease-out hover:-translate-x-[3px] hover:-translate-y-[3px] hover:shadow-[7px_7px_0_var(--color-fab-shadow-soft)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_var(--color-fab-shadow)]",
       },
       size: {
         default:
