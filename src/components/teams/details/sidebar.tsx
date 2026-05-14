@@ -57,14 +57,13 @@ export function Sidebar({ data }: { data: TeamDetails }) {
   }, [leaveTeam, team._id]);
 
   const badges: SidebarCardBadge[] = [
-    {
-      label: team.joinPolicy === "open" ? "Open" : "Closed",
-      variant: team.joinPolicy === "open" ? "success" : "neutral",
-    },
+    isFull
+      ? { label: "Full", variant: "error" }
+      : {
+          label: team.joinPolicy === "open" ? "Open" : "Closed",
+          variant: team.joinPolicy === "open" ? "success" : "neutral",
+        },
   ];
-  if (isFull) {
-    badges.push({ label: "Full", variant: "error" });
-  }
   if (userMembership) {
     badges.push({
       label: userMembership.role,
