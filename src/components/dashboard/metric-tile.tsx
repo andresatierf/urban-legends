@@ -82,10 +82,7 @@ export function RosetteTile({
         {team.team.name}
       </div>
       {team.userRole === "captain" && (
-        <span
-          className="border-gold text-ink text-label-caps bg-gold/30 mb-2 inline-flex items-center gap-[3px] rounded-full border-[1.5px] px-2 py-0.5"
-          style={{ marginBottom: "0.5rem" }}
-        >
+        <span className="border-gold text-ink text-label-caps bg-gold/30 mb-2 inline-flex items-center gap-[3px] rounded-full border-[1.5px] px-2 py-0.5">
           <WhistleSvgSmall />
           Captain
         </span>
@@ -96,10 +93,7 @@ export function RosetteTile({
       <div className="text-mute text-body-sm mt-1">
         {team.memberCount} members
       </div>
-      <div
-        className="border-ink bg-paper-deep relative mb-[0.3rem] h-[10px] overflow-visible rounded-full border-[1.5px]"
-        style={{ marginTop: "0.75rem" }}
-      >
+      <div className="border-ink bg-paper-deep relative mt-3 mb-[0.3rem] h-[10px] overflow-visible rounded-full border-[1.5px]">
         <div
           className="bg-grass absolute top-0 left-0 h-full rounded-full transition-[width] duration-[400ms] ease-linear"
           style={{ width: `${progress}%` }}

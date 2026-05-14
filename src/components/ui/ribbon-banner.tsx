@@ -7,7 +7,7 @@ export function RibbonBanner({
 }) {
   return (
     <div
-      className={`bg-gold text-ink mx-auto mb-6 flex min-h-12 w-fit items-stretch ${small ? "!mb-5 !min-h-9" : ""}`}
+      className={`bg-gold text-ink mx-auto flex w-fit items-stretch ${small ? "mb-5 min-h-9" : "mb-6 min-h-12"}`}
     >
       <svg
         aria-hidden
