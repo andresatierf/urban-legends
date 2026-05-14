@@ -1,3 +1,4 @@
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { cn } from "@/lib/utils";
 
 export function SectionLabel({
@@ -8,7 +9,7 @@ export function SectionLabel({
   children: React.ReactNode;
 }) {
   return (
-    <h3 className="text-muted-foreground flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
+    <Eyebrow as="div" className="flex items-center gap-2">
       <span
         className={cn(
           "inline-block h-1.5 w-1.5 rounded-full",
@@ -16,6 +17,6 @@ export function SectionLabel({
         )}
       />
       {children}
-    </h3>
+    </Eyebrow>
   );
 }
