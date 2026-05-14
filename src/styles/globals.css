@@ -165,7 +165,7 @@
   --popover: var(--card);
   --popover-foreground: var(--ink);
   --primary: var(--sunset);
-  --primary-foreground: var(--ink);
+  --primary-foreground: var(--white);
   --secondary: var(--paper-deep);
   --secondary-foreground: var(--ink);
   --muted: var(--paper-deep);
@@ -268,6 +268,7 @@
   --ink-rgb: 244, 236, 226;
   --mute: #a89a8b;
   --crimson: #d04a38;
+  --sunset: #d65a2e;
   --shadow: rgba(var(--ink-rgb), 0.12);
   --chip: #2f261f;
 
@@ -435,10 +436,10 @@
 /* ── Button demo pseudo-state overrides ─────────────────────────── */
 
 @utility pseudo-hover {
-  &:where(button, [role="button"]) {
-    &:not(:active) {
-      filter: brightness(1.1);
-    }
+  &[data-variant="default"]:not(:active),
+  &[data-variant="destructive"]:not(:active),
+  &[data-variant="link"]:not(:active) {
+    filter: brightness(1.1);
   }
   &[data-variant="secondary"]:not(:active),
   &[data-variant="outline"]:not(:active) {
@@ -451,8 +452,18 @@
 }
 
 @utility pseudo-focus {
-  outline: 3px solid color-mix(in srgb, var(--ring) 20%, transparent);
-  outline-offset: 0px;
+  box-shadow:
+    0 0 0 2px var(--background),
+    0 0 0 5px color-mix(in srgb, var(--ring) 60%, transparent),
+    3px 3px 0 var(--color-shadow);
+  &[data-variant="ghost"],
+  &[data-variant="icon"],
+  &[data-variant="link"],
+  &[data-variant="outline"] {
+    box-shadow:
+      0 0 0 2px var(--background),
+      0 0 0 5px color-mix(in srgb, var(--ring) 60%, transparent);
+  }
 }
 
 @utility pseudo-active {
