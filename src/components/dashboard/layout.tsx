@@ -229,7 +229,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
 
   return (
     <div className="relative [padding:1.5rem_1.5rem_2.5rem] font-[Lexend]">
-      <section className="border-fd-ink bg-fd-card relative z-[1] mt-3 rounded-[22px] border-2 pt-12 pr-8 pb-8 pl-8 text-center shadow-[6px_6px_0_var(--fd-shadow)] sm:mb-5 sm:pb-[4.5rem]">
+      <section className="border-ink bg-card relative z-[1] mt-3 rounded-[22px] border-2 pt-12 pr-8 pb-8 pl-8 text-center shadow-[6px_6px_0_var(--shadow)] sm:mb-5 sm:pb-[4.5rem]">
         <Confetti />
         {selectedTour && data.activeTournaments.length > 1 && (
           <div className="-mt-4 mb-6 flex justify-center sm:mb-0">
@@ -242,10 +242,10 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
           </div>
         )}
         <RibbonBanner label={`WEEK ${weekNo} · FIELD DAY`} />
-        <h1 className="text-fd-ink mt-4 mb-[0.45rem] font-[Funnel_Display] text-[clamp(1.75rem,4vw,2.8rem)] leading-[1.1] font-extrabold">
+        <h1 className="text-ink mt-4 mb-[0.45rem] font-[Funnel_Display] text-[clamp(1.75rem,4vw,2.8rem)] leading-[1.1] font-extrabold">
           Welcome to the field, {data.userName} 🎽
         </h1>
-        <p className="text-fd-mute m-0 mb-7 font-[Lexend] text-[1.05rem]">
+        <p className="text-mute m-0 mb-7 font-[Lexend] text-[1.05rem]">
           Here&apos;s how today&apos;s shaping up.
         </p>
 
@@ -339,18 +339,18 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
                 <svg aria-hidden width="56" height="56" viewBox="0 0 56 56">
                   <path
                     d="M4 4 L52 4 L52 52 L4 52 Z"
-                    fill="var(--fd-gold)"
-                    stroke="var(--fd-ink)"
+                    fill="var(--gold)"
+                    stroke="var(--ink)"
                     strokeWidth="2"
                     strokeLinejoin="round"
                     transform="rotate(45 28 28) scale(0.68) translate(8 8)"
                   />
                 </svg>
-                <span className="text-fd-ink pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-[Funnel_Display] text-[1.1rem] font-extrabold">
+                <span className="text-ink pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-[Funnel_Display] text-[1.1rem] font-extrabold">
                   VS
                 </span>
                 <div
-                  className={`border-fd-ink rounded-full border-[1.5px] [padding:0.2rem_0.6rem] font-[DM_Mono] text-[0.6rem] font-medium tracking-[0.12em] uppercase ${selectedRivalDelta >= 0 ? "bg-[rgba(93,199,122,0.25)]" : "bg-[rgba(255,122,69,0.2)]"}`}
+                  className={`border-ink rounded-full border-[1.5px] [padding:0.2rem_0.6rem] font-[DM_Mono] text-[0.6rem] font-medium tracking-[0.12em] uppercase ${selectedRivalDelta >= 0 ? "bg-[rgba(93,199,122,0.25)]" : "bg-[rgba(255,122,69,0.2)]"}`}
                 >
                   {selectedRivalDelta >= 0
                     ? `AHEAD BY ${selectedRivalDelta}`
@@ -365,28 +365,28 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
         <section className="relative z-[1] mt-0 flex flex-col">
           <RibbonBanner label="SQUAD OF THE DAY" small />
           {mvpTeam ? (
-            <div className="border-fd-ink bg-fd-grass flex items-center gap-8 rounded-[22px] border-2 p-8 shadow-[6px_6px_0_var(--fd-shadow)]">
+            <div className="border-ink bg-grass flex items-center gap-8 rounded-[22px] border-2 p-8 shadow-[6px_6px_0_var(--shadow)]">
               <div aria-hidden className="flex-shrink-0">
                 <TrophySvg />
               </div>
               <div className="flex-1">
-                <div className="text-fd-ink mb-[0.4rem] font-[DM_Mono] text-[0.7rem] font-medium tracking-[0.2em] uppercase opacity-75">
+                <div className="text-ink mb-[0.4rem] font-[DM_Mono] text-[0.7rem] font-medium tracking-[0.2em] uppercase opacity-75">
                   Star Crew
                 </div>
-                <div className="text-fd-ink mb-[0.45rem] font-[Funnel_Display] text-[clamp(1.6rem,4vw,2.4rem)] leading-[1.1] font-extrabold">
+                <div className="text-ink mb-[0.45rem] font-[Funnel_Display] text-[clamp(1.6rem,4vw,2.4rem)] leading-[1.1] font-extrabold">
                   {mvpTeam.team.name}
                 </div>
-                <p className="text-fd-ink m-0 font-[Lexend] text-[0.95rem] leading-[1.5] opacity-80">
+                <p className="text-ink m-0 font-[Lexend] text-[0.95rem] leading-[1.5] opacity-80">
                   {mvpDisplayCount} submission
                   {mvpDisplayCount === 1 ? "" : "s"}{" "}
                   {mvpCountToday > 0 ? "today" : "this period"} ·{" "}
                   <strong>{mvpTeam.tournament.name}</strong>
                 </p>
-                <p className="text-fd-ink m-0 font-[Lexend] text-[0.95rem] leading-[1.5] opacity-80">
+                <p className="text-ink m-0 font-[Lexend] text-[0.95rem] leading-[1.5] opacity-80">
                   {mvpTeam.memberCount} member
                   {mvpTeam.memberCount === 1 ? "" : "s"}
                   {mvpTeam.userRole === "captain" && (
-                    <span className="border-fd-gold text-fd-ink mt-[0.35rem] ml-[0.35rem] inline-flex items-center gap-[3px] rounded-full border-[1.5px] bg-[rgba(255,200,71,0.3)] [padding:0.15rem_0.5rem] font-[Lexend] text-[0.65rem] font-semibold tracking-[0.08em] uppercase">
+                    <span className="border-gold text-ink mt-[0.35rem] ml-[0.35rem] inline-flex items-center gap-[3px] rounded-full border-[1.5px] bg-[rgba(255,200,71,0.3)] [padding:0.15rem_0.5rem] font-[Lexend] text-[0.65rem] font-semibold tracking-[0.08em] uppercase">
                       <WhistleSvgSmall />
                       Captain
                     </span>
@@ -395,18 +395,18 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               </div>
             </div>
           ) : (
-            <div className="border-fd-ink bg-fd-grass flex items-center gap-8 rounded-[22px] border-2 p-8 shadow-[6px_6px_0_var(--fd-shadow)]">
+            <div className="border-ink bg-grass flex items-center gap-8 rounded-[22px] border-2 p-8 shadow-[6px_6px_0_var(--shadow)]">
               <div aria-hidden className="flex-shrink-0">
                 <TrophySvg />
               </div>
               <div className="flex-1">
-                <div className="text-fd-ink mb-[0.4rem] font-[DM_Mono] text-[0.7rem] font-medium tracking-[0.2em] uppercase opacity-75">
+                <div className="text-ink mb-[0.4rem] font-[DM_Mono] text-[0.7rem] font-medium tracking-[0.2em] uppercase opacity-75">
                   Star Crew
                 </div>
-                <div className="text-fd-ink mb-[0.45rem] font-[Funnel_Display] text-[clamp(1.6rem,4vw,2.4rem)] leading-[1.1] font-extrabold">
+                <div className="text-ink mb-[0.45rem] font-[Funnel_Display] text-[clamp(1.6rem,4vw,2.4rem)] leading-[1.1] font-extrabold">
                   No teams yet
                 </div>
-                <p className="text-fd-ink m-0 font-[Lexend] text-[0.95rem] leading-[1.5] opacity-80">
+                <p className="text-ink m-0 font-[Lexend] text-[0.95rem] leading-[1.5] opacity-80">
                   Join a tournament to compete.
                 </p>
               </div>
@@ -426,7 +426,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               label="STREAK"
               value={streakDays}
               unit="DAYS"
-              color="var(--fd-sky)"
+              color="var(--sky)"
               sparkline={last7
                 .slice()
                 .reverse()
@@ -436,21 +436,21 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               label="THIS WEEK"
               value={weekApproved}
               unit="APPROVED"
-              color="var(--fd-grass)"
+              color="var(--grass)"
               sparkline={sparkline}
             />
             <MetricTile
               label="TODAY"
               value={todayApproved}
               unit="LOGGED"
-              color="var(--fd-sunset)"
+              color="var(--sunset)"
               sparkline={sparkline}
             />
             <MetricTile
               label="SQUAD RANK"
               value={squadRank}
               unit={`OF ${Math.max(standings.length, 1)}`}
-              color="var(--fd-plum)"
+              color="var(--plum)"
               sparkline={[3, 2, 3, 2, 1, 2, squadRank]}
             />
           </div>
@@ -459,7 +459,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
         {data.activities.length > 0 && (
           <section className="relative z-[1] mt-0 flex flex-col">
             <RibbonBanner label="HIGHLIGHTS FROM THE FIELD" small />
-            <div className="border-fd-ink bg-fd-card relative overflow-hidden rounded-[22px] border-2 [padding:1.5rem_1.5rem_1.5rem_2rem] shadow-[6px_6px_0_var(--fd-shadow)] before:absolute before:top-6 before:bottom-6 before:left-[1.85rem] before:w-0 before:border-l-2 before:border-dashed before:border-[rgba(var(--fd-ink-rgb),0.2)] before:content-['']">
+            <div className="border-ink bg-card relative overflow-hidden rounded-[22px] border-2 [padding:1.5rem_1.5rem_1.5rem_2rem] shadow-[6px_6px_0_var(--shadow)] before:absolute before:top-6 before:bottom-6 before:left-[1.85rem] before:w-0 before:border-l-2 before:border-dashed before:border-[rgba(var(--ink-rgb),0.2)] before:content-['']">
               {data.activities.map((a, i) => {
                 const dotColorClass = activityDotColorClass(a.type);
                 return (
@@ -468,13 +468,13 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
                     className="relative grid grid-cols-[3.5rem_1fr] gap-x-3 py-[0.6rem]"
                   >
                     <div
-                      className={`border-fd-card absolute top-1/2 -left-[1.65rem] size-[10px] -translate-y-1/2 rounded-full border-2 shadow-[0_0_0_2px_var(--fd-ink)] ${dotColorClass}`}
+                      className={`border-card absolute top-1/2 -left-[1.65rem] size-[10px] -translate-y-1/2 rounded-full border-2 shadow-[0_0_0_2px_var(--ink)] ${dotColorClass}`}
                       aria-hidden
                     />
-                    <div className="text-fd-mute pt-[0.1rem] font-[DM_Mono] text-[0.68rem] whitespace-nowrap">
+                    <div className="text-mute pt-[0.1rem] font-[DM_Mono] text-[0.68rem] whitespace-nowrap">
                       {formatRelative(a.timestamp)}
                     </div>
-                    <div className="text-fd-ink font-[Lexend] text-[0.9rem] leading-[1.4]">
+                    <div className="text-ink font-[Lexend] text-[0.9rem] leading-[1.4]">
                       {a.description}
                     </div>
                   </div>
@@ -493,25 +493,25 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               {data.invitations.map((inv) => (
                 <div
                   key={inv.id}
-                  className="border-fd-ink bg-fd-card rounded-[16px] border-2 [padding:1.1rem_1.25rem] shadow-[4px_4px_0_var(--fd-shadow)]"
+                  className="border-ink bg-card rounded-[16px] border-2 [padding:1.1rem_1.25rem] shadow-[4px_4px_0_var(--shadow)]"
                 >
-                  <div className="border-fd-gold mb-2 inline-block rounded-full border-[1.5px] bg-[rgba(255,200,71,0.35)] [padding:0.15rem_0.6rem] font-[DM_Mono] text-[0.62rem] font-medium tracking-[0.18em] uppercase">
+                  <div className="border-gold mb-2 inline-block rounded-full border-[1.5px] bg-[rgba(255,200,71,0.35)] [padding:0.15rem_0.6rem] font-[DM_Mono] text-[0.62rem] font-medium tracking-[0.18em] uppercase">
                     RSVP
                   </div>
                   <div className="mb-[0.2rem] font-[Funnel_Display] text-[1.1rem] font-bold">
                     {inv.teamName}
                   </div>
-                  <div className="text-fd-mute mb-[0.2rem] font-[Lexend] text-[0.82rem]">
+                  <div className="text-mute mb-[0.2rem] font-[Lexend] text-[0.82rem]">
                     {inv.tournamentName} · invited by {inv.invitedBy}
                   </div>
-                  <div className="text-fd-mute mb-3 font-[DM_Mono] text-[0.7rem]">
+                  <div className="text-mute mb-3 font-[DM_Mono] text-[0.7rem]">
                     {formatRelative(inv.timestamp)}
                   </div>
                   <div className="flex gap-2">
-                    <button className="border-fd-ink bg-fd-sunset cursor-pointer rounded-full border-2 [padding:0.35rem_1rem] font-[Lexend] text-[0.82rem] font-semibold text-white transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--fd-ink)]">
+                    <button className="border-ink bg-sunset cursor-pointer rounded-full border-2 [padding:0.35rem_1rem] font-[Lexend] text-[0.82rem] font-semibold text-white transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--ink)]">
                       COUNT ME IN
                     </button>
-                    <button className="border-fd-ink bg-fd-paper-deep text-fd-ink cursor-pointer rounded-full border-2 [padding:0.35rem_1rem] font-[Lexend] text-[0.82rem] font-semibold transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--fd-ink)]">
+                    <button className="border-ink bg-paper-deep text-ink cursor-pointer rounded-full border-2 [padding:0.35rem_1rem] font-[Lexend] text-[0.82rem] font-semibold transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--ink)]">
                       MAYBE NEXT TIME
                     </button>
                   </div>
@@ -520,25 +520,25 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               {data.joinRequests.map((jr) => (
                 <div
                   key={jr.id}
-                  className="border-fd-ink bg-fd-card rounded-[16px] border-2 [padding:1.1rem_1.25rem] shadow-[4px_4px_0_var(--fd-shadow)]"
+                  className="border-ink bg-card rounded-[16px] border-2 [padding:1.1rem_1.25rem] shadow-[4px_4px_0_var(--shadow)]"
                 >
-                  <div className="border-fd-plum mb-2 inline-block rounded-full border-[1.5px] bg-[rgba(161,102,212,0.15)] [padding:0.15rem_0.6rem] font-[DM_Mono] text-[0.62rem] font-medium tracking-[0.18em] uppercase">
+                  <div className="border-plum mb-2 inline-block rounded-full border-[1.5px] bg-[rgba(161,102,212,0.15)] [padding:0.15rem_0.6rem] font-[DM_Mono] text-[0.62rem] font-medium tracking-[0.18em] uppercase">
                     JOIN REQUEST
                   </div>
                   <div className="mb-[0.2rem] font-[Funnel_Display] text-[1.1rem] font-bold">
                     {jr.userName}
                   </div>
-                  <div className="text-fd-mute mb-[0.2rem] font-[Lexend] text-[0.82rem]">
+                  <div className="text-mute mb-[0.2rem] font-[Lexend] text-[0.82rem]">
                     wants to join {jr.teamName}
                   </div>
-                  <div className="text-fd-mute mb-3 font-[DM_Mono] text-[0.7rem]">
+                  <div className="text-mute mb-3 font-[DM_Mono] text-[0.7rem]">
                     {formatRelative(jr.timestamp)}
                   </div>
                   <div className="flex gap-2">
-                    <button className="border-fd-ink bg-fd-sunset cursor-pointer rounded-full border-2 [padding:0.35rem_1rem] font-[Lexend] text-[0.82rem] font-semibold text-white transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--fd-ink)]">
+                    <button className="border-ink bg-sunset cursor-pointer rounded-full border-2 [padding:0.35rem_1rem] font-[Lexend] text-[0.82rem] font-semibold text-white transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--ink)]">
                       WELCOME ABOARD
                     </button>
-                    <button className="border-fd-ink bg-fd-paper-deep text-fd-ink cursor-pointer rounded-full border-2 [padding:0.35rem_1rem] font-[Lexend] text-[0.82rem] font-semibold transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--fd-ink)]">
+                    <button className="border-ink bg-paper-deep text-ink cursor-pointer rounded-full border-2 [padding:0.35rem_1rem] font-[Lexend] text-[0.82rem] font-semibold transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--ink)]">
                       NOT TODAY
                     </button>
                   </div>
@@ -546,7 +546,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               ))}
               {data.invitations.length === 0 &&
                 data.joinRequests.length === 0 && (
-                  <div className="border-fd-mute text-fd-mute rounded-[14px] border-2 border-dashed p-5 text-center font-[Lexend] text-[0.85rem] opacity-70">
+                  <div className="border-mute text-mute rounded-[14px] border-2 border-dashed p-5 text-center font-[Lexend] text-[0.85rem] opacity-70">
                     No pending RSVPs — you&apos;re all caught up.
                   </div>
                 )}
@@ -561,17 +561,17 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
                 return (
                   <div
                     key={s.id}
-                    className="border-fd-ink bg-fd-card flex items-start gap-[0.85rem] rounded-[16px] border-2 [padding:1rem_1.25rem] shadow-[4px_4px_0_var(--fd-shadow)]"
+                    className="border-ink bg-card flex items-start gap-[0.85rem] rounded-[16px] border-2 [padding:1rem_1.25rem] shadow-[4px_4px_0_var(--shadow)]"
                   >
                     <WhistleSvg />
                     <div className="flex-1">
                       <div className="mb-[0.15rem] font-[Funnel_Display] text-[1rem] font-bold">
                         {s.teamName}
                       </div>
-                      <div className="text-fd-mute mb-[0.2rem] font-[Lexend] text-[0.8rem]">
+                      <div className="text-mute mb-[0.2rem] font-[Lexend] text-[0.8rem]">
                         {s.tournamentName}
                       </div>
-                      <div className="text-fd-mute font-[DM_Mono] text-[0.72rem]">
+                      <div className="text-mute font-[DM_Mono] text-[0.72rem]">
                         Logged {daysAgo} day{daysAgo === 1 ? "" : "s"} ago,
                         awaiting whistle
                       </div>
@@ -582,7 +582,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               {urgentDeadlines.map((d) => (
                 <div
                   key={d.tournament._id}
-                  className="flex items-start gap-[0.85rem] rounded-[16px] border-2 border-[#e53e3e] bg-[rgba(229,62,62,0.05)] [padding:1rem_1.25rem] shadow-[4px_4px_0_var(--fd-shadow)]"
+                  className="flex items-start gap-[0.85rem] rounded-[16px] border-2 border-[#e53e3e] bg-[rgba(229,62,62,0.05)] [padding:1rem_1.25rem] shadow-[4px_4px_0_var(--shadow)]"
                 >
                   <StopwatchSvg urgent />
                   <div className="flex-1">
@@ -598,7 +598,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               ))}
               {data.pendingSubmissions.length === 0 &&
                 urgentDeadlines.length === 0 && (
-                  <div className="border-fd-mute text-fd-mute rounded-[14px] border-2 border-dashed p-5 text-center font-[Lexend] text-[0.85rem] opacity-70">
+                  <div className="border-mute text-mute rounded-[14px] border-2 border-dashed p-5 text-center font-[Lexend] text-[0.85rem] opacity-70">
                     Queue is clear — nothing pending.
                   </div>
                 )}
@@ -610,7 +610,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
       {data.isAdmin && data.adminStats && (
         <section className="relative z-[1] mt-5">
           <RibbonBanner label="COACH'S CLIPBOARD" small />
-          <div className="border-fd-ink bg-fd-paper-deep rounded-[22px] border-2 [padding:1.75rem] shadow-[6px_6px_0_var(--fd-shadow)]">
+          <div className="border-ink bg-paper-deep rounded-[22px] border-2 [padding:1.75rem] shadow-[6px_6px_0_var(--shadow)]">
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <CoachStat
                 label="Members"
