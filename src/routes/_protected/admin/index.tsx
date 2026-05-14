@@ -7,13 +7,6 @@ import { AdminQuickActions } from "@/components/admin/admin-quick-actions";
 import { AdminRecentActivityFeed } from "@/components/admin/admin-recent-activity-feed";
 import { AdminStatsCards } from "@/components/admin/admin-stats-cards";
 import { SectionHeader } from "@/components/section-header";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/hooks/useUser";
 
@@ -52,19 +45,9 @@ function AdminDashboard() {
               pendingActions={dashboardData.pendingActions}
             />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>
-                  Latest submissions across all tournaments
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AdminRecentActivityFeed
-                  activities={dashboardData.recentActivity}
-                />
-              </CardContent>
-            </Card>
+            <AdminRecentActivityFeed
+              activities={dashboardData.recentActivity}
+            />
           </div>
         </>
       ) : (

@@ -1,8 +1,6 @@
 "use client";
 
-import { FileText, Trophy, UserCog, Users } from "lucide-react";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 interface AdminStatsCardsProps {
   stats: {
@@ -13,60 +11,58 @@ interface AdminStatsCardsProps {
   };
 }
 
+type Stats = AdminStatsCardsProps["stats"];
+
+const statCards: {
+  label: string;
+  description: string;
+  accent: string;
+  statKey: keyof Stats;
+}[] = [
+  {
+    label: "Users",
+    description: "Total registered users",
+    accent: "var(--info)",
+    statKey: "totalUsers",
+  },
+  {
+    label: "Tournaments",
+    description: "All tournaments in system",
+    accent: "var(--social)",
+    statKey: "totalTournaments",
+  },
+  {
+    label: "Teams",
+    description: "Active teams across all tournaments",
+    accent: "var(--success)",
+    statKey: "totalTeams",
+  },
+  {
+    label: "Submissions",
+    description: "Total submissions received",
+    accent: "var(--primary)",
+    statKey: "totalSubmissions",
+  },
+];
+
 export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Users</CardTitle>
-          <UserCog className="h-4 w-4 text-blue-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.totalUsers}</div>
-          <p className="text-muted-foreground mt-2 text-xs">
-            Total registered users
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Tournaments</CardTitle>
-          <Trophy className="h-4 w-4 text-purple-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.totalTournaments}</div>
-          <p className="text-muted-foreground mt-2 text-xs">
-            All tournaments in system
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Teams</CardTitle>
-          <Users className="h-4 w-4 text-green-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.totalTeams}</div>
-          <p className="text-muted-foreground mt-2 text-xs">
-            Active teams across all tournaments
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Submissions</CardTitle>
-          <FileText className="h-4 w-4 text-orange-600" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.totalSubmissions}</div>
-          <p className="text-muted-foreground mt-2 text-xs">
-            Total submissions received
-          </p>
-        </CardContent>
-      </Card>
+      {statCards.map((card) => (
+        <div
+          key={card.statKey}
+          className="border-ink bg-card shadow-fd-md hover:shadow-fd-xl flex flex-col gap-[0.2rem] overflow-hidden rounded-xl border-2 p-4 transition-[transform,box-shadow] duration-[120ms] ease-linear hover:-translate-x-0.5 hover:-translate-y-0.5"
+          style={{ "--metric-accent": card.accent } as React.CSSProperties}
+        >
+          <div
+            aria-hidden
+            className="-mx-4 -mt-1 mb-[0.6rem] h-1 rounded-xs [background:repeating-linear-gradient(90deg,var(--metric-accent,var(--gold))_0px,var(--metric-accent,var(--gold))_8px,transparent_8px,transparent_14px)]"
+          />
+          <Eyebrow>{card.label}</Eyebrow>
+          <span className="text-ink text-display">{stats[card.statKey]}</span>
+          <Eyebrow>{card.description}</Eyebrow>
+        </div>
+      ))}
     </div>
   );
 }
