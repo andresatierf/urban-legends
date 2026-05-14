@@ -165,7 +165,7 @@
   --popover: var(--card);
   --popover-foreground: var(--ink);
   --primary: var(--sunset);
-  --primary-foreground: var(--ink);
+  --primary-foreground: var(--white);
   --secondary: var(--paper-deep);
   --secondary-foreground: var(--ink);
   --muted: var(--paper-deep);
@@ -173,7 +173,7 @@
   --accent: var(--paper-deep);
   --accent-foreground: var(--ink);
   --destructive: var(--crimson);
-  --destructive-foreground: var(--paper);
+  --destructive-foreground: var(--white);
   --border: var(--ink);
   --input: rgba(var(--ink-rgb), 0.12);
   --ring: var(--sunset);
@@ -268,6 +268,7 @@
   --ink-rgb: 244, 236, 226;
   --mute: #a89a8b;
   --crimson: #d04a38;
+  --sunset: #d65a2e;
   --shadow: rgba(var(--ink-rgb), 0.12);
   --chip: #2f261f;
 
@@ -430,6 +431,48 @@
   font-weight: 500;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
+}
+
+/* ── Button demo pseudo-state overrides ─────────────────────────── */
+
+@utility pseudo-hover {
+  &[data-variant="default"]:not(:active),
+  &[data-variant="destructive"]:not(:active),
+  &[data-variant="link"]:not(:active) {
+    filter: brightness(1.1);
+  }
+  &[data-variant="secondary"]:not(:active),
+  &[data-variant="outline"]:not(:active) {
+    background-color: var(--accent);
+  }
+  &[data-variant="ghost"]:not(:active),
+  &[data-variant="icon"]:not(:active) {
+    background-color: var(--muted);
+  }
+}
+
+@utility pseudo-focus {
+  box-shadow:
+    0 0 0 2px var(--background),
+    0 0 0 5px color-mix(in srgb, var(--ring) 60%, transparent),
+    3px 3px 0 var(--color-shadow);
+  &[data-variant="ghost"],
+  &[data-variant="icon"],
+  &[data-variant="link"],
+  &[data-variant="outline"] {
+    box-shadow:
+      0 0 0 2px var(--background),
+      0 0 0 5px color-mix(in srgb, var(--ring) 60%, transparent);
+  }
+}
+
+@utility pseudo-active {
+  translate: 1px 1px;
+  &[data-variant="default"],
+  &[data-variant="secondary"],
+  &[data-variant="destructive"] {
+    box-shadow: 1px 1px 0 var(--color-shadow);
+  }
 }
 
 /* ── Field Day keyframes ─────────────────────────────────────────── */
