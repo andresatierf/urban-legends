@@ -35,16 +35,17 @@ export function TeamCard({ data, onLeave, joinSlot }: Props) {
 export function TeamCardSkeleton() {
   return (
     <ComposedCard>
-      <ComposedCardHeader>
-        <div className="flex min-w-0 flex-col gap-[0.15rem]">
-          <Skeleton className="h-3 w-32" />
-          <Skeleton className="h-5 w-40" />
-        </div>
-        <Skeleton className="h-5 w-14" />
+      <ComposedCardHeader
+        badge={{
+          variant: "neutral",
+          children: <Skeleton className="h-3 w-10" />,
+        }}
+      >
+        <Skeleton className="h-3 w-32" />
+        <Skeleton className="h-5 w-40" />
       </ComposedCardHeader>
       <ComposedCardBody>
         <Skeleton className="h-12 w-full rounded-md" />
-        <Skeleton className="h-1 w-full rounded-full" />
         <div className="space-y-1.5">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex items-center gap-2">
