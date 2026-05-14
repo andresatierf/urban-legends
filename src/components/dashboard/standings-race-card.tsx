@@ -23,9 +23,6 @@ export type StandingsRaceCardProps = {
   userTeamId?: string;
 };
 
-const FONT_DISPLAY = "'Funnel Display', sans-serif";
-const FONT_MONO = "'DM Mono', monospace";
-
 const CHART_OVERRIDE =
   "rounded-none! border-0! bg-transparent! p-0! shadow-none!";
 
@@ -40,49 +37,33 @@ export function StandingsRaceCard({
     <div className="border-ink bg-card overflow-hidden rounded-[22px] border-2 shadow-[6px_6px_0_var(--color-shadow)]">
       <header className="border-ink bg-paper-deep flex flex-wrap items-center justify-between gap-4 border-b-2 px-5 py-4">
         <div className="flex flex-col gap-[0.15rem]">
-          <span
-            className="text-mute text-[0.62rem] tracking-[0.18em] uppercase"
-            style={{ fontFamily: FONT_MONO }}
-          >
+          <span className="text-mute text-label-caps text-[0.62rem] tracking-[0.18em]">
             The Race · Live Standings
           </span>
-          <h3
-            className="m-0 text-[1.25rem] font-extrabold"
-            style={{ fontFamily: FONT_DISPLAY }}
-          >
+          <h3 className="font-heading m-0 text-[1.25rem] font-extrabold">
             {group.tournament.name}
           </h3>
         </div>
         <div className="flex items-center gap-[0.85rem]">
           {leader && (
             <span className="border-ink bg-card inline-flex items-center gap-2 rounded-full border-2 px-[0.7rem] py-[0.3rem] shadow-[3px_3px_0_var(--color-shadow)]">
-              <span
-                className="text-mute text-[0.58rem] tracking-[0.18em] uppercase"
-                style={{ fontFamily: FONT_MONO }}
-              >
+              <span className="text-mute text-label-caps text-[0.58rem] tracking-[0.18em]">
                 Leading
               </span>
-              <span
-                className="text-[0.85rem] font-bold"
-                style={{ fontFamily: FONT_DISPLAY }}
-              >
+              <span className="font-heading text-[0.85rem] font-bold">
                 {leader.team.name}
               </span>
-              <span
-                className="text-sunset text-[0.75rem] font-semibold"
-                style={{ fontFamily: FONT_MONO }}
-              >
+              <span className="text-sunset font-mono text-[0.75rem] font-semibold">
                 {leader.team.points} pts
               </span>
             </span>
           )}
           <span
-            className={`border-ink text-ink rounded-full border-2 px-[0.65rem] py-[0.22rem] text-[0.65rem] tracking-[0.16em] uppercase ${
+            className={`border-ink text-ink text-label-caps rounded-full border-2 px-[0.65rem] py-[0.22rem] text-[0.65rem] tracking-[0.16em] ${
               isActive
                 ? "bg-grass dark:border-emerald-700/60 dark:bg-emerald-900/40 dark:text-emerald-200"
                 : "bg-paper-deep text-mute"
             }`}
-            style={{ fontFamily: FONT_MONO }}
           >
             {isActive ? "Active" : "Ended"}
           </span>
@@ -102,10 +83,7 @@ export function StandingsRaceCard({
         </div>
 
         <div className="min-[960px]:border-ink/20 flex min-h-0 flex-col px-[1.1rem] pt-[0.9rem] pb-[1.1rem] min-[960px]:border-l-[1.5px] min-[960px]:border-dashed">
-          <div
-            className="border-ink/15 text-mute grid grid-cols-[2.5rem_1fr_auto] items-center gap-[0.6rem] border-b-[1.5px] px-1 pb-[0.4rem] text-[0.58rem] tracking-[0.16em] uppercase"
-            style={{ fontFamily: FONT_MONO }}
-          >
+          <div className="border-ink/15 text-mute text-label-caps grid grid-cols-[2.5rem_1fr_auto] items-center gap-[0.6rem] border-b-[1.5px] px-1 pb-[0.4rem] text-[0.58rem] tracking-[0.16em]">
             <span>Rank</span>
             <span>Team</span>
             <span className="text-right">Pts</span>
@@ -132,40 +110,25 @@ export function StandingsRaceCard({
                   key={t.team._id}
                   className={`relative grid grid-cols-[2.5rem_1fr_auto] items-center gap-[0.6rem] rounded-[10px] border-[1.5px] px-[0.55rem] pt-[0.55rem] pb-[0.45rem] ${rowBg}`}
                 >
-                  <span
-                    className="text-center text-[1rem]"
-                    style={{ fontFamily: FONT_MONO }}
-                  >
+                  <span className="text-center font-mono text-[1rem]">
                     {rankLabel}
                   </span>
                   <span className="flex min-w-0 items-center gap-[0.45rem]">
-                    <span
-                      className="truncate text-[0.95rem] font-bold"
-                      style={{ fontFamily: FONT_DISPLAY }}
-                    >
+                    <span className="font-heading truncate text-[0.95rem] font-bold">
                       {t.team.name}
                     </span>
                     {t.userRole === "captain" && (
-                      <span
-                        className="border-gold bg-gold/30 rounded-full border-[1.5px] px-[0.4rem] py-[0.08rem] text-[0.55rem] tracking-[0.14em] whitespace-nowrap uppercase"
-                        style={{ fontFamily: FONT_MONO }}
-                      >
+                      <span className="border-gold bg-gold/30 text-label-caps rounded-full border-[1.5px] px-[0.4rem] py-[0.08rem] text-[0.55rem] tracking-[0.14em] whitespace-nowrap">
                         Captain
                       </span>
                     )}
                     {isYou && (
-                      <span
-                        className="border-ink bg-gold text-ink rounded-full border-[1.5px] px-[0.4rem] py-[0.08rem] text-[0.55rem] font-bold tracking-[0.14em]"
-                        style={{ fontFamily: FONT_MONO }}
-                      >
+                      <span className="border-ink bg-gold text-ink text-label-caps rounded-full border-[1.5px] px-[0.4rem] py-[0.08rem] text-[0.55rem] font-bold tracking-[0.14em]">
                         YOU
                       </span>
                     )}
                   </span>
-                  <span
-                    className="text-sunset text-right text-[1rem] font-semibold"
-                    style={{ fontFamily: FONT_MONO }}
-                  >
+                  <span className="text-sunset text-right font-mono text-[1rem] font-semibold">
                     {t.team.points}
                   </span>
                   <span
