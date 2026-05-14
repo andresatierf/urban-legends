@@ -2,7 +2,12 @@ import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { type QueryCtx, mutation, query } from "./_generated/server";
+import {
+  type QueryCtx,
+  internalMutation,
+  mutation,
+  query,
+} from "./_generated/server";
 import {
   canDeleteTeam,
   canEditTeam,
@@ -10,7 +15,10 @@ import {
   computeTeamPermissions,
 } from "./authority/core";
 import { enrichWithRelations } from "./lib/helpers";
-import { recompute as lifecycleRecompute } from "./lifecycle/submissions";
+import {
+  recompute as lifecycleRecompute,
+  recomputeRecentActivity,
+} from "./lifecycle/submissions";
 import { notifyRemovedFromTeam } from "./notifications/triggers";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow, getUser } from "./users";
@@ -850,75 +858,15 @@ export const getStatistics = query({
   },
 });
 
-export const getCardSummaries = query({
-  args: {
-    teamIds: v.array(v.id("teams")),
-  },
-  handler: async (ctx, args) => {
-    await getCurrentUserOrThrow(ctx);
-
-    if (args.teamIds.length === 0) return {};
-
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-    const dates: string[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setUTCDate(d.getUTCDate() - i);
-      dates.push(d.toISOString().split("T")[0]);
+// One-shot backfill for team.recentActivity. Safe to re-run.
+// Invoke via Convex dashboard or `bunx convex run teams:backfillRecentActivity`.
+export const backfillRecentActivity = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const teams = await ctx.db.query("teams").collect();
+    for (const team of teams) {
+      await recomputeRecentActivity(ctx, team._id);
     }
-    const startDate = dates[0];
-
-    const summaries: Record<
-      string,
-      {
-        approved: number;
-        pending: number;
-        days: { date: string; approved: number; pending: number }[];
-      }
-    > = {};
-
-    await Promise.all(
-      args.teamIds.map(async (teamId) => {
-        const submissions = await ctx.db
-          .query("submissions")
-          .withIndex("by_team_and_date", (q) =>
-            q.eq("teamId", teamId).gte("date", startDate),
-          )
-          .collect();
-
-        const dayMap = new Map<string, { approved: number; pending: number }>();
-        for (const date of dates) {
-          dayMap.set(date, { approved: 0, pending: 0 });
-        }
-
-        let totalApproved = 0;
-        let totalPending = 0;
-
-        for (const s of submissions) {
-          if (s.state === "deleted") continue;
-          const bucket = dayMap.get(s.date);
-          if (!bucket) continue;
-          if (s.state === "approved") {
-            bucket.approved++;
-            totalApproved++;
-          } else if (s.state === "pending") {
-            bucket.pending++;
-            totalPending++;
-          }
-        }
-
-        summaries[teamId] = {
-          approved: totalApproved,
-          pending: totalPending,
-          days: dates.map((date) => ({
-            date,
-            ...dayMap.get(date)!,
-          })),
-        };
-      }),
-    );
-
-    return summaries;
+    return { teamsBackfilled: teams.length };
   },
 });

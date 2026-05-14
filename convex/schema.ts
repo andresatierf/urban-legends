@@ -34,6 +34,19 @@ export default defineSchema({
     maxMembers: v.optional(v.number()),
     points: v.number(),
     lastActivityAt: v.optional(v.string()),
+    recentActivity: v.optional(
+      v.object({
+        updatedAt: v.string(),
+        days: v.array(
+          v.object({
+            date: v.string(),
+            approved: v.number(),
+            pending: v.number(),
+            rejected: v.number(),
+          }),
+        ),
+      }),
+    ),
   })
     .index("by_tournament", ["tournamentId"])
     .index("by_tournament_and_name", ["tournamentId", "name"])
