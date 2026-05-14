@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-import { Card } from "../card";
 import { Checkbox } from "../checkbox";
 import { Input } from "../input";
 import { DataTablePagination } from "./pagination";
@@ -124,19 +123,19 @@ export function DataTable<TData, TValue>({
           {/* <DataTableViewOptions table={table} /> */}
         </div>
       )}
-      <Card className="overflow-hidden">
+      <div className="overflow-hidden">
         <Table className="w-full border-collapse text-left">
-          <TableCaption className="bg-muted text-muted-foreground m-0 flex-1 py-2 text-sm">
+          <TableCaption className="text-label-caps text-muted-foreground m-0 flex-1 py-2">
             {table.options.enableRowSelection
               ? `${table.getFilteredSelectedRowModel().rows.length} of ${table.getFilteredRowModel().rows.length} row(s) selected`
               : `${data.length} rows`}
           </TableCaption>
-          <TableHeader className="bg-muted text-muted-foreground text-sm uppercase">
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="p-3">
+                    <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -179,7 +178,7 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
-      </Card>
+      </div>
       <DataTablePagination table={table} />
     </div>
   );
@@ -195,10 +194,10 @@ function InnerTableRow<TData>({ row, className }: InnerTableRowProps<TData>) {
     <TableRow
       key={row.id}
       data-state={row.getIsSelected() && "selected"}
-      className={cn("hover:bg-muted/50 border-t transition", className)}
+      className={className}
     >
       {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id} className="p-3">
+        <TableCell key={cell.id}>
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
         </TableCell>
       ))}

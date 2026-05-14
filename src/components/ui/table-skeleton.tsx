@@ -25,17 +25,15 @@ export function TableSkeleton({
   return (
     <Card className={className} role="status" aria-busy="true">
       <Table>
-        <TableHeader className="bg-gray-50">
+        <TableHeader>
           <TableRow>
             {headers
               ? headers.map((header) => (
-                  <TableHead key={header} className="p-3">
-                    {header}
-                  </TableHead>
+                  <TableHead key={header}>{header}</TableHead>
                 ))
               : Array.from({ length: columns }).map((_, i) => (
                   // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton placeholder - order never changes
-                  <TableHead key={i} className="p-3">
+                  <TableHead key={i}>
                     <Skeleton className="h-4 w-20" />
                   </TableHead>
                 ))}
@@ -47,7 +45,7 @@ export function TableSkeleton({
             <TableRow key={rowIndex}>
               {Array.from({ length: columns }).map((_, colIndex) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: Skeleton placeholder - order never changes
-                <TableCell key={colIndex} className="p-3">
+                <TableCell key={colIndex}>
                   <Skeleton className="h-4 w-full" />
                 </TableCell>
               ))}
