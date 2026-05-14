@@ -1,5 +1,6 @@
-import { SectionHeader } from "../section-header";
-import { TournamentOverviewCard } from "../tournaments/card/layout";
+import { SectionHeader } from "@/components/section-header";
+import { TournamentOverviewCard } from "@/components/tournaments/card/layout";
+
 import { DEMO_TOURNAMENT_ITEMS } from "./tournament-fixtures";
 
 export function TournamentSection() {

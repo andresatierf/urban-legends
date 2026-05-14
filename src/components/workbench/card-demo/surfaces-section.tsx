@@ -1,5 +1,6 @@
 "use client";
 
+import { SectionHeader } from "@/components/section-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,8 +49,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-import { SectionHeader } from "../section-header";
 
 export function SurfacesSection() {
   return (

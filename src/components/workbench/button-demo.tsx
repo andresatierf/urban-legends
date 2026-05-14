@@ -1,7 +1,7 @@
 import { Loader2, Star, Trash2 } from "lucide-react";
 
-import { Button } from "./ui/button";
-import { BUTTON_VARIANTS } from "./ui/button.types";
+import { Button } from "@/components/ui/button";
+import { BUTTON_VARIANTS } from "@/components/ui/button.types";
 
 const VARIANTS = Object.values(BUTTON_VARIANTS);
 

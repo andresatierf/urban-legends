@@ -4,8 +4,8 @@ import type {
   SubmitterEvidence,
 } from "@/components/submissions/review/types";
 
-import type { Doc, Id } from "../../../convex/_generated/dataModel";
-import type { UserWithRoles } from "../../../convex/users";
+import type { Doc, Id } from "../../../../convex/_generated/dataModel";
+import type { UserWithRoles } from "../../../../convex/users";
 
 type State = "pending" | "approved" | "rejected" | "deleted";
 type Tier = "base" | "advanced";
