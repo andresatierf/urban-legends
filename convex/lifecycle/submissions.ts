@@ -310,7 +310,6 @@ export async function submit(
     submissionType: args.type,
     state: "pending",
     createdBy: args.userId,
-    submittedAt: Date.now(),
     pointsEarned: 0,
     submissionGroupId: undefined,
     evidenceStorageIds: args.evidenceStorageIds ?? [],

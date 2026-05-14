@@ -90,7 +90,6 @@ export default defineSchema({
     ),
     createdBy: v.id("users"),
     managedBy: v.optional(v.id("users")),
-    submittedAt: v.number(),
     reviewedAt: v.optional(v.number()),
     tier: v.union(v.literal("base"), v.literal("advanced")),
     pointsEarned: v.number(),

@@ -192,7 +192,6 @@ describe("submit", () => {
       expect(sub?.submissionType).toBe("individual");
       expect(sub?.submissionGroupId).toBeUndefined();
       expect(sub?.tier).toBe("base");
-      expect(sub?.submittedAt).toEqual(expect.any(Number));
       expect(sub?.reviewedAt).toBeUndefined();
       await assertSubmissionInvariant(ctx, { teamId, tournamentId });
     });
@@ -622,7 +621,6 @@ describe("approve", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
       });
     });
 
@@ -648,7 +646,6 @@ describe("approve", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
       });
     });
 
@@ -827,7 +824,6 @@ describe("reject", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
       });
     });
 
@@ -1104,7 +1100,6 @@ describe("softDelete", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
       });
     });
 
@@ -1134,7 +1129,6 @@ describe("softDelete", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
         evidenceStorageIds: [storageId],
       });
     });
@@ -1163,7 +1157,6 @@ describe("softDelete", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
         evidenceStorageIds: [storageId],
       });
     });
@@ -1228,7 +1221,6 @@ describe("softDelete", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
       });
     });
 
@@ -1325,7 +1317,6 @@ describe("edit", () => {
         tier: "base",
         pointsEarned: 1,
         createdBy: userId,
-        submittedAt: Date.now(),
       });
     });
 
@@ -1519,7 +1510,6 @@ describe("edit", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
       });
     });
 
@@ -1550,7 +1540,6 @@ describe("edit", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
         evidenceStorageIds: [storageIdA, storageIdB],
       });
     });
@@ -1604,7 +1593,6 @@ describe("edit", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
         evidenceStorageIds: [storageIdA, storageIdB],
       });
     });
@@ -1641,7 +1629,6 @@ describe("edit", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
         evidenceStorageIds: [storageIdA, storageIdB],
       });
     });
@@ -1695,7 +1682,6 @@ describe("edit", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
         evidenceStorageIds: [storageIdA],
       });
     });
@@ -1738,7 +1724,6 @@ describe("edit", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
         evidenceStorageIds: [storageIdA],
       });
     });
@@ -1771,7 +1756,6 @@ describe("edit", () => {
         tier: "base",
         pointsEarned: 0,
         createdBy: userId,
-        submittedAt: Date.now(),
         evidenceStorageIds: existing,
       });
     });
