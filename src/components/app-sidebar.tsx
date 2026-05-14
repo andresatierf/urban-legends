@@ -4,6 +4,7 @@ import type { FunctionReference } from "convex/server";
 import {
   Activity,
   BarChart3,
+  ClipboardCheck,
   ClipboardList,
   Code2,
   Layers,
@@ -86,14 +87,10 @@ function useSidebarItems(
             icon: Users,
           },
           {
-            title: "Submissions",
+            title: "My Submissions",
             href: "/submissions",
             icon: ClipboardList,
-            badge: {
-              query: api.role.reviewer.getPendingCount,
-              color: "warning",
-              tooltip: "Pending Submissions",
-            },
+            exact: true,
           },
           {
             title: "Submit Activity",
@@ -134,6 +131,16 @@ function useSidebarItems(
         title: "Review",
         roles: ["reviewer", "admin"],
         items: [
+          {
+            title: "Review Submissions",
+            href: "/submissions/review",
+            icon: ClipboardCheck,
+            badge: {
+              query: api.role.reviewer.getPendingCount,
+              color: "warning",
+              tooltip: "Pending Submissions",
+            },
+          },
           {
             title: "Review Stats",
             href: "/reviewer/statistics",

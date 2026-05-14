@@ -12,9 +12,13 @@ import type { SubmissionDetailsData } from "./types";
 
 type Props = {
   data: SubmissionDetailsData;
+  backTo?: string;
 };
 
-export function SubmissionDetailsLayout({ data }: Props) {
+export function SubmissionDetailsLayout({
+  data,
+  backTo = "/submissions",
+}: Props) {
   const isTeamSubmission = data.submission.submissionType === "team";
 
   return (
@@ -23,7 +27,7 @@ export function SubmissionDetailsLayout({ data }: Props) {
       eyebrow="Review"
       headerActions={
         <Button variant="outline" asChild>
-          <Link to="/submissions">
+          <Link to={backTo}>
             <ArrowLeft />
             Back
           </Link>

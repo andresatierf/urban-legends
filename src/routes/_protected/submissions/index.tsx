@@ -1,14 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "convex/react";
 
 import { SectionHeader } from "@/components/section-header";
 import {
-  SubmissionListing,
-  SubmissionListingSkeleton,
+  MySubmissionsListing,
+  MySubmissionsListingSkeleton,
 } from "@/components/submissions/listing/layout";
 import { useUser } from "@/hooks/useUser";
-
-import { api } from "../../../../convex/_generated/api";
 
 export const Route = createFileRoute("/_protected/submissions/")({
   component: SubmissionsPage,
@@ -16,21 +13,20 @@ export const Route = createFileRoute("/_protected/submissions/")({
 
 function SubmissionsPage() {
   const { user } = useUser();
-  const authority = useQuery(api.submissions.getAuthority, {});
 
-  if (!user || authority === undefined) {
+  if (!user) {
     return (
       <>
-        <SectionHeader as="h1" title="Submissions" />
-        <SubmissionListingSkeleton />
+        <SectionHeader as="h1" title="My Submissions" />
+        <MySubmissionsListingSkeleton />
       </>
     );
   }
 
   return (
     <>
-      <SectionHeader as="h1" title="Submissions" />
-      <SubmissionListing user={user} authority={authority} />
+      <SectionHeader as="h1" title="My Submissions" />
+      <MySubmissionsListing user={user} />
     </>
   );
 }
