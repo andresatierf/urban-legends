@@ -309,7 +309,7 @@ function SubmissionsPage() {
             <SectionHeader title="Your Submissions" />
           )}
           <Tabs defaultValue="calendar">
-            <TabsList>
+            <TabsList className="ml-auto">
               <TabsTrigger value="calendar">
                 <Calendar className="mr-2 h-4 w-4" />
                 Calendar
@@ -346,7 +346,7 @@ function SubmissionsPage() {
                               teams={teamsWithTournaments}
                               selectedTeamId={selectedTeamId}
                               onTeamChange={setSelectedTeamId}
-                              className="sm:absolute sm:-top-5 sm:left-5 sm:z-[3]"
+                              className="sm:absolute sm:-top-4 sm:left-4 sm:z-3"
                             />
                           </div>
                         )}
