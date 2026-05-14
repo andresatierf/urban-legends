@@ -7,11 +7,11 @@ export const getStatusBadge = (tournament: Doc<"tournaments">) => {
 
   switch (status) {
     case "upcoming":
-      return <Badge variant="outline">Upcoming</Badge>;
+      return <Badge variant="info">Upcoming</Badge>;
     case "active":
-      return <Badge variant="default">Active</Badge>;
+      return <Badge variant="success">Active</Badge>;
     case "ended":
-      return <Badge variant="secondary">Ended</Badge>;
+      return <Badge variant="neutral">Ended</Badge>;
   }
 };
 

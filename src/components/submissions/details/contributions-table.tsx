@@ -62,9 +62,9 @@ export function ContributionsTable({ submitter, teammates }: Props) {
                   </TableCell>
                   <TableCell>
                     {p.isSubmitter ? (
-                      <Badge variant="secondary">Submitter</Badge>
+                      <Badge variant="info">Submitter</Badge>
                     ) : (
-                      <Badge variant="outline">Member</Badge>
+                      <Badge variant="neutral">Member</Badge>
                     )}
                   </TableCell>
                   <TableCell>

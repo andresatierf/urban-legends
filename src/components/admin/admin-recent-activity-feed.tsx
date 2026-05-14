@@ -39,12 +39,11 @@ export function AdminRecentActivityFeed({
 
   const getStateBadgeVariant = (
     state: string,
-  ): "outline" | "default" | "secondary" | "destructive" => {
-    if (state === "approved") return "default";
-    if (state === "rejected") return "destructive";
-    if (state === "pending") return "secondary";
-    if (state === "deleted") return "outline";
-    return "outline";
+  ): "success" | "warning" | "error" | "neutral" => {
+    if (state === "approved") return "success";
+    if (state === "rejected") return "error";
+    if (state === "pending") return "warning";
+    return "neutral";
   };
 
   if (activities.length === 0) {
@@ -78,7 +77,7 @@ export function AdminRecentActivityFeed({
                   {activity.state}
                 </Badge>
                 {activity.tournament && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="neutral" className="text-xs">
                     {activity.tournament.name}
                   </Badge>
                 )}

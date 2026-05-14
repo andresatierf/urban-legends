@@ -17,13 +17,13 @@ export function SystemServiceStatus({ services }: SystemServiceStatusProps) {
   const getStatusBadge = (status: string) => {
     if (status === "healthy") {
       return (
-        <Badge variant="default" className="gap-1">
+        <Badge variant="success" className="gap-1">
           <CheckCircle className="h-3 w-3" />
           Healthy
         </Badge>
       );
     }
-    return <Badge variant="destructive">Unhealthy</Badge>;
+    return <Badge variant="error">Unhealthy</Badge>;
   };
 
   return (

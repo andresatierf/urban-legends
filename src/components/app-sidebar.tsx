@@ -49,7 +49,7 @@ type SidebarItem = {
   exact?: boolean;
   badge?: {
     query: FunctionReference<"query">;
-    color?: "default" | "destructive" | "secondary" | "outline";
+    color?: "success" | "warning" | "error" | "info" | "social" | "neutral";
     tooltip?: string;
   };
 } & (
@@ -91,7 +91,7 @@ function useSidebarItems(
             icon: ClipboardList,
             badge: {
               query: api.role.reviewer.getPendingCount,
-              color: "secondary",
+              color: "warning",
               tooltip: "Pending Submissions",
             },
           },
@@ -152,7 +152,7 @@ function useSidebarItems(
             icon: Shield,
             badge: {
               query: api.captain.getPendingActionsCount,
-              color: "default",
+              color: "info",
               tooltip: "Pending Requests & Invitations",
             },
             exact: true,

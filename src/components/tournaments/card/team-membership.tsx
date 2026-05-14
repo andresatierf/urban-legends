@@ -19,7 +19,7 @@ export function TeamMembership({ data }: { data: TournamentCardData }) {
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium">{team.name}</span>
           {team.isCaptain && (
-            <Badge variant="secondary" className="flex items-center gap-0.5">
+            <Badge variant="warning" className="flex items-center gap-0.5">
               <Shield className="h-2.5 w-2.5" />
               Captain
             </Badge>

@@ -24,7 +24,7 @@ export function SystemDatabaseMetrics({
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{label}</span>
           {orphaned > 0 && (
-            <Badge variant="destructive" className="gap-1">
+            <Badge variant="error" className="gap-1">
               <AlertTriangle className="h-3 w-3" />
               {orphaned} orphaned
             </Badge>

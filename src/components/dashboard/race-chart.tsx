@@ -19,13 +19,13 @@ import {
 } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
 
-const RACE_COLORS = [
-  "#ff7a45", // sunset
-  "#5db9f5", // sky
-  "#5dc77a", // grass
-  "#a166d4", // plum
-  "#ffc847", // gold
-  "#cd9352", // bronze
+const CHART_TOKENS = [
+  "var(--color-chart-1)",
+  "var(--color-chart-2)",
+  "var(--color-chart-3)",
+  "var(--color-chart-4)",
+  "var(--color-chart-5)",
+  "var(--color-bronze)",
 ];
 
 export type RaceChartSeries = {
@@ -65,7 +65,7 @@ export function RaceChart({
       s.teamId,
       {
         label: <span className="font-medium">{s.teamName}</span>,
-        color: RACE_COLORS[idx % RACE_COLORS.length],
+        color: CHART_TOKENS[idx % CHART_TOKENS.length],
       },
     ]),
   );
@@ -77,7 +77,7 @@ export function RaceChart({
   const legendPayload = series.map((s, idx) => ({
     value: s.teamId,
     dataKey: s.teamId,
-    color: RACE_COLORS[idx % RACE_COLORS.length],
+    color: CHART_TOKENS[idx % CHART_TOKENS.length],
     type: "square" as const,
   }));
 

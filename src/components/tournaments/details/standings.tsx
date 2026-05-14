@@ -133,7 +133,7 @@ function TeamRankRow({
         <div className="flex items-center gap-2">
           <span className="font-medium">{team.name}</span>
           {isUserTeam && (
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="warning" className="text-xs">
               You
             </Badge>
           )}

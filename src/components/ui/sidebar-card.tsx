@@ -91,7 +91,7 @@ export function SidebarCard({
                 <Icon className={cn("h-5 w-5", iconColor ?? "text-primary")} />
               )}
               {badges?.map((badge) => (
-                <Badge key={badge.label} variant={badge.variant ?? "default"}>
+                <Badge key={badge.label} variant={badge.variant ?? "neutral"}>
                   {badge.icon && <badge.icon className="h-3 w-3" />}
                   {badge.label}
                 </Badge>

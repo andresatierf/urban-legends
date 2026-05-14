@@ -31,7 +31,7 @@ export function EvidenceGrid({ evidence }: Props) {
                 <span className="truncate text-xs font-medium">
                   {img.filename ?? `Evidence ${idx + 1}`}
                 </span>
-                <Badge variant="outline" className="shrink-0 text-xs">
+                <Badge variant="neutral" className="shrink-0 text-xs">
                   #{idx + 1}
                 </Badge>
               </CardContent>

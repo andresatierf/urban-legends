@@ -59,16 +59,16 @@ export function Sidebar({ data }: { data: TeamDetails }) {
   const badges: SidebarCardBadge[] = [
     {
       label: team.joinPolicy === "open" ? "Open" : "Closed",
-      variant: team.joinPolicy === "open" ? "default" : "secondary",
+      variant: team.joinPolicy === "open" ? "success" : "neutral",
     },
   ];
   if (isFull) {
-    badges.push({ label: "Full", variant: "destructive" });
+    badges.push({ label: "Full", variant: "error" });
   }
   if (userMembership) {
     badges.push({
       label: userMembership.role,
-      variant: "outline",
+      variant: "warning",
       icon: Shield,
     });
   }

@@ -48,7 +48,7 @@ export function PublicLeaderboardCard({
   const getRankBadge = (rank: number) => {
     return (
       <Badge
-        variant={rank > 3 ? "outline" : "default"}
+        variant={rank > 3 ? "neutral" : "warning"}
         className={cn({
           "bg-podium-gold": rank === 1,
           "bg-podium-silver": rank === 2,
@@ -73,7 +73,7 @@ export function PublicLeaderboardCard({
               {totalTeams} team{totalTeams === 1 ? "" : "s"} competing
             </CardDescription>
           </div>
-          <Badge variant="default">Live</Badge>
+          <Badge variant="success">Live</Badge>
         </div>
       </CardHeader>
       <CardContent>

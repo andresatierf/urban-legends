@@ -74,13 +74,13 @@ export function Sidebar({ data }: { data: SubmissionDetailsData }) {
     { label: submission.state, variant: stateBadgeVariant(submission.state) },
     {
       label: submission.tier,
-      variant: submission.tier === "advanced" ? "default" : "secondary",
+      variant: submission.tier === "advanced" ? "social" : "info",
     },
     ...(isTeamSubmission
       ? [
           {
             label: "Team",
-            variant: "outline" as const,
+            variant: "neutral" as const,
             icon: Users,
           },
         ]

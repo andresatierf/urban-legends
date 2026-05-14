@@ -34,9 +34,7 @@ export function TeamRosters({ data, sortedTeams }: Props) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold">{team.name}</span>
                   <Badge
-                    variant={
-                      team.joinPolicy === "open" ? "default" : "secondary"
-                    }
+                    variant={team.joinPolicy === "open" ? "success" : "neutral"}
                   >
                     {team.joinPolicy === "open" ? "Open" : "Closed"}
                   </Badge>

@@ -6,30 +6,30 @@ export const getStatusBadge = (status: string) => {
   switch (status) {
     case "pending":
       return (
-        <Badge variant="outline">
+        <Badge variant="warning">
           <Clock className="h-3 w-3" />
           Pending
         </Badge>
       );
     case "accepted":
       return (
-        <Badge variant="default">
+        <Badge variant="success">
           <Check className="h-3 w-3" />
           Accepted
         </Badge>
       );
     case "rejected":
       return (
-        <Badge variant="destructive">
+        <Badge variant="error">
           <X className="h-3 w-3" />
           Declined
         </Badge>
       );
     case "cancelled":
-      return <Badge variant="outline">Cancelled</Badge>;
+      return <Badge variant="neutral">Cancelled</Badge>;
     case "expired":
-      return <Badge variant="outline">Expired</Badge>;
+      return <Badge variant="neutral">Expired</Badge>;
     default:
-      return <Badge>{status}</Badge>;
+      return <Badge variant="neutral">{status}</Badge>;
   }
 };
