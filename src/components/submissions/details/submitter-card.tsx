@@ -3,6 +3,7 @@ import { Shield } from "lucide-react";
 import type { UserWithRoles } from "../../../../convex/users";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { Eyebrow } from "../../ui/eyebrow";
 import { getInitials } from "../../users/utils";
 
 type Props = {
@@ -13,10 +14,11 @@ export function SubmitterCard({ submitter }: Props) {
   return (
     <Card className="border-card-info-border">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <Shield className="text-primary h-4 w-4" />
-          <CardTitle>Submitter</CardTitle>
-        </div>
+        <Eyebrow as="div" className="flex items-center gap-2">
+          <Shield className="h-3.5 w-3.5" />
+          Submitter
+        </Eyebrow>
+        <CardTitle className="text-h3">Submitted by</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-3">

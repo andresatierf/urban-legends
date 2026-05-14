@@ -15,6 +15,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { Image } from "@/components/ui/image";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { cn } from "@/lib/utils";
@@ -60,8 +61,12 @@ export function MosaicReviewCard({
           isGroup={facts.isGroup}
           pointsEarned={facts.pointsEarned}
         />
-        <p className="leading-tight font-semibold">{facts.teamName}</p>
-        <p className="text-muted-foreground text-sm">{facts.tournamentName}</p>
+        <p className="font-heading leading-tight font-semibold">
+          {facts.teamName}
+        </p>
+        <Eyebrow as="p" className="truncate">
+          {facts.tournamentName}
+        </Eyebrow>
         <div className="text-muted-foreground text-sm">
           {item.type === "individual" ? (
             <p>

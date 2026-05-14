@@ -20,6 +20,7 @@ export function SubmissionDetailsLayout({ data }: Props) {
   return (
     <DetailsPageLayout
       title="Submission Details"
+      eyebrow="Review"
       headerActions={
         <Button variant="outline" asChild>
           <Link to="/submissions">

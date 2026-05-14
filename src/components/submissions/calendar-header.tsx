@@ -36,7 +36,7 @@ export function CalendarHeader({
 
   return (
     <>
-      <h2 className="text-2xl font-semibold">{monthYear}</h2>
+      <h2 className="text-h2">{monthYear}</h2>
 
       <div className="flex gap-2">
         <Button

@@ -2,6 +2,7 @@ import { Clock } from "lucide-react";
 
 import type { Doc } from "../../../../convex/_generated/dataModel";
 import type { UserWithRoles } from "../../../../convex/users";
+import { Eyebrow } from "../../ui/eyebrow";
 
 function formatDate(input: string | number): string {
   return new Date(input).toLocaleDateString("en-GB", {
@@ -32,10 +33,10 @@ export function ReviewTimeline({ submission, managedByUser }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Clock className="h-4 w-4" />
-        Review timeline
-      </div>
+      <Eyebrow as="div" className="flex items-center gap-2">
+        <Clock className="h-3.5 w-3.5" />
+        Review Timeline
+      </Eyebrow>
       <div className="text-muted-foreground space-y-1 text-xs">
         <div className="flex justify-between">
           <span>Submitted</span>

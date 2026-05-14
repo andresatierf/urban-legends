@@ -4,6 +4,7 @@ import { SectionHeader } from "./section-header";
 
 type DetailsPageLayoutProps = {
   title: string;
+  eyebrow?: string;
   headerActions?: ReactNode;
   sidebar: ReactNode;
   children: ReactNode;
@@ -11,13 +12,14 @@ type DetailsPageLayoutProps = {
 
 export function DetailsPageLayout({
   title,
+  eyebrow,
   headerActions,
   sidebar,
   children,
 }: DetailsPageLayoutProps) {
   return (
     <>
-      <SectionHeader as="h1" title={title}>
+      <SectionHeader as="h1" title={title} eyebrow={eyebrow}>
         {headerActions}
       </SectionHeader>
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
