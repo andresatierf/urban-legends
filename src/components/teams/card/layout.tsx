@@ -1,4 +1,9 @@
-import { Card } from "../../ui/card";
+import {
+  ComposedCard,
+  ComposedCardBody,
+  ComposedCardHeader,
+} from "@/components/common/card/composed-card";
+
 import { Skeleton } from "../../ui/skeleton";
 import { Footer } from "./footer";
 import { Header } from "./header";
@@ -15,29 +20,29 @@ type Props = {
 
 export function TeamCard({ data, onLeave, joinSlot }: Props) {
   return (
-    <Card className="border-ink shadow-fd-lg gap-0 overflow-hidden rounded-2xl border-2 p-0">
+    <ComposedCard>
       <Header data={data} />
-      <div className="flex flex-col gap-3 px-4 py-3">
+      <ComposedCardBody>
         <StatsGrid data={data} />
         <MemberRoster data={data} />
         <RoleBanner data={data} />
         <Footer data={data} onLeave={onLeave} joinSlot={joinSlot} />
-      </div>
-    </Card>
+      </ComposedCardBody>
+    </ComposedCard>
   );
 }
 
 export function TeamCardSkeleton() {
   return (
-    <Card className="border-ink shadow-fd-lg gap-0 overflow-hidden rounded-2xl border-2 p-0">
-      <div className="border-ink bg-paper-deep flex items-center justify-between gap-3 border-b-2 px-4 py-3">
+    <ComposedCard>
+      <ComposedCardHeader>
         <div className="flex min-w-0 flex-col gap-[0.15rem]">
           <Skeleton className="h-3 w-32" />
           <Skeleton className="h-5 w-40" />
         </div>
         <Skeleton className="h-5 w-14" />
-      </div>
-      <div className="flex flex-col gap-3 px-4 py-3">
+      </ComposedCardHeader>
+      <ComposedCardBody>
         <Skeleton className="h-12 w-full rounded-md" />
         <Skeleton className="h-1 w-full rounded-full" />
         <div className="space-y-1.5">
@@ -52,7 +57,7 @@ export function TeamCardSkeleton() {
           <Skeleton className="h-7 flex-1" />
           <Skeleton className="h-7 w-16" />
         </div>
-      </div>
-    </Card>
+      </ComposedCardBody>
+    </ComposedCard>
   );
 }

@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  ComposedCard,
+  ComposedCardHeader,
+} from "@/components/common/card/composed-card";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { RaceChart, type RaceChartSeries } from "./race-chart";
 import type { DashboardTeam } from "./types";
@@ -36,8 +41,8 @@ export function StandingsRaceCard({
 }: StandingsRaceCardProps) {
   const leader = group.teams[0];
   return (
-    <div className="border-ink bg-card shadow-fd-lg overflow-hidden rounded-2xl border-2">
-      <header className="border-ink bg-paper-deep flex flex-wrap items-center justify-between gap-4 border-b-2 px-5 py-4">
+    <ComposedCard>
+      <ComposedCardHeader className="gap-4 px-5 py-4">
         <div className="flex flex-col gap-[0.15rem]">
           <span className="text-mute text-label-caps">
             The Race · Live Standings
@@ -68,7 +73,7 @@ export function StandingsRaceCard({
             {isActive ? "Active" : "Ended"}
           </span>
         </div>
-      </header>
+      </ComposedCardHeader>
 
       <div className="grid grid-cols-1 min-[960px]:grid-cols-[1.4fr_1fr] min-[960px]:[grid-template-rows:544px]">
         <div className="min-w-0 px-4 pt-4 pb-2">
@@ -140,6 +145,6 @@ export function StandingsRaceCard({
           </div>
         </div>
       </div>
-    </div>
+    </ComposedCard>
   );
 }
