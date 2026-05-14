@@ -165,7 +165,7 @@ export function UpsertSubmissionFormDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <FieldGroup>
+          <FieldGroup className="max-w-[640px]">
             {!teamId && (
               <form.AppField name="teamId">
                 {(field) => (

@@ -133,7 +133,7 @@ export function UpsertTeamFormDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <FieldGroup>
+          <FieldGroup className="max-w-[640px]">
             {!tournamentId && (
               <form.AppField name="tournamentId">
                 {(field) => (
