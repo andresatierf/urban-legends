@@ -173,7 +173,7 @@
   --accent: var(--paper-deep);
   --accent-foreground: var(--ink);
   --destructive: var(--crimson);
-  --destructive-foreground: var(--paper);
+  --destructive-foreground: var(--white);
   --border: var(--ink);
   --input: rgba(var(--ink-rgb), 0.12);
   --ring: var(--sunset);
