@@ -8,7 +8,6 @@ import { ReviewSection } from "./review-section";
 type Authority = {
   canReview: boolean;
   canManage: boolean;
-  isPlayer: boolean;
 };
 
 type Props = {
