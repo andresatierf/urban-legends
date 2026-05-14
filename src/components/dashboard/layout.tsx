@@ -238,7 +238,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               tournaments={data.activeTournaments}
               selectedTournamentId={selectedTour._id}
               onSelect={setSelectedTourId}
-              className="sm:absolute sm:-top-5 sm:left-5 sm:z-[3]"
+              className="sm:absolute sm:-top-4 sm:left-5 sm:z-[3]"
             />
           </div>
         )}
