@@ -23,11 +23,11 @@ All currently open issue numbers (used to evaluate blocking):
 
 </open-numbers>
 
-Issues in the **Todo** column of the "Team Planning" project, with bodies:
+Issues in the **Todo** column of the "Team Planning" project that also carry the `ready-for-agent` label, with bodies:
 
 <ready-issues>
 
-!`gh project item-list 2 --owner andresatierf --format json --limit 500 --jq '.items[] | select(.status=="Todo" and .content.type=="Issue") | "## Issue #\(.content.number): \(.content.title)\nLabels: \(.labels | join(", "))\n\n\(.content.body)\n\n---\n"'`
+!`gh project item-list 2 --owner andresatierf --format json --limit 500 --jq '.items[] | select(.status=="Todo" and .content.type=="Issue" and (.labels | index("ready-for-agent"))) | "## Issue #\(.content.number): \(.content.title)\nLabels: \(.labels | join(", "))\n\n\(.content.body)\n\n---\n"'`
 
 </ready-issues>
 
