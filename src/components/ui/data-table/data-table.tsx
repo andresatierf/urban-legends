@@ -4,23 +4,22 @@ import { Link } from "@tanstack/react-router";
 import {
   type ColumnDef,
   type ColumnFiltersState,
-  type Row,
-  type SortingState,
-  type TableOptions,
-  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type Row,
+  type SortingState,
+  type TableOptions,
   useReactTable,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -28,7 +27,6 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-import { Card } from "../card";
 import { Checkbox } from "../checkbox";
 import { Input } from "../input";
 import { DataTablePagination } from "./pagination";
@@ -111,9 +109,9 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       {enableSearch && (
-        <div className="flex items-center py-4">
+        <div className="flex items-center">
           <Input
             type="search"
             placeholder="Search..."
@@ -124,19 +122,14 @@ export function DataTable<TData, TValue>({
           {/* <DataTableViewOptions table={table} /> */}
         </div>
       )}
-      <Card className="overflow-hidden">
+      <div className="border-border bg-card overflow-hidden rounded-xl border-2 shadow-[4px_4px_0_var(--shadow)]">
         <Table className="w-full border-collapse text-left">
-          <TableCaption className="bg-muted text-muted-foreground m-0 flex-1 py-2 text-sm">
-            {table.options.enableRowSelection
-              ? `${table.getFilteredSelectedRowModel().rows.length} of ${table.getFilteredRowModel().rows.length} row(s) selected`
-              : `${data.length} rows`}
-          </TableCaption>
-          <TableHeader className="bg-muted text-muted-foreground text-sm uppercase">
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="p-3">
+                    <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -179,8 +172,8 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
-      </Card>
-      <DataTablePagination table={table} />
+        <DataTablePagination table={table} />
+      </div>
     </div>
   );
 }
@@ -195,10 +188,10 @@ function InnerTableRow<TData>({ row, className }: InnerTableRowProps<TData>) {
     <TableRow
       key={row.id}
       data-state={row.getIsSelected() && "selected"}
-      className={cn("hover:bg-muted/50 border-t transition", className)}
+      className={className}
     >
       {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id} className="p-3">
+        <TableCell key={cell.id}>
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
         </TableCell>
       ))}

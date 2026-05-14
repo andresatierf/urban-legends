@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { RolesBadgeList } from "@/components/users/roles-badge-list";
-import { cn } from "@/lib/utils";
 
 import { api } from "../../../../convex/_generated/api";
 
@@ -45,15 +44,15 @@ function UsersPage() {
       <Card className="overflow-hidden">
         <Table className="w-full border-collapse text-left">
           {users && users?.length !== 0 && (
-            <TableCaption className="my-0 bg-gray-50 py-2 text-gray-600">
+            <TableCaption className="text-label-caps text-muted-foreground my-0 py-2">
               {users?.length} users
             </TableCaption>
           )}
-          <TableHeader className="bg-gray-50 text-sm text-gray-600 uppercase">
+          <TableHeader>
             <TableRow>
-              <TableHead className="p-3">Name</TableHead>
-              <TableHead className="p-3">Email</TableHead>
-              <TableHead className="p-3">Roles</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Roles</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -64,16 +63,12 @@ function UsersPage() {
                 params={{ userId: user._id }}
                 className="contents"
               >
-                <TableRow
-                  className={cn("border-t transition hover:bg-gray-50")}
-                >
-                  <TableCell className="p-3 font-medium text-gray-800">
-                    {user.name}{" "}
-                  </TableCell>
-                  <TableCell className="p-3 text-gray-600">
+                <TableRow>
+                  <TableCell className="font-medium">{user.name} </TableCell>
+                  <TableCell className="text-muted-foreground">
                     {user.email}
                   </TableCell>
-                  <TableCell className="p-3 text-gray-600">
+                  <TableCell>
                     <RolesBadgeList roles={user.roleNames || []} />
                   </TableCell>
                 </TableRow>
@@ -83,7 +78,7 @@ function UsersPage() {
               <TableRow>
                 <TableCell
                   colSpan={3}
-                  className="p-4 text-center text-gray-500 italic"
+                  className="text-muted-foreground p-4 text-center italic"
                 >
                   No users yet.
                 </TableCell>

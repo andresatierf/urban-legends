@@ -56,7 +56,7 @@ const getRowClassName = (rank: number, _isWinner: boolean) => {
   if (rank === 3) {
     return "bg-podium-bronze-bg hover:bg-podium-bronze-bg/80";
   }
-  return "hover:bg-muted/50";
+  return "";
 };
 
 type Props = {
