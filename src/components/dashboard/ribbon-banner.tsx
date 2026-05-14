@@ -20,7 +20,7 @@ export function RibbonBanner({
         <polygon points="18,0 18,40 0,20" fill="currentColor" />
       </svg>
       <div
-        className={`flex items-center [padding:0_1.25rem] font-[Funnel_Display] font-extrabold tracking-[0.14em] whitespace-nowrap uppercase ${small ? "text-[0.8rem]" : "text-[1rem]"} group-hover:[animation:va-ribbon-flutter_0.4s_ease]`}
+        className={`font-heading flex items-center [padding:0_1.25rem] font-extrabold tracking-[0.14em] whitespace-nowrap uppercase ${small ? "text-[0.8rem]" : "text-[1rem]"} group-hover:[animation:va-ribbon-flutter_0.4s_ease]`}
       >
         {label}
       </div>

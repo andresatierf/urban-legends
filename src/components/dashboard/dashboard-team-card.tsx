@@ -27,20 +27,20 @@ export function DashboardTeamCard({
   return (
     <div className="border-ink bg-card rounded-[22px] border-2 p-6 shadow-[6px_6px_0_var(--shadow)] transition-[transform,box-shadow] duration-[120ms] ease-linear hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[8px_8px_0_var(--shadow)]">
       <div className="mb-[0.3rem] flex items-start justify-between gap-2">
-        <div className="flex-1 font-[Funnel_Display] text-[1.15rem] leading-[1.2] font-extrabold">
+        <div className="font-heading flex-1 text-[1.15rem] leading-[1.2] font-extrabold">
           {name}
           {isCaptain && (
-            <span className="border-gold text-ink mt-[0.35rem] ml-[0.35rem] inline-flex items-center gap-[3px] rounded-full border-[1.5px] bg-[rgba(255,200,71,0.3)] [padding:0.15rem_0.5rem] font-[Lexend] text-[0.65rem] font-semibold tracking-[0.08em] uppercase">
+            <span className="border-gold text-ink text-label-caps mt-[0.35rem] ml-[0.35rem] inline-flex items-center gap-[3px] rounded-full border-[1.5px] bg-[rgba(255,200,71,0.3)] [padding:0.15rem_0.5rem] text-[0.65rem]">
               <WhistleSvgSmall />
               Team Captain
             </span>
           )}
         </div>
-        <div className="text-ink flex-shrink-0 font-[DM_Mono] text-[1.6rem] leading-[1] font-medium [font-variant-numeric:tabular-nums]">
+        <div className="text-ink text-metric flex-shrink-0 text-[1.6rem]">
           {points}
         </div>
       </div>
-      <div className="text-mute mb-[0.85rem] font-[Lexend] text-[0.82rem] italic">
+      <div className="text-mute text-body-sm mb-[0.85rem] text-[0.82rem] italic">
         {tournamentName}
       </div>
       <div className="mb-4 flex items-center gap-1">
@@ -51,7 +51,7 @@ export function DashboardTeamCard({
           />
         ))}
         {memberCount > 5 && (
-          <span className="text-mute ml-1 font-[DM_Mono] text-[0.7rem]">
+          <span className="text-mute ml-1 font-mono text-[0.7rem]">
             +{memberCount - 5}
           </span>
         )}
@@ -63,7 +63,7 @@ export function DashboardTeamCard({
         />
         <RunnerSvg progress={Math.min(progress, 100)} />
       </div>
-      <div className="text-mute flex justify-between font-[DM_Mono] text-[0.6rem] tracking-[0.08em]">
+      <div className="text-mute text-label-caps flex justify-between text-[0.6rem]">
         <span>Start</span>
         <span>Finish</span>
       </div>

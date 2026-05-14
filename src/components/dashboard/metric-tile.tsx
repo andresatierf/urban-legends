@@ -33,13 +33,11 @@ export function MetricTile({
         aria-hidden
         className="-mx-4 -mt-1 mb-[0.6rem] h-1 rounded-[2px] [background:repeating-linear-gradient(90deg,var(--metric-accent,var(--gold))_0px,var(--metric-accent,var(--gold))_8px,transparent_8px,transparent_14px)]"
       />
-      <span className="text-mute font-[DM_Mono] text-[0.6rem] font-medium tracking-[0.16em] uppercase">
+      <span className="text-mute text-label-caps text-[0.6rem]">
         {label}
       </span>
-      <span className="text-ink font-[Funnel_Display] text-[2.4rem] leading-[1] font-extrabold [font-variant-numeric:tabular-nums]">
-        {value}
-      </span>
-      <span className="text-mute mb-[0.4rem] font-[DM_Mono] text-[0.6rem] font-medium tracking-[0.12em] uppercase">
+      <span className="text-ink text-display text-[2.4rem]">{value}</span>
+      <span className="text-mute text-label-caps mb-[0.4rem] text-[0.6rem]">
         {unit}
       </span>
       <svg
@@ -83,25 +81,26 @@ export function RosetteTile({
     <div
       className={`border-ink bg-card flex flex-1 flex-col items-center rounded-[22px] border-2 p-6 text-center shadow-[6px_6px_0_var(--shadow)] transition-[transform,box-shadow] duration-[120ms] ease-linear hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[8px_8px_0_var(--shadow)] ${highlight ? "border-gold bg-[rgba(255,200,71,0.15)]" : ""}`}
     >
-      <div className="text-mute mb-[0.35rem] font-[DM_Mono] text-[0.6rem] font-medium tracking-[0.2em] uppercase">
+      <div className="text-mute text-label-caps mb-[0.35rem] text-[0.6rem]">
         {label}
       </div>
-      <div className="text-ink mb-[0.35rem] font-[Funnel_Display] text-[1.3rem] leading-[1.2] font-extrabold">
+      <div className="text-ink font-heading mb-[0.35rem] text-[1.3rem] leading-[1.2] font-extrabold">
         {team.team.name}
       </div>
       {team.userRole === "captain" && (
         <span
-          className="border-gold text-ink mb-2 inline-flex items-center gap-[3px] rounded-full border-[1.5px] bg-[rgba(255,200,71,0.3)] [padding:0.15rem_0.5rem] font-[Lexend] text-[0.65rem] font-semibold tracking-[0.08em] uppercase"
+          className="border-gold text-ink text-label-caps mb-2 inline-flex items-center gap-[3px] rounded-full border-[1.5px] bg-[rgba(255,200,71,0.3)] [padding:0.15rem_0.5rem] text-[0.65rem]"
           style={{ marginBottom: "0.5rem" }}
         >
           <WhistleSvgSmall />
           Captain
         </span>
       )}
-      <div className="text-ink font-[DM_Mono] text-[2rem] leading-[1] font-medium [font-variant-numeric:tabular-nums]">
-        {team.team.points} <span className="text-mute text-[0.9rem]">pts</span>
+      <div className="text-ink text-metric text-[2rem]">
+        {team.team.points}{" "}
+        <span className="text-mute text-[0.9rem]">pts</span>
       </div>
-      <div className="text-mute mt-1 font-[Lexend] text-[0.78rem]">
+      <div className="text-mute text-body-sm mt-1 text-[0.78rem]">
         {team.memberCount} members
       </div>
       <div
@@ -114,7 +113,7 @@ export function RosetteTile({
         />
         <RunnerSvg progress={progress} />
       </div>
-      <div className="text-mute flex justify-between font-[DM_Mono] text-[0.6rem] tracking-[0.08em]">
+      <div className="text-mute text-label-caps flex justify-between text-[0.6rem]">
         <span>Start</span>
         <span>{progress}%</span>
         <span>End</span>

@@ -11,7 +11,7 @@ export function FooterRibbon({ date }: { date: string }) {
       >
         <polygon points="18,0 18,40 0,20" fill="currentColor" />
       </svg>
-      <span className="flex items-center [padding:0_1.5rem] font-[Funnel_Display] text-[0.82rem] font-bold tracking-[0.2em] whitespace-nowrap text-white uppercase">
+      <span className="font-heading flex items-center [padding:0_1.5rem] text-[0.82rem] font-bold tracking-[0.2em] whitespace-nowrap text-white uppercase">
         GO TEAM &middot; {date} &middot; KEEP IT MOVING
       </span>
       <svg
