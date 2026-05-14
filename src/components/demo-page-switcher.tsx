@@ -4,8 +4,12 @@ import { useActiveRoute } from "@/hooks/useActiveRoute";
 import { cn } from "@/lib/utils";
 
 const DEMO_PAGES = [
+  { to: "/dev/tokens", label: "Tokens" },
   { to: "/dev/button-demo", label: "Buttons" },
   { to: "/dev/card-demo", label: "Cards" },
+  { to: "/dev/inputs", label: "Inputs" },
+  { to: "/dev/badges", label: "Badges" },
+  { to: "/dev/table", label: "Table" },
 ] as const;
 
 export function DemoPageSwitcher() {
