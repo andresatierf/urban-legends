@@ -132,8 +132,8 @@ function Chips({
       </Badge>
       {tier === "advanced" && (
         <Badge
-          variant="outline"
-          className="bg-background/90 gap-0.5 text-[10px] font-medium shadow-sm backdrop-blur"
+          variant="social"
+          className="gap-0.5 text-[10px] font-medium shadow-sm backdrop-blur"
         >
           <Sparkles className="h-2.5 w-2.5" />
           Advanced
@@ -141,8 +141,8 @@ function Chips({
       )}
       {isGroup && (
         <Badge
-          variant="outline"
-          className="bg-background/90 gap-0.5 text-[10px] font-medium shadow-sm backdrop-blur"
+          variant="info"
+          className="gap-0.5 text-[10px] font-medium shadow-sm backdrop-blur"
         >
           <Users className="h-2.5 w-2.5" />
           Team
@@ -150,8 +150,8 @@ function Chips({
       )}
       {pointsEarned > 0 && (
         <Badge
-          variant="outline"
-          className="bg-background/90 text-[10px] font-medium shadow-sm backdrop-blur"
+          variant="warning"
+          className="text-[10px] font-medium shadow-sm backdrop-blur"
         >
           +{pointsEarned} pts
         </Badge>

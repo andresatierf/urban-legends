@@ -17,10 +17,10 @@ export function Header({ data }: { data: TeamCardData }) {
             <Star className="size-3.5 fill-amber-400 text-amber-400" />
           )}
         </CardTitle>
-        <Badge variant={team.joinPolicy === "open" ? "default" : "secondary"}>
+        <Badge variant={team.joinPolicy === "open" ? "success" : "neutral"}>
           {team.joinPolicy === "open" ? "Open" : "Closed"}
         </Badge>
-        {isFull && <Badge variant="destructive">Full</Badge>}
+        {isFull && <Badge variant="error">Full</Badge>}
       </div>
     </CardHeader>
   );

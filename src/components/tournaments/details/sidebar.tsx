@@ -34,10 +34,10 @@ export function Sidebar({ data, tournamentId }: Props) {
             : "Ended",
       variant:
         data.status === "active"
-          ? "default"
+          ? "success"
           : data.status === "upcoming"
-            ? "outline"
-            : "secondary",
+            ? "info"
+            : "neutral",
     },
   ];
 

@@ -35,13 +35,13 @@ export function SubmissionCardDetails({
           </Badge>
         )}
         {submission.submissionType === "team" && (
-          <Badge variant="outline">
+          <Badge variant="social">
             <Users className="mr-1 h-3 w-3" />
             Team Exercise
           </Badge>
         )}
         {submission.pointsEarned > 0 && (
-          <Badge variant="outline">
+          <Badge variant="warning">
             <Trophy className="mr-1 h-3 w-3" />
             {submission.pointsEarned} points
           </Badge>

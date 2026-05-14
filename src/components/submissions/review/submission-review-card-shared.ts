@@ -20,7 +20,7 @@ export function stateBadgeVariant(
 ): BadgeProps["variant"] {
   if (state === "approved") return "success";
   if (state === "rejected") return "error";
-  if (state === "deleted") return "outline";
+  if (state === "deleted") return "neutral";
   return "warning";
 }
 

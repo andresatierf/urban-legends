@@ -69,18 +69,6 @@ function BadgesWorkbenchPage() {
           <Badge variant="neutral">Deleted</Badge>
         </div>
       </section>
-
-      <section className="space-y-4">
-        <h3 className="text-h3">Legacy variants</h3>
-        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
-          <Badge variant="default">default</Badge>
-          <Badge variant="secondary">secondary</Badge>
-          <Badge variant="destructive">destructive</Badge>
-          <Badge variant="outline">outline</Badge>
-          <Badge variant="ghost">ghost</Badge>
-          <Badge variant="link">link</Badge>
-        </div>
-      </section>
     </div>
   );
 }

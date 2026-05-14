@@ -67,9 +67,7 @@ export function MemberRoster({ data }: { data: TeamDetails }) {
                     <span className="text-sm font-medium">{member.name}</span>
                     <Badge
                       variant={
-                        member.memberRole === "captain"
-                          ? "default"
-                          : "secondary"
+                        member.memberRole === "captain" ? "warning" : "neutral"
                       }
                     >
                       {member.memberRole === "captain" && (

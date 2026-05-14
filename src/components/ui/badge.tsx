@@ -9,17 +9,6 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground [a]:hover:bg-primary/80 rounded-full font-medium",
-        secondary:
-          "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80 rounded-full font-medium",
-        destructive:
-          "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20 rounded-full font-medium",
-        outline:
-          "border-border bg-input/20 text-foreground dark:bg-input/30 [a]:hover:bg-muted [a]:hover:text-muted-foreground rounded-full font-medium",
-        ghost:
-          "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50 rounded-full font-medium",
-        link: "text-primary rounded-full font-medium underline-offset-4 hover:underline",
         success:
           "text-label-caps bg-badge-success-bg text-badge-success-text border-badge-success-border rounded-full border-2 tracking-[0.16em]",
         warning:
@@ -40,7 +29,7 @@ const badgeVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "neutral",
       size: "default",
     },
   },
@@ -48,7 +37,7 @@ const badgeVariants = cva(
 
 function Badge({
   className,
-  variant = "default",
+  variant = "neutral",
   size = "default",
   asChild = false,
   ...props

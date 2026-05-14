@@ -55,21 +55,19 @@ export function LiveActivityFeed({ activities }: LiveActivityFeedProps) {
                 </span>
               </p>
               <div className="flex flex-wrap items-center gap-2 text-xs">
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="neutral" className="text-xs">
                   <Trophy className="mr-1 h-3 w-3" />
                   {activity.tournament?.name || "Unknown tournament"}
                 </Badge>
                 <Badge
-                  variant={
-                    activity.tier === "advanced" ? "secondary" : "outline"
-                  }
+                  variant={activity.tier === "advanced" ? "info" : "neutral"}
                   className="text-xs"
                 >
                   {activity.tier === "advanced" ? "Advanced" : "Base"} Tier
                 </Badge>
                 <Badge
                   variant={
-                    activity.submissionType === "team" ? "secondary" : "outline"
+                    activity.submissionType === "team" ? "social" : "neutral"
                   }
                   className="text-xs"
                 >

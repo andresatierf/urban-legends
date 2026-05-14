@@ -13,13 +13,13 @@ import {
 
 interface SidebarBadgeProps {
   query: FunctionReference<"query">;
-  color?: "default" | "destructive" | "secondary" | "outline";
+  color?: "success" | "warning" | "error" | "info" | "social" | "neutral";
   tooltip?: string;
 }
 
 export function SidebarBadge({
   query,
-  color = "default",
+  color = "neutral",
   tooltip,
 }: SidebarBadgeProps) {
   // query is already a valid FunctionReference<"query">

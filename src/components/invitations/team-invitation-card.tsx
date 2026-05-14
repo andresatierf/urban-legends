@@ -38,7 +38,7 @@ export function TeamInvitationCard({
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <p className="font-medium">{invitation.team?.name}</p>
-            {isExpired && <Badge variant="destructive">Expired</Badge>}
+            {isExpired && <Badge variant="error">Expired</Badge>}
           </div>
           <div className="text-muted-foreground mt-1 flex flex-col items-start">
             <span className="flex items-center gap-1">
