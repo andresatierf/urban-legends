@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -458,6 +459,38 @@ function SwitchSection() {
   );
 }
 
+function SliderSection() {
+  return (
+    <Section title="Slider">
+      <div className="space-y-4">
+        <StateRow label="Default">
+          <Slider defaultValue={[50]} />
+        </StateRow>
+        <StateRow label="With value">
+          <div className="flex items-center gap-3">
+            <Slider defaultValue={[72]} className="flex-1" />
+            <span className="text-body-sm text-muted-foreground w-8 text-right tabular-nums">
+              72
+            </span>
+          </div>
+        </StateRow>
+        <StateRow label="Focus">
+          <Slider defaultValue={[40]} className="pseudo-focus" />
+        </StateRow>
+        <StateRow label="Range">
+          <Slider defaultValue={[25, 75]} />
+        </StateRow>
+        <StateRow label="Stepped">
+          <Slider defaultValue={[3]} min={0} max={10} step={1} />
+        </StateRow>
+        <StateRow label="Disabled">
+          <Slider defaultValue={[30]} disabled />
+        </StateRow>
+      </div>
+    </Section>
+  );
+}
+
 function InputsWorkbenchPage() {
   return (
     <div className="space-y-8">
@@ -473,6 +506,7 @@ function InputsWorkbenchPage() {
       <CheckboxSection />
       <RadioSection />
       <SwitchSection />
+      <SliderSection />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { Slider as SliderPrimitive } from "radix-ui";
-import type * as React from "react";
+import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,12 @@ function Slider({
   max = 100,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root>) {
+  const thumbCount = React.useMemo(() => {
+    if (Array.isArray(value)) return value.length;
+    if (Array.isArray(defaultValue)) return defaultValue.length;
+    return 1;
+  }, [value, defaultValue]);
+
   return (
     <SliderPrimitive.Root
       data-slot="slider"
@@ -35,10 +41,13 @@ function Slider({
           className="bg-primary absolute h-full"
         />
       </SliderPrimitive.Track>
-      <SliderPrimitive.Thumb
-        data-slot="slider-thumb"
-        className="border-border bg-chip focus-visible:border-ring focus-visible:ring-ring/20 block size-4 rounded-full border-2 shadow-sm transition-colors outline-none focus-visible:ring-[3px] disabled:pointer-events-none"
-      />
+      {Array.from({ length: thumbCount }, (_, i) => (
+        <SliderPrimitive.Thumb
+          key={i}
+          data-slot="slider-thumb"
+          className="border-border bg-chip focus-visible:border-ring focus-visible:ring-ring/20 block size-4 rounded-full border-2 shadow-sm transition-colors outline-none focus-visible:ring-[3px] disabled:pointer-events-none"
+        />
+      ))}
     </SliderPrimitive.Root>
   );
 }
