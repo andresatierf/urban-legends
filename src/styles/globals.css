@@ -80,6 +80,18 @@
   --color-card-dashed-bg: var(--color-card-dashed-bg);
   --color-card-dashed-border: var(--color-card-dashed-border);
 
+  /* ── Badge semantic tokens ───────────────────────────────────────── */
+  --color-badge-success-bg: var(--badge-success-bg);
+  --color-badge-success-text: var(--badge-success-text);
+  --color-badge-warning-bg: var(--badge-warning-bg);
+  --color-badge-warning-text: var(--badge-warning-text);
+  --color-badge-error-bg: var(--badge-error-bg);
+  --color-badge-error-text: var(--badge-error-text);
+  --color-badge-info-bg: var(--badge-info-bg);
+  --color-badge-info-text: var(--badge-info-text);
+  --color-badge-social-bg: var(--badge-social-bg);
+  --color-badge-social-text: var(--badge-social-text);
+
   /* ── Component color tokens ────────────────────────────────────── */
   --color-podium-gold: var(--podium-gold);
   --color-podium-silver: var(--podium-silver);
@@ -222,6 +234,18 @@
   --podium-silver-bg: #c5cdd61a;
   --podium-bronze-bg: #cd93521a;
 
+  /* ── Badge (tinted-alpha semantic fills per DESIGN.md) ──────────── */
+  --badge-success-bg: #5dc77a29;
+  --badge-success-text: #1f5a33;
+  --badge-warning-bg: #ffc8472e;
+  --badge-warning-text: #6b4a07;
+  --badge-error-bg: #c13a2a29;
+  --badge-error-text: var(--crimson);
+  --badge-info-bg: #5db9f529;
+  --badge-info-text: #1b5179;
+  --badge-social-bg: #a166d429;
+  --badge-social-text: #5c2c8e;
+
   /* ── Calendar (derived from semantic state aliases) ─────────────── */
   --calendar-approved-border: #4aa865;
   --calendar-approved-bg: #5dc77a1a;
@@ -292,6 +316,18 @@
   --podium-gold-bg: #ffc84733;
   --podium-silver-bg: #c5cdd61a;
   --podium-bronze-bg: #cd935226;
+
+  /* ── Badge (dark) ──────────────────────────────────────────────── */
+  --badge-success-bg: #5dc77a26;
+  --badge-success-text: #7fd999;
+  --badge-warning-bg: #ffc84726;
+  --badge-warning-text: #ffd670;
+  --badge-error-bg: #d04a3826;
+  --badge-error-text: #e07060;
+  --badge-info-bg: #5db9f526;
+  --badge-info-text: #8dcdf7;
+  --badge-social-bg: #a166d426;
+  --badge-social-text: #c49ae6;
 
   /* ── Calendar (dark) ───────────────────────────────────────────── */
   --calendar-approved-border: #5dc77a;

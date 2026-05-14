@@ -18,10 +18,10 @@ export interface SubmissionReviewCardProps {
 export function stateBadgeVariant(
   state: SubmissionState,
 ): BadgeProps["variant"] {
-  if (state === "approved") return "default";
-  if (state === "rejected") return "destructive";
-  if (state === "deleted") return "secondary";
-  return "outline";
+  if (state === "approved") return "success";
+  if (state === "rejected") return "error";
+  if (state === "deleted") return "outline";
+  return "warning";
 }
 
 export function managedByLabel(state: SubmissionState): string {

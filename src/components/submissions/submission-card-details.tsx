@@ -6,6 +6,8 @@ import type { Doc } from "@/../convex/_generated/dataModel";
 import { Badge } from "@/components/ui/badge";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 
+import { stateBadgeVariant } from "./review/submission-review-card-shared";
+
 interface SubmissionCardDetailsProps {
   submission: Doc<"submissions">;
   team: Doc<"teams">;
@@ -19,36 +21,16 @@ export function SubmissionCardDetails({
 }: SubmissionCardDetailsProps) {
   const { format } = useFormattedDate();
 
-  const tierColors = {
-    base: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-    advanced:
-      "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-  };
-
-  // Safely get tier color with fallback
-  const tierColor =
-    submission.tier && submission.tier in tierColors
-      ? tierColors[submission.tier as keyof typeof tierColors]
-      : tierColors.base;
+  const tierBadgeVariant = submission.tier === "advanced" ? "social" : "info";
 
   return (
     <div className="flex-1 space-y-3">
       <div className="flex flex-wrap gap-2">
-        <Badge
-          variant={
-            submission.state === "approved"
-              ? "default"
-              : submission.state === "rejected"
-                ? "destructive"
-                : submission.state === "deleted"
-                  ? "secondary"
-                  : "outline"
-          }
-        >
+        <Badge variant={stateBadgeVariant(submission.state)}>
           {submission.state.charAt(0).toUpperCase() + submission.state.slice(1)}
         </Badge>
         {submission.tier && (
-          <Badge className={tierColor}>
+          <Badge variant={tierBadgeVariant}>
             {submission.tier === "base" ? "Base Tier" : "Advanced Tier"}
           </Badge>
         )}

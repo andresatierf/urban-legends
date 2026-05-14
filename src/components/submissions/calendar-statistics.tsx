@@ -45,22 +45,22 @@ export function CalendarStatistics({
     {
       label: "Total Days",
       value: statistics.totalDays,
-      color: "text-blue-600",
+      color: "text-info",
     },
     {
       label: "Days Submitted",
       value: statistics.daysWithSubmissions,
-      color: "text-green-600",
+      color: "text-success",
     },
     {
       label: "Current Streak",
       value: `${statistics.currentStreak} 🔥`,
-      color: "text-orange-600",
+      color: "text-warning",
     },
     {
       label: "Completion Rate",
       value: `${statistics.completionRate}%`,
-      color: "text-purple-600",
+      color: "text-social",
     },
   ];
 
@@ -68,17 +68,17 @@ export function CalendarStatistics({
     {
       label: "Approved",
       value: statistics.approved,
-      color: "text-green-600",
+      color: "text-success",
     },
     {
       label: "Pending",
       value: statistics.pending,
-      color: "text-yellow-600",
+      color: "text-warning",
     },
     {
       label: "Rejected",
       value: statistics.rejected,
-      color: "text-red-600",
+      color: "text-destructive",
     },
   ];
 
@@ -86,20 +86,20 @@ export function CalendarStatistics({
     {
       condition: statistics.completionRate === 100,
       message: "🎉 Perfect completion! Keep up the amazing work!",
-      bgColor: "bg-green-50 dark:bg-green-700/20",
-      textColor: "text-green-800 dark:text-green-400",
+      bgColor: "bg-badge-success-bg",
+      textColor: "text-badge-success-text",
     },
     {
       condition: statistics.currentStreak >= 7 && statistics.currentStreak < 30,
       message: `🔥 You're on fire! ${statistics.currentStreak} day streak!`,
-      bgColor: "bg-orange-50 dark:bg-orange-700/20",
-      textColor: "text-orange-800 dark:text-orange-400",
+      bgColor: "bg-badge-warning-bg",
+      textColor: "text-badge-warning-text",
     },
     {
       condition: statistics.currentStreak >= 30,
       message: `👑 Legendary! ${statistics.currentStreak} day streak! You're unstoppable!`,
-      bgColor: "bg-purple-50 dark:bg-purple-700/20",
-      textColor: "text-purple-800 dark:text-purple-400",
+      bgColor: "bg-badge-social-bg",
+      textColor: "text-badge-social-text",
     },
   ];
 
