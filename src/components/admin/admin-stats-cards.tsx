@@ -1,7 +1,5 @@
 "use client";
 
-import { FileText, Trophy, UserCog, Users } from "lucide-react";
-
 import { Eyebrow } from "@/components/ui/eyebrow";
 
 interface AdminStatsCardsProps {
@@ -18,7 +16,6 @@ const statCards = [
     key: "users",
     label: "Users",
     description: "Total registered users",
-    icon: UserCog,
     accent: "var(--info)",
     getValue: (s: AdminStatsCardsProps["stats"]) => s.totalUsers,
   },
@@ -26,7 +23,6 @@ const statCards = [
     key: "tournaments",
     label: "Tournaments",
     description: "All tournaments in system",
-    icon: Trophy,
     accent: "var(--social)",
     getValue: (s: AdminStatsCardsProps["stats"]) => s.totalTournaments,
   },
@@ -34,7 +30,6 @@ const statCards = [
     key: "teams",
     label: "Teams",
     description: "Active teams across all tournaments",
-    icon: Users,
     accent: "var(--success)",
     getValue: (s: AdminStatsCardsProps["stats"]) => s.totalTeams,
   },
@@ -42,7 +37,6 @@ const statCards = [
     key: "submissions",
     label: "Submissions",
     description: "Total submissions received",
-    icon: FileText,
     accent: "var(--primary)",
     getValue: (s: AdminStatsCardsProps["stats"]) => s.totalSubmissions,
   },
