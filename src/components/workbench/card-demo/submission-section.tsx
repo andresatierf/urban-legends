@@ -1,7 +1,8 @@
-import { SectionHeader } from "../section-header";
-import { CarouselReviewCard } from "../submissions/review/submission-review-card-carousel";
-import { MosaicReviewCard } from "../submissions/review/submission-review-card-mosaic";
-import type { SubmissionReviewCardProps } from "../submissions/review/submission-review-card-shared";
+import { SectionHeader } from "@/components/section-header";
+import { CarouselReviewCard } from "@/components/submissions/review/submission-review-card-carousel";
+import { MosaicReviewCard } from "@/components/submissions/review/submission-review-card-mosaic";
+import type { SubmissionReviewCardProps } from "@/components/submissions/review/submission-review-card-shared";
+
 import { DEMO_GROUP_ITEMS, DEMO_INDIVIDUAL_ITEMS } from "./submission-fixtures";
 
 const VARIANTS = [

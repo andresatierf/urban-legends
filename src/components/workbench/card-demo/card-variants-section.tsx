@@ -1,3 +1,4 @@
+import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,8 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-import { SectionHeader } from "../section-header";
 
 export function CardVariantsSection() {
   return (
