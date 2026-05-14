@@ -367,6 +367,7 @@ describe("tournaments.listWithAuthority", () => {
           tier: "base",
           createdBy: playerId,
           pointsEarned: 1,
+          submittedAt: Date.now(),
         });
         await ctx.db.insert("submissions", {
           userId: playerId,
@@ -378,6 +379,7 @@ describe("tournaments.listWithAuthority", () => {
           tier: "base",
           createdBy: playerId,
           pointsEarned: 0,
+          submittedAt: Date.now(),
         });
       });
 
@@ -415,6 +417,7 @@ describe("tournaments.listWithAuthority", () => {
           tier: "base",
           createdBy: creatorId,
           pointsEarned: 0,
+          submittedAt: Date.now(),
         });
         await ctx.db.insert("submissions", {
           userId: creatorId,
@@ -426,6 +429,7 @@ describe("tournaments.listWithAuthority", () => {
           tier: "base",
           createdBy: creatorId,
           pointsEarned: 0,
+          submittedAt: Date.now(),
         });
       });
 
@@ -453,6 +457,7 @@ describe("tournaments.listWithAuthority", () => {
           tier: "base",
           createdBy: creatorId,
           pointsEarned: 0,
+          submittedAt: Date.now(),
         });
       });
 

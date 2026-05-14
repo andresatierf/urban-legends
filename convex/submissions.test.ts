@@ -71,6 +71,7 @@ describe("submissions.list", () => {
             tier: "base",
             createdBy: userId,
             pointsEarned: 0,
+            submittedAt: Date.now(),
             evidenceStorageIds: [storageId],
           });
           return { userId, teamId, tournamentId, storageId };
@@ -102,6 +103,7 @@ describe("submissions.list", () => {
           tier: "base",
           createdBy: userId,
           pointsEarned: 0,
+          submittedAt: Date.now(),
         });
         return { userId };
       });
@@ -155,6 +157,7 @@ describe("submissions.getMonthSubmissions — thumbnail resolution logic", () =>
         tier: "base",
         createdBy: userId,
         pointsEarned: 0,
+        submittedAt: Date.now(),
         evidenceStorageIds: [s1, s2],
       });
       const sub = await ctx.db.get(subId);

@@ -31,7 +31,12 @@ async function transition(
   }
 
   // approved may move forward to rejected or deleted (e.g. admin correction), but not back
-  await ctx.db.patch(submissionId, { state: to, managedBy });
+  const isReview = to === "approved" || to === "rejected";
+  await ctx.db.patch(submissionId, {
+    state: to,
+    managedBy,
+    ...(isReview && { reviewedAt: Date.now() }),
+  });
   return "changed";
 }
 
@@ -305,6 +310,7 @@ export async function submit(
     submissionType: args.type,
     state: "pending",
     createdBy: args.userId,
+    submittedAt: Date.now(),
     pointsEarned: 0,
     submissionGroupId: undefined,
     evidenceStorageIds: args.evidenceStorageIds ?? [],

@@ -124,6 +124,7 @@ function makeIndividual(
     createdBy: `user-${idx}` as Id<"users">,
     tier,
     pointsEarned: pointsFor(state, tier),
+    submittedAt: Date.now(),
   };
   return {
     type: "individual",

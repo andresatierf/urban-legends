@@ -66,6 +66,7 @@ async function seedWorld(ctx: Ctx) {
     tier: "base",
     pointsEarned: 0,
     createdBy: ownerId,
+    submittedAt: Date.now(),
   });
 
   return { ownerId, tournamentId, teamId, submissionId };

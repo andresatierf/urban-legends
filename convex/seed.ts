@@ -529,6 +529,7 @@ async function insertIndividualSubmission(
   ctx: MutationCtx,
   s: IndividualSubmissionSeed,
 ) {
+  const submittedAt = Date.now();
   return await ctx.db.insert("submissions", {
     userId: s.userId,
     teamId: s.teamId,
@@ -542,6 +543,8 @@ async function insertIndividualSubmission(
     pointsEarned:
       s.state === "approved" ? DEFAULT_SCORING.individualPoints[s.tier] : 0,
     managedBy: s.managedBy,
+    submittedAt,
+    ...(s.state !== "pending" && { reviewedAt: submittedAt }),
   });
 }
 
@@ -601,6 +604,7 @@ async function insertTeamGroup(ctx: MutationCtx, s: TeamGroupSeed) {
       ? groupPoints / participantCount
       : 0;
 
+  const submittedAt = Date.now();
   for (const userId of s.memberIds) {
     await ctx.db.insert("submissions", {
       userId,
@@ -615,6 +619,8 @@ async function insertTeamGroup(ctx: MutationCtx, s: TeamGroupSeed) {
       pointsEarned: pointsPerSub,
       submissionGroupId: groupId,
       managedBy: s.managedBy,
+      submittedAt,
+      ...(s.state !== "pending" && { reviewedAt: submittedAt }),
     });
   }
 
