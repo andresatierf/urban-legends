@@ -10,21 +10,21 @@ export function TrophySvg() {
     >
       <path
         d="M16 8 H48 V36 C48 48 16 48 16 36 Z"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="2.5"
         fill="rgba(255,200,71,0.25)"
         strokeLinejoin="round"
       />
       <path
         d="M16 16 C8 16 8 28 16 28"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="2.5"
         fill="none"
         strokeLinecap="round"
       />
       <path
         d="M48 16 C56 16 56 28 48 28"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="2.5"
         fill="none"
         strokeLinecap="round"
@@ -34,7 +34,7 @@ export function TrophySvg() {
         y1="48"
         x2="32"
         y2="60"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="2.5"
         strokeLinecap="round"
       />
@@ -44,14 +44,14 @@ export function TrophySvg() {
         width="24"
         height="5"
         rx="2"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="2"
         fill="rgba(255,200,71,0.3)"
       />
       <path
         d="M32 18 L33.5 23 L38.5 23 L34.5 26 L36 31 L32 28 L28 31 L29.5 26 L25.5 23 L30.5 23 Z"
         fill="#ffc847"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="1"
       />
     </svg>
@@ -73,19 +73,19 @@ export function WhistleSvg() {
         cx="9"
         cy="14"
         r="5"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="2"
         fill="rgba(255,122,69,0.15)"
       />
       <path
         d="M14 14 L20 8"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="2"
         strokeLinecap="round"
       />
       <path
         d="M17 6 L22 6"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="2"
         strokeLinecap="round"
       />
@@ -94,7 +94,7 @@ export function WhistleSvg() {
         y1="9"
         x2="9"
         y2="11"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -138,7 +138,7 @@ export function WhistleSvgSmall() {
 }
 
 export function StopwatchSvg({ urgent }: { urgent: boolean }) {
-  const stroke = urgent ? "#e53e3e" : "var(--fd-ink)";
+  const stroke = urgent ? "#e53e3e" : "var(--ink)";
   return (
     <svg
       aria-hidden
@@ -210,37 +210,37 @@ export function RunnerSvg({ progress }: { progress: number }) {
         cx="9"
         cy="4"
         r="3"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="1.5"
         fill="rgba(93,199,122,0.4)"
       />
       <path
         d="M9 7 L9 16"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
       <path
         d="M9 10 L5 13"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
       <path
         d="M9 10 L13 8"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
       <path
         d="M9 16 L6 22"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
       <path
         d="M9 16 L13 20"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="1.5"
         strokeLinecap="round"
       />
@@ -265,7 +265,7 @@ export function CheckboxSvg({ checked }: { checked?: boolean }) {
         width="20"
         height="20"
         rx="4"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="2"
         fill={checked ? "rgba(93,199,122,0.3)" : "rgba(122,106,92,0.1)"}
       />
@@ -299,8 +299,8 @@ export function StarSvgSmall() {
     >
       <path
         d="M7 1 L8.5 5 L13 5 L9.5 7.5 L11 12 L7 9.5 L3 12 L4.5 7.5 L1 5 L5.5 5 Z"
-        fill="var(--fd-gold)"
-        stroke="var(--fd-ink)"
+        fill="var(--gold)"
+        stroke="var(--ink)"
         strokeWidth="1"
         strokeLinejoin="round"
       />
@@ -322,8 +322,8 @@ export function MedallionSvg({ number }: { number: number }) {
         cx="16"
         cy="16"
         r="14"
-        fill="var(--fd-paper-deep)"
-        stroke="var(--fd-ink)"
+        fill="var(--paper-deep)"
+        stroke="var(--ink)"
         strokeWidth="2"
       />
       <circle
@@ -331,7 +331,7 @@ export function MedallionSvg({ number }: { number: number }) {
         cy="16"
         r="10"
         fill="none"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="1"
         opacity="0.2"
       />
@@ -342,7 +342,7 @@ export function MedallionSvg({ number }: { number: number }) {
         fontFamily="'DM Mono', monospace"
         fontSize="11"
         fontWeight="500"
-        fill="var(--fd-ink)"
+        fill="var(--ink)"
       >
         {String(number).padStart(2, "0")}
       </text>
@@ -390,7 +390,7 @@ export function MedalSvg({ type }: { type: "gold" | "silver" | "bronze" }) {
         cy="34"
         r="16"
         fill={c}
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="2"
       />
       <circle
@@ -398,7 +398,7 @@ export function MedalSvg({ type }: { type: "gold" | "silver" | "bronze" }) {
         cy="34"
         r="11"
         fill="none"
-        stroke="var(--fd-ink)"
+        stroke="var(--ink)"
         strokeWidth="1.5"
         opacity="0.3"
       />

@@ -7,11 +7,11 @@ export function RibbonBanner({
 }) {
   return (
     <div
-      className={`bg-fd-gold mx-auto mb-6 flex min-h-12 w-fit items-stretch [color:#2a1f1a] text-[#2a1f1a] ${small ? "!mb-5 !min-h-9" : ""}`}
+      className={`bg-gold mx-auto mb-6 flex min-h-12 w-fit items-stretch [color:#2a1f1a] text-[#2a1f1a] ${small ? "!mb-5 !min-h-9" : ""}`}
     >
       <svg
         aria-hidden
-        className={`text-fd-gold [margin-left:-1px] block flex-shrink-0 ${small ? "h-9" : "h-12"}`}
+        className={`text-gold [margin-left:-1px] block flex-shrink-0 ${small ? "h-9" : "h-12"}`}
         width="18"
         height="100%"
         viewBox="0 0 18 40"
@@ -26,7 +26,7 @@ export function RibbonBanner({
       </div>
       <svg
         aria-hidden
-        className={`text-fd-gold [margin-right:-1px] block flex-shrink-0 ${small ? "h-9" : "h-12"}`}
+        className={`text-gold [margin-right:-1px] block flex-shrink-0 ${small ? "h-9" : "h-12"}`}
         width="18"
         height="100%"
         viewBox="0 0 18 40"

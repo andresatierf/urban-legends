@@ -4,11 +4,11 @@ export function extractName(description: string): string {
 }
 
 export function activityDotColorClass(type: string): string {
-  if (type === "submission_approved") return "bg-fd-grass";
-  if (type === "team_member_joined") return "bg-fd-sky";
-  if (type.includes("join_request")) return "bg-fd-plum";
-  if (type === "submission_rejected") return "bg-fd-sunset";
-  return "bg-fd-mute";
+  if (type === "submission_approved") return "bg-grass";
+  if (type === "team_member_joined") return "bg-sky";
+  if (type.includes("join_request")) return "bg-plum";
+  if (type === "submission_rejected") return "bg-sunset";
+  return "bg-mute";
 }
 
 export function formatRelative(timestamp: number): string {

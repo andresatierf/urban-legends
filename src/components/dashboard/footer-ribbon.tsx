@@ -1,9 +1,9 @@
 export function FooterRibbon({ date }: { date: string }) {
   return (
-    <div className="bg-fd-sunset flex min-h-10 items-stretch text-[#2a1f1a]">
+    <div className="bg-sunset flex min-h-10 items-stretch text-[#2a1f1a]">
       <svg
         aria-hidden
-        className="text-fd-sunset [margin-left:-1px] block h-10 flex-shrink-0"
+        className="text-sunset [margin-left:-1px] block h-10 flex-shrink-0"
         width="18"
         height="100%"
         viewBox="0 0 18 40"
@@ -16,7 +16,7 @@ export function FooterRibbon({ date }: { date: string }) {
       </span>
       <svg
         aria-hidden
-        className="text-fd-sunset [margin-right:-1px] block h-10 flex-shrink-0"
+        className="text-sunset [margin-right:-1px] block h-10 flex-shrink-0"
         width="18"
         height="100%"
         viewBox="0 0 18 40"
