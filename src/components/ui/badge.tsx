@@ -24,8 +24,9 @@ const badgeVariants = cva(
       size: {
         xs: "h-[1.05rem] px-[0.45rem] py-[0.05rem] text-[0.55rem]!",
         sm: "h-[1.25rem] px-[0.6rem] py-[0.15rem] text-[0.6rem]!",
-        default: "h-auto px-[0.75rem] py-[0.22rem] text-[0.65rem]!",
-        lg: "h-auto px-[0.95rem] py-[0.32rem] text-[0.85rem]!",
+        default:
+          "h-auto px-[0.75rem] pt-[0.18rem] pb-[0.26rem] text-[0.65rem]!",
+        lg: "h-auto px-[0.95rem] pt-[0.38rem] pb-[0.5rem] text-[0.85rem]! leading-none",
       },
     },
     defaultVariants: {

@@ -69,6 +69,47 @@ function BadgesWorkbenchPage() {
           <Badge variant="neutral">Deleted</Badge>
         </div>
       </section>
+
+      <section className="space-y-4">
+        <h3 className="text-h3">Tournament states</h3>
+        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
+          <Badge variant="success">Active</Badge>
+          <Badge variant="info">Upcoming</Badge>
+          <Badge variant="neutral">Ended</Badge>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-h3">Team member roles</h3>
+        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
+          <Badge variant="warning">Captain</Badge>
+          <Badge variant="neutral">Member</Badge>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-h3">Team join policy</h3>
+        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
+          <Badge variant="success">Open</Badge>
+          <Badge variant="neutral">Closed</Badge>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-h3">Submission types</h3>
+        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
+          <Badge variant="neutral">Individual</Badge>
+          <Badge variant="social">Team Exercise</Badge>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-h3">Submission tiers</h3>
+        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
+          <Badge variant="info">Base Tier</Badge>
+          <Badge variant="social">Advanced Tier</Badge>
+        </div>
+      </section>
     </div>
   );
 }
