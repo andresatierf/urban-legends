@@ -24,12 +24,13 @@ export function TeamCard({ data, onLeave, joinSlot }: Props) {
   const isFull = team.maxMembers != null && memberCount >= team.maxMembers;
 
   const badge: BadgeProps[] = [
-    {
-      variant: team.joinPolicy === "open" ? "success" : "neutral",
-      children: team.joinPolicy === "open" ? "Open" : "Closed",
-    },
+    isFull
+      ? { variant: "error", children: "Full" }
+      : {
+          variant: team.joinPolicy === "open" ? "success" : "neutral",
+          children: team.joinPolicy === "open" ? "Open" : "Closed",
+        },
   ];
-  if (isFull) badge.push({ variant: "error", children: "Full" });
 
   const canLeave =
     userRole === "member" || (userRole === "captain" && memberCount === 1);

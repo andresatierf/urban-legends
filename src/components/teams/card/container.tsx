@@ -18,7 +18,10 @@ export function TeamCardContainer({ data }: { data: TeamCardData }) {
     });
   };
 
-  const canShowJoin = !data.isUserInTeam && data.team.joinPolicy !== "closed";
+  const isFull =
+    data.team.maxMembers != null && data.memberCount >= data.team.maxMembers;
+  const canShowJoin =
+    !data.isUserInTeam && data.team.joinPolicy !== "closed" && !isFull;
   const joinSlot = canShowJoin ? (
     <JoinTeamFormButton
       teamId={data.team._id}

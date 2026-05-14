@@ -24,6 +24,8 @@ export function TeamRosters({ data, sortedTeams }: Props) {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {sortedTeams.map((team) => {
           const isUserTeam = data.userTeam?._id === team._id;
+          const isFull =
+            team.maxMembers != null && team.memberCount >= team.maxMembers;
           return (
             <Card
               key={team._id}
@@ -33,11 +35,17 @@ export function TeamRosters({ data, sortedTeams }: Props) {
               <CardContent className="flex flex-1 flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold">{team.name}</span>
-                  <Badge
-                    variant={team.joinPolicy === "open" ? "success" : "neutral"}
-                  >
-                    {team.joinPolicy === "open" ? "Open" : "Closed"}
-                  </Badge>
+                  {isFull ? (
+                    <Badge variant="error">Full</Badge>
+                  ) : (
+                    <Badge
+                      variant={
+                        team.joinPolicy === "open" ? "success" : "neutral"
+                      }
+                    >
+                      {team.joinPolicy === "open" ? "Open" : "Closed"}
+                    </Badge>
+                  )}
                 </div>
                 <div className="space-y-1">
                   {team.members.map((m) => (
