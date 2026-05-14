@@ -1138,18 +1138,64 @@ async function seedNotificationsForAdmin(ctx: MutationCtx) {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Generate pending submissions for every team in a tournament across every
- * day from start date up to today (or the tournament end date, whichever is
- * earlier). Randomly mixes tiers and individual/team types so leaderboards
- * and review queues look populated.
+ * Action wrapper: fetches the demo evidence images, then runs the mutation
+ * that generates random submissions and attaches images to the new rows.
  */
-export const seedRandomSubmissions = internalMutation({
+interface SeedRandomSubmissionsResult {
+  tournamentName: string;
+  submissionsCreated: number;
+  teamsTouched?: number;
+  daysCovered?: number;
+  groupsCreated?: number;
+  storageIdsCreated: number;
+}
+
+export const seedRandomSubmissions = internalAction({
   args: {
     tournamentName: v.string(),
     maxPerTeamPerDay: v.optional(v.number()),
     seed: v.optional(v.number()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<SeedRandomSubmissionsResult> => {
+    const storageIds: Id<"_storage">[] = [];
+    for (const url of DEMO_EVIDENCE_URLS) {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const blob = await res.blob();
+      storageIds.push(await ctx.storage.store(blob));
+    }
+    const result = await ctx.runMutation(
+      internal.seed.seedRandomSubmissionsDb,
+      { ...args, storageIds },
+    );
+    return { ...result, storageIdsCreated: storageIds.length };
+  },
+});
+
+/**
+ * Generate pending submissions for every team in a tournament across every
+ * day from start date up to today (or the tournament end date, whichever is
+ * earlier). Randomly mixes tiers and individual/team types so leaderboards
+ * and review queues look populated. Each created submission/group gets
+ * 1–3 evidence images cycled from the provided pool.
+ */
+export const seedRandomSubmissionsDb = internalMutation({
+  args: {
+    tournamentName: v.string(),
+    maxPerTeamPerDay: v.optional(v.number()),
+    seed: v.optional(v.number()),
+    storageIds: v.array(v.id("_storage")),
+  },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    tournamentName: string;
+    submissionsCreated: number;
+    teamsTouched?: number;
+    daysCovered?: number;
+    groupsCreated?: number;
+  }> => {
     const tournament = await ctx.db
       .query("tournaments")
       .withIndex("by_name", (q) => q.eq("name", args.tournamentName))
@@ -1181,6 +1227,19 @@ export const seedRandomSubmissions = internalMutation({
 
     let submissionsCreated = 0;
     let groupsCreated = 0;
+    let evidenceCursor = 0;
+    const pickEvidence = (): Id<"_storage">[] => {
+      if (args.storageIds.length === 0) return [];
+      const count = 1 + Math.floor(rng() * 3);
+      const ids: Id<"_storage">[] = [];
+      for (let j = 0; j < count; j++) {
+        ids.push(
+          args.storageIds[(evidenceCursor + j) % args.storageIds.length],
+        );
+      }
+      evidenceCursor = (evidenceCursor + count) % args.storageIds.length;
+      return ids;
+    };
 
     for (const team of teams) {
       const members = await ctx.db
@@ -1200,6 +1259,8 @@ export const seedRandomSubmissions = internalMutation({
           const tier: "base" | "advanced" = rng() < 0.7 ? "base" : "advanced";
           const isTeam = rng() < 0.15;
 
+          const evidenceIds = pickEvidence();
+
           if (isTeam) {
             const subset = members
               .filter(() => rng() < 0.6)
@@ -1208,7 +1269,7 @@ export const seedRandomSubmissions = internalMutation({
               subset.length > 0
                 ? subset
                 : [members[Math.floor(rng() * members.length)].userId];
-            await insertTeamGroup(ctx, {
+            const groupId = await insertTeamGroup(ctx, {
               teamId: team._id,
               tournamentId: tournament._id,
               memberIds,
@@ -1220,9 +1281,22 @@ export const seedRandomSubmissions = internalMutation({
             });
             groupsCreated++;
             submissionsCreated += memberIds.length;
+            if (evidenceIds.length > 0) {
+              const memberSubs = await ctx.db
+                .query("submissions")
+                .withIndex("by_group", (q) =>
+                  q.eq("submissionGroupId", groupId),
+                )
+                .collect();
+              for (const sub of memberSubs) {
+                await ctx.db.patch(sub._id, {
+                  evidenceStorageIds: evidenceIds,
+                });
+              }
+            }
           } else {
             const member = members[Math.floor(rng() * members.length)];
-            await insertIndividualSubmission(ctx, {
+            const subId = await insertIndividualSubmission(ctx, {
               teamId: team._id,
               tournamentId: tournament._id,
               userId: member.userId,
@@ -1232,6 +1306,9 @@ export const seedRandomSubmissions = internalMutation({
               description: `Random ${tier} individual submission on ${date}`,
             });
             submissionsCreated++;
+            if (evidenceIds.length > 0) {
+              await ctx.db.patch(subId, { evidenceStorageIds: evidenceIds });
+            }
           }
         }
       }
