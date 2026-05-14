@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
+import { Eyebrow } from "../ui/eyebrow";
 import { FieldGroup } from "../ui/field";
 
 const formSchema = z.object({
@@ -146,7 +147,7 @@ export function UpsertTournamentFormDialog({
                 : "Create a new tournament"}
             </DialogDescription>
           </DialogHeader>
-          <FieldGroup>
+          <FieldGroup className="max-w-[640px]">
             <form.AppField name="name">
               {(field) => (
                 <field.TextField
@@ -240,45 +241,38 @@ export function UpsertTournamentFormDialog({
               </form.AppField>
             </FieldGroup>
 
-            <div className="space-y-4">
-              <div className="text-sm font-medium">Scoring Configuration</div>
-              <div className="space-y-3">
-                <div className="text-muted-foreground text-xs font-medium">
-                  Individual Exercise Points
-                </div>
-                <FieldGroup className="flex-row">
-                  <form.AppField name="scoringConfig.individualPoints.base">
-                    {(field) => <field.NumberField label="Base Tier" />}
-                  </form.AppField>
-                  <form.AppField name="scoringConfig.individualPoints.advanced">
-                    {(field) => <field.NumberField label="Advanced Tier" />}
-                  </form.AppField>
-                </FieldGroup>
+            <Eyebrow as="div">Scoring Configuration</Eyebrow>
 
-                <div className="text-muted-foreground text-xs font-medium">
-                  Team Exercise Points
-                </div>
-                <FieldGroup className="flex-row">
-                  <form.AppField name="scoringConfig.teamExercisePoints.base">
-                    {(field) => <field.NumberField label="Base Tier" />}
-                  </form.AppField>
-                  <form.AppField name="scoringConfig.teamExercisePoints.advanced">
-                    {(field) => <field.NumberField label="Advanced Tier" />}
-                  </form.AppField>
-                </FieldGroup>
+            <Eyebrow as="div">Individual Exercise Points</Eyebrow>
+            <FieldGroup className="flex-row">
+              <form.AppField name="scoringConfig.individualPoints.base">
+                {(field) => <field.NumberField label="Base Tier" />}
+              </form.AppField>
+              <form.AppField name="scoringConfig.individualPoints.advanced">
+                {(field) => <field.NumberField label="Advanced Tier" />}
+              </form.AppField>
+            </FieldGroup>
 
-                <form.AppField name="scoringConfig.teamExerciseThreshold">
-                  {(field) => (
-                    <field.NumberField
-                      label="Team Exercise Threshold (0-1)"
-                      step="0.1"
-                      min="0"
-                      max="1"
-                    />
-                  )}
-                </form.AppField>
-              </div>
-            </div>
+            <Eyebrow as="div">Team Exercise Points</Eyebrow>
+            <FieldGroup className="flex-row">
+              <form.AppField name="scoringConfig.teamExercisePoints.base">
+                {(field) => <field.NumberField label="Base Tier" />}
+              </form.AppField>
+              <form.AppField name="scoringConfig.teamExercisePoints.advanced">
+                {(field) => <field.NumberField label="Advanced Tier" />}
+              </form.AppField>
+            </FieldGroup>
+
+            <form.AppField name="scoringConfig.teamExerciseThreshold">
+              {(field) => (
+                <field.NumberField
+                  label="Team Exercise Threshold (0-1)"
+                  step="0.1"
+                  min="0"
+                  max="1"
+                />
+              )}
+            </form.AppField>
           </FieldGroup>
 
           <form.Subscribe
