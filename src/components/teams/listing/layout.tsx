@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 
 import { api } from "../../../../convex/_generated/api";
-import type { Doc, Id } from "../../../../convex/_generated/dataModel";
+import type { Doc } from "../../../../convex/_generated/dataModel";
 import { TournamentSwitcher } from "../../dashboard/tournament-switcher";
 import { getTournamentStatus } from "../../tournaments/utils";
 import { Skeleton } from "../../ui/skeleton";
@@ -105,10 +105,7 @@ export function TeamListing({
     });
   }, [allTeams, tournamentMap, userTeamIds, effectiveFilter, includeEnded]);
 
-  const allTeamIds = useMemo(
-    () => allTeams.map((t) => t._id as Id<"teams">),
-    [allTeams],
-  );
+  const allTeamIds = useMemo(() => allTeams.map((t) => t._id), [allTeams]);
   const summaries = useQuery(
     api.teams.getCardSummaries,
     allTeamIds.length > 0 ? { teamIds: allTeamIds } : "skip",

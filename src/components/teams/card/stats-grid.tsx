@@ -39,17 +39,22 @@ export function StatsGrid({ data }: { data: TeamCardData }) {
   );
 }
 
+const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+
+function activityCellColor(day: { approved: number; pending: number }) {
+  if (day.approved + day.pending === 0) return "border-muted bg-muted/30";
+  if (day.approved > 0) return "border-success/50 bg-success/30";
+  return "border-warning/50 bg-warning/30";
+}
+
 function ActivityStrip({
   days,
 }: {
   days: { date: string; approved: number; pending: number }[];
 }) {
-  const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
-
   return (
     <div className="flex items-end gap-1">
       {days.map((day) => {
-        const total = day.approved + day.pending;
         const dayOfWeek = new Date(day.date + "T00:00:00").getUTCDay();
         return (
           <div
@@ -59,11 +64,7 @@ function ActivityStrip({
             <div
               className={cn(
                 "h-4 w-full rounded-sm border",
-                total === 0
-                  ? "border-muted bg-muted/30"
-                  : day.approved > 0
-                    ? "border-success/50 bg-success/30"
-                    : "border-warning/50 bg-warning/30",
+                activityCellColor(day),
               )}
               title={`${day.date}: ${day.approved} approved, ${day.pending} pending`}
             />
