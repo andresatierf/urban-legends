@@ -31,7 +31,7 @@ export function StatsGrid({ data }: { data: TeamCardData }) {
             key={item.label}
             className="border-ink bg-card shadow-fd-xs flex flex-col items-center rounded-md border-2 py-2 text-center"
           >
-            <span className="text-metric text-sm font-semibold tabular-nums">
+            <span className="text-metric text-sm font-semibold">
               {item.value}
             </span>
             <Eyebrow>{item.label}</Eyebrow>
