@@ -81,7 +81,7 @@ function InputSection() {
           <Input defaultValue="Hello world" />
         </StateRow>
         <StateRow label="Focus">
-          <Input placeholder="Click to focus" />
+          <Input className="pseudo-focus" placeholder="Focused" />
         </StateRow>
         <StateRow label="Invalid">
           <div className="space-y-1">
@@ -111,7 +111,7 @@ function TextareaSection() {
           <Textarea defaultValue="This is a multi-line text area with some content that demonstrates the Field Day treatment." />
         </StateRow>
         <StateRow label="Focus">
-          <Textarea placeholder="Click to focus" />
+          <Textarea className="pseudo-focus" placeholder="Focused" />
         </StateRow>
         <StateRow label="Invalid">
           <div className="space-y-1">
@@ -163,8 +163,8 @@ function SelectSection() {
         </StateRow>
         <StateRow label="Focus">
           <Select>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Click to focus" />
+            <SelectTrigger className="pseudo-focus w-full">
+              <SelectValue placeholder="Focused" />
             </SelectTrigger>
             <SelectContent>
               {FRUIT_OPTIONS.map((opt) => (
@@ -247,7 +247,7 @@ function ComboboxSection() {
         </StateRow>
         <StateRow label="Focus">
           <Combobox items={FRUIT_OPTIONS.map((o) => o.value)}>
-            <ComboboxInput placeholder="Click to focus" />
+            <ComboboxInput className="pseudo-focus" placeholder="Focused" />
             <ComboboxContent>
               <ComboboxList>
                 <ComboboxEmpty>No results</ComboboxEmpty>

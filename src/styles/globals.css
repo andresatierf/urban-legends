@@ -524,6 +524,14 @@
       0 0 0 2px var(--background),
       0 0 0 5px color-mix(in srgb, var(--ring) 60%, transparent);
   }
+  /* Form input slots: tinted ring + ring-coloured border, no offset shadow. */
+  &[data-slot="input"],
+  &[data-slot="textarea"],
+  &[data-slot="select-trigger"],
+  &[data-slot="input-group"] {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
+  }
 }
 
 @utility pseudo-active {
