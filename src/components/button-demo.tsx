@@ -15,6 +15,12 @@ const STATES = [
 ] as const;
 type State = (typeof STATES)[number];
 
+const PSEUDO_CLASSES: Partial<Record<State, string>> = {
+  hover: "pseudo-hover",
+  focus: "pseudo-focus",
+  active: "pseudo-active",
+};
+
 function stateLabel(state: State) {
   return state.charAt(0).toUpperCase() + state.slice(1);
 }
@@ -53,17 +59,10 @@ function DemoButton({
     );
   }
 
-  const pseudoClass =
-    state === "hover"
-      ? "pseudo-hover"
-      : state === "focus"
-        ? "pseudo-focus"
-        : state === "active"
-          ? "pseudo-active"
-          : undefined;
+  const stateClass = PSEUDO_CLASSES[state];
 
   return (
-    <Button variant={variant} size={size} className={pseudoClass}>
+    <Button variant={variant} size={size} className={stateClass}>
       {label}
     </Button>
   );
