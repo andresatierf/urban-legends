@@ -89,7 +89,7 @@ export function NotificationItem({
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm">{notification.title}</p>
         {!notification.isRead && (
-          <span className="bg-destructive h-2 w-2 shrink-0 rounded-full" />
+          <span className="bg-info h-2 w-2 shrink-0 rounded-full" />
         )}
       </div>
       {notification.body && (
