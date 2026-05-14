@@ -85,7 +85,7 @@ export function RaceChart({
     <ChartContext.Provider value={{ config }}>
       <div
         className={cn(
-          "border-fab-ink bg-fab-surface rounded-[18px] border-2 px-5 pt-4 pb-[1.1rem] shadow-[5px_5px_0_var(--color-fab-shadow)]",
+          "border-fab-ink bg-fab-surface shadow-fd-md rounded-2xl border-2 px-5 pt-4 pb-[1.1rem]",
           className,
         )}
       >
@@ -116,7 +116,7 @@ export function RaceChart({
             />
             <ChartTooltip
               content={
-                <ChartTooltipContent className="border-fab-ink text-fab-ink bg-fab-surface [&_.shrink-0]:!border-fab-ink min-w-44 !rounded-[14px] border-2 !shadow-[4px_4px_0_var(--color-fab-shadow)] [&_.justify-between]:!gap-4 [&_.shrink-0]:!h-3 [&_.shrink-0]:!w-3 [&_.shrink-0]:!rounded-[4px] [&_.shrink-0]:!border-2" />
+                <ChartTooltipContent className="border-fab-ink text-fab-ink bg-fab-surface [&_.shrink-0]:!border-fab-ink !shadow-fd min-w-44 !rounded-xl border-2 [&_.justify-between]:!gap-4 [&_.shrink-0]:!h-3 [&_.shrink-0]:!w-3 [&_.shrink-0]:!rounded-sm [&_.shrink-0]:!border-2" />
               }
             />
             {userSeries && (
@@ -144,19 +144,19 @@ export function RaceChart({
                     <g>
                       <polygon
                         points={points}
-                        className="fill-fab-gold stroke-[#2a1f1a] [stroke-width:1.5] [stroke-linejoin:round]"
+                        className="fill-fab-gold stroke-ink [stroke-width:1.5] [stroke-linejoin:round]"
                       />
                       <text
                         x={flagX + 11}
                         y={cy - 1}
-                        className="fill-[#2a1f1a] text-[9.5px] font-extrabold tracking-[1.1px]"
+                        className="fill-ink text-[9.5px] font-extrabold tracking-widest"
                       >
                         YOU
                       </text>
                       <text
                         x={flagX + 11}
                         y={cy + 9}
-                        className="fill-[#2a1f1a] text-[10px]"
+                        className="fill-ink text-[10px]"
                       >
                         {userSeries.total}
                       </text>
@@ -202,7 +202,7 @@ export function RaceChart({
         </ChartContainer>
         <ChartLegendContent
           payload={legendPayload}
-          className="text-fab-ink [&>div>div]:border-fab-ink mt-2 flex-wrap !justify-start gap-x-4 gap-y-2 !pt-0 text-[0.82rem] [&>div]:!gap-1.5 [&>div>div]:!h-3 [&>div>div]:!w-3 [&>div>div]:!rounded-[4px] [&>div>div]:border-2"
+          className="text-fab-ink [&>div>div]:border-fab-ink text-body-sm mt-2 flex-wrap !justify-start gap-x-4 gap-y-2 !pt-0 [&>div]:!gap-1.5 [&>div>div]:!h-3 [&>div>div]:!w-3 [&>div>div]:!rounded-sm [&>div>div]:border-2"
         />
       </div>
     </ChartContext.Provider>

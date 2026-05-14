@@ -138,7 +138,7 @@ export function WhistleSvgSmall() {
 }
 
 export function StopwatchSvg({ urgent }: { urgent: boolean }) {
-  const stroke = urgent ? "#e53e3e" : "var(--ink)";
+  const stroke = urgent ? "var(--crimson)" : "var(--ink)";
   return (
     <svg
       aria-hidden
