@@ -73,7 +73,7 @@ const hooks = {
   },
 };
 
-const copyToWorktree = ["node_modules"];
+const copyToWorktree = ["node_modules", ".env.local"];
 
 // ---------------------------------------------------------------------------
 // Phase 1: Plan
