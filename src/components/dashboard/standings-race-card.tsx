@@ -64,16 +64,9 @@ export function StandingsRaceCard({
   return (
     <ComposedCard
       bodyClassName="p-0"
-      eyebrow={
-        <span className="text-mute text-label-caps">
-          The Race · Live Standings
-        </span>
-      }
-      title={
-        <h3 className="font-heading m-0 text-xl font-extrabold">
-          {group.tournament.name}
-        </h3>
-      }
+      eyebrow="The Race · Live Standings"
+      title={group.tournament.name}
+      titleSize="lg"
       badge={badge}
     >
       <div className="grid grid-cols-1 min-[960px]:grid-cols-[1.4fr_1fr] min-[960px]:[grid-template-rows:544px]">

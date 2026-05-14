@@ -28,7 +28,7 @@ function TeamsPage() {
   );
 
   const headerActions = (
-    <Button asChild variant="outline" size="sm">
+    <Button asChild size="sm">
       <Link to="/tournaments">
         <Trophy />
         View Tournaments
