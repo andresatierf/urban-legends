@@ -21,9 +21,7 @@ export function StatChip({
           </span>
         ) : null}
       </span>
-      <span className="text-mute text-label-caps text-[0.62rem]">
-        {label}
-      </span>
+      <span className="text-mute text-label-caps text-[0.62rem]">{label}</span>
     </div>
   );
 }

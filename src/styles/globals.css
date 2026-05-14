@@ -133,14 +133,6 @@
   --radius-xl: 14px;
   --radius-2xl: 20px;
 
-  /* ── Spacing scale ─────────────────────────────────────────────── */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-2xl: 48px;
-
   /* ── Breakpoints ───────────────────────────────────────────────── */
   --breakpoint-xs: 30rem;
 }
@@ -347,7 +339,7 @@
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 0;
+    z-index: -1;
     background-image: radial-gradient(
       circle,
       var(--dot, rgba(var(--ink-rgb), 0.1)) 1px,

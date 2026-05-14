@@ -229,7 +229,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
 
   return (
     <div className="relative [padding:1.5rem_1.5rem_2.5rem]">
-      <section className="border-ink bg-card relative z-[1] mt-3 rounded-[22px] border-2 pt-12 pr-8 pb-8 pl-8 text-center shadow-[6px_6px_0_var(--shadow)] sm:mb-5 sm:pb-[4.5rem]">
+      <section className="border-ink bg-card relative mt-3 rounded-[22px] border-2 pt-12 pr-8 pb-8 pl-8 text-center shadow-[6px_6px_0_var(--shadow)] sm:mb-5 sm:pb-[4.5rem]">
         <Confetti />
         {selectedTour && data.activeTournaments.length > 1 && (
           <div className="-mt-4 mb-6 flex justify-center sm:mb-0">
@@ -286,7 +286,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
 
       {selectedGroup && (
         <section
-          className="relative z-[1] mt-15 [animation:va-fadein-up_0.4s_ease_both] motion-reduce:animate-none"
+          className="relative mt-15 [animation:va-fadein-up_0.4s_ease_both] motion-reduce:animate-none"
           style={{ animationDelay: "120ms" }}
         >
           <RibbonBanner label="Standings" />
@@ -300,7 +300,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
       )}
 
       {data.teams.length > 0 && (
-        <section className="relative z-[1] mt-5">
+        <section className="relative mt-5">
           <RibbonBanner label="MY SQUADS" small />
           <div className="grid grid-cols-1 gap-4">
             {data.teams.map((t) => {
@@ -329,9 +329,9 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
         </section>
       )}
 
-      <div className="relative z-[1] mt-5 grid grid-cols-1 gap-5 min-[960px]:grid-cols-2">
+      <div className="relative mt-5 grid grid-cols-1 gap-5 min-[960px]:grid-cols-2">
         {selectedUserTeam && selectedRival && (
-          <section className="relative z-[1] mt-0 flex flex-col">
+          <section className="relative mt-0 flex flex-col">
             <RibbonBanner label="TALE OF THE TAPE" small />
             <div className="flex flex-col items-center gap-4 sm:flex-row">
               <RosetteTile team={selectedUserTeam} label="YOU" highlight />
@@ -362,7 +362,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
           </section>
         )}
 
-        <section className="relative z-[1] mt-0 flex flex-col">
+        <section className="relative mt-0 flex flex-col">
           <RibbonBanner label="SQUAD OF THE DAY" small />
           <div className="border-ink bg-grass flex items-center gap-8 rounded-[22px] border-2 p-8 shadow-[6px_6px_0_var(--shadow)]">
             <div aria-hidden className="flex-shrink-0">
@@ -404,9 +404,9 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
         </section>
       </div>
 
-      <div className="relative z-[1] mt-5 grid grid-cols-1 gap-5 min-[960px]:grid-cols-2">
+      <div className="relative mt-5 grid grid-cols-1 gap-5 min-[960px]:grid-cols-2">
         <section
-          className="relative z-[1] mt-0 flex [animation:va-fadein-up_0.4s_ease_both] flex-col motion-reduce:animate-none"
+          className="relative mt-0 flex [animation:va-fadein-up_0.4s_ease_both] flex-col motion-reduce:animate-none"
           style={{ animationDelay: "100ms" }}
         >
           <RibbonBanner label="FIELD STATS" small />
@@ -446,7 +446,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
         </section>
 
         {data.activities.length > 0 && (
-          <section className="relative z-[1] mt-0 flex flex-col">
+          <section className="relative mt-0 flex flex-col">
             <RibbonBanner label="HIGHLIGHTS FROM THE FIELD" small />
             <div className="border-ink bg-card relative overflow-hidden rounded-[22px] border-2 [padding:1.5rem_1.5rem_1.5rem_2rem] shadow-[6px_6px_0_var(--shadow)] before:absolute before:top-6 before:bottom-6 before:left-[1.85rem] before:w-0 before:border-l-2 before:border-dashed before:border-[rgba(var(--ink-rgb),0.2)] before:content-['']">
               {data.activities.map((a, i) => {
@@ -475,7 +475,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
       </div>
 
       {hasInbox && (
-        <section className="relative z-[1] mt-5">
+        <section className="relative mt-5">
           <RibbonBanner label="INBOX" small />
           <div className="grid grid-cols-1 gap-4">
             <div className="flex flex-col gap-[0.85rem]">
@@ -597,7 +597,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
       )}
 
       {data.isAdmin && data.adminStats && (
-        <section className="relative z-[1] mt-5">
+        <section className="relative mt-5">
           <RibbonBanner label="COACH'S CLIPBOARD" small />
           <div className="border-ink bg-paper-deep rounded-[22px] border-2 [padding:1.75rem] shadow-[6px_6px_0_var(--shadow)]">
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
