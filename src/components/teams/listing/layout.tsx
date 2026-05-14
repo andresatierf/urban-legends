@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "convex/react";
 import { ArrowRight, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -6,12 +7,14 @@ import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 
-import type { Doc } from "../../../../convex/_generated/dataModel";
+import { api } from "../../../../convex/_generated/api";
+import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 import { TournamentSwitcher } from "../../dashboard/tournament-switcher";
 import { getTournamentStatus } from "../../tournaments/utils";
 import { Skeleton } from "../../ui/skeleton";
 import { TeamCardContainer } from "../card/container";
 import { TeamCardSkeleton } from "../card/layout";
+import type { SubmissionSummary } from "../card/types";
 import { JoinTeamCard } from "../join-team-card";
 import type { TeamWithMembers, TournamentMap } from "./types";
 
@@ -101,6 +104,16 @@ export function TeamListing({
       return aMine - bMine;
     });
   }, [allTeams, tournamentMap, userTeamIds, effectiveFilter, includeEnded]);
+
+  const allTeamIds = useMemo(
+    () => allTeams.map((t) => t._id as Id<"teams">),
+    [allTeams],
+  );
+  const summaries = useQuery(
+    api.teams.getCardSummaries,
+    allTeamIds.length > 0 ? { teamIds: allTeamIds } : "skip",
+  );
+  const summaryMap = (summaries ?? {}) as Record<string, SubmissionSummary>;
 
   const hasAnyTeams = allTeams.length > 0;
   const hasEndedTournaments = tournamentsWithTeams.some(
@@ -200,6 +213,7 @@ export function TeamListing({
                     isUserMember,
                     isUserInTeam: userTournamentIds.has(team.tournamentId),
                     userRole: role,
+                    submissionSummary: summaryMap[team._id],
                   }}
                 />
               );
