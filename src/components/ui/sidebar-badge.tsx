@@ -31,7 +31,7 @@ export function SidebarBadge({
   const InnerBadge = (
     <Badge
       variant={color}
-      className="ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full p-0 text-xs"
+      className="ml-auto flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-xs tracking-normal"
     >
       {count > 99 ? "99+" : count}
     </Badge>
