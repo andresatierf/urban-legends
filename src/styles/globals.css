@@ -83,14 +83,22 @@
   /* ── Badge semantic tokens ───────────────────────────────────────── */
   --color-badge-success-bg: var(--badge-success-bg);
   --color-badge-success-text: var(--badge-success-text);
+  --color-badge-success-border: var(--badge-success-border);
   --color-badge-warning-bg: var(--badge-warning-bg);
   --color-badge-warning-text: var(--badge-warning-text);
+  --color-badge-warning-border: var(--badge-warning-border);
   --color-badge-error-bg: var(--badge-error-bg);
   --color-badge-error-text: var(--badge-error-text);
+  --color-badge-error-border: var(--badge-error-border);
   --color-badge-info-bg: var(--badge-info-bg);
   --color-badge-info-text: var(--badge-info-text);
+  --color-badge-info-border: var(--badge-info-border);
   --color-badge-social-bg: var(--badge-social-bg);
   --color-badge-social-text: var(--badge-social-text);
+  --color-badge-social-border: var(--badge-social-border);
+  --color-badge-neutral-bg: var(--badge-neutral-bg);
+  --color-badge-neutral-text: var(--badge-neutral-text);
+  --color-badge-neutral-border: var(--badge-neutral-border);
 
   /* ── Component color tokens ────────────────────────────────────── */
   --color-podium-gold: var(--podium-gold);
@@ -234,17 +242,25 @@
   --podium-silver-bg: #c5cdd61a;
   --podium-bronze-bg: #cd93521a;
 
-  /* ── Badge (tinted-alpha semantic fills per DESIGN.md) ──────────── */
-  --badge-success-bg: #5dc77a29;
-  --badge-success-text: #1f5a33;
-  --badge-warning-bg: #ffc8472e;
-  --badge-warning-text: #6b4a07;
-  --badge-error-bg: #c13a2a29;
-  --badge-error-text: var(--crimson);
-  --badge-info-bg: #5db9f529;
-  --badge-info-text: #1b5179;
-  --badge-social-bg: #a166d429;
-  --badge-social-text: #5c2c8e;
+  /* ── Badge (solid Field Day pills — ink border + ink text on accent fill) ── */
+  --badge-success-bg: var(--grass);
+  --badge-success-text: var(--ink);
+  --badge-success-border: var(--ink);
+  --badge-warning-bg: var(--gold);
+  --badge-warning-text: var(--ink);
+  --badge-warning-border: var(--ink);
+  --badge-error-bg: var(--crimson);
+  --badge-error-text: var(--paper);
+  --badge-error-border: var(--ink);
+  --badge-info-bg: var(--sky);
+  --badge-info-text: var(--ink);
+  --badge-info-border: var(--ink);
+  --badge-social-bg: #a166d4;
+  --badge-social-text: var(--paper);
+  --badge-social-border: var(--ink);
+  --badge-neutral-bg: var(--paper-deep);
+  --badge-neutral-text: var(--mute);
+  --badge-neutral-border: var(--mute);
 
   /* ── Calendar (derived from semantic state aliases) ─────────────── */
   --calendar-approved-border: #4aa865;
@@ -317,17 +333,25 @@
   --podium-silver-bg: #c5cdd61a;
   --podium-bronze-bg: #cd935226;
 
-  /* ── Badge (dark) ──────────────────────────────────────────────── */
-  --badge-success-bg: #5dc77a26;
-  --badge-success-text: #7fd999;
-  --badge-warning-bg: #ffc84726;
-  --badge-warning-text: #ffd670;
-  --badge-error-bg: #d04a3826;
-  --badge-error-text: #e07060;
-  --badge-info-bg: #5db9f526;
-  --badge-info-text: #8dcdf7;
-  --badge-social-bg: #a166d426;
-  --badge-social-text: #c49ae6;
+  /* ── Badge (dark — translucent semantic per ACTIVE-pill pattern) ──── */
+  --badge-success-bg: #5dc77a40;
+  --badge-success-text: #b6ecc4;
+  --badge-success-border: #5dc77a99;
+  --badge-warning-bg: #ffc84740;
+  --badge-warning-text: #ffe39a;
+  --badge-warning-border: #ffc84799;
+  --badge-error-bg: #d04a3840;
+  --badge-error-text: #f0a89c;
+  --badge-error-border: #d04a3899;
+  --badge-info-bg: #5db9f540;
+  --badge-info-text: #b8dffb;
+  --badge-info-border: #5db9f599;
+  --badge-social-bg: #a166d440;
+  --badge-social-text: #d8baee;
+  --badge-social-border: #a166d499;
+  --badge-neutral-bg: #7a6a5c1a;
+  --badge-neutral-text: var(--mute);
+  --badge-neutral-border: #7a6a5c66;
 
   /* ── Calendar (dark) ───────────────────────────────────────────── */
   --calendar-approved-border: #5dc77a;
