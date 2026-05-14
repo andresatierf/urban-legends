@@ -11,6 +11,7 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 
 import { ThemeScript } from "@/components/theme-script";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 import { cn } from "@/lib/utils";
 
 import appCss from "@/styles/globals.css?url";
@@ -61,6 +62,7 @@ function RootDocument() {
             import.meta.env
               .NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL as string
           }
+          appearance={clerkAppearance}
         >
           <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
             <ThemeProvider>

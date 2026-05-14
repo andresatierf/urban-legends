@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_auth")({
 
 function AuthLayout() {
   return (
-    <div className="flex min-h-screen w-full flex-col bg-gray-50">
+    <div className="bg-paper flex min-h-screen w-full flex-col">
       <div className="pointer-events-auto fixed top-2 right-2 z-50">
         <ThemeSwitcher />
       </div>
