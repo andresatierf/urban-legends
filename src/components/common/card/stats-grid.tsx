@@ -1,6 +1,7 @@
 import { type VariantProps, cva } from "class-variance-authority";
 import type * as React from "react";
 
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { cn } from "@/lib/utils";
 
 const gridVariants = cva("grid grid-cols-3", {
@@ -17,7 +18,8 @@ const cellVariants = cva("flex flex-col items-center text-center", {
   variants: {
     variant: {
       divided: "py-2",
-      tiles: "bg-muted/50 rounded-md px-2 py-2",
+      tiles:
+        "border-ink bg-card shadow-fd-sm hover:shadow-fd-md rounded-xl border-2 px-2 py-2 transition-shadow duration-[120ms] ease-linear",
     },
   },
   defaultVariants: { variant: "divided" },
@@ -27,7 +29,7 @@ const valueVariants = cva("text-sm font-semibold", {
   variants: {
     variant: {
       divided: "tabular-nums",
-      tiles: "font-heading",
+      tiles: "text-metric",
     },
   },
   defaultVariants: { variant: "divided" },
@@ -53,9 +55,13 @@ export function StatsGrid({ items, variant, className }: Props) {
           <div key={i} className={cellVariants({ variant })}>
             {Icon && <Icon className="text-muted-foreground mb-1 size-3.5" />}
             <div className={valueVariants({ variant })}>{item.value}</div>
-            <div className="text-muted-foreground text-[0.625rem]">
-              {item.label}
-            </div>
+            {variant === "tiles" ? (
+              <Eyebrow>{item.label}</Eyebrow>
+            ) : (
+              <div className="text-muted-foreground text-[0.625rem]">
+                {item.label}
+              </div>
+            )}
           </div>
         );
       })}

@@ -1,25 +1,37 @@
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 
-import { StatusBand } from "../../common/card/status-band";
-import { STATUS_LABEL, getTournamentStatus } from "../utils";
+import { Badge } from "../../ui/badge";
+import {
+  getTournamentStatus,
+  STATUS_LABEL,
+  type TournamentStatus,
+} from "../utils";
 import type { TournamentCardData } from "./types";
+
+const STATUS_VARIANT: Record<TournamentStatus, "success" | "info" | "neutral"> =
+  {
+    active: "success",
+    upcoming: "info",
+    ended: "neutral",
+  };
 
 export function StatusHeader({ data }: { data: TournamentCardData }) {
   const { format } = useFormattedDate();
   const status = getTournamentStatus(data);
 
   return (
-    <StatusBand
-      status={status}
-      palette="semantic"
-      className="flex-wrap gap-x-2 gap-y-0.5 rounded-t-lg py-2.5"
-    >
-      <span className="text-xs font-semibold tracking-wider uppercase">
+    <header className="border-ink bg-paper-deep flex flex-wrap items-center justify-between gap-3 border-b-2 px-4 py-3">
+      <div className="flex min-w-0 flex-col gap-[0.15rem]">
+        <span className="text-mute text-label-caps">
+          {format(data.startDate, "long")} – {format(data.endDate, "long")}
+        </span>
+        <h3 className="font-heading m-0 truncate text-base font-extrabold">
+          {data.name}
+        </h3>
+      </div>
+      <Badge variant={STATUS_VARIANT[status]} size="default">
         {STATUS_LABEL[status]}
-      </span>
-      <span className="text-xs whitespace-nowrap">
-        {format(data.startDate, "long")} – {format(data.endDate, "long")}
-      </span>
-    </StatusBand>
+      </Badge>
+    </header>
   );
 }
