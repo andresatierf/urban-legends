@@ -192,6 +192,7 @@ describe("submit", () => {
       expect(sub?.submissionType).toBe("individual");
       expect(sub?.submissionGroupId).toBeUndefined();
       expect(sub?.tier).toBe("base");
+      expect(sub?.reviewedAt).toBeUndefined();
       await assertSubmissionInvariant(ctx, { teamId, tournamentId });
     });
   });
@@ -493,6 +494,7 @@ describe("approve", () => {
       expect(sub?.state).toBe("approved");
       // base individual = 1
       expect(sub?.pointsEarned).toBe(scoringConfig.individualPoints.base);
+      expect(sub?.reviewedAt).toEqual(expect.any(Number));
 
       const team = await ctx.db.get(teamId);
       expect(team?.points).toBe(scoringConfig.individualPoints.base);
@@ -710,6 +712,7 @@ describe("reject", () => {
       const sub = await ctx.db.get(submissionId);
       expect(sub?.state).toBe("rejected");
       expect(sub?.pointsEarned).toBe(0);
+      expect(sub?.reviewedAt).toEqual(expect.any(Number));
 
       const team = await ctx.db.get(teamId);
       expect(team?.points).toBe(0);
@@ -831,7 +834,7 @@ describe("reject", () => {
     ).rejects.toThrow(IllegalTransition);
   });
 
-  test("previously approved individual submission can be rejected: removes points from team.points", async () => {
+  test("approved individual submission cannot be rejected (approved is locked-in; use softDelete instead)", async () => {
     const t = convexTest(schemaForTest);
     const { userId, teamId, tournamentId } = await t.run(seedWorld);
 
@@ -848,20 +851,15 @@ describe("reject", () => {
       await approve(ctx, submissionId, userId);
     });
 
-    const result = await t.run(async (ctx) => {
-      return await reject(ctx, submissionId, userId);
-    });
+    await expect(
+      t.run(async (ctx) => {
+        await reject(ctx, submissionId, userId);
+      }),
+    ).rejects.toThrow(IllegalTransition);
 
     await t.run(async (ctx) => {
-      expect(result.pointsDelta).toBeLessThan(0);
-
       const sub = await ctx.db.get(submissionId);
-      expect(sub?.state).toBe("rejected");
-      expect(sub?.pointsEarned).toBe(0);
-
-      const team = await ctx.db.get(teamId);
-      expect(team?.points).toBe(0);
-
+      expect(sub?.state).toBe("approved");
       await assertSubmissionInvariant(ctx, { teamId, tournamentId });
     });
   });
@@ -922,6 +920,7 @@ describe("softDelete", () => {
       const sub = await ctx.db.get(submissionId);
       expect(sub?.state).toBe("deleted");
       expect(sub?.pointsEarned).toBe(0);
+      expect(sub?.reviewedAt).toBeUndefined();
 
       const team = await ctx.db.get(teamId);
       expect(team?.points).toBe(0);

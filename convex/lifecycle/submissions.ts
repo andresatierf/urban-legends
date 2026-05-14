@@ -30,8 +30,18 @@ async function transition(
     throw new IllegalTransition(from, to);
   }
 
-  // approved may move forward to rejected or deleted (e.g. admin correction), but not back
-  await ctx.db.patch(submissionId, { state: to, managedBy });
+  // approved is locked-in for scoring purposes: it can only be softDeleted,
+  // not re-reviewed. Admin correction is via delete + new submission.
+  if (from === "approved" && to === "rejected") {
+    throw new IllegalTransition(from, to);
+  }
+
+  const isReview = to === "approved" || to === "rejected";
+  await ctx.db.patch(submissionId, {
+    state: to,
+    managedBy,
+    ...(isReview && { reviewedAt: Date.now() }),
+  });
   return "changed";
 }
 

@@ -8,11 +8,6 @@
  * @module
  */
 
-import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
-} from "convex/server";
 import type * as authority_core from "../authority/core.js";
 import type * as authority_index from "../authority/index.js";
 import type * as captain from "../captain.js";
@@ -27,9 +22,9 @@ import type * as lib_helpers from "../lib/helpers.js";
 import type * as lifecycle_joinRequests from "../lifecycle/joinRequests.js";
 import type * as lifecycle_submissions from "../lifecycle/submissions.js";
 import type * as migrations from "../migrations.js";
+import type * as notifications from "../notifications.js";
 import type * as notifications_triggers from "../notifications/triggers.js";
 import type * as notifications_types from "../notifications/types.js";
-import type * as notifications from "../notifications.js";
 import type * as public_ from "../public.js";
 import type * as role_admin from "../role/admin.js";
 import type * as role_reviewer from "../role/reviewer.js";
@@ -44,14 +39,12 @@ import type * as teams from "../teams.js";
 import type * as tournaments from "../tournaments.js";
 import type * as users from "../users.js";
 
-/**
- * A utility for referencing Convex functions in your app's API.
- *
- * Usage:
- * ```js
- * const myFunctionReference = api.myModule.myFunction;
- * ```
- */
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
+
 declare const fullApi: ApiFromModules<{
   "authority/core": typeof authority_core;
   "authority/index": typeof authority_index;
@@ -67,9 +60,9 @@ declare const fullApi: ApiFromModules<{
   "lifecycle/joinRequests": typeof lifecycle_joinRequests;
   "lifecycle/submissions": typeof lifecycle_submissions;
   migrations: typeof migrations;
+  notifications: typeof notifications;
   "notifications/triggers": typeof notifications_triggers;
   "notifications/types": typeof notifications_types;
-  notifications: typeof notifications;
   public: typeof public_;
   "role/admin": typeof role_admin;
   "role/reviewer": typeof role_reviewer;
@@ -84,11 +77,31 @@ declare const fullApi: ApiFromModules<{
   tournaments: typeof tournaments;
   users: typeof users;
 }>;
+
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
 export declare const api: FilterApi<
   typeof fullApi,
   FunctionReference<any, "public">
 >;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
 export declare const internal: FilterApi<
   typeof fullApi,
   FunctionReference<any, "internal">
 >;
+
+export declare const components: {};
