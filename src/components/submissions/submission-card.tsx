@@ -37,7 +37,7 @@ export function SubmissionCard({
   const isOwner = submission.userId === currentUser._id;
 
   return (
-    <Card className="flex-col gap-4 md:flex-row">
+    <Card className="md:flex-row">
       {thumbnailUrl && (
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md">
           <Image
