@@ -28,7 +28,7 @@ export function TournamentGroup({
           {teams.length} team{teams.length === 1 ? "" : "s"}
         </span>
       </div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
         {teams.map((team) => (
           <TeamCardContainer
             key={team._id}

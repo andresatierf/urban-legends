@@ -26,7 +26,7 @@ export function YourTeams({
             : "You don't have a team in this tournament."}
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
           {teams.map((team) => {
             const role = currentUserId
               ? (team.members.find((m) => m._id === currentUserId)
