@@ -142,7 +142,7 @@ function CaptainDashboard() {
                       </Button>
                       <Button
                         size="sm"
-                        color="destructive"
+                        variant="destructive"
                         onClick={() => handleRejectRequest(request._id)}
                         disabled={processingId === request._id}
                       >

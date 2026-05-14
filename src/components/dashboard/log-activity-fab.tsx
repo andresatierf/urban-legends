@@ -28,7 +28,7 @@ export function LogActivityFab({
   return (
     <Button
       type="button"
-      variant="field-day"
+      variant="default"
       onClick={(e) => {
         onClick?.(e);
         if (!e.defaultPrevented) openSubmissionDialog();

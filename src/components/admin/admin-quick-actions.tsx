@@ -18,11 +18,7 @@ export function AdminQuickActions() {
       </CardHeader>
       <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <UpsertTournamentFormDialog>
-          <Button
-            variant="outline"
-            color="secondary"
-            className="h-auto max-w-full flex-1"
-          >
+          <Button variant="outline" className="h-auto max-w-full flex-1">
             <Plus className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">Create Tournament</div>

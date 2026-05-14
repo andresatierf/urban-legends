@@ -432,6 +432,38 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Button demo pseudo-state overrides ─────────────────────────── */
+
+@utility pseudo-hover {
+  &:where(button, [role="button"]) {
+    &:not(:active) {
+      filter: brightness(1.1);
+    }
+  }
+  &[data-variant="secondary"]:not(:active),
+  &[data-variant="outline"]:not(:active) {
+    background-color: var(--accent);
+  }
+  &[data-variant="ghost"]:not(:active),
+  &[data-variant="icon"]:not(:active) {
+    background-color: var(--muted);
+  }
+}
+
+@utility pseudo-focus {
+  ring-width: 3px;
+  --tw-ring-color: color-mix(in srgb, var(--ring) 20%, transparent);
+}
+
+@utility pseudo-active {
+  translate: 1px 1px;
+  &[data-variant="default"],
+  &[data-variant="secondary"],
+  &[data-variant="destructive"] {
+    box-shadow: 1px 1px 0 var(--color-shadow);
+  }
+}
+
 /* ── Field Day keyframes ─────────────────────────────────────────── */
 @keyframes va-fadein-up {
   from {
