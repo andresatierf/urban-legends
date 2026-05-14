@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { LogOut, Settings } from "lucide-react";
 
 import { Button } from "../../ui/button";
-import { CardFooter } from "../../ui/card";
 import type { TeamCardData } from "./types";
 
 type Props = {
@@ -18,7 +17,7 @@ export function Footer({ data, onLeave, joinSlot }: Props) {
     userRole === "member" || (userRole === "captain" && memberCount === 1);
 
   return (
-    <CardFooter className="gap-2 px-4 py-3">
+    <div className="flex items-center gap-2">
       {isUserMember ? (
         <>
           <Button variant="outline" size="sm" className="flex-1" asChild>
@@ -44,6 +43,6 @@ export function Footer({ data, onLeave, joinSlot }: Props) {
           </Button>
         </>
       )}
-    </CardFooter>
+    </div>
   );
 }
