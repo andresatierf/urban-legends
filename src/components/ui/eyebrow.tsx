@@ -18,7 +18,7 @@ const eyebrowVariants = cva("text-label-caps", {
   },
 });
 
-type EyebrowProps = Omit<React.ComponentProps<"span">, "ref"> &
+type EyebrowProps = React.ComponentPropsWithoutRef<"span"> &
   VariantProps<typeof eyebrowVariants> & {
     as?: "span" | "div" | "p" | "label";
   };
@@ -31,10 +31,7 @@ function Eyebrow({
   ...props
 }: EyebrowProps) {
   return (
-    <Comp
-      className={cn(eyebrowVariants({ color }), className)}
-      {...(props as Record<string, unknown>)}
-    >
+    <Comp className={cn(eyebrowVariants({ color }), className)} {...props}>
       {children}
     </Comp>
   );
