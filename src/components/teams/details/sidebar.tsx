@@ -30,7 +30,7 @@ import type { TeamDetails } from "./types";
 export function Sidebar({ data }: { data: TeamDetails }) {
   const { team, tournament, statistics, userMembership } = data;
   const isFull =
-    team.maxMembers !== undefined && statistics.memberCount >= team.maxMembers;
+    team.maxMembers != null && statistics.memberCount >= team.maxMembers;
 
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [editTeamDialogOpen, setEditTeamDialogOpen] = useState(false);
