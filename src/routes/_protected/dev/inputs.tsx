@@ -110,6 +110,9 @@ function TextareaSection() {
         <StateRow label="With value">
           <Textarea defaultValue="This is a multi-line text area with some content that demonstrates the Field Day treatment." />
         </StateRow>
+        <StateRow label="Focus">
+          <Textarea placeholder="Click to focus" />
+        </StateRow>
         <StateRow label="Invalid">
           <div className="space-y-1">
             <Textarea aria-invalid="true" defaultValue="Bad content" />
@@ -148,6 +151,20 @@ function SelectSection() {
           <Select defaultValue="banana">
             <SelectTrigger className="w-full">
               <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FRUIT_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </StateRow>
+        <StateRow label="Focus">
+          <Select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Click to focus" />
             </SelectTrigger>
             <SelectContent>
               {FRUIT_OPTIONS.map((opt) => (
@@ -209,6 +226,60 @@ function ComboboxSection() {
               </ComboboxList>
             </ComboboxContent>
           </Combobox>
+        </StateRow>
+        <StateRow label="With value">
+          <Combobox
+            items={FRUIT_OPTIONS.map((o) => o.value)}
+            defaultValue="banana"
+          >
+            <ComboboxInput placeholder="Search fruits..." />
+            <ComboboxContent>
+              <ComboboxList>
+                <ComboboxEmpty>No results</ComboboxEmpty>
+                {FRUIT_OPTIONS.map((opt) => (
+                  <ComboboxItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </ComboboxItem>
+                ))}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
+        </StateRow>
+        <StateRow label="Focus">
+          <Combobox items={FRUIT_OPTIONS.map((o) => o.value)}>
+            <ComboboxInput placeholder="Click to focus" />
+            <ComboboxContent>
+              <ComboboxList>
+                <ComboboxEmpty>No results</ComboboxEmpty>
+                {FRUIT_OPTIONS.map((opt) => (
+                  <ComboboxItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </ComboboxItem>
+                ))}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
+        </StateRow>
+        <StateRow label="Invalid">
+          <div className="space-y-1">
+            <Combobox items={FRUIT_OPTIONS.map((o) => o.value)}>
+              <ComboboxInput
+                aria-invalid="true"
+                placeholder="Required field..."
+              />
+              <ComboboxContent>
+                <ComboboxList>
+                  <ComboboxEmpty>No results</ComboboxEmpty>
+                  {FRUIT_OPTIONS.map((opt) => (
+                    <ComboboxItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </ComboboxItem>
+                  ))}
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
+            <p className="text-destructive text-xs">Please pick a fruit</p>
+          </div>
         </StateRow>
         <StateRow label="Disabled">
           <Combobox items={FRUIT_OPTIONS.map((o) => o.value)}>
@@ -297,6 +368,29 @@ function RadioSection() {
             </div>
           </RadioGroup>
         </StateRow>
+        <StateRow label="Invalid">
+          <div className="space-y-1">
+            <RadioGroup>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem
+                  value="option-x"
+                  id="r-inv1"
+                  aria-invalid="true"
+                />
+                <Label htmlFor="r-inv1">Option X</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem
+                  value="option-y"
+                  id="r-inv2"
+                  aria-invalid="true"
+                />
+                <Label htmlFor="r-inv2">Option Y</Label>
+              </div>
+            </RadioGroup>
+            <p className="text-destructive text-xs">Please select an option</p>
+          </div>
+        </StateRow>
         <StateRow label="Disabled">
           <RadioGroup defaultValue="option-a" disabled>
             <div className="flex items-center gap-2">
@@ -332,6 +426,15 @@ function SwitchSection() {
           <div className="flex items-center gap-2">
             <Switch id="sw-checked" defaultChecked />
             <Label htmlFor="sw-checked">Dark mode</Label>
+          </div>
+        </StateRow>
+        <StateRow label="Invalid">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Switch id="sw-invalid" aria-invalid="true" />
+              <Label htmlFor="sw-invalid">Required toggle</Label>
+            </div>
+            <p className="text-destructive text-xs">You must enable this</p>
           </div>
         </StateRow>
         <StateRow label="Disabled">

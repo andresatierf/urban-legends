@@ -412,9 +412,10 @@ The radius scale is generous compared to default shadcn. Surfaces feel
 | `2xl` | 20px | Hero panels, modal surfaces |
 
 Borders on Field Day surfaces are **2px ink at full strength** for
-Cards and primary/secondary/destructive Buttons. Inputs use **1.5px
-ink** for slightly softer rhythm in dense forms. Dividers and table
-row separators use **1px ink at ~12% alpha** (`border-soft`).
+Cards, primary/secondary/destructive Buttons, and form inputs (Input,
+Textarea, Select, Combobox, Checkbox, Radio). This keeps inputs visually
+weighted with the surfaces they sit in. Dividers and table row separators
+use **1px ink at ~12% alpha** (`border-soft`).
 
 ## Components
 
