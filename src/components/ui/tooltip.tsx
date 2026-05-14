@@ -48,7 +48,9 @@ function TooltipContent({
         {...props}
       >
         {children}
-        <TooltipPrimitive.Arrow className="bg-card fill-card z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" />
+        <TooltipPrimitive.Arrow asChild>
+          <div className="bg-card border-border z-50 size-2.5 -translate-y-1/2 rotate-45 rounded-[2px] border-r-2 border-b-2" />
+        </TooltipPrimitive.Arrow>
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   );

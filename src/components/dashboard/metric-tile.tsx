@@ -33,9 +33,7 @@ export function MetricTile({
         aria-hidden
         className="-mx-4 -mt-1 mb-[0.6rem] h-1 rounded-[2px] [background:repeating-linear-gradient(90deg,var(--metric-accent,var(--gold))_0px,var(--metric-accent,var(--gold))_8px,transparent_8px,transparent_14px)]"
       />
-      <span className="text-mute text-label-caps text-[0.6rem]">
-        {label}
-      </span>
+      <span className="text-mute text-label-caps text-[0.6rem]">{label}</span>
       <span className="text-ink text-display text-[2.4rem]">{value}</span>
       <span className="text-mute text-label-caps mb-[0.4rem] text-[0.6rem]">
         {unit}
@@ -97,8 +95,7 @@ export function RosetteTile({
         </span>
       )}
       <div className="text-ink text-metric text-[2rem]">
-        {team.team.points}{" "}
-        <span className="text-mute text-[0.9rem]">pts</span>
+        {team.team.points} <span className="text-mute text-[0.9rem]">pts</span>
       </div>
       <div className="text-mute text-body-sm mt-1 text-[0.78rem]">
         {team.memberCount} members
