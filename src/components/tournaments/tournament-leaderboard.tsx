@@ -76,14 +76,14 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
         columns={4}
         headers={["Rank", "Team Name", "Points", "Members"]}
         rows={5}
-        className="overflow-hidden"
+        className="border-ink shadow-fd-lg overflow-hidden rounded-2xl border-2"
       />
     );
   }
 
   if (leaderboard.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border p-12 text-center">
+      <div className="border-ink bg-card shadow-fd-lg flex flex-col items-center justify-center rounded-2xl border-2 p-12 text-center">
         <Trophy className="text-muted-foreground mb-4 h-12 w-12" />
         <h3 className="mb-2 text-lg font-semibold">No teams yet</h3>
         <p className="text-muted-foreground text-sm">
@@ -94,14 +94,22 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
   }
 
   return (
-    <div className="rounded-lg border">
+    <div className="border-ink bg-card shadow-fd-lg overflow-hidden rounded-2xl border-2">
       <Table>
-        <TableHeader>
+        <TableHeader className="border-ink bg-paper-deep [&_tr]:border-ink [&_tr]:hover:bg-paper-deep">
           <TableRow>
-            <TableHead className="w-16">Rank</TableHead>
-            <TableHead>Team Name</TableHead>
-            <TableHead className="w-24 text-right">Points</TableHead>
-            <TableHead className="w-24 text-right">Members</TableHead>
+            <TableHead className="text-label-caps text-mute w-16">
+              Rank
+            </TableHead>
+            <TableHead className="text-label-caps text-mute">
+              Team Name
+            </TableHead>
+            <TableHead className="text-label-caps text-mute w-24 text-right">
+              Points
+            </TableHead>
+            <TableHead className="text-label-caps text-mute w-24 text-right">
+              Members
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

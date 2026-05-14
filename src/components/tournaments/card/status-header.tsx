@@ -1,34 +1,37 @@
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 
-import { Eyebrow } from "../../ui/eyebrow";
-import { type RibbonColor, RibbonBanner } from "../../ui/ribbon-banner";
+import { Badge } from "../../ui/badge";
 import {
-  type TournamentStatus,
-  STATUS_LABEL,
   getTournamentStatus,
+  STATUS_LABEL,
+  type TournamentStatus,
 } from "../utils";
 import type { TournamentCardData } from "./types";
 
-const STATUS_RIBBON_COLOR: Record<TournamentStatus, RibbonColor> = {
-  active: "sunset",
-  upcoming: "sky",
-  ended: "mute",
-};
+const STATUS_VARIANT: Record<TournamentStatus, "success" | "info" | "neutral"> =
+  {
+    active: "success",
+    upcoming: "info",
+    ended: "neutral",
+  };
 
 export function StatusHeader({ data }: { data: TournamentCardData }) {
   const { format } = useFormattedDate();
   const status = getTournamentStatus(data);
 
   return (
-    <div className="pt-3 pb-1">
-      <RibbonBanner
-        label={STATUS_LABEL[status]}
-        color={STATUS_RIBBON_COLOR[status]}
-        small
-      />
-      <Eyebrow as="div" className="text-center">
-        {format(data.startDate, "long")} – {format(data.endDate, "long")}
-      </Eyebrow>
-    </div>
+    <header className="border-ink bg-paper-deep flex flex-wrap items-center justify-between gap-3 border-b-2 px-4 py-3">
+      <div className="flex min-w-0 flex-col gap-[0.15rem]">
+        <span className="text-mute text-label-caps">
+          {format(data.startDate, "long")} – {format(data.endDate, "long")}
+        </span>
+        <h3 className="font-heading m-0 truncate text-base font-extrabold">
+          {data.name}
+        </h3>
+      </div>
+      <Badge variant={STATUS_VARIANT[status]} size="default">
+        {STATUS_LABEL[status]}
+      </Badge>
+    </header>
   );
 }
