@@ -29,16 +29,24 @@ export function useReviewActions() {
     }
   };
 
-  const onReject = async (item: ReviewItem) => {
+  const onReject = async (item: ReviewItem, reason: string) => {
     if (item.type === "individual") {
       await tryMutate({
-        fn: () => reject({ submissionId: item.data.submission._id }),
+        fn: () =>
+          reject({
+            submissionId: item.data.submission._id,
+            reason: reason || undefined,
+          }),
         successToast: "Submission rejected successfully",
         defaultFailureToast: "Failed to reject submission",
       });
     } else {
       await tryMutate({
-        fn: () => rejectGroup({ groupId: item.data.group._id }),
+        fn: () =>
+          rejectGroup({
+            groupId: item.data.group._id,
+            reason: reason || undefined,
+          }),
         successToast: "Team activity rejected successfully",
         defaultFailureToast: "Failed to reject team activity",
       });

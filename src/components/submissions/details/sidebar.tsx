@@ -23,6 +23,7 @@ import {
   type SidebarCardBadge,
   type SidebarCardStat,
 } from "../../ui/sidebar-card";
+import { RejectReasonDialog } from "../reject-reason-dialog";
 import { stateBadgeVariant } from "../review/submission-review-card-shared";
 import { ReviewTimeline } from "./review-timeline";
 import { ScoringCard } from "./scoring-card";
@@ -34,6 +35,8 @@ export function Sidebar({ data }: { data: SubmissionDetailsData }) {
     data;
   const navigate = useNavigate();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   const approveSubmission = useMutation(api.submissions.approve);
   const rejectSubmission = useMutation(api.submissions.reject);
@@ -47,13 +50,26 @@ export function Sidebar({ data }: { data: SubmissionDetailsData }) {
     });
   }, [approveSubmission, submission._id]);
 
-  const handleReject = useCallback(() => {
-    void tryMutate({
-      fn: () => rejectSubmission({ submissionId: submission._id }),
-      successToast: "Submission rejected successfully",
-      defaultFailureToast: "Failed to reject submission",
-    });
-  }, [rejectSubmission, submission._id]);
+  const handleRejectConfirm = useCallback(
+    async (reason: string) => {
+      setIsRejecting(true);
+      try {
+        await tryMutate({
+          fn: () =>
+            rejectSubmission({
+              submissionId: submission._id,
+              reason: reason || undefined,
+            }),
+          successToast: "Submission rejected successfully",
+          defaultFailureToast: "Failed to reject submission",
+        });
+      } finally {
+        setIsRejecting(false);
+        setRejectDialogOpen(false);
+      }
+    },
+    [rejectSubmission, submission._id],
+  );
 
   const handleDelete = useCallback(() => {
     void tryMutate({
@@ -101,7 +117,7 @@ export function Sidebar({ data }: { data: SubmissionDetailsData }) {
       label: "Reject",
       icon: X,
       variant: "destructive",
-      onClick: handleReject,
+      onClick: () => setRejectDialogOpen(true),
     });
   }
   if (data.canEdit) {
@@ -138,6 +154,13 @@ export function Sidebar({ data }: { data: SubmissionDetailsData }) {
           />
         )}
       </div>
+
+      <RejectReasonDialog
+        open={rejectDialogOpen}
+        onOpenChange={setRejectDialogOpen}
+        onConfirm={handleRejectConfirm}
+        isSubmitting={isRejecting}
+      />
 
       <SidebarCard
         icon={headlineIcon}
