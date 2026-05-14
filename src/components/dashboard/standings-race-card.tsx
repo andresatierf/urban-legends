@@ -1,12 +1,12 @@
 "use client";
 
 import type { Doc } from "../../../convex/_generated/dataModel";
-import type { DemoTeam } from "./dashboard-variant-fixtures";
 import { RaceChart, type RaceChartSeries } from "./race-chart";
+import type { DashboardTeam } from "./types";
 
 export type StandingsGroup = {
   tournament: Doc<"tournaments">;
-  teams: DemoTeam[];
+  teams: DashboardTeam[];
   maxPts: number;
 };
 
@@ -77,7 +77,7 @@ export function StandingsRaceCard({
             </span>
           )}
           <span
-            className={`border-fd-ink rounded-full border-2 px-[0.65rem] text-fd-ink py-[0.22rem] text-[0.65rem] tracking-[0.16em] uppercase ${
+            className={`border-fd-ink text-fd-ink rounded-full border-2 px-[0.65rem] py-[0.22rem] text-[0.65rem] tracking-[0.16em] uppercase ${
               isActive
                 ? "bg-fd-grass dark:border-emerald-700/60 dark:bg-emerald-900/40 dark:text-emerald-200"
                 : "bg-fd-paper-deep text-fd-mute"
@@ -89,7 +89,7 @@ export function StandingsRaceCard({
         </div>
       </header>
 
-      <div className="grid grid-cols-1 min-[960px]:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-1 min-[960px]:grid-cols-[1.4fr_1fr] min-[960px]:[grid-template-rows:544px]">
         <div className="min-w-0 px-4 pt-4 pb-2">
           {chartData && chartData.series.length > 0 && (
             <RaceChart
@@ -101,7 +101,7 @@ export function StandingsRaceCard({
           )}
         </div>
 
-        <div className="min-[960px]:border-fd-ink/20 flex flex-col gap-[0.45rem] px-[1.1rem] pt-[0.9rem] pb-[1.1rem] min-[960px]:border-l-[1.5px] min-[960px]:border-dashed">
+        <div className="min-[960px]:border-fd-ink/20 flex min-h-0 flex-col px-[1.1rem] pt-[0.9rem] pb-[1.1rem] min-[960px]:border-l-[1.5px] min-[960px]:border-dashed">
           <div
             className="border-fd-ink/15 text-fd-mute grid grid-cols-[2.5rem_1fr_auto] items-center gap-[0.6rem] border-b-[1.5px] px-1 pb-[0.4rem] text-[0.58rem] tracking-[0.16em] uppercase"
             style={{ fontFamily: FONT_MONO }}
@@ -110,75 +110,77 @@ export function StandingsRaceCard({
             <span>Team</span>
             <span className="text-right">Pts</span>
           </div>
-          {group.teams.map((t, i) => {
-            const pct = Math.round((t.team.points / group.maxPts) * 100);
-            const rankLabel =
-              i === 0
-                ? "🥇"
-                : i === 1
-                  ? "🥈"
-                  : i === 2
-                    ? "🥉"
-                    : String(i + 1).padStart(2, "0");
-            const isYou = t.team._id === userTeamId;
-            const rowBg = isYou
-              ? "border-fd-sky bg-fd-sky/10"
-              : i < 3
-                ? "border-fd-gold/50 bg-fd-gold/15"
-                : "border-transparent bg-fd-paper-deep";
-            return (
-              <div
-                key={t.team._id}
-                className={`relative grid grid-cols-[2.5rem_1fr_auto] items-center gap-[0.6rem] rounded-[10px] border-[1.5px] px-[0.55rem] pt-[0.55rem] pb-[0.45rem] ${rowBg}`}
-              >
-                <span
-                  className="text-center text-[1rem]"
-                  style={{ fontFamily: FONT_MONO }}
+          <div className="-mr-[0.4rem] flex min-h-0 flex-1 flex-col gap-[0.45rem] overflow-y-auto pt-[0.45rem] pr-[0.4rem]">
+            {group.teams.map((t, i) => {
+              const pct = Math.round((t.team.points / group.maxPts) * 100);
+              const rankLabel =
+                i === 0
+                  ? "🥇"
+                  : i === 1
+                    ? "🥈"
+                    : i === 2
+                      ? "🥉"
+                      : String(i + 1).padStart(2, "0");
+              const isYou = t.team._id === userTeamId;
+              const rowBg = isYou
+                ? "border-fd-sky bg-fd-sky/10"
+                : i < 3
+                  ? "border-fd-gold/50 bg-fd-gold/15"
+                  : "border-transparent bg-fd-paper-deep";
+              return (
+                <div
+                  key={t.team._id}
+                  className={`relative grid grid-cols-[2.5rem_1fr_auto] items-center gap-[0.6rem] rounded-[10px] border-[1.5px] px-[0.55rem] pt-[0.55rem] pb-[0.45rem] ${rowBg}`}
                 >
-                  {rankLabel}
-                </span>
-                <span className="flex min-w-0 items-center gap-[0.45rem]">
                   <span
-                    className="truncate text-[0.95rem] font-bold"
-                    style={{ fontFamily: FONT_DISPLAY }}
+                    className="text-center text-[1rem]"
+                    style={{ fontFamily: FONT_MONO }}
                   >
-                    {t.team.name}
+                    {rankLabel}
                   </span>
-                  {t.userRole === "captain" && (
+                  <span className="flex min-w-0 items-center gap-[0.45rem]">
                     <span
-                      className="border-fd-gold bg-fd-gold/30 rounded-full border-[1.5px] px-[0.4rem] py-[0.08rem] text-[0.55rem] tracking-[0.14em] whitespace-nowrap uppercase"
-                      style={{ fontFamily: FONT_MONO }}
+                      className="truncate text-[0.95rem] font-bold"
+                      style={{ fontFamily: FONT_DISPLAY }}
                     >
-                      Captain
+                      {t.team.name}
                     </span>
-                  )}
-                  {isYou && (
-                    <span
-                      className="border-fd-ink bg-fd-gold text-fd-ink rounded-full border-[1.5px] px-[0.4rem] py-[0.08rem] text-[0.55rem] font-bold tracking-[0.14em]"
-                      style={{ fontFamily: FONT_MONO }}
-                    >
-                      YOU
-                    </span>
-                  )}
-                </span>
-                <span
-                  className="text-fd-sunset text-right text-[1rem] font-semibold"
-                  style={{ fontFamily: FONT_MONO }}
-                >
-                  {t.team.points}
-                </span>
-                <span
-                  aria-hidden
-                  className="bg-fd-ink/10 relative col-span-full mt-[0.3rem] block h-1 overflow-hidden rounded-[2px]"
-                >
+                    {t.userRole === "captain" && (
+                      <span
+                        className="border-fd-gold bg-fd-gold/30 rounded-full border-[1.5px] px-[0.4rem] py-[0.08rem] text-[0.55rem] tracking-[0.14em] whitespace-nowrap uppercase"
+                        style={{ fontFamily: FONT_MONO }}
+                      >
+                        Captain
+                      </span>
+                    )}
+                    {isYou && (
+                      <span
+                        className="border-fd-ink bg-fd-gold text-fd-ink rounded-full border-[1.5px] px-[0.4rem] py-[0.08rem] text-[0.55rem] font-bold tracking-[0.14em]"
+                        style={{ fontFamily: FONT_MONO }}
+                      >
+                        YOU
+                      </span>
+                    )}
+                  </span>
                   <span
-                    className="from-fd-grass to-fd-sky absolute inset-y-0 left-0 bg-gradient-to-r transition-[width] duration-500 ease-out"
-                    style={{ width: `${pct}%` }}
-                  />
-                </span>
-              </div>
-            );
-          })}
+                    className="text-fd-sunset text-right text-[1rem] font-semibold"
+                    style={{ fontFamily: FONT_MONO }}
+                  >
+                    {t.team.points}
+                  </span>
+                  <span
+                    aria-hidden
+                    className="bg-fd-ink/10 relative col-span-full mt-[0.3rem] block h-1 overflow-hidden rounded-[2px]"
+                  >
+                    <span
+                      className="from-fd-grass to-fd-sky absolute inset-y-0 left-0 bg-gradient-to-r transition-[width] duration-500 ease-out"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

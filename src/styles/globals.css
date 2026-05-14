@@ -4,6 +4,7 @@
 @import "@fontsource-variable/instrument-sans";
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
+@import url('https://fonts.googleapis.com/css2?family=Funnel+Display:wght@700;800&family=Lexend:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -485,7 +486,30 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-mono;
+    @apply bg-fd-paper text-fd-ink font-mono;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: radial-gradient(
+      circle,
+      var(--fd-dot, rgba(var(--fd-ink-rgb), 0.1)) 1px,
+      transparent 1.4px
+    );
+    background-size: 18px 18px;
+    background-position: 0 0;
+    mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.9),
+      rgba(0, 0, 0, 0.9) 80%,
+      rgba(0, 0, 0, 0.3)
+    );
+  }
+  .dark body {
+    --fd-dot: rgba(244, 236, 226, 0.08);
   }
   html {
     @apply font-sans;
@@ -496,5 +520,37 @@
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+}
+
+/* ── Field Day / Variant-A keyframes ─────────────────────────── */
+@keyframes va-fadein-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes va-confetti-drift {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(10deg);
+  }
+}
+
+@keyframes va-ribbon-flutter {
+  0%,
+  100% {
+    letter-spacing: 0.14em;
+  }
+  50% {
+    letter-spacing: 0.18em;
   }
 }

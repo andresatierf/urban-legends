@@ -3,6 +3,7 @@
 import { ArrowRight, PencilLine } from "lucide-react";
 import type { ComponentProps } from "react";
 
+import { useSubmissionDialog } from "@/components/submission-dialog-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -20,12 +21,18 @@ export function LogActivityFab({
   teamName,
   tournamentName,
   className,
+  onClick,
   ...buttonProps
 }: LogActivityFabProps) {
+  const { openSubmissionDialog } = useSubmissionDialog();
   return (
     <Button
       type="button"
       variant="field-day"
+      onClick={(e) => {
+        onClick?.(e);
+        if (!e.defaultPrevented) openSubmissionDialog();
+      }}
       {...buttonProps}
       className={cn(
         "mt-5 grid h-auto w-full max-w-none grid-cols-[1fr_auto] grid-rows-[auto_auto] items-center gap-x-[0.9rem] gap-y-[0.15rem] px-[1.05rem] pt-3 pb-[0.85rem] text-left whitespace-normal sm:mt-0 sm:w-auto sm:max-w-[min(420px,88%)]",
@@ -36,7 +43,7 @@ export function LogActivityFab({
         <PencilLine className="size-[14px]" strokeWidth={2.5} />
         Log today&apos;s activity
       </span>
-      <span className="flex gap-1 justify-end">
+      <span className="flex justify-end gap-1">
         <ArrowRight
           className="row-start-2 size-4 self-center"
           strokeWidth={1.5}

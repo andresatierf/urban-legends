@@ -31,7 +31,7 @@ export function TournamentSwitcher({
   return (
     <Select value={selectedTournamentId} onValueChange={onSelect}>
       <SelectTrigger
-        className={`border-fd-ink bg-fd-chip dark:bg-fd-chip text-fd-ink !h-auto w-fit gap-[0.5rem] rounded-full border-2 px-[0.75rem] py-[0.25rem] shadow-[2px_2px_0_var(--fd-shadow)] hover:bg-fd-chip dark:hover:bg-fd-chip focus-visible:ring-0 ${className ?? ""}`}
+        className={`border-fd-ink bg-fd-chip dark:bg-fd-chip text-fd-ink hover:bg-fd-chip dark:hover:bg-fd-chip !h-auto w-fit gap-[0.5rem] rounded-full border-2 px-[0.75rem] py-[0.25rem] shadow-[2px_2px_0_var(--fd-shadow)] focus-visible:ring-0 ${className ?? ""}`}
       >
         <span className="font-fd-display text-fd-mute text-[0.72rem] font-extrabold tracking-[0.14em] uppercase">
           {label}
