@@ -8,10 +8,10 @@ import { useUser } from "@/hooks/useUser";
 import { isToday } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
-import { api } from "../../../convex/_generated/api";
-import type { Doc, Id } from "../../../convex/_generated/dataModel";
-import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
-import { Eyebrow } from "../ui/eyebrow";
+import { api } from "../../../../../convex/_generated/api";
+import type { Doc, Id } from "../../../../../convex/_generated/dataModel";
+import { Card, CardContent, CardFooter, CardHeader } from "../../../ui/card";
+import { Eyebrow } from "../../../ui/eyebrow";
 import { CalendarDateCell, cellStyles } from "./calendar-date-cell";
 import { CalendarHeader } from "./calendar-header";
 

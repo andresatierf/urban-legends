@@ -5,12 +5,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { UpsertSubmissionFormDialog } from "@/components/form/upsert-submission-form";
 import { SectionHeader } from "@/components/section-header";
-import { CalendarStatistics } from "@/components/submissions/calendar-statistics";
+import { CalendarStatistics } from "@/components/submissions/listing/calendar/calendar-statistics";
+import { SubmissionCalendar } from "@/components/submissions/listing/calendar/submission-calendar";
+import { SubmissionCardList } from "@/components/submissions/listing/card/submission-card-list";
+import { TeamSelector } from "@/components/submissions/listing/team-selector";
 import { SubmissionReviewList } from "@/components/submissions/review/submission-review-list";
 import type { ReviewItem } from "@/components/submissions/review/types";
-import { SubmissionCalendar } from "@/components/submissions/submission-calendar";
-import { SubmissionCardList } from "@/components/submissions/submission-card-list";
-import { TeamSelector } from "@/components/submissions/team-selector";
 import { CardContent } from "@/components/ui/card";
 import {
   Empty,

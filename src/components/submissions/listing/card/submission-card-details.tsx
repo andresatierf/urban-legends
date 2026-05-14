@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 
-import { stateBadgeVariant } from "./review/submission-review-card-shared";
+import { stateBadgeVariant } from "../../review/submission-review-card-shared";
 
 interface SubmissionCardDetailsProps {
   submission: Doc<"submissions">;
