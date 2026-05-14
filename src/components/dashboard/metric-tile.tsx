@@ -1,3 +1,5 @@
+import { Eyebrow } from "@/components/ui/eyebrow";
+
 import { RunnerSvg, WhistleSvgSmall } from "./svg-icons";
 import type { DashboardTeam } from "./types";
 
@@ -33,9 +35,9 @@ export function MetricTile({
         aria-hidden
         className="-mx-4 -mt-1 mb-[0.6rem] h-1 rounded-xs [background:repeating-linear-gradient(90deg,var(--metric-accent,var(--gold))_0px,var(--metric-accent,var(--gold))_8px,transparent_8px,transparent_14px)]"
       />
-      <span className="text-mute text-label-caps">{label}</span>
+      <Eyebrow className="text-mute">{label}</Eyebrow>
       <span className="text-ink text-display">{value}</span>
-      <span className="text-mute text-label-caps mb-[0.4rem]">{unit}</span>
+      <Eyebrow className="text-mute mb-[0.4rem]">{unit}</Eyebrow>
       <svg
         aria-hidden
         width={w}
@@ -77,7 +79,7 @@ export function RosetteTile({
     <div
       className={`border-ink bg-card shadow-fd-lg hover:shadow-fd-xl flex flex-1 flex-col items-center rounded-2xl border-2 p-6 text-center transition-[transform,box-shadow] duration-[120ms] ease-linear hover:-translate-x-0.5 hover:-translate-y-0.5 ${highlight ? "border-gold bg-gold/15" : ""}`}
     >
-      <div className="text-mute text-label-caps mb-[0.35rem]">{label}</div>
+      <Eyebrow className="text-mute mb-[0.35rem] block">{label}</Eyebrow>
       <div className="text-ink font-heading mb-[0.35rem] text-xl leading-[1.2] font-extrabold">
         {team.team.name}
       </div>
@@ -100,11 +102,11 @@ export function RosetteTile({
         />
         <RunnerSvg progress={progress} />
       </div>
-      <div className="text-mute text-label-caps flex justify-between">
+      <Eyebrow className="text-mute flex justify-between" as="div">
         <span>Start</span>
         <span>{progress}%</span>
         <span>End</span>
-      </div>
+      </Eyebrow>
     </div>
   );
 }

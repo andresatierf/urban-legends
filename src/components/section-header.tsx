@@ -2,10 +2,13 @@ import type { LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+import { Eyebrow } from "./ui/eyebrow";
+
 type Props = {
   as?: keyof React.JSX.IntrinsicElements;
   title: string;
   description?: string;
+  eyebrow?: string;
   Icon?: LucideIcon;
   children?: React.ReactNode;
 };
@@ -14,6 +17,7 @@ export function SectionHeader({
   as: Comp = "h2",
   title,
   description,
+  eyebrow,
   Icon,
   children,
 }: Props) {
@@ -29,16 +33,17 @@ export function SectionHeader({
           />
         )}
         <div>
+          {eyebrow && <Eyebrow className="mb-1 block">{eyebrow}</Eyebrow>}
           <Comp
-            className={cn("text-foreground font-semibold", {
-              "text-3xl font-bold": Comp === "h1",
-              "text-lg": Comp === "h2",
+            className={cn("text-foreground", {
+              "text-h1": Comp === "h1",
+              "text-h2": Comp === "h2",
             })}
           >
             {title}
           </Comp>
           {description && (
-            <p className="text-muted-foreground">{description}</p>
+            <p className="text-body-md text-muted-foreground">{description}</p>
           )}
         </div>
       </div>
