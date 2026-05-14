@@ -18,7 +18,11 @@ export function EvidenceGrid({ evidence }: Props) {
       {evidence.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {evidence.map((img, idx) => (
-            <Card key={img._id} size="sm" className="overflow-hidden p-0">
+            <Card
+              key={img._id}
+              size="sm"
+              className="overflow-hidden p-0 data-[size=sm]:p-0"
+            >
               <Image
                 src={img.url}
                 alt={img.filename ?? `Evidence ${idx + 1}`}
