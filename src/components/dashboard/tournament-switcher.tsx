@@ -33,10 +33,10 @@ export function TournamentSwitcher({
       <SelectTrigger
         className={`border-ink bg-chip dark:bg-chip text-ink hover:bg-chip dark:hover:bg-chip !h-auto w-fit gap-[0.5rem] rounded-full border-2 px-[0.75rem] py-[0.25rem] shadow-[2px_2px_0_var(--shadow)] focus-visible:ring-0 ${className ?? ""}`}
       >
-        <span className="font-fd-display text-mute text-[0.72rem] font-extrabold tracking-[0.14em] uppercase">
+        <span className="text-mute text-label-caps font-heading text-[0.72rem] font-extrabold">
           {label}
         </span>
-        <span className="font-fd-body text-ink text-[0.9rem] font-semibold">
+        <span className="text-ink text-[0.9rem] font-semibold">
           <SelectValue />
         </span>
       </SelectTrigger>
@@ -48,7 +48,7 @@ export function TournamentSwitcher({
           <SelectItem
             key={t._id}
             value={t._id}
-            className="font-fd-body text-ink focus:bg-ink/10 text-[0.9rem] font-semibold"
+            className="text-ink focus:bg-ink/10 text-[0.9rem] font-semibold"
           >
             {t.name}
           </SelectItem>

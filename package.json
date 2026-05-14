@@ -74,9 +74,6 @@
   },
   "devDependencies": {
     "@ai-hero/sandcastle": "^0.5.10",
-    "@fontsource-variable/geist": "^5.2.8",
-    "@fontsource-variable/geist-mono": "^5.2.7",
-    "@fontsource-variable/instrument-sans": "^5.2.8",
     "@google/design.md": "^0.1.1",
     "@types/node": "^20",
     "@types/react": "^19.2.2",
