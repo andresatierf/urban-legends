@@ -5,9 +5,10 @@ Implement issue #{{TASK_ID}}: {{ISSUE_TITLE}}
 You are on branch `{{BRANCH}}` inside an isolated git worktree. No other agents
 are touching this worktree — commit freely.
 
-Pull in the issue (and any parent PRD it references):
+Pull in the issue, its comments (triage notes, agent briefs, clarifications),
+and any parent PRD it references:
 
-!`gh issue view {{TASK_ID}}`
+!`gh issue view {{TASK_ID}} --comments`
 
 # CONTEXT
 
