@@ -29,10 +29,10 @@ export function WinnerAnnouncement({ tournamentId }: Props) {
   }
 
   return (
-    <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+    <Card className="border-podium-gold bg-podium-gold-bg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-2xl">
-          <Trophy className="h-8 w-8 text-yellow-600" />
+          <Trophy className="text-podium-gold h-8 w-8" />
           Tournament Champion!
         </CardTitle>
       </CardHeader>
@@ -60,7 +60,7 @@ export function WinnerAnnouncement({ tournamentId }: Props) {
             {winner.members.map((member) => (
               <div
                 key={member._id}
-                className="rounded-full bg-white px-3 py-1 text-sm dark:bg-gray-950"
+                className="bg-card rounded-full px-3 py-1 text-sm"
               >
                 {member.name}
               </div>

@@ -65,28 +65,28 @@ export function TeamStatisticsCard({ teamId }: Props) {
       value: team.points,
       icon: Award,
       description: `From ${stats.approvedSubmissions} approved submissions`,
-      color: "text-yellow-600",
+      color: "text-warning",
     },
     {
       title: "Approval Rate",
       value: `${(stats.approvalRate * 100).toFixed(1)}%`,
       icon: CheckCircle,
       description: `${stats.approvedSubmissions}/${stats.totalSubmissions} submissions approved`,
-      color: "text-green-600",
+      color: "text-success",
     },
     {
       title: "Current Streak",
       value: `${stats.currentStreak} days`,
       icon: Flame,
       description: "Consecutive days with submissions",
-      color: "text-orange-600",
+      color: "text-primary",
     },
     {
       title: "Avg Points/Day",
       value: stats.averagePointsPerDay.toFixed(2),
       icon: TrendingUp,
       description: `Over ${stats.daysSoFar} days`,
-      color: "text-blue-600",
+      color: "text-info",
     },
     {
       title: "Completion Rate",
@@ -99,14 +99,14 @@ export function TeamStatisticsCard({ teamId }: Props) {
         );
         return `${daysWithSubmissions}/${stats.daysSoFar} days with submissions`;
       })(),
-      color: "text-purple-600",
+      color: "text-social",
     },
     {
       title: "Total Submissions",
       value: stats.totalSubmissions,
       icon: Activity,
       description: `${stats.approvedSubmissions} approved, ${stats.pendingSubmissions ?? "unknown"} pending, ${stats.rejectedSubmissions ?? "unknown"} rejected`,
-      color: "text-indigo-600",
+      color: "text-info",
     },
   ];
 

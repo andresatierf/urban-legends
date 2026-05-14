@@ -10,10 +10,7 @@ type Props = {
 export function WinnerAnnouncementSkeleton({ className }: Props) {
   return (
     <Card
-      className={cn(
-        "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20",
-        className,
-      )}
+      className={cn("border-podium-gold bg-podium-gold-bg", className)}
       role="status"
       aria-busy="true"
       aria-label="Loading winner announcement"

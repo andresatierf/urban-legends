@@ -17,14 +17,15 @@ interface RolesBadgeListProps {
   className?: string;
 }
 
-const roleVariants: Record<string, string> = {
-  admin: "border-red-200 bg-red-100 text-red-800 hover:bg-red-100/80",
-  player: "border-blue-200 bg-blue-100 text-blue-800 hover:bg-blue-100/80",
-  tournament_manager:
-    "border-purple-200 bg-purple-100 text-purple-800 hover:bg-purple-100/80",
-  reviewer:
-    "border-orange-200 bg-orange-100 text-orange-800 hover:bg-orange-100/80",
-  viewer: "border-green-200 bg-green-100 text-green-800 hover:bg-green-100/80",
+const roleVariants: Record<
+  string,
+  "error" | "info" | "social" | "warning" | "success" | "neutral"
+> = {
+  admin: "error",
+  player: "info",
+  tournament_manager: "social",
+  reviewer: "warning",
+  viewer: "success",
 };
 
 export function RolesBadgeList({
@@ -65,10 +66,8 @@ export function RolesBadgeList({
         return (
           <Badge
             key={role}
-            className={cn(
-              roleVariants[role] || "border-gray-200 bg-gray-100 text-gray-800",
-              "flex items-center gap-1",
-            )}
+            variant={roleVariants[role] || "neutral"}
+            className="flex items-center gap-1"
           >
             <span>{displayName}</span>
             {editable && onRemove && (

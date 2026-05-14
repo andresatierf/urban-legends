@@ -205,6 +205,19 @@
   --info: var(--sky);
   --social: var(--plum);
 
+  /* ── Token-discipline decisions (#147) ─────────────────────────── */
+  /* 1. Role → semantic accent: admin→error, player→info,
+        tournament_manager→social, reviewer→warning, viewer→success.
+        Matches the 5-accent palette without introducing new tokens. */
+  /* 2. Notification dot: reuses --destructive (crimson). A dedicated
+        --notification token would be over-specified for a single dot. */
+  /* 3. Winner card: reuses podium-gold tokens below. The winner IS
+        the podium-1 team, so a distinct --winner token would diverge
+        from the leaderboard's own gold treatment. */
+  /* 4. Categorical section dots: "your" / active → success (grass),
+        upcoming / "rest" → info (sky), ended → muted-foreground.
+        Maps the two listing tones to the same semantic pair. */
+
   /* ── Chart series (categorical Field Day accents) ──────────────── */
   --chart-1: var(--sunset);
   --chart-2: var(--grass);

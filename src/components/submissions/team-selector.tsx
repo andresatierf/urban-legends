@@ -73,7 +73,7 @@ export function TeamSelector({
               <div className="flex flex-col items-start">
                 <span className="font-medium">{team.name}</span>
                 {team.tournament && (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-muted-foreground text-xs">
                     {team.tournament.name}
                   </span>
                 )}

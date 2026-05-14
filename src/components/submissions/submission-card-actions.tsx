@@ -42,7 +42,7 @@ export function SubmissionCardActions({
         <Button
           size="sm"
           variant="default"
-          className="bg-green-600 hover:bg-green-700"
+          className="bg-success text-primary-foreground hover:bg-success/90"
           onClick={onApprove}
         >
           <Check className="mr-1 h-4 w-4" />
@@ -50,12 +50,7 @@ export function SubmissionCardActions({
         </Button>
       )}
       {canReject && (
-        <Button
-          size="sm"
-          variant="default"
-          className="bg-red-600 hover:bg-red-700"
-          onClick={onReject}
-        >
+        <Button size="sm" variant="destructive" onClick={onReject}>
           <X className="mr-1 h-4 w-4" />
           Reject
         </Button>
