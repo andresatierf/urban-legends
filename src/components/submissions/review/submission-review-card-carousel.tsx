@@ -112,7 +112,7 @@ export function CarouselReviewCard({
               disabled={isApproving || isRejecting}
               className="flex-1 gap-1.5 rounded-none"
             >
-              <Check className="h-4 w-4 text-emerald-600" />
+              <Check className="text-success h-4 w-4" />
               {isApproving ? "Approving..." : "Approve"}
             </Button>
           )}
@@ -193,7 +193,7 @@ function MetaFooter({
           {primaryLabel}
         </p>
         {pointsEarned > 0 && (
-          <span className="font-heading shrink-0 text-xs font-medium text-emerald-600">
+          <span className="font-heading text-success shrink-0 text-xs font-medium">
             +{pointsEarned} pts
           </span>
         )}

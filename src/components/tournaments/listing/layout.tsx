@@ -16,7 +16,7 @@ export function TournamentListing({
     <div className="space-y-8">
       {active.length > 0 && (
         <TournamentSection
-          dotClass="bg-emerald-500"
+          dotClass="bg-success"
           label="Now playing"
           tournaments={active}
         />
@@ -24,7 +24,7 @@ export function TournamentListing({
 
       {upcoming.length > 0 && (
         <TournamentSection
-          dotClass="bg-blue-500"
+          dotClass="bg-info"
           label="Coming soon"
           tournaments={upcoming}
         />

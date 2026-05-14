@@ -12,7 +12,7 @@ export function SectionLabel({
       <span
         className={cn(
           "inline-block h-1.5 w-1.5 rounded-full",
-          tone === "your" ? "bg-emerald-500" : "bg-blue-500",
+          tone === "your" ? "bg-success" : "bg-info",
         )}
       />
       {children}

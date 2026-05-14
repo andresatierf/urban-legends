@@ -309,29 +309,16 @@ function SubmissionsPage() {
             <SectionHeader title="Your Submissions" />
           )}
           <Tabs defaultValue="calendar">
-            <div className="flex items-start justify-between">
-              <TabsList>
-                <TabsTrigger value="calendar">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Calendar
-                </TabsTrigger>
-                <TabsTrigger value="list">
-                  <List className="mr-2 h-4 w-4" />
-                  List
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="calendar">
-                {teamsWithTournaments.length > 1 && (
-                  <div className="flex justify-end">
-                    <TeamSelector
-                      teams={teamsWithTournaments}
-                      selectedTeamId={selectedTeamId}
-                      onTeamChange={setSelectedTeamId}
-                    />
-                  </div>
-                )}
-              </TabsContent>
-            </div>
+            <TabsList className="ml-auto">
+              <TabsTrigger value="calendar">
+                <Calendar className="mr-2 h-4 w-4" />
+                Calendar
+              </TabsTrigger>
+              <TabsTrigger value="list">
+                <List className="mr-2 h-4 w-4" />
+                List
+              </TabsTrigger>
+            </TabsList>
             <TabsContent value="calendar">
               {teamsWithTournaments.length === 0 ? (
                 <div className="rounded-lg border border-dashed">
@@ -352,11 +339,23 @@ function SubmissionsPage() {
                 <div className="space-y-6">
                   {selectedTeam?.tournament && selectedTeamId && (
                     <>
-                      <SubmissionCalendar
-                        teamId={selectedTeamId}
-                        tournamentId={selectedTeam.tournamentId}
-                        onDateClick={handleDateClick}
-                      />
+                      <div className="relative">
+                        {teamsWithTournaments.length > 1 && (
+                          <div className="mb-3 flex justify-center sm:mb-0">
+                            <TeamSelector
+                              teams={teamsWithTournaments}
+                              selectedTeamId={selectedTeamId}
+                              onTeamChange={setSelectedTeamId}
+                              className="sm:absolute sm:-top-4 sm:left-4 sm:z-3"
+                            />
+                          </div>
+                        )}
+                        <SubmissionCalendar
+                          teamId={selectedTeamId}
+                          tournamentId={selectedTeam.tournamentId}
+                          onDateClick={handleDateClick}
+                        />
+                      </div>
                       <CalendarStatistics
                         teamId={selectedTeamId}
                         tournamentId={selectedTeam.tournamentId}

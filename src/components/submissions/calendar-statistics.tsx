@@ -142,7 +142,7 @@ export function CalendarStatistics({
                 <div
                   className={cn(
                     "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold",
-                    "dark:bg-background/20 bg-gray-100",
+                    "bg-paper-deep dark:bg-background/20",
                     stat.color,
                   )}
                 >

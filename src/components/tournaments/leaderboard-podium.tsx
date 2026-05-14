@@ -94,7 +94,7 @@ export function LeaderboardPodium({ tournamentId }: Props) {
                 {team.memberCount} members
               </div>
               {team.isWinner && (
-                <div className="mt-3 rounded-full bg-yellow-500 px-3 py-1 text-xs font-semibold text-white">
+                <div className="bg-podium-gold text-primary-foreground mt-3 rounded-full px-3 py-1 text-xs font-semibold">
                   Tournament Winner
                 </div>
               )}

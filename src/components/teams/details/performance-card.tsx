@@ -29,25 +29,25 @@ export function PerformanceCard({ teamId }: Props) {
         [
           {
             icon: Trophy,
-            iconColor: "text-amber-500",
+            iconColor: "text-warning",
             label: "Rank",
             value: `#${stats.rank} / ${stats.totalTeams}`,
           },
           {
             icon: Flame,
-            iconColor: "text-orange-600",
+            iconColor: "text-primary",
             label: "Streak",
             value: `${stats.currentStreak}d`,
           },
           {
             icon: Calendar,
-            iconColor: "text-purple-600",
+            iconColor: "text-social",
             label: "Completion",
             value: `${(stats.completionRate * 100).toFixed(0)}%`,
           },
           {
             icon: TrendingUp,
-            iconColor: "text-blue-600",
+            iconColor: "text-info",
             label: "Pts/day",
             value: stats.averagePointsPerDay.toFixed(1),
           },
@@ -55,19 +55,19 @@ export function PerformanceCard({ teamId }: Props) {
         [
           {
             icon: CheckCircle,
-            iconColor: "text-green-600",
+            iconColor: "text-success",
             label: "Approved",
             value: String(stats.approvedSubmissions),
           },
           {
             icon: Activity,
-            iconColor: "text-yellow-600",
+            iconColor: "text-warning",
             label: "Pending",
             value: String(stats.pendingSubmissions),
           },
           {
             icon: Activity,
-            iconColor: "text-red-600",
+            iconColor: "text-destructive",
             label: "Rejected",
             value: String(stats.rejectedSubmissions),
           },
