@@ -5,6 +5,7 @@ import { ComboboxField } from "@/components/form/fields/combobox-field";
 import { DateField } from "@/components/form/fields/date-field";
 import { NumberField } from "@/components/form/fields/number-field";
 import { SelectField } from "@/components/form/fields/select-field";
+import { SliderField } from "@/components/form/fields/slider-field";
 import { TextField } from "@/components/form/fields/text-field";
 import { TextareaField } from "@/components/form/fields/textarea-field";
 
@@ -17,6 +18,7 @@ export const { useAppForm, withForm, withFieldGroup } = createFormHook({
     DateField,
     NumberField,
     SelectField,
+    SliderField,
     TextField,
     TextareaField,
   },
