@@ -147,6 +147,7 @@
   --font-heading: "Funnel Display", sans-serif;
 
   /* ── Radius scale ──────────────────────────────────────────────── */
+  --radius-xs: 2px;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 12px;
@@ -288,14 +289,14 @@
   --calendar-disabled-text: #7a6a5c80;
   --calendar-today-ring: var(--sunset);
 
-  /* ── FAB / RaceChart (light) ───────────────────────────────────── */
-  --fab-bg: #ff7a45;
-  --fab-ink: #2a1f1a;
-  --fab-gold: #ffc847;
-  --fab-grid: rgba(42, 31, 26, 0.22);
-  --fab-shadow: rgba(42, 31, 26, 0.12);
-  --fab-shadow-soft: rgba(42, 31, 26, 0.06);
-  --fab-surface: #ffffff;
+  /* ── FAB / RaceChart (derived from semantic tokens) ─────────────── */
+  --fab-bg: var(--primary);
+  --fab-ink: var(--foreground);
+  --fab-gold: var(--gold);
+  --fab-grid: rgba(var(--ink-rgb), 0.22);
+  --fab-shadow: var(--shadow);
+  --fab-shadow-soft: rgba(var(--ink-rgb), 0.06);
+  --fab-surface: var(--card);
 }
 
 .dark {
@@ -379,13 +380,9 @@
   --calendar-disabled-text: #a89a8b80;
   --calendar-today-ring: var(--sunset);
 
-  /* ── FAB / RaceChart (dark) ────────────────────────────────────── */
-  --fab-bg: #d65a2e;
-  --fab-ink: #f4ece2;
-  --fab-grid: rgba(244, 236, 226, 0.22);
-  --fab-shadow: rgba(244, 236, 226, 0.22);
-  --fab-shadow-soft: rgba(244, 236, 226, 0.1);
-  --fab-surface: #2b231c;
+  /* ── FAB / RaceChart (dark — only override differing opacities) ── */
+  --fab-shadow: rgba(var(--ink-rgb), 0.22);
+  --fab-shadow-soft: rgba(var(--ink-rgb), 0.1);
 }
 
 @layer base {
@@ -533,6 +530,27 @@
   &[data-variant="destructive"] {
     box-shadow: 1px 1px 0 var(--color-shadow);
   }
+}
+
+/* ── Field Day hard-offset shadow utilities ─────────────────────── */
+
+@utility shadow-fd-xs {
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+@utility shadow-fd-sm {
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+@utility shadow-fd {
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+@utility shadow-fd-md {
+  box-shadow: 5px 5px 0 var(--shadow);
+}
+@utility shadow-fd-lg {
+  box-shadow: 6px 6px 0 var(--shadow);
+}
+@utility shadow-fd-xl {
+  box-shadow: 8px 8px 0 var(--shadow);
 }
 
 /* ── Field Day keyframes ─────────────────────────────────────────── */
