@@ -18,7 +18,8 @@ export function TeamCardContainer({ data }: { data: TeamCardData }) {
     });
   };
 
-  const joinSlot = (
+  const canShowJoin = !data.isUserInTeam && data.team.joinPolicy !== "closed";
+  const joinSlot = canShowJoin ? (
     <JoinTeamFormButton
       teamId={data.team._id}
       team={data.team}
@@ -26,8 +27,9 @@ export function TeamCardContainer({ data }: { data: TeamCardData }) {
       isUserMember={data.isUserMember}
       isUserInTeam={data.isUserInTeam}
       size="sm"
+      variant="grass"
     />
-  );
+  ) : undefined;
 
   return <TeamCard data={data} onLeave={handleLeave} joinSlot={joinSlot} />;
 }

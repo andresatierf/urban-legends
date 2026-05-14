@@ -1,4 +1,5 @@
-import { Users } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { SectionHeader } from "@/components/section-header";
@@ -6,14 +7,13 @@ import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 
 import type { Doc } from "../../../../convex/_generated/dataModel";
+import { TournamentSwitcher } from "../../dashboard/tournament-switcher";
 import { getTournamentStatus } from "../../tournaments/utils";
 import { Skeleton } from "../../ui/skeleton";
+import { TeamCardContainer } from "../card/container";
 import { TeamCardSkeleton } from "../card/layout";
 import { JoinTeamCard } from "../join-team-card";
-import { FilterBar } from "./filter-bar";
-import { OtherTeams } from "./other-teams";
 import type { TeamWithMembers, TournamentMap } from "./types";
-import { YourTeams } from "./your-teams";
 
 const STATUS_ORDER: Record<ReturnType<typeof getTournamentStatus>, number> = {
   active: 0,
@@ -36,7 +36,15 @@ export function TeamListing({
 }: Props) {
   const { user } = useUser({ shouldThrow: false });
   const currentUserId = user?._id;
-  const [filter, setFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<string>(() => {
+    const tournamentIds = Array.from(
+      new Set(allTeams.map((t) => t.tournamentId)),
+    );
+    const active = tournamentIds
+      .map((id) => tournamentMap[id])
+      .find((t) => t && getTournamentStatus(t) === "active");
+    return active?._id ?? "all";
+  });
   const [includeEnded, setIncludeEnded] = useState(false);
 
   const userTeamIds = useMemo(
@@ -76,7 +84,7 @@ export function TeamListing({
     return hidden ? "all" : filter;
   }, [filter, visibleTournaments]);
 
-  const { filteredYourTeams, filteredOtherTeams } = useMemo(() => {
+  const visibleTeams = useMemo(() => {
     const isEndedTeam = (team: TeamWithMembers) => {
       const t = tournamentMap[team.tournamentId];
       return t ? getTournamentStatus(t) === "ended" : false;
@@ -87,28 +95,12 @@ export function TeamListing({
         ? includeEnded || !isEndedTeam(team)
         : team.tournamentId === effectiveFilter;
 
-    return {
-      filteredYourTeams: userTeams.filter(matchesFilter),
-      filteredOtherTeams: allTeams.filter(
-        (t) => !userTeamIds.has(t._id) && matchesFilter(t),
-      ),
-    };
-  }, [
-    userTeams,
-    allTeams,
-    tournamentMap,
-    userTeamIds,
-    effectiveFilter,
-    includeEnded,
-  ]);
-
-  const otherTournaments = useMemo(
-    () =>
-      visibleTournaments.filter((t) =>
-        filteredOtherTeams.some((team) => team.tournamentId === t._id),
-      ),
-    [visibleTournaments, filteredOtherTeams],
-  );
+    return allTeams.filter(matchesFilter).sort((a, b) => {
+      const aMine = userTeamIds.has(a._id) ? 0 : 1;
+      const bMine = userTeamIds.has(b._id) ? 0 : 1;
+      return aMine - bMine;
+    });
+  }, [allTeams, tournamentMap, userTeamIds, effectiveFilter, includeEnded]);
 
   const hasAnyTeams = allTeams.length > 0;
   const hasEndedTournaments = tournamentsWithTeams.some(
@@ -134,27 +126,84 @@ export function TeamListing({
 
       {!hasAnyTeams ? (
         <JoinTeamCard first />
+      ) : visibleTeams.length === 0 ? (
+        <>
+          {visibleTournaments.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <TournamentSwitcher
+                tournaments={visibleTournaments}
+                selectedTournamentId={effectiveFilter}
+                onSelect={setFilter}
+                label="Tournament"
+                allOption={{ value: "all", label: "All tournaments" }}
+              />
+              {effectiveFilter !== "all" && (
+                <Button size="sm" asChild>
+                  <Link
+                    to="/tournaments/$tournamentId"
+                    params={{ tournamentId: effectiveFilter }}
+                  >
+                    View tournament
+                    <ArrowRight className="size-3.5" />
+                  </Link>
+                </Button>
+              )}
+            </div>
+          )}
+          <p className="text-muted-foreground rounded-lg border border-dashed py-6 text-center text-xs">
+            No teams to show.
+          </p>
+        </>
       ) : (
         <>
-          <FilterBar
-            tournaments={visibleTournaments}
-            activeFilter={effectiveFilter}
-            onFilterChange={setFilter}
-          />
-
-          <div className="space-y-8">
-            <YourTeams
-              teams={filteredYourTeams}
-              effectiveFilter={effectiveFilter}
-              tournamentMap={tournamentMap}
-              currentUserId={currentUserId}
-            />
-            <OtherTeams
-              teams={filteredOtherTeams}
-              tournaments={otherTournaments}
-              effectiveFilter={effectiveFilter}
-              userTournamentIds={userTournamentIds}
-            />
+          {visibleTournaments.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <TournamentSwitcher
+                tournaments={visibleTournaments}
+                selectedTournamentId={effectiveFilter}
+                onSelect={setFilter}
+                label="Tournament"
+                allOption={{ value: "all", label: "All tournaments" }}
+              />
+              {effectiveFilter !== "all" && (
+                <Button size="sm" asChild>
+                  <Link
+                    to="/tournaments/$tournamentId"
+                    params={{ tournamentId: effectiveFilter }}
+                  >
+                    View tournament
+                    <ArrowRight className="size-3.5" />
+                  </Link>
+                </Button>
+              )}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-3 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
+            {visibleTeams.map((team) => {
+              const isUserMember = userTeamIds.has(team._id);
+              const role =
+                isUserMember && currentUserId
+                  ? (team.members.find((m) => m._id === currentUserId)
+                      ?.memberRole ?? null)
+                  : null;
+              return (
+                <TeamCardContainer
+                  key={team._id}
+                  data={{
+                    team,
+                    tournament:
+                      effectiveFilter === "all"
+                        ? tournamentMap[team.tournamentId]
+                        : undefined,
+                    members: team.members,
+                    memberCount: team.members.length,
+                    isUserMember,
+                    isUserInTeam: userTournamentIds.has(team.tournamentId),
+                    userRole: role,
+                  }}
+                />
+              );
+            })}
           </div>
         </>
       )}
@@ -172,34 +221,12 @@ export function TeamListingSkeleton({
       <SectionHeader as="h1" title="Teams" Icon={Users}>
         {headerActions}
       </SectionHeader>
-      <div className="flex flex-wrap gap-1.5">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-7 w-28 rounded-full" />
+      <Skeleton className="h-8 w-44 rounded-full" />
+      <div className="grid grid-cols-1 gap-3 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <TeamCardSkeleton key={i} />
         ))}
       </div>
-      <section className="space-y-4">
-        <Skeleton className="h-3 w-32" />
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <TeamCardSkeleton key={i} />
-          ))}
-        </div>
-      </section>
-      <section className="space-y-4">
-        <Skeleton className="h-3 w-32" />
-        <div className="space-y-5">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <Skeleton className="h-4 w-48" />
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {Array.from({ length: 3 }).map((__, j) => (
-                  <TeamCardSkeleton key={j} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

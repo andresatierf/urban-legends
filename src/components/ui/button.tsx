@@ -13,6 +13,9 @@ const buttonVariants = cva(
           "border-foreground bg-primary text-primary-foreground border-2 shadow-[3px_3px_0_var(--color-shadow)] hover:brightness-110 active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_var(--color-shadow)]",
         secondary:
           "border-foreground bg-card text-foreground hover:bg-accent border-2 shadow-[3px_3px_0_var(--color-shadow)] active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_var(--color-shadow)]",
+        sky: "border-foreground bg-sky text-ink border-2 shadow-[3px_3px_0_var(--color-shadow)] hover:brightness-110 active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_var(--color-shadow)]",
+        grass:
+          "border-foreground bg-grass text-ink border-2 shadow-[3px_3px_0_var(--color-shadow)] hover:brightness-110 active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_var(--color-shadow)]",
         destructive:
           "border-foreground bg-destructive text-destructive-foreground border-2 shadow-[3px_3px_0_var(--color-shadow)] hover:brightness-110 active:translate-x-px active:translate-y-px active:shadow-[1px_1px_0_var(--color-shadow)]",
         outline:

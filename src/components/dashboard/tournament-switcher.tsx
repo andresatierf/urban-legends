@@ -11,6 +11,7 @@ type TournamentSwitcherProps = {
   onSelect: (tournamentId: string) => void;
   label?: string;
   className?: string;
+  allOption?: { value: string; label: string };
 };
 
 export function TournamentSwitcher({
@@ -19,18 +20,23 @@ export function TournamentSwitcher({
   onSelect,
   label = "Viewing",
   className,
+  allOption,
 }: TournamentSwitcherProps) {
-  if (tournaments.length <= 1) return null;
+  if (tournaments.length <= 1 && !allOption) return null;
+
+  const options = [
+    ...(allOption
+      ? [{ value: allOption.value, triggerLabel: allOption.label }]
+      : []),
+    ...tournaments.map((t) => ({ value: t._id, triggerLabel: t.name })),
+  ];
 
   return (
     <PrefixedSelect
       prefix={label}
       value={selectedTournamentId}
       onValueChange={onSelect}
-      options={tournaments.map((t) => ({
-        value: t._id,
-        triggerLabel: t.name,
-      }))}
+      options={options}
       className={className}
     />
   );

@@ -106,23 +106,11 @@ export function JoinTeamFormButton({
     );
   }
 
-  // User already in a team
-  if (isUserInTeam) {
-    return (
-      <Button variant="outline" size={size} disabled>
-        Already in a Team
-      </Button>
-    );
-  }
+  // User already in a team — no action available
+  if (isUserInTeam) return null;
 
-  // Closed teams can't be joined via request
-  if (isClosed) {
-    return (
-      <Button variant="outline" size={size} disabled>
-        Closed
-      </Button>
-    );
-  }
+  // Closed teams can't be joined via request — no action available
+  if (isClosed) return null;
 
   // Team is full
   if (isFull) {

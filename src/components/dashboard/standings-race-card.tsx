@@ -1,5 +1,8 @@
 "use client";
 
+import { ComposedCard } from "@/components/common/card/composed-card";
+import type { BadgeProps } from "@/components/ui/badge";
+
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { RaceChart, type RaceChartSeries } from "./race-chart";
 import type { DashboardTeam } from "./types";
@@ -35,41 +38,37 @@ export function StandingsRaceCard({
   userTeamId,
 }: StandingsRaceCardProps) {
   const leader = group.teams[0];
+  const badge: BadgeProps[] = [];
+  if (leader) {
+    badge.push({
+      variant: "neutral",
+      size: "lg",
+      children: (
+        <span className="inline-flex items-center gap-2">
+          <span className="text-mute text-label-caps">Leading</span>
+          <span className="font-heading text-sm font-bold">
+            {leader.team.name}
+          </span>
+          <span className="text-sunset font-mono text-xs font-semibold">
+            {leader.team.points} pts
+          </span>
+        </span>
+      ),
+    });
+  }
+  badge.push({
+    variant: isActive ? "success" : "neutral",
+    size: "lg",
+    children: isActive ? "Active" : "Ended",
+  });
   return (
-    <div className="border-ink bg-card shadow-fd-lg overflow-hidden rounded-2xl border-2">
-      <header className="border-ink bg-paper-deep flex flex-wrap items-center justify-between gap-4 border-b-2 px-5 py-4">
-        <div className="flex flex-col gap-[0.15rem]">
-          <span className="text-mute text-label-caps">
-            The Race · Live Standings
-          </span>
-          <h3 className="font-heading m-0 text-xl font-extrabold">
-            {group.tournament.name}
-          </h3>
-        </div>
-        <div className="flex items-center gap-[0.85rem]">
-          {leader && (
-            <span className="border-ink bg-card shadow-fd-sm inline-flex items-center gap-2 rounded-full border-2 px-[0.7rem] py-[0.3rem]">
-              <span className="text-mute text-label-caps">Leading</span>
-              <span className="font-heading text-sm font-bold">
-                {leader.team.name}
-              </span>
-              <span className="text-sunset font-mono text-xs font-semibold">
-                {leader.team.points} pts
-              </span>
-            </span>
-          )}
-          <span
-            className={`border-ink text-ink text-label-caps rounded-full border-2 px-[0.65rem] py-[0.22rem] ${
-              isActive
-                ? "bg-grass dark:border-emerald-700/60 dark:bg-emerald-900/40 dark:text-emerald-200"
-                : "bg-paper-deep text-mute"
-            }`}
-          >
-            {isActive ? "Active" : "Ended"}
-          </span>
-        </div>
-      </header>
-
+    <ComposedCard
+      bodyClassName="p-0"
+      eyebrow="The Race · Live Standings"
+      title={group.tournament.name}
+      titleSize="lg"
+      badge={badge}
+    >
       <div className="grid grid-cols-1 min-[960px]:grid-cols-[1.4fr_1fr] min-[960px]:[grid-template-rows:544px]">
         <div className="min-w-0 px-4 pt-4 pb-2">
           {chartData && chartData.series.length > 0 && (
@@ -140,6 +139,6 @@ export function StandingsRaceCard({
           </div>
         </div>
       </div>
-    </div>
+    </ComposedCard>
   );
 }
