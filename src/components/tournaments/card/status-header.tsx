@@ -1,25 +1,34 @@
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 
-import { StatusBand } from "../../common/card/status-band";
-import { STATUS_LABEL, getTournamentStatus } from "../utils";
+import { Eyebrow } from "../../ui/eyebrow";
+import { type RibbonColor, RibbonBanner } from "../../ui/ribbon-banner";
+import {
+  type TournamentStatus,
+  STATUS_LABEL,
+  getTournamentStatus,
+} from "../utils";
 import type { TournamentCardData } from "./types";
+
+const STATUS_RIBBON_COLOR: Record<TournamentStatus, RibbonColor> = {
+  active: "sunset",
+  upcoming: "sky",
+  ended: "mute",
+};
 
 export function StatusHeader({ data }: { data: TournamentCardData }) {
   const { format } = useFormattedDate();
   const status = getTournamentStatus(data);
 
   return (
-    <StatusBand
-      status={status}
-      palette="semantic"
-      className="flex-wrap gap-x-2 gap-y-0.5 rounded-t-lg py-2.5"
-    >
-      <span className="text-xs font-semibold tracking-wider uppercase">
-        {STATUS_LABEL[status]}
-      </span>
-      <span className="text-xs whitespace-nowrap">
+    <div className="pt-3 pb-1">
+      <RibbonBanner
+        label={STATUS_LABEL[status]}
+        color={STATUS_RIBBON_COLOR[status]}
+        small
+      />
+      <Eyebrow as="div" className="text-center">
         {format(data.startDate, "long")} – {format(data.endDate, "long")}
-      </span>
-    </StatusBand>
+      </Eyebrow>
+    </div>
   );
 }
