@@ -8,9 +8,9 @@ import type { BadgeProps } from "@/components/ui/badge";
 
 import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
 import { Skeleton } from "../../ui/skeleton";
+import { ActivityBars } from "./activity-bars";
 import { MemberRoster } from "./member-roster";
 import { RoleBanner } from "./role-banner";
-import { StatsGrid } from "./stats-grid";
 import type { TeamCardData } from "./types";
 
 type Props = {
@@ -24,6 +24,7 @@ export function TeamCard({ data, onLeave, joinSlot }: Props) {
   const isFull = team.maxMembers != null && memberCount >= team.maxMembers;
 
   const badge: BadgeProps[] = [
+    { variant: "warning", children: `${team.points.toLocaleString()} pts` },
     isFull
       ? { variant: "error", children: "Full" }
       : {
@@ -78,7 +79,7 @@ export function TeamCard({ data, onLeave, joinSlot }: Props) {
       badge={badge}
       actions={actions}
     >
-      <StatsGrid data={data} />
+      <ActivityBars recentActivity={team.recentActivity} />
       <MemberRoster data={data} />
       <RoleBanner data={data} />
     </ComposedCard>

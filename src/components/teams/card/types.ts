@@ -6,18 +6,6 @@ export type MemberPreview = {
   memberRole: "captain" | "member";
 };
 
-export type DaySummary = {
-  date: string;
-  approved: number;
-  pending: number;
-};
-
-export type SubmissionSummary = {
-  approved: number;
-  pending: number;
-  days: DaySummary[];
-};
-
 export type TeamCardData = {
   team: Doc<"teams">;
   tournament?: Doc<"tournaments">;
@@ -26,5 +14,4 @@ export type TeamCardData = {
   isUserMember: boolean;
   isUserInTeam: boolean;
   userRole?: "captain" | "member" | null;
-  submissionSummary?: SubmissionSummary;
 };
