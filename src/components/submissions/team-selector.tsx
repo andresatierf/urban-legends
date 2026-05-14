@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId } from "react";
+import { useEffect } from "react";
 
 import {
   Select,
@@ -16,6 +16,8 @@ interface TeamSelectorProps {
   teams: Array<Doc<"teams"> & { tournament?: Doc<"tournaments"> | null }>;
   selectedTeamId?: Id<"teams">;
   onTeamChange: (teamId: Id<"teams">) => void;
+  label?: string;
+  className?: string;
 }
 
 const STORAGE_KEY = "selectedTeamId";
@@ -24,32 +26,25 @@ export function TeamSelector({
   teams,
   selectedTeamId,
   onTeamChange,
+  label = "Team",
+  className,
 }: TeamSelectorProps) {
-  const selectId = useId();
-
-  // Load saved team selection from localStorage on mount
   useEffect(() => {
     if (!selectedTeamId && teams.length > 0) {
       const savedTeamId = localStorage.getItem(STORAGE_KEY);
       if (savedTeamId && teams.some((t) => t._id === savedTeamId)) {
         onTeamChange(savedTeamId as Id<"teams">);
       } else {
-        // Default to first team
         onTeamChange(teams[0]._id);
       }
     }
   }, [teams, selectedTeamId, onTeamChange]);
 
-  // Save selection to localStorage whenever it changes
   useEffect(() => {
     if (selectedTeamId) {
       localStorage.setItem(STORAGE_KEY, selectedTeamId);
     }
   }, [selectedTeamId]);
-
-  const handleValueChange = (value: string) => {
-    onTeamChange(value as Id<"teams">);
-  };
 
   if (teams.length === 0) {
     return null;
@@ -58,34 +53,43 @@ export function TeamSelector({
   const selectedTeam = teams.find((t) => t._id === selectedTeamId);
 
   return (
-    <div className="flex items-center gap-2">
-      <label htmlFor={selectId} className="text-sm font-medium">
-        Team:
-      </label>
-      <Select
-        value={selectedTeamId || undefined}
-        onValueChange={handleValueChange}
+    <Select
+      value={selectedTeamId || undefined}
+      onValueChange={(value) => onTeamChange(value as Id<"teams">)}
+    >
+      <SelectTrigger
+        className={`border-ink bg-chip dark:bg-chip text-ink hover:bg-chip dark:hover:bg-chip shadow-fd-xs !h-auto w-fit gap-[0.5rem] rounded-full border-2 px-[0.75rem] py-[0.25rem] focus-visible:ring-0 ${className ?? ""}`}
       >
-        <SelectTrigger id={selectId} className="h-12 w-[280px]">
+        <span className="text-mute text-label-caps font-heading font-extrabold">
+          {label}
+        </span>
+        <span className="text-ink text-body-sm font-semibold">
           <SelectValue placeholder="Select a team...">
             {selectedTeam?.name}
           </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {teams.map((team) => (
-            <SelectItem key={team._id} value={team._id}>
-              <div className="flex flex-col items-start">
-                <span className="font-medium">{team.name}</span>
-                {team.tournament && (
-                  <span className="text-muted-foreground text-xs">
-                    {team.tournament.name}
-                  </span>
-                )}
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+        </span>
+      </SelectTrigger>
+      <SelectContent
+        position="popper"
+        className="border-ink bg-chip text-ink shadow-fd-sm w-[var(--radix-select-trigger-width)] min-w-[var(--radix-select-trigger-width)] rounded-2xl border-2"
+      >
+        {teams.map((team) => (
+          <SelectItem
+            key={team._id}
+            value={team._id}
+            className="text-ink focus:bg-ink/10 text-body-sm font-semibold"
+          >
+            <div className="flex flex-col items-start">
+              <span>{team.name}</span>
+              {team.tournament && (
+                <span className="text-mute text-label-caps font-heading font-extrabold">
+                  {team.tournament.name}
+                </span>
+              )}
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
