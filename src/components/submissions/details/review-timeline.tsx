@@ -2,7 +2,6 @@ import { Clock } from "lucide-react";
 
 import type { Doc } from "../../../../convex/_generated/dataModel";
 import type { UserWithRoles } from "../../../../convex/users";
-import { managedByLabel } from "../review/submission-review-card-shared";
 
 function formatDate(input: string | number): string {
   return new Date(input).toLocaleDateString("en-GB", {
@@ -12,15 +11,24 @@ function formatDate(input: string | number): string {
   });
 }
 
+function reviewedLabel(state: Doc<"submissions">["state"]): string {
+  if (state === "approved") return "Approved";
+  if (state === "rejected") return "Rejected";
+  if (state === "deleted") return "Deleted";
+  return "Awaiting review";
+}
+
 type Props = {
   submission: Doc<"submissions">;
   managedByUser: UserWithRoles | null;
 };
 
 export function ReviewTimeline({ submission, managedByUser }: Props) {
-  const reviewedLabel = managedByUser
-    ? managedByLabel(submission.state)
-    : "Awaiting review";
+  const reviewedValue = managedByUser
+    ? submission.reviewedAt
+      ? `${formatDate(submission.reviewedAt)} by ${managedByUser.name}`
+      : `by ${managedByUser.name}`
+    : "—";
 
   return (
     <div className="space-y-3">
@@ -34,8 +42,8 @@ export function ReviewTimeline({ submission, managedByUser }: Props) {
           <span>{formatDate(submission._creationTime)}</span>
         </div>
         <div className="flex justify-between">
-          <span>{reviewedLabel}</span>
-          <span>{managedByUser?.name ?? "—"}</span>
+          <span>{reviewedLabel(submission.state)}</span>
+          <span>{reviewedValue}</span>
         </div>
       </div>
     </div>

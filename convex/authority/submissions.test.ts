@@ -197,6 +197,30 @@ describe("canApproveSubmission", () => {
     });
     expect(result).toBe(false);
   });
+
+  test("admin cannot approve an already-approved submission", async () => {
+    const t = convexTest(schemaForTest);
+    const result = await t.run(async (ctx) => {
+      const { submissionId } = await seedWorld(ctx);
+      await ctx.db.patch(submissionId, { state: "approved" });
+      const adminId = await makeUser(ctx, "admin_reapprove");
+      await giveSystemRole(ctx, adminId, "admin");
+      return canApproveSubmission.check(ctx, adminId, { submissionId });
+    });
+    expect(result).toBe(false);
+  });
+
+  test("admin cannot approve a rejected submission", async () => {
+    const t = convexTest(schemaForTest);
+    const result = await t.run(async (ctx) => {
+      const { submissionId } = await seedWorld(ctx);
+      await ctx.db.patch(submissionId, { state: "rejected" });
+      const adminId = await makeUser(ctx, "admin_rejected_approve");
+      await giveSystemRole(ctx, adminId, "admin");
+      return canApproveSubmission.check(ctx, adminId, { submissionId });
+    });
+    expect(result).toBe(false);
+  });
 });
 
 // ── canRejectSubmission ─────────────────────────────────────────────────────
@@ -244,6 +268,42 @@ describe("canRejectSubmission", () => {
       const reviewerId = await makeUser(ctx, "reviewer_b2");
       await giveTournamentRole(ctx, reviewerId, otherTId, "reviewer");
       return canRejectSubmission.check(ctx, reviewerId, { submissionId });
+    });
+    expect(result).toBe(false);
+  });
+
+  test("admin cannot reject an approved submission (approved is locked-in; use delete instead)", async () => {
+    const t = convexTest(schemaForTest);
+    const result = await t.run(async (ctx) => {
+      const { submissionId } = await seedWorld(ctx);
+      await ctx.db.patch(submissionId, { state: "approved" });
+      const adminId = await makeUser(ctx, "admin_reject_approved");
+      await giveSystemRole(ctx, adminId, "admin");
+      return canRejectSubmission.check(ctx, adminId, { submissionId });
+    });
+    expect(result).toBe(false);
+  });
+
+  test("admin cannot reject an already-rejected submission", async () => {
+    const t = convexTest(schemaForTest);
+    const result = await t.run(async (ctx) => {
+      const { submissionId } = await seedWorld(ctx);
+      await ctx.db.patch(submissionId, { state: "rejected" });
+      const adminId = await makeUser(ctx, "admin_rereject");
+      await giveSystemRole(ctx, adminId, "admin");
+      return canRejectSubmission.check(ctx, adminId, { submissionId });
+    });
+    expect(result).toBe(false);
+  });
+
+  test("admin cannot reject a deleted submission", async () => {
+    const t = convexTest(schemaForTest);
+    const result = await t.run(async (ctx) => {
+      const { submissionId } = await seedWorld(ctx);
+      await ctx.db.patch(submissionId, { state: "deleted" });
+      const adminId = await makeUser(ctx, "admin_reject_deleted");
+      await giveSystemRole(ctx, adminId, "admin");
+      return canRejectSubmission.check(ctx, adminId, { submissionId });
     });
     expect(result).toBe(false);
   });

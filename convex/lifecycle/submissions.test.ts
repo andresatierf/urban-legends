@@ -834,7 +834,7 @@ describe("reject", () => {
     ).rejects.toThrow(IllegalTransition);
   });
 
-  test("previously approved individual submission can be rejected: removes points from team.points", async () => {
+  test("approved individual submission cannot be rejected (approved is locked-in; use softDelete instead)", async () => {
     const t = convexTest(schemaForTest);
     const { userId, teamId, tournamentId } = await t.run(seedWorld);
 
@@ -851,20 +851,15 @@ describe("reject", () => {
       await approve(ctx, submissionId, userId);
     });
 
-    const result = await t.run(async (ctx) => {
-      return await reject(ctx, submissionId, userId);
-    });
+    await expect(
+      t.run(async (ctx) => {
+        await reject(ctx, submissionId, userId);
+      }),
+    ).rejects.toThrow(IllegalTransition);
 
     await t.run(async (ctx) => {
-      expect(result.pointsDelta).toBeLessThan(0);
-
       const sub = await ctx.db.get(submissionId);
-      expect(sub?.state).toBe("rejected");
-      expect(sub?.pointsEarned).toBe(0);
-
-      const team = await ctx.db.get(teamId);
-      expect(team?.points).toBe(0);
-
+      expect(sub?.state).toBe("approved");
       await assertSubmissionInvariant(ctx, { teamId, tournamentId });
     });
   });

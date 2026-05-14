@@ -157,6 +157,7 @@ export const canEditSubmission: SubmissionRule = rule(
 export const canApproveSubmission: SubmissionRule = rule(
   "canApproveSubmission",
   (facts) => {
+    if (facts.submissionState !== "pending") return false;
     if (isAdminOrDev(facts.systemRoles)) return true;
     return hasReviewerOrAbove(facts.tournamentRoles);
   },
@@ -165,6 +166,7 @@ export const canApproveSubmission: SubmissionRule = rule(
 export const canRejectSubmission: SubmissionRule = rule(
   "canRejectSubmission",
   (facts) => {
+    if (facts.submissionState !== "pending") return false;
     if (isAdminOrDev(facts.systemRoles)) return true;
     return hasReviewerOrAbove(facts.tournamentRoles);
   },
@@ -209,11 +211,13 @@ export async function computeSubmissionPermissions(
     canCreate: facts.isTeamMember,
     canEdit: facts.isOwner && facts.submissionState === "pending",
     canApprove:
-      isAdminOrDev(facts.systemRoles) ||
-      hasReviewerOrAbove(facts.tournamentRoles),
+      facts.submissionState === "pending" &&
+      (isAdminOrDev(facts.systemRoles) ||
+        hasReviewerOrAbove(facts.tournamentRoles)),
     canReject:
-      isAdminOrDev(facts.systemRoles) ||
-      hasReviewerOrAbove(facts.tournamentRoles),
+      facts.submissionState === "pending" &&
+      (isAdminOrDev(facts.systemRoles) ||
+        hasReviewerOrAbove(facts.tournamentRoles)),
     canDelete:
       nonTerminal &&
       (isAdminOrDev(facts.systemRoles) ||
