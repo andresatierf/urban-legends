@@ -2,6 +2,7 @@
 
 import type { Doc } from "@/../convex/_generated/dataModel";
 import type { UserWithRoles } from "@/../convex/users";
+import { Card } from "@/components/ui/card";
 import { Image } from "@/components/ui/image";
 import { useUser } from "@/hooks/useUser";
 
@@ -36,7 +37,7 @@ export function SubmissionCard({
   const isOwner = submission.userId === currentUser._id;
 
   return (
-    <div className="bg-card flex flex-col gap-4 rounded-lg border p-4 shadow-sm transition-shadow hover:shadow-md md:flex-row">
+    <Card className="md:flex-row">
       {thumbnailUrl && (
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md">
           <Image
@@ -71,6 +72,6 @@ export function SubmissionCard({
           onDelete={onDelete}
         />
       </div>
-    </div>
+    </Card>
   );
 }

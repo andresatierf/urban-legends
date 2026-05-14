@@ -5,10 +5,10 @@ import { useQuery } from "convex/react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Skeleton } from "../ui/skeleton";
+import { api } from "../../../../../convex/_generated/api";
+import type { Id } from "../../../../../convex/_generated/dataModel";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card";
+import { Skeleton } from "../../../ui/skeleton";
 
 interface CalendarStatisticsProps {
   teamId: Id<"teams">;

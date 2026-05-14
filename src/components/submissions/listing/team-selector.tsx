@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 import { PrefixedSelect } from "@/components/ui/prefixed-select";
 
-import type { Doc, Id } from "../../../convex/_generated/dataModel";
+import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
 interface TeamSelectorProps {
   teams: Array<Doc<"teams"> & { tournament?: Doc<"tournaments"> | null }>;

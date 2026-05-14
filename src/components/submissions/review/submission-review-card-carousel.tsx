@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { Image } from "@/components/ui/image";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { cn } from "@/lib/utils";
@@ -189,7 +190,7 @@ function MetaFooter({
   return (
     <div className="space-y-1 px-3 py-2.5">
       <div className="flex items-baseline justify-between gap-2">
-        <p className="truncate text-sm leading-tight font-semibold">
+        <p className="font-heading truncate text-sm leading-tight font-semibold">
           {primaryLabel}
         </p>
         {pointsEarned > 0 && (
@@ -198,7 +199,9 @@ function MetaFooter({
           </span>
         )}
       </div>
-      <p className="text-muted-foreground truncate text-xs">{tournamentName}</p>
+      <Eyebrow as="p" className="truncate">
+        {tournamentName}
+      </Eyebrow>
       <p className="text-muted-foreground truncate text-xs">
         {format(date, "short")}
       </p>

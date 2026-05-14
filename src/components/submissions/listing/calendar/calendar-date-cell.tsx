@@ -5,8 +5,8 @@ import { cva } from "class-variance-authority";
 import { Image } from "@/components/ui/image";
 import { cn } from "@/lib/utils";
 
-import type { Id } from "../../../convex/_generated/dataModel";
-import { toUTCDateString } from "../../../convex/lib/dates";
+import type { Id } from "../../../../../convex/_generated/dataModel";
+import { toUTCDateString } from "../../../../../convex/lib/dates";
 
 export const cellStyles = cva(
   "cursor-pointer border-2 transition-all duration-150 hover:shadow-md",

@@ -4,9 +4,10 @@ import { Calendar, Trophy, User, Users } from "lucide-react";
 
 import type { Doc } from "@/../convex/_generated/dataModel";
 import { Badge } from "@/components/ui/badge";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 
-import { stateBadgeVariant } from "./review/submission-review-card-shared";
+import { stateBadgeVariant } from "../../review/submission-review-card-shared";
 
 interface SubmissionCardDetailsProps {
   submission: Doc<"submissions">;
@@ -25,6 +26,7 @@ export function SubmissionCardDetails({
 
   return (
     <div className="flex-1 space-y-3">
+      <Eyebrow as="div">Status</Eyebrow>
       <div className="flex flex-wrap gap-2">
         <Badge variant={stateBadgeVariant(submission.state)}>
           {submission.state.charAt(0).toUpperCase() + submission.state.slice(1)}
@@ -49,16 +51,19 @@ export function SubmissionCardDetails({
       </div>
 
       <div className="grid gap-2 text-sm">
+        <Eyebrow as="div">Activity</Eyebrow>
         <div className="text-muted-foreground flex items-center gap-2">
           <Calendar className="h-4 w-4" />
           <span>
             {submission.date ? format(submission.date, "long") : "No Date"}
           </span>
         </div>
+        <Eyebrow as="div">Team</Eyebrow>
         <div className="text-muted-foreground flex items-center gap-2">
           <Users className="h-4 w-4" />
           <span>{team.name}</span>
         </div>
+        <Eyebrow as="div">Submitted by</Eyebrow>
         <div className="text-muted-foreground flex items-center gap-2">
           <User className="h-4 w-4" />
           <span>{user.name}</span>

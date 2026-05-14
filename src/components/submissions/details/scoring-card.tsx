@@ -1,5 +1,6 @@
 import type { Doc } from "../../../../convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { Eyebrow } from "../../ui/eyebrow";
 import { Separator } from "../../ui/separator";
 
 type Props = {
@@ -19,7 +20,8 @@ export function ScoringCard({ submission, tournament }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Scoring</CardTitle>
+        <Eyebrow as="div">Points</Eyebrow>
+        <CardTitle className="text-h3">Scoring</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-xs">
         <div className="flex justify-between">

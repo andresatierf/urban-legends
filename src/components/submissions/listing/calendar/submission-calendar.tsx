@@ -8,9 +8,10 @@ import { useUser } from "@/hooks/useUser";
 import { isToday } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
-import { api } from "../../../convex/_generated/api";
-import type { Doc, Id } from "../../../convex/_generated/dataModel";
-import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
+import { api } from "../../../../../convex/_generated/api";
+import type { Doc, Id } from "../../../../../convex/_generated/dataModel";
+import { Card, CardContent, CardFooter, CardHeader } from "../../../ui/card";
+import { Eyebrow } from "../../../ui/eyebrow";
 import { CalendarDateCell, cellStyles } from "./calendar-date-cell";
 import { CalendarHeader } from "./calendar-header";
 
@@ -203,6 +204,9 @@ export function SubmissionCalendar({
   return (
     <Card>
       <CardHeader className="xs:flex-row flex flex-col items-center justify-between gap-4 text-center">
+        <Eyebrow as="div" color="sunset">
+          Activity
+        </Eyebrow>
         <CalendarHeader
           currentDate={currentDate}
           onPrevMonth={handlePrevMonth}
@@ -215,12 +219,9 @@ export function SubmissionCalendar({
       <CardContent>
         <div className="mb-2 grid grid-cols-7 gap-2">
           {weekdayLabels.map((day) => (
-            <div
-              key={day}
-              className="text-foreground text-center text-sm font-semibold"
-            >
+            <Eyebrow key={day} as="div" className="text-center">
               {day}
-            </div>
+            </Eyebrow>
           ))}
         </div>
 
@@ -261,6 +262,9 @@ export function SubmissionCalendar({
 function CalendarLegend() {
   return (
     <div className="xs:flex-row xs:items-center mt-6 flex flex-1 flex-col flex-wrap items-start justify-between gap-4 border-t pt-4 text-xs">
+      <Eyebrow as="div" className="w-full">
+        Legend
+      </Eyebrow>
       <div className="xs:flex-row xs:items-center flex flex-col flex-wrap items-start justify-center gap-4">
         {(
           [undefined, "pending", "approved", "rejected"] as (
