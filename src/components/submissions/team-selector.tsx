@@ -58,7 +58,7 @@ export function TeamSelector({
           <div className="flex flex-col items-start">
             <span>{team.name}</span>
             {team.tournament && (
-              <span className="text-mute text-label-caps font-heading font-extrabold">
+              <span className="text-mute text-body-sm font-normal">
                 {team.tournament.name}
               </span>
             )}

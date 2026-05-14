@@ -55,7 +55,7 @@ export function PrefixedSelect({
           <SelectItem
             key={option.value}
             value={option.value}
-            className="text-ink focus:bg-ink/10 text-body-sm font-semibold"
+            className="text-ink! data-highlighted:bg-ink/10! data-highlighted:text-ink! focus:bg-ink/10! focus:text-ink! text-body-sm font-semibold"
           >
             {option.children ?? option.triggerLabel}
           </SelectItem>
