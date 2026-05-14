@@ -368,6 +368,7 @@ export {
   ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
+  ChartContext,
   ChartLegendContent,
   ChartStyle,
 };
