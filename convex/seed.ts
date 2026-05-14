@@ -1132,3 +1132,125 @@ async function seedNotificationsForAdmin(ctx: MutationCtx) {
 
   return { notificationsCreated: created };
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// Random submission fill
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Generate pending submissions for every team in a tournament across every
+ * day from start date up to today (or the tournament end date, whichever is
+ * earlier). Randomly mixes tiers and individual/team types so leaderboards
+ * and review queues look populated.
+ */
+export const seedRandomSubmissions = internalMutation({
+  args: {
+    tournamentName: v.string(),
+    maxPerTeamPerDay: v.optional(v.number()),
+    seed: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const tournament = await ctx.db
+      .query("tournaments")
+      .withIndex("by_name", (q) => q.eq("name", args.tournamentName))
+      .first();
+    if (!tournament) {
+      throw new Error(`Tournament "${args.tournamentName}" not found`);
+    }
+
+    const teams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
+      .collect();
+    if (teams.length === 0) {
+      throw new Error(`Tournament "${args.tournamentName}" has no teams`);
+    }
+
+    const rng = makeRng(args.seed ?? 1337);
+    const maxPerTeamPerDay = args.maxPerTeamPerDay ?? 3;
+
+    const startMs = new Date(tournament.startDate).getTime();
+    const endMs = Math.min(new Date(tournament.endDate).getTime(), Date.now());
+    if (endMs < startMs) {
+      return { tournamentName: args.tournamentName, submissionsCreated: 0 };
+    }
+    const totalDays = Math.floor((endMs - startMs) / 86_400_000);
+    const dates = Array.from({ length: totalDays + 1 }, (_, i) =>
+      new Date(startMs + i * 86_400_000).toISOString().slice(0, 10),
+    );
+
+    let submissionsCreated = 0;
+    let groupsCreated = 0;
+
+    for (const team of teams) {
+      const members = await ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) => q.eq("teamId", team._id))
+        .collect();
+      if (members.length === 0) continue;
+
+      // Skip ~30% of teams entirely so some teams look quiet.
+      if (rng() < 0.3) continue;
+
+      for (const date of dates) {
+        // Only ~40% of days have any activity for this team.
+        if (rng() > 0.4) continue;
+        const count = 1 + Math.floor(rng() * maxPerTeamPerDay);
+        for (let i = 0; i < count; i++) {
+          const tier: "base" | "advanced" = rng() < 0.7 ? "base" : "advanced";
+          const isTeam = rng() < 0.15;
+
+          if (isTeam) {
+            const subset = members
+              .filter(() => rng() < 0.6)
+              .map((m) => m.userId);
+            const memberIds =
+              subset.length > 0
+                ? subset
+                : [members[Math.floor(rng() * members.length)].userId];
+            await insertTeamGroup(ctx, {
+              teamId: team._id,
+              tournamentId: tournament._id,
+              memberIds,
+              totalTeamMembers: members.length,
+              date,
+              state: "pending",
+              tier,
+              description: `Random ${tier} team submission on ${date}`,
+            });
+            groupsCreated++;
+            submissionsCreated += memberIds.length;
+          } else {
+            const member = members[Math.floor(rng() * members.length)];
+            await insertIndividualSubmission(ctx, {
+              teamId: team._id,
+              tournamentId: tournament._id,
+              userId: member.userId,
+              date,
+              state: "pending",
+              tier,
+              description: `Random ${tier} individual submission on ${date}`,
+            });
+            submissionsCreated++;
+          }
+        }
+      }
+    }
+
+    return {
+      tournamentName: args.tournamentName,
+      teamsTouched: teams.length,
+      daysCovered: dates.length,
+      groupsCreated,
+      submissionsCreated,
+    };
+  },
+});
+
+function makeRng(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
