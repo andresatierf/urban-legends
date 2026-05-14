@@ -16,7 +16,9 @@
     "pretypecheck": "bun --bun run routes:generate",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "sandcastle": "bun --bun .sandcastle/main.ts"
+    "sandcastle": "bun --bun .sandcastle/main.ts",
+    "fallow": "npx fallow",
+    "fallow:ci": "npx fallow --ci"
   },
   "dependencies": {
     "@auth/core": "^0.37.0",

@@ -40,6 +40,15 @@ bun run format:fix      # Auto-format code (oxfmt)
 - Exclude `convex/_generated/**` from linting and formatting
 - Use double quotes for JavaScript/TypeScript strings
 
+### Code Health
+
+```bash
+bun run fallow          # Run Fallow analysis (unused code, duplication, complexity)
+bun run fallow:ci       # Run with SARIF output and quiet mode (CI)
+```
+
+**Fallow** provides a periodic code-health signal — it is **not a blocking gate**. Findings surface as warnings to inform cleanup triage. In CI, Fallow runs on PRs and posts inline annotations and a summary comment. The Fallow MCP server (`fallow-mcp`) is configured in `.claude/settings.json` for agent use. See `docs/adr/0007-adopt-fallow-code-health.md` for rationale.
+
 ### Git Commits
 
 The repository follows this commit format:

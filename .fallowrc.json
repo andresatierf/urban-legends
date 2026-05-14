@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "ignorePatterns": [
+    "convex/_generated/**",
+    ".output/**",
+    ".nitro/**",
+    ".tanstack/**",
+    "src/routeTree.gen.ts"
+  ],
+  "rules": {
+    "unused-files": "warn",
+    "unused-exports": "warn",
+    "unused-types": "warn",
+    "unused-deps": "warn",
+    "unused-enum-members": "warn",
+    "duplicate-exports": "warn",
+    "circular-deps": "warn"
+  }
+}
