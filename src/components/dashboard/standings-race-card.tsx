@@ -23,6 +23,8 @@ export type StandingsRaceCardProps = {
   userTeamId?: string;
 };
 
+const RANK_MEDALS = ["🥇", "🥈", "🥉"] as const;
+
 const CHART_OVERRIDE =
   "rounded-none! border-0! bg-transparent! p-0! shadow-none!";
 
@@ -92,13 +94,7 @@ export function StandingsRaceCard({
             {group.teams.map((t, i) => {
               const pct = Math.round((t.team.points / group.maxPts) * 100);
               const rankLabel =
-                i === 0
-                  ? "🥇"
-                  : i === 1
-                    ? "🥈"
-                    : i === 2
-                      ? "🥉"
-                      : String(i + 1).padStart(2, "0");
+                RANK_MEDALS[i] ?? String(i + 1).padStart(2, "0");
               const isYou = t.team._id === userTeamId;
               const rowBg = isYou
                 ? "border-sky bg-sky/10"

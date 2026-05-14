@@ -364,54 +364,43 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
 
         <section className="relative z-[1] mt-0 flex flex-col">
           <RibbonBanner label="SQUAD OF THE DAY" small />
-          {mvpTeam ? (
-            <div className="border-ink bg-grass flex items-center gap-8 rounded-[22px] border-2 p-8 shadow-[6px_6px_0_var(--shadow)]">
-              <div aria-hidden className="flex-shrink-0">
-                <TrophySvg />
-              </div>
-              <div className="flex-1">
-                <div className="text-ink text-label-caps mb-[0.4rem] text-[0.7rem] opacity-75">
-                  Star Crew
-                </div>
-                <div className="text-ink text-h1 mb-[0.45rem] text-[clamp(1.6rem,4vw,2.4rem)]">
-                  {mvpTeam.team.name}
-                </div>
-                <p className="text-ink text-body-md m-0 text-[0.95rem] leading-[1.5] opacity-80">
-                  {mvpDisplayCount} submission
-                  {mvpDisplayCount === 1 ? "" : "s"}{" "}
-                  {mvpCountToday > 0 ? "today" : "this period"} ·{" "}
-                  <strong>{mvpTeam.tournament.name}</strong>
-                </p>
-                <p className="text-ink text-body-md m-0 text-[0.95rem] leading-[1.5] opacity-80">
-                  {mvpTeam.memberCount} member
-                  {mvpTeam.memberCount === 1 ? "" : "s"}
-                  {mvpTeam.userRole === "captain" && (
-                    <span className="border-gold text-ink text-label-caps mt-[0.35rem] ml-[0.35rem] inline-flex items-center gap-[3px] rounded-full border-[1.5px] bg-[rgba(255,200,71,0.3)] [padding:0.15rem_0.5rem] text-[0.65rem]">
-                      <WhistleSvgSmall />
-                      Captain
-                    </span>
-                  )}
-                </p>
-              </div>
+          <div className="border-ink bg-grass flex items-center gap-8 rounded-[22px] border-2 p-8 shadow-[6px_6px_0_var(--shadow)]">
+            <div aria-hidden className="flex-shrink-0">
+              <TrophySvg />
             </div>
-          ) : (
-            <div className="border-ink bg-grass flex items-center gap-8 rounded-[22px] border-2 p-8 shadow-[6px_6px_0_var(--shadow)]">
-              <div aria-hidden className="flex-shrink-0">
-                <TrophySvg />
+            <div className="flex-1">
+              <div className="text-ink text-label-caps mb-[0.4rem] text-[0.7rem] opacity-75">
+                Star Crew
               </div>
-              <div className="flex-1">
-                <div className="text-ink text-label-caps mb-[0.4rem] text-[0.7rem] opacity-75">
-                  Star Crew
-                </div>
-                <div className="text-ink text-h1 mb-[0.45rem] text-[clamp(1.6rem,4vw,2.4rem)]">
-                  No teams yet
-                </div>
+              <div className="text-ink text-h1 mb-[0.45rem] text-[clamp(1.6rem,4vw,2.4rem)]">
+                {mvpTeam ? mvpTeam.team.name : "No teams yet"}
+              </div>
+              {mvpTeam ? (
+                <>
+                  <p className="text-ink text-body-md m-0 text-[0.95rem] leading-[1.5] opacity-80">
+                    {mvpDisplayCount} submission
+                    {mvpDisplayCount === 1 ? "" : "s"}{" "}
+                    {mvpCountToday > 0 ? "today" : "this period"} ·{" "}
+                    <strong>{mvpTeam.tournament.name}</strong>
+                  </p>
+                  <p className="text-ink text-body-md m-0 text-[0.95rem] leading-[1.5] opacity-80">
+                    {mvpTeam.memberCount} member
+                    {mvpTeam.memberCount === 1 ? "" : "s"}
+                    {mvpTeam.userRole === "captain" && (
+                      <span className="border-gold text-ink text-label-caps mt-[0.35rem] ml-[0.35rem] inline-flex items-center gap-[3px] rounded-full border-[1.5px] bg-[rgba(255,200,71,0.3)] [padding:0.15rem_0.5rem] text-[0.65rem]">
+                        <WhistleSvgSmall />
+                        Captain
+                      </span>
+                    )}
+                  </p>
+                </>
+              ) : (
                 <p className="text-ink text-body-md m-0 text-[0.95rem] leading-[1.5] opacity-80">
                   Join a tournament to compete.
                 </p>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </section>
       </div>
 
