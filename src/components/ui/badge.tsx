@@ -30,7 +30,7 @@ const badgeVariants = cva(
     },
     defaultVariants: {
       variant: "neutral",
-      size: "default",
+      size: "sm",
     },
   },
 );
@@ -38,7 +38,7 @@ const badgeVariants = cva(
 function Badge({
   className,
   variant = "neutral",
-  size = "default",
+  size = "sm",
   asChild = false,
   ...props
 }: React.ComponentProps<"span"> &
