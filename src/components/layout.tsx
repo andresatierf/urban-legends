@@ -9,7 +9,7 @@ import { AppSidebar } from "./app-sidebar";
 import { FloatingSidebarActions } from "./floating-sidebar-actions";
 import { NotificationDropdown } from "./notifications/notification-dropdown";
 import { SubmissionDialogProvider } from "./submission-dialog-context";
-import { ThemeSwitcher } from "./theme-switcher";
+import { ThemeToggle } from "./theme-toggle";
 import { SidebarProvider } from "./ui/sidebar";
 
 export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -22,7 +22,7 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
         <AppSidebar />
         <FloatingSidebarActions />
         <div className="pointer-events-auto fixed top-2 right-2 z-50 flex items-center gap-1">
-          <ThemeSwitcher />
+          <ThemeToggle />
           {user && (
             <NotificationDropdown userId={user._id} unreadCount={unreadCount} />
           )}

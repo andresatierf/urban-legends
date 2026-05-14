@@ -14,7 +14,7 @@ export function DemoPageSwitcher() {
   return (
     <nav
       aria-label="Demo pages"
-      className="bg-muted text-muted-foreground inline-flex h-8 w-fit items-center gap-0.5 rounded-lg p-[3px]"
+      className="bg-muted text-muted-foreground flex w-fit max-w-full flex-wrap items-center gap-0.5 rounded-lg p-[3px]"
     >
       {DEMO_PAGES.map(({ to, label }) => {
         const active = isActive(to, true);
@@ -24,7 +24,7 @@ export function DemoPageSwitcher() {
             to={to}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "hover:text-foreground inline-flex h-full items-center justify-center rounded-md border border-transparent px-2.5 text-xs font-medium whitespace-nowrap transition-colors",
+              "hover:text-foreground inline-flex h-7 items-center justify-center rounded-md border border-transparent px-2.5 text-xs font-medium whitespace-nowrap transition-colors",
               active && "bg-background text-foreground shadow-sm",
             )}
           >

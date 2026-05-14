@@ -122,7 +122,7 @@ function SubmissionsPage() {
   // ── Review / Management state ─────────────────────────────────────────────
   const reviewData = useQuery(
     api.role.reviewer.getPendingSubmissions,
-    authority?.canReview ? {} : "skip",
+    authority?.canReview ? { limit: 500 } : "skip",
   );
 
   const reviewItems: ReviewItem[] = useMemo(

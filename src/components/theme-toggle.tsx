@@ -1,33 +1,29 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { type Theme, useTheme } from "@/hooks/use-theme";
 import { THEME_OPTIONS } from "@/lib/theme-config";
-import { cn } from "@/lib/utils";
+
+const CYCLE: Theme[] = ["light", "dark", "system"];
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const { icon: Icon, label } = THEME_OPTIONS[theme];
+
+  const next = () => {
+    const idx = CYCLE.indexOf(theme);
+    setTheme(CYCLE[(idx + 1) % CYCLE.length]);
+  };
 
   return (
-    <div className="bg-background inline-flex items-center gap-1 rounded-lg border p-1">
-      {Object.entries(THEME_OPTIONS).map(([value, { icon: Icon, label }]) => (
-        <button
-          key={value}
-          type="button"
-          onClick={() => setTheme(value as Theme)}
-          className={cn(
-            "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-            "hover:bg-muted focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
-            theme === value
-              ? "bg-primary text-primary-foreground hover:bg-primary/80 shadow-sm"
-              : "text-muted-foreground",
-          )}
-          aria-pressed={theme === value}
-          aria-label={`${label} theme`}
-        >
-          <Icon className="h-4 w-4" />
-          <span className="hidden sm:inline">{label}</span>
-        </button>
-      ))}
-    </div>
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={next}
+      aria-label={`Theme: ${label}. Click to change.`}
+      title={`Theme: ${label}`}
+    >
+      <Icon className="h-5 w-5" />
+    </Button>
   );
 }
