@@ -44,7 +44,10 @@ export const approve = mutation({
 });
 
 export const reject = mutation({
-  args: { groupId: v.id("submissionGroups") },
+  args: {
+    groupId: v.id("submissionGroups"),
+    reason: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
@@ -67,7 +70,9 @@ export const reject = mutation({
       submissionId: child._id,
     });
 
-    await lifecycleReject(ctx, child._id, user._id);
+    await lifecycleReject(ctx, child._id, user._id, {
+      rejectionReason: args.reason,
+    });
   },
 });
 

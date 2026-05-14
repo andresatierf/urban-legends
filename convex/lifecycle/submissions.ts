@@ -18,6 +18,7 @@ async function transition(
   submissionId: Id<"submissions">,
   to: "approved" | "rejected" | "deleted",
   managedBy: Id<"users">,
+  options?: { rejectionReason?: string },
 ): Promise<"noop" | "changed"> {
   const sub = await ctx.db.get(submissionId);
   if (!sub) throw new Error("Submission not found");
@@ -41,6 +42,9 @@ async function transition(
     state: to,
     managedBy,
     ...(isReview && { reviewedAt: Date.now() }),
+    ...(to === "rejected" && options?.rejectionReason
+      ? { rejectionReason: options.rejectionReason }
+      : {}),
   });
   return "changed";
 }
@@ -495,6 +499,7 @@ export async function reject(
   ctx: MutationCtx,
   submissionId: Id<"submissions">,
   by: Id<"users">,
+  options?: { rejectionReason?: string },
 ): Promise<{ pointsDelta: number }> {
   const submission = await ctx.db.get(submissionId);
   if (!submission) throw new Error("Submission not found");
@@ -513,7 +518,7 @@ export async function reject(
     submission.submissionType === "individual" ||
     !submission.submissionGroupId
   ) {
-    await transition(ctx, submissionId, "rejected", by);
+    await transition(ctx, submissionId, "rejected", by, options);
     await ctx.db.patch(submissionId, { pointsEarned: 0 });
   } else {
     const groupId = submission.submissionGroupId as Id<"submissionGroups">;
@@ -527,7 +532,7 @@ export async function reject(
     );
 
     for (const sub of nonTerminal) {
-      await transition(ctx, sub._id, "rejected", by);
+      await transition(ctx, sub._id, "rejected", by, options);
       await ctx.db.patch(sub._id, { pointsEarned: 0 });
     }
 
