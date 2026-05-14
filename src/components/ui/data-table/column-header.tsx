@@ -3,8 +3,6 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-import { Button } from "../button";
-
 interface DataTableColumnHeaderProps<
   TData,
   TValue,
@@ -14,7 +12,7 @@ interface DataTableColumnHeaderProps<
 }
 
 function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
-  const iconClass = "ml-1 h-3.5 w-3.5";
+  const iconClass = "ml-1 h-3 w-3";
 
   if (direction === "asc") return <ArrowUp className={iconClass} />;
   if (direction === "desc") return <ArrowDown className={iconClass} />;
@@ -27,20 +25,23 @@ export function DataTableColumnHeader<TData, TValue>({
   className,
 }: DataTableColumnHeaderProps<TData, TValue>) {
   if (!column.getCanSort()) {
-    return <div className={cn(className)}>{title}</div>;
+    return <span className={cn(className)}>{title}</span>;
   }
 
   const sorted = column.getIsSorted();
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className={cn("-ml-3 h-8", sorted && "text-primary", className)}
+    <button
+      type="button"
+      className={cn(
+        "hover:text-foreground inline-flex items-center font-[inherit]",
+        sorted && "text-primary",
+        className,
+      )}
       onClick={() => column.toggleSorting(sorted === "asc")}
     >
       {title}
       <SortIcon direction={sorted} />
-    </Button>
+    </button>
   );
 }

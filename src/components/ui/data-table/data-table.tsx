@@ -4,23 +4,22 @@ import { Link } from "@tanstack/react-router";
 import {
   type ColumnDef,
   type ColumnFiltersState,
-  type Row,
-  type SortingState,
-  type TableOptions,
-  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type Row,
+  type SortingState,
+  type TableOptions,
   useReactTable,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -110,9 +109,9 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       {enableSearch && (
-        <div className="flex items-center py-4">
+        <div className="flex items-center">
           <Input
             type="search"
             placeholder="Search..."
@@ -123,13 +122,8 @@ export function DataTable<TData, TValue>({
           {/* <DataTableViewOptions table={table} /> */}
         </div>
       )}
-      <div className="overflow-hidden">
+      <div className="border-border bg-card overflow-hidden rounded-xl border-2 shadow-[4px_4px_0_var(--shadow)]">
         <Table className="w-full border-collapse text-left">
-          <TableCaption className="text-label-caps text-muted-foreground m-0 flex-1 py-2">
-            {table.options.enableRowSelection
-              ? `${table.getFilteredSelectedRowModel().rows.length} of ${table.getFilteredRowModel().rows.length} row(s) selected`
-              : `${data.length} rows`}
-          </TableCaption>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -178,8 +172,8 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
+        <DataTablePagination table={table} />
       </div>
-      <DataTablePagination table={table} />
     </div>
   );
 }

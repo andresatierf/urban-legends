@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { DataTableColumnHeader } from "@/components/ui/data-table/column-header";
 import { DataTable } from "@/components/ui/data-table/data-table";
 
@@ -203,32 +202,26 @@ function TableWorkbenchPage() {
           dividers, sunset hover, sunset sort indicator, 44px rows, outline
           pagination buttons.
         </p>
-        <Card className="overflow-hidden">
-          <DataTable
-            columns={columns}
-            data={data}
-            enableSearch
-            initialState={{ pagination: { pageSize: 5 } }}
-          />
-        </Card>
+        <DataTable
+          columns={columns}
+          data={data}
+          enableSearch
+          initialState={{ pagination: { pageSize: 5 } }}
+        />
       </section>
 
       <section className="space-y-4">
         <h3 className="text-h3">Without search</h3>
-        <Card className="overflow-hidden">
-          <DataTable columns={columns} data={data.slice(0, 8)} />
-        </Card>
+        <DataTable columns={columns} data={data.slice(0, 8)} />
       </section>
 
       <section className="space-y-4">
         <h3 className="text-h3">Empty state</h3>
-        <Card className="overflow-hidden">
-          <DataTable
-            columns={columns}
-            data={[]}
-            emptyMessage="No participants found."
-          />
-        </Card>
+        <DataTable
+          columns={columns}
+          data={[]}
+          emptyMessage="No participants found."
+        />
       </section>
     </div>
   );

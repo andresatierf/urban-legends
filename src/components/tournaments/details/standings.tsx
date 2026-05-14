@@ -56,7 +56,7 @@ export function Standings({
       )}
 
       {sortedTeams.length > 0 ? (
-        <Card>
+        <Card className="gap-0 overflow-hidden p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -150,8 +150,8 @@ function TeamRankRow({
               style={{ width: `${barWidth}%` }}
             />
           </div>
-          <span className="w-14 text-right text-sm font-bold">
-            {team.points}
+          <span className="w-14 text-right text-sm font-bold tabular-nums">
+            {Math.round(team.points)}
           </span>
         </div>
       </TableCell>
