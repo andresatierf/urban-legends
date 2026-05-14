@@ -1,12 +1,13 @@
 import { useState } from "react";
 
+import { Confetti } from "@/components/ui/confetti";
+import { FooterRibbon } from "@/components/ui/footer-ribbon";
+import { RibbonBanner } from "@/components/ui/ribbon-banner";
+
 import { CoachStat } from "./coach-stat";
-import { Confetti } from "./confetti";
 import { DashboardTeamCard } from "./dashboard-team-card";
-import { FooterRibbon } from "./footer-ribbon";
 import { LogActivityFab } from "./log-activity-fab";
 import { MetricTile, RosetteTile } from "./metric-tile";
-import { RibbonBanner } from "./ribbon-banner";
 import { StandingsRaceCard } from "./standings-race-card";
 import { StatChip } from "./stat-chip";
 import {
@@ -228,8 +229,8 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
     urgentDeadlines.length > 0;
 
   return (
-    <div className="relative [padding:1.5rem_1.5rem_2.5rem]">
-      <section className="border-ink bg-card relative mt-3 rounded-[22px] border-2 pt-12 pr-8 pb-8 pl-8 text-center shadow-[6px_6px_0_var(--shadow)] sm:mb-5 sm:pb-[4.5rem]">
+    <div className="relative p-6 pb-10">
+      <section className="border-ink bg-card shadow-fd-lg relative mt-3 rounded-2xl border-2 pt-12 pr-8 pb-8 pl-8 text-center sm:mb-5 sm:pb-[4.5rem]">
         <Confetti />
         {selectedTour && data.activeTournaments.length > 1 && (
           <div className="-mt-4 mb-6 flex justify-center sm:mb-0">
@@ -350,7 +351,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
                   VS
                 </span>
                 <div
-                  className={`border-ink text-label-caps rounded-full border-[1.5px] [padding:0.2rem_0.6rem] text-[0.6rem] ${selectedRivalDelta >= 0 ? "bg-[rgba(93,199,122,0.25)]" : "bg-[rgba(255,122,69,0.2)]"}`}
+                  className={`border-ink text-label-caps rounded-full border-[1.5px] px-2.5 py-1 ${selectedRivalDelta >= 0 ? "bg-grass/25" : "bg-sunset/20"}`}
                 >
                   {selectedRivalDelta >= 0
                     ? `AHEAD BY ${selectedRivalDelta}`
@@ -364,30 +365,30 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
 
         <section className="relative mt-0 flex flex-col">
           <RibbonBanner label="SQUAD OF THE DAY" small />
-          <div className="border-ink bg-grass flex items-center gap-8 rounded-[22px] border-2 p-8 shadow-[6px_6px_0_var(--shadow)]">
+          <div className="border-ink bg-grass shadow-fd-lg flex items-center gap-8 rounded-2xl border-2 p-8">
             <div aria-hidden className="flex-shrink-0">
               <TrophySvg />
             </div>
             <div className="flex-1">
-              <div className="text-ink text-label-caps mb-[0.4rem] text-[0.7rem] opacity-75">
+              <div className="text-ink text-label-caps mb-[0.4rem] opacity-75">
                 Star Crew
               </div>
-              <div className="text-ink text-h1 mb-[0.45rem] text-[clamp(1.6rem,4vw,2.4rem)]">
+              <div className="text-ink text-h1 mb-[0.45rem]">
                 {mvpTeam ? mvpTeam.team.name : "No teams yet"}
               </div>
               {mvpTeam ? (
                 <>
-                  <p className="text-ink text-body-md m-0 text-[0.95rem] leading-[1.5] opacity-80">
+                  <p className="text-ink text-body-md m-0 leading-[1.5] opacity-80">
                     {mvpDisplayCount} submission
                     {mvpDisplayCount === 1 ? "" : "s"}{" "}
                     {mvpCountToday > 0 ? "today" : "this period"} ·{" "}
                     <strong>{mvpTeam.tournament.name}</strong>
                   </p>
-                  <p className="text-ink text-body-md m-0 text-[0.95rem] leading-[1.5] opacity-80">
+                  <p className="text-ink text-body-md m-0 leading-[1.5] opacity-80">
                     {mvpTeam.memberCount} member
                     {mvpTeam.memberCount === 1 ? "" : "s"}
                     {mvpTeam.userRole === "captain" && (
-                      <span className="border-gold text-ink text-label-caps mt-[0.35rem] ml-[0.35rem] inline-flex items-center gap-[3px] rounded-full border-[1.5px] bg-[rgba(255,200,71,0.3)] [padding:0.15rem_0.5rem] text-[0.65rem]">
+                      <span className="border-gold text-ink text-label-caps bg-gold/30 mt-[0.35rem] ml-[0.35rem] inline-flex items-center gap-[3px] rounded-full border-[1.5px] px-2 py-0.5">
                         <WhistleSvgSmall />
                         Captain
                       </span>
@@ -395,7 +396,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
                   </p>
                 </>
               ) : (
-                <p className="text-ink text-body-md m-0 text-[0.95rem] leading-[1.5] opacity-80">
+                <p className="text-ink text-body-md m-0 leading-[1.5] opacity-80">
                   Join a tournament to compete.
                 </p>
               )}
@@ -448,7 +449,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
         {data.activities.length > 0 && (
           <section className="relative mt-0 flex flex-col">
             <RibbonBanner label="HIGHLIGHTS FROM THE FIELD" small />
-            <div className="border-ink bg-card relative overflow-hidden rounded-[22px] border-2 [padding:1.5rem_1.5rem_1.5rem_2rem] shadow-[6px_6px_0_var(--shadow)] before:absolute before:top-6 before:bottom-6 before:left-[1.85rem] before:w-0 before:border-l-2 before:border-dashed before:border-[rgba(var(--ink-rgb),0.2)] before:content-['']">
+            <div className="border-ink bg-card shadow-fd-lg before:border-ink/20 relative overflow-hidden rounded-2xl border-2 p-6 pl-8 before:absolute before:top-6 before:bottom-6 before:left-[1.85rem] before:w-0 before:border-l-2 before:border-dashed before:content-['']">
               {data.activities.map((a, i) => {
                 const dotColorClass = activityDotColorClass(a.type);
                 return (
@@ -457,13 +458,13 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
                     className="relative grid grid-cols-[3.5rem_1fr] gap-x-3 py-[0.6rem]"
                   >
                     <div
-                      className={`border-card absolute top-1/2 -left-[1.65rem] size-[10px] -translate-y-1/2 rounded-full border-2 shadow-[0_0_0_2px_var(--ink)] ${dotColorClass}`}
+                      className={`border-card ring-ink absolute top-1/2 -left-[1.65rem] size-[10px] -translate-y-1/2 rounded-full border-2 ring-2 ${dotColorClass}`}
                       aria-hidden
                     />
-                    <div className="text-mute pt-[0.1rem] font-mono text-[0.68rem] whitespace-nowrap">
+                    <div className="text-mute pt-[0.1rem] font-mono text-xs whitespace-nowrap">
                       {formatRelative(a.timestamp)}
                     </div>
-                    <div className="text-ink text-body-sm text-[0.9rem] leading-[1.4]">
+                    <div className="text-ink text-body-sm leading-[1.4]">
                       {a.description}
                     </div>
                   </div>
@@ -482,25 +483,25 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               {data.invitations.map((inv) => (
                 <div
                   key={inv.id}
-                  className="border-ink bg-card rounded-[16px] border-2 [padding:1.1rem_1.25rem] shadow-[4px_4px_0_var(--shadow)]"
+                  className="border-ink bg-card shadow-fd rounded-xl border-2 px-5 py-4"
                 >
-                  <div className="border-gold text-label-caps mb-2 inline-block rounded-full border-[1.5px] bg-[rgba(255,200,71,0.35)] [padding:0.15rem_0.6rem] text-[0.62rem]">
+                  <div className="border-gold text-label-caps bg-gold/35 mb-2 inline-block rounded-full border-[1.5px] px-2.5 py-0.5">
                     RSVP
                   </div>
-                  <div className="font-heading mb-[0.2rem] text-[1.1rem] font-bold">
+                  <div className="font-heading text-h3 mb-[0.2rem] font-bold">
                     {inv.teamName}
                   </div>
-                  <div className="text-mute text-body-sm mb-[0.2rem] text-[0.82rem]">
+                  <div className="text-mute text-body-sm mb-[0.2rem]">
                     {inv.tournamentName} · invited by {inv.invitedBy}
                   </div>
-                  <div className="text-mute mb-3 font-mono text-[0.7rem]">
+                  <div className="text-mute mb-3 font-mono text-xs">
                     {formatRelative(inv.timestamp)}
                   </div>
                   <div className="flex gap-2">
-                    <button className="border-ink bg-sunset text-body-sm cursor-pointer rounded-full border-2 [padding:0.35rem_1rem] text-[0.82rem] font-semibold text-white transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--ink)]">
+                    <button className="border-ink bg-sunset text-body-sm hover:shadow-fd-sm cursor-pointer rounded-full border-2 px-4 py-1.5 font-semibold text-white transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px">
                       COUNT ME IN
                     </button>
-                    <button className="border-ink bg-paper-deep text-ink text-body-sm cursor-pointer rounded-full border-2 [padding:0.35rem_1rem] text-[0.82rem] font-semibold transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--ink)]">
+                    <button className="border-ink bg-paper-deep text-ink text-body-sm hover:shadow-fd-sm cursor-pointer rounded-full border-2 px-4 py-1.5 font-semibold transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px">
                       MAYBE NEXT TIME
                     </button>
                   </div>
@@ -509,25 +510,25 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               {data.joinRequests.map((jr) => (
                 <div
                   key={jr.id}
-                  className="border-ink bg-card rounded-[16px] border-2 [padding:1.1rem_1.25rem] shadow-[4px_4px_0_var(--shadow)]"
+                  className="border-ink bg-card shadow-fd rounded-xl border-2 px-5 py-4"
                 >
-                  <div className="border-plum text-label-caps mb-2 inline-block rounded-full border-[1.5px] bg-[rgba(161,102,212,0.15)] [padding:0.15rem_0.6rem] text-[0.62rem]">
+                  <div className="border-plum text-label-caps bg-plum/15 mb-2 inline-block rounded-full border-[1.5px] px-2.5 py-0.5">
                     JOIN REQUEST
                   </div>
-                  <div className="font-heading mb-[0.2rem] text-[1.1rem] font-bold">
+                  <div className="font-heading text-h3 mb-[0.2rem] font-bold">
                     {jr.userName}
                   </div>
-                  <div className="text-mute text-body-sm mb-[0.2rem] text-[0.82rem]">
+                  <div className="text-mute text-body-sm mb-[0.2rem]">
                     wants to join {jr.teamName}
                   </div>
-                  <div className="text-mute mb-3 font-mono text-[0.7rem]">
+                  <div className="text-mute mb-3 font-mono text-xs">
                     {formatRelative(jr.timestamp)}
                   </div>
                   <div className="flex gap-2">
-                    <button className="border-ink bg-sunset text-body-sm cursor-pointer rounded-full border-2 [padding:0.35rem_1rem] text-[0.82rem] font-semibold text-white transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--ink)]">
+                    <button className="border-ink bg-sunset text-body-sm hover:shadow-fd-sm cursor-pointer rounded-full border-2 px-4 py-1.5 font-semibold text-white transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px">
                       WELCOME ABOARD
                     </button>
-                    <button className="border-ink bg-paper-deep text-ink text-body-sm cursor-pointer rounded-full border-2 [padding:0.35rem_1rem] text-[0.82rem] font-semibold transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--ink)]">
+                    <button className="border-ink bg-paper-deep text-ink text-body-sm hover:shadow-fd-sm cursor-pointer rounded-full border-2 px-4 py-1.5 font-semibold transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px">
                       NOT TODAY
                     </button>
                   </div>
@@ -535,7 +536,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               ))}
               {data.invitations.length === 0 &&
                 data.joinRequests.length === 0 && (
-                  <div className="border-mute text-mute text-body-sm rounded-[14px] border-2 border-dashed p-5 text-center text-[0.85rem] opacity-70">
+                  <div className="border-mute text-mute text-body-sm rounded-xl border-2 border-dashed p-5 text-center opacity-70">
                     No pending RSVPs — you&apos;re all caught up.
                   </div>
                 )}
@@ -550,17 +551,17 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
                 return (
                   <div
                     key={s.id}
-                    className="border-ink bg-card flex items-start gap-[0.85rem] rounded-[16px] border-2 [padding:1rem_1.25rem] shadow-[4px_4px_0_var(--shadow)]"
+                    className="border-ink bg-card shadow-fd flex items-start gap-[0.85rem] rounded-xl border-2 px-5 py-4"
                   >
                     <WhistleSvg />
                     <div className="flex-1">
-                      <div className="font-heading mb-[0.15rem] text-[1rem] font-bold">
+                      <div className="font-heading text-body-md mb-[0.15rem] font-bold">
                         {s.teamName}
                       </div>
-                      <div className="text-mute text-body-sm mb-[0.2rem] text-[0.8rem]">
+                      <div className="text-mute text-body-sm mb-[0.2rem]">
                         {s.tournamentName}
                       </div>
-                      <div className="text-mute font-mono text-[0.72rem]">
+                      <div className="text-mute font-mono text-xs">
                         Logged {daysAgo} day{daysAgo === 1 ? "" : "s"} ago,
                         awaiting whistle
                       </div>
@@ -571,14 +572,14 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               {urgentDeadlines.map((d) => (
                 <div
                   key={d.tournament._id}
-                  className="flex items-start gap-[0.85rem] rounded-[16px] border-2 border-[#e53e3e] bg-[rgba(229,62,62,0.05)] [padding:1rem_1.25rem] shadow-[4px_4px_0_var(--shadow)]"
+                  className="border-crimson bg-crimson/5 shadow-fd flex items-start gap-[0.85rem] rounded-xl border-2 px-5 py-4"
                 >
                   <StopwatchSvg urgent />
                   <div className="flex-1">
-                    <div className="font-heading mb-[0.15rem] text-[1rem] font-bold">
+                    <div className="font-heading text-body-md mb-[0.15rem] font-bold">
                       {d.tournament.name}
                     </div>
-                    <div className="font-mono text-[0.72rem] font-medium text-[#e53e3e]">
+                    <div className="text-crimson font-mono text-xs font-medium">
                       Final whistle in {d.daysUntilEnd} day
                       {d.daysUntilEnd === 1 ? "" : "s"}
                     </div>
@@ -587,7 +588,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               ))}
               {data.pendingSubmissions.length === 0 &&
                 urgentDeadlines.length === 0 && (
-                  <div className="border-mute text-mute text-body-sm rounded-[14px] border-2 border-dashed p-5 text-center text-[0.85rem] opacity-70">
+                  <div className="border-mute text-mute text-body-sm rounded-xl border-2 border-dashed p-5 text-center opacity-70">
                     Queue is clear — nothing pending.
                   </div>
                 )}
@@ -599,7 +600,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
       {data.isAdmin && data.adminStats && (
         <section className="relative mt-5">
           <RibbonBanner label="COACH'S CLIPBOARD" small />
-          <div className="border-ink bg-paper-deep rounded-[22px] border-2 [padding:1.75rem] shadow-[6px_6px_0_var(--shadow)]">
+          <div className="border-ink bg-paper-deep shadow-fd-lg rounded-2xl border-2 p-7">
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <CoachStat
                 label="Members"

@@ -7,11 +7,11 @@ export function RibbonBanner({
 }) {
   return (
     <div
-      className={`bg-gold mx-auto mb-6 flex min-h-12 w-fit items-stretch [color:#2a1f1a] text-[#2a1f1a] ${small ? "!mb-5 !min-h-9" : ""}`}
+      className={`bg-gold text-ink mx-auto flex w-fit items-stretch ${small ? "mb-5 min-h-9" : "mb-6 min-h-12"}`}
     >
       <svg
         aria-hidden
-        className={`text-gold [margin-left:-1px] block flex-shrink-0 ${small ? "h-9" : "h-12"}`}
+        className={`text-gold -ml-px block flex-shrink-0 ${small ? "h-9" : "h-12"}`}
         width="18"
         height="100%"
         viewBox="0 0 18 40"
@@ -20,13 +20,13 @@ export function RibbonBanner({
         <polygon points="18,0 18,40 0,20" fill="currentColor" />
       </svg>
       <div
-        className={`font-heading flex items-center [padding:0_1.25rem] font-extrabold tracking-[0.14em] whitespace-nowrap uppercase ${small ? "text-[0.8rem]" : "text-[1rem]"} group-hover:[animation:va-ribbon-flutter_0.4s_ease]`}
+        className={`font-heading flex items-center px-5 font-extrabold tracking-[0.14em] whitespace-nowrap uppercase ${small ? "text-body-sm" : "text-body-md"} group-hover:[animation:va-ribbon-flutter_0.4s_ease]`}
       >
         {label}
       </div>
       <svg
         aria-hidden
-        className={`text-gold [margin-right:-1px] block flex-shrink-0 ${small ? "h-9" : "h-12"}`}
+        className={`text-gold -mr-px block flex-shrink-0 ${small ? "h-9" : "h-12"}`}
         width="18"
         height="100%"
         viewBox="0 0 18 40"

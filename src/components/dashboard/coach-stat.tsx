@@ -14,17 +14,15 @@ export function CoachStat({
   unit?: string;
 }) {
   return (
-    <div className="border-ink bg-card flex items-start gap-3 rounded-[14px] border-2 p-4 shadow-[3px_3px_0_var(--shadow)]">
+    <div className="border-ink bg-card shadow-fd-sm flex items-start gap-3 rounded-xl border-2 p-4">
       <CheckboxSvg checked={ok} />
       <div className="flex-1">
-        <div className="text-mute text-label-caps mb-[0.2rem] text-[0.72rem]">
-          {label}
-        </div>
-        <div className="text-metric mb-[0.2rem] text-[1.8rem]">
+        <div className="text-mute text-label-caps mb-[0.2rem]">{label}</div>
+        <div className="text-metric mb-[0.2rem] text-3xl">
           {value}
-          {unit && <span className="ml-[0.05em] text-[1rem]">{unit}</span>}
+          {unit && <span className="ml-[0.05em] text-base">{unit}</span>}
         </div>
-        <div className="text-mute text-body-sm text-[0.72rem]">{sub}</div>
+        <div className="text-mute text-body-sm">{sub}</div>
       </div>
     </div>
   );

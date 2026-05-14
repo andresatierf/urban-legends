@@ -39,7 +39,7 @@ export function LogActivityFab({
         className,
       )}
     >
-      <span className="col-span-2 inline-flex items-center gap-[0.4rem] text-[0.78rem] font-extrabold tracking-[0.1em] uppercase opacity-95">
+      <span className="text-label-caps col-span-2 inline-flex items-center gap-[0.4rem] font-extrabold opacity-95">
         <PencilLine className="size-[14px]" strokeWidth={2.5} />
         Log today&apos;s activity
       </span>
@@ -49,9 +49,9 @@ export function LogActivityFab({
           strokeWidth={1.5}
           aria-hidden
         />
-        <span className="text-[0.95rem] leading-[1.15]">
+        <span className="text-base leading-[1.15]">
           <strong className="font-bold">{teamName}</strong>
-          <span className="text-[0.85rem] opacity-85"> · {tournamentName}</span>
+          <span className="text-sm opacity-85"> · {tournamentName}</span>
         </span>
       </span>
     </Button>
