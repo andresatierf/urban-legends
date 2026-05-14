@@ -13,6 +13,14 @@ interface DataTableColumnHeaderProps<
   title: string;
 }
 
+function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
+  const iconClass = "ml-1 h-3.5 w-3.5";
+
+  if (direction === "asc") return <ArrowUp className={iconClass} />;
+  if (direction === "desc") return <ArrowDown className={iconClass} />;
+  return <ArrowUpDown className={iconClass} />;
+}
+
 export function DataTableColumnHeader<TData, TValue>({
   column,
   title,
@@ -32,15 +40,7 @@ export function DataTableColumnHeader<TData, TValue>({
       onClick={() => column.toggleSorting(sorted === "asc")}
     >
       {title}
-      {sorted === "desc" ? (
-        <ArrowDown
-          className={cn("ml-1 h-3.5 w-3.5", sorted && "text-primary")}
-        />
-      ) : sorted === "asc" ? (
-        <ArrowUp className={cn("ml-1 h-3.5 w-3.5", sorted && "text-primary")} />
-      ) : (
-        <ArrowUpDown className="ml-1 h-3.5 w-3.5" />
-      )}
+      <SortIcon direction={sorted} />
     </Button>
   );
 }
