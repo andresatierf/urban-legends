@@ -55,6 +55,8 @@ export function TeamSelector({
     return null;
   }
 
+  const selectedTeam = teams.find((t) => t._id === selectedTeamId);
+
   return (
     <div className="flex items-center gap-2">
       <label htmlFor={selectId} className="text-sm font-medium">
@@ -65,7 +67,9 @@ export function TeamSelector({
         onValueChange={handleValueChange}
       >
         <SelectTrigger id={selectId} className="h-12 w-[280px]">
-          <SelectValue placeholder="Select a team..." />
+          <SelectValue placeholder="Select a team...">
+            {selectedTeam?.name}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {teams.map((team) => (
