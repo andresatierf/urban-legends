@@ -47,6 +47,22 @@ jobs:
       - name: Run TypeScript type check
         run: bun --bun run typecheck
 
+  code-health:
+    name: Code Health (Fallow)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Fallow
+        uses: fallow-rs/fallow@v2
+        with:
+          fail-on-issues: false
+          annotations: true
+          comment: true
+
   all-checks:
     name: All Checks Passed
     runs-on: ubuntu-latest
