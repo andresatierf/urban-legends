@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 interface AdminPendingActionsPanelProps {
   pendingActions: {
@@ -27,7 +28,7 @@ export function AdminPendingActionsPanel({
     pendingActions.pendingSubmissions + pendingActions.joinRequests;
 
   return (
-    <Card>
+    <Card className="shadow-fd-md">
       <CardHeader>
         <CardTitle>Pending Actions</CardTitle>
         <CardDescription>
@@ -42,9 +43,7 @@ export function AdminPendingActionsPanel({
             <FileCheck className="text-muted-foreground h-5 w-5" />
             <div>
               <div className="text-sm font-medium">Pending Submissions</div>
-              <div className="text-muted-foreground text-xs">
-                Awaiting approval
-              </div>
+              <Eyebrow>Awaiting approval</Eyebrow>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -66,9 +65,7 @@ export function AdminPendingActionsPanel({
             <UserPlus className="text-muted-foreground h-5 w-5" />
             <div>
               <div className="text-sm font-medium">Join Requests</div>
-              <div className="text-muted-foreground text-xs">
-                System-wide pending requests
-              </div>
+              <Eyebrow>System-wide pending requests</Eyebrow>
             </div>
           </div>
           <div className="flex items-center gap-2">

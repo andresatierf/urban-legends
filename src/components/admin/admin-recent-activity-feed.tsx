@@ -4,6 +4,8 @@ import { formatDistanceToNow } from "date-fns";
 import { CheckCircle, Clock, FileText, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eyebrow } from "@/components/ui/eyebrow";
 
 import type { Doc } from "../../../convex/_generated/dataModel";
 
@@ -26,13 +28,13 @@ export function AdminRecentActivityFeed({
 }: AdminRecentActivityFeedProps) {
   const getActivityIcon = (state: string) => {
     if (state === "approved") {
-      return <CheckCircle className="h-4 w-4 text-green-600" />;
+      return <CheckCircle className="text-success h-4 w-4" />;
     }
     if (state === "rejected") {
-      return <XCircle className="h-4 w-4 text-red-600" />;
+      return <XCircle className="text-destructive h-4 w-4" />;
     }
     if (state === "pending") {
-      return <Clock className="h-4 w-4 text-yellow-600" />;
+      return <Clock className="text-warning h-4 w-4" />;
     }
     return <FileText className="h-4 w-4" />;
   };
@@ -48,49 +50,60 @@ export function AdminRecentActivityFeed({
 
   if (activities.length === 0) {
     return (
-      <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">
-        <p className="text-sm">No recent activity</p>
-      </div>
+      <Card className="shadow-fd-md">
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-muted-foreground flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-sm">No recent activity</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="h-96 overflow-y-auto">
-      <div className="space-y-4 pr-4">
-        {activities.map((activity) => (
-          <div key={activity.id} className="flex gap-3">
-            <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-              {getActivityIcon(activity.state)}
-            </div>
-            <div className="flex-1 space-y-1">
-              <p className="text-sm">
-                {activity.submitter?.name || "Unknown user"} submitted to{" "}
-                <span className="font-medium">
-                  {activity.team?.name || "Unknown team"}
-                </span>
-              </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge
-                  variant={getStateBadgeVariant(activity.state)}
-                  className="text-xs"
-                >
-                  {activity.state}
-                </Badge>
-                {activity.tournament && (
-                  <Badge variant="neutral" className="text-xs">
-                    {activity.tournament.name}
-                  </Badge>
-                )}
-                <span className="text-muted-foreground text-xs">
-                  {formatDistanceToNow(new Date(activity.createdAt), {
-                    addSuffix: true,
-                  })}
-                </span>
+    <Card className="shadow-fd-md">
+      <CardHeader>
+        <CardTitle>Recent Activity</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="h-96 overflow-y-auto">
+          <div className="space-y-4 pr-4">
+            {activities.map((activity) => (
+              <div key={activity.id} className="flex gap-3">
+                <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+                  {getActivityIcon(activity.state)}
+                </div>
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm">
+                    {activity.submitter?.name || "Unknown user"} submitted to{" "}
+                    <span className="font-medium">
+                      {activity.team?.name || "Unknown team"}
+                    </span>
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={getStateBadgeVariant(activity.state)}>
+                      {activity.state}
+                    </Badge>
+                    {activity.tournament && (
+                      <Badge variant="neutral">
+                        {activity.tournament.name}
+                      </Badge>
+                    )}
+                    <Eyebrow>
+                      {formatDistanceToNow(new Date(activity.createdAt), {
+                        addSuffix: true,
+                      })}
+                    </Eyebrow>
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
