@@ -1,7 +1,7 @@
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { cn } from "@/lib/utils";
 
-import type { TeamCardData } from "./types";
+import type { DaySummary, TeamCardData } from "./types";
 
 export function StatsGrid({ data }: { data: TeamCardData }) {
   const { team, memberCount, submissionSummary } = data;
@@ -47,11 +47,7 @@ function activityCellColor(day: { approved: number; pending: number }) {
   return "border-warning/50 bg-warning/30";
 }
 
-function ActivityStrip({
-  days,
-}: {
-  days: { date: string; approved: number; pending: number }[];
-}) {
+function ActivityStrip({ days }: { days: DaySummary[] }) {
   return (
     <div className="flex items-end gap-1">
       {days.map((day) => {
