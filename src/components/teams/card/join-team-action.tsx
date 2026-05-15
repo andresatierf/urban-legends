@@ -3,13 +3,11 @@ import type { ComposedCardAction } from "@/components/common/card/composed-card"
 import { JoinTeamFormButton } from "../../form/join-team-form-button";
 import type { TeamCardData } from "./types";
 
-export function joinTeamAction(
-  data: TeamCardData,
-  isFull: boolean,
-): ComposedCardAction | null {
+export function joinTeamAction(data: TeamCardData): ComposedCardAction | null {
   if (data.isUserInTeam) return null;
   if (data.team.joinPolicy === "closed") return null;
-  if (isFull) return null;
+  if (data.team.maxMembers != null && data.memberCount >= data.team.maxMembers)
+    return null;
 
   return {
     slot: (

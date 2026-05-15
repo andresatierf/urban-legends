@@ -57,7 +57,7 @@ export function TeamCard({ data, onLeave }: Props) {
       params: { teamId: team._id },
     });
   } else {
-    const join = joinTeamAction(data, isFull);
+    const join = joinTeamAction(data);
     if (join) actions.push(join);
     actions.push({
       label: "View",
