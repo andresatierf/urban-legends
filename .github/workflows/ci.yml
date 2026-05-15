@@ -62,18 +62,3 @@ jobs:
           fail-on-issues: false
           annotations: true
           comment: true
-
-  all-checks:
-    name: All Checks Passed
-    runs-on: ubuntu-latest
-    needs: [lint-and-format, typecheck]
-    if: always()
-
-    steps:
-      - name: Check if all jobs succeeded
-        run: |
-          if [[ "${{ needs.lint-and-format.result }}" != "success" ]] || [[ "${{ needs.typecheck.result }}" != "success" ]]; then
-            echo "One or more checks failed"
-            exit 1
-          fi
-          echo "All checks passed successfully!"

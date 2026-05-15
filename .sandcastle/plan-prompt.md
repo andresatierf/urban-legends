@@ -27,7 +27,7 @@ Open `ready-for-agent` issues, with bodies:
 
 <ready-issues>
 
-!`gh issue list --state open --label "ready-for-agent" --limit 200 --json number,title,body,labels --jq '.[] | "## Issue #\(.number): \(.title)\nLabels: \(.labels | map(.name) | join(", "))\n\n\(.body)\n\n---\n"'`
+!`gh project item-list 2 --owner andresatierf --format json --limit 500 --jq '.items[] | select(.status=="Todo" and .content.type=="Issue" and (.labels | index("ready-for-agent"))) | "## Issue #\(.content.number): \(.content.title)\nLabels: \(.labels | join(", "))\n\n\(.content.body)\n\n---\n"'`
 
 </ready-issues>
 
