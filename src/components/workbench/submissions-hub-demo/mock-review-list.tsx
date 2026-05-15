@@ -30,21 +30,21 @@ export function MockReviewList({
 
   const filtered = useMemo(() => filterItems(items, filter), [items, filter]);
 
-  const onApprove = async (target: ReviewItem) => {
+  const updateItemState = (
+    target: ReviewItem,
+    state: "approved" | "rejected",
+  ) => {
     setItems((prev) =>
       prev.map((it) =>
-        keyFor(it) === keyFor(target) ? mutateState(it, "approved") : it,
+        keyFor(it) === keyFor(target) ? mutateState(it, state) : it,
       ),
     );
   };
 
-  const onReject = async (target: ReviewItem) => {
-    setItems((prev) =>
-      prev.map((it) =>
-        keyFor(it) === keyFor(target) ? mutateState(it, "rejected") : it,
-      ),
-    );
-  };
+  const onApprove = async (target: ReviewItem) =>
+    updateItemState(target, "approved");
+  const onReject = async (target: ReviewItem) =>
+    updateItemState(target, "rejected");
 
   return (
     <SubmissionReviewList

@@ -112,9 +112,6 @@ function SideRail({
   panel: SidePanel;
   setPanel: (p: SidePanel) => void;
 }) {
-  const pendingCount = DEMO_REVIEW_ITEMS.filter(
-    (i) => i.data.state === "pending",
-  ).length;
   return (
     <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
       <div className="flex items-center justify-between gap-2">
@@ -152,19 +149,17 @@ function SideRail({
         </Button>
       </div>
 
-      {panel === "review" ? (
-        <ReviewRail pending={pendingCount} />
-      ) : (
-        <ManageRail />
-      )}
+      {panel === "review" ? <ReviewRail /> : <ManageRail />}
     </aside>
   );
 }
 
-function ReviewRail({ pending }: { pending: number }) {
-  const pendingItems = DEMO_REVIEW_ITEMS.filter(
+function ReviewRail() {
+  const allPending = DEMO_REVIEW_ITEMS.filter(
     (i) => i.data.state === "pending",
-  ).slice(0, 5);
+  );
+  const pending = allPending.length;
+  const pendingItems = allPending.slice(0, 5);
   return (
     <Card variant="deep" size="sm" className="gap-3">
       <div className="flex items-center justify-between">
@@ -266,21 +261,13 @@ function ManageRail() {
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="done">Done</TabsTrigger>
           </TabsList>
-          <TabsContent value="all">
-            <div className="max-h-[600px] overflow-y-auto pr-1">
-              <MockReviewList filter="all" showFilters={false} />
-            </div>
-          </TabsContent>
-          <TabsContent value="pending">
-            <div className="max-h-[600px] overflow-y-auto pr-1">
-              <MockReviewList filter="pending" showFilters={false} />
-            </div>
-          </TabsContent>
-          <TabsContent value="done">
-            <div className="max-h-[600px] overflow-y-auto pr-1">
-              <MockReviewList filter="done" showFilters={false} />
-            </div>
-          </TabsContent>
+          {(["all", "pending", "done"] as const).map((tab) => (
+            <TabsContent key={tab} value={tab}>
+              <div className="max-h-[600px] overflow-y-auto pr-1">
+                <MockReviewList filter={tab} showFilters={false} />
+              </div>
+            </TabsContent>
+          ))}
         </Tabs>
       </CardContent>
     </Card>
