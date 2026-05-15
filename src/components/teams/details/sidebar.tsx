@@ -146,6 +146,7 @@ export function Sidebar({ data }: { data: TeamDetails }) {
             open={transferCaptaincyDialogOpen}
             onOpenChange={setTransferCaptaincyDialogOpen}
             teamId={team._id}
+            isViewerCaptain={userMembership?.role === "captain"}
           />
         )}
       </div>

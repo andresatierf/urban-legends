@@ -375,7 +375,7 @@ describe("canTransferCaptaincy", () => {
     });
   });
 
-  test("admin cannot transfer captaincy (captain-only action)", async () => {
+  test("admin can transfer captaincy on any team with memberCount > 1", async () => {
     const t = convexTest(schemaForTest);
     await t.run(async (ctx) => {
       const { teamId } = await seedWorld(ctx);
@@ -383,6 +383,49 @@ describe("canTransferCaptaincy", () => {
       await giveSystemRole(ctx, admin, "admin");
       const member = await makeUser(ctx, "member");
       await addTeamMember(ctx, member, teamId, "member");
+      expect(await canTransferCaptaincy.check(ctx, admin, { teamId })).toBe(
+        true,
+      );
+    });
+  });
+
+  test("dev can transfer captaincy on any team with memberCount > 1", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { teamId } = await seedWorld(ctx);
+      const dev = await makeUser(ctx, "dev");
+      await giveSystemRole(ctx, dev, "dev");
+      const member = await makeUser(ctx, "member");
+      await addTeamMember(ctx, member, teamId, "member");
+      expect(await canTransferCaptaincy.check(ctx, dev, { teamId })).toBe(true);
+    });
+  });
+
+  test("tournament_manager of the team's tournament can transfer captaincy", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { tournamentId, teamId } = await seedWorld(ctx);
+      const manager = await makeUser(ctx, "manager");
+      await giveTournamentRole(
+        ctx,
+        manager,
+        tournamentId,
+        "tournament_manager",
+      );
+      const member = await makeUser(ctx, "member");
+      await addTeamMember(ctx, member, teamId, "member");
+      expect(await canTransferCaptaincy.check(ctx, manager, { teamId })).toBe(
+        true,
+      );
+    });
+  });
+
+  test("admin cannot transfer captaincy when team has only one member", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { teamId } = await seedWorld(ctx);
+      const admin = await makeUser(ctx, "admin");
+      await giveSystemRole(ctx, admin, "admin");
       expect(await canTransferCaptaincy.check(ctx, admin, { teamId })).toBe(
         false,
       );
@@ -488,6 +531,8 @@ describe("computeTeamPermissions flag bag", () => {
       const { teamId } = await seedWorld(ctx);
       const admin = await makeUser(ctx, "admin");
       await giveSystemRole(ctx, admin, "admin");
+      const member = await makeUser(ctx, "member");
+      await addTeamMember(ctx, member, teamId, "member");
 
       const perms = await computeTeamPermissions(ctx, admin, teamId);
 
@@ -496,8 +541,21 @@ describe("computeTeamPermissions flag bag", () => {
       expect(perms.canDelete).toBe(true);
       expect(perms.canInvite).toBe(true);
       expect(perms.canLeave).toBe(false); // not a member
-      expect(perms.canTransferCaptaincy).toBe(false); // not captain
+      expect(perms.canTransferCaptaincy).toBe(true); // admin override, memberCount > 1
       expect(perms.canManageMembers).toBe(true);
+    });
+  });
+
+  test("admin canTransferCaptaincy false when team has only one member", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { teamId } = await seedWorld(ctx);
+      const admin = await makeUser(ctx, "admin");
+      await giveSystemRole(ctx, admin, "admin");
+
+      const perms = await computeTeamPermissions(ctx, admin, teamId);
+
+      expect(perms.canTransferCaptaincy).toBe(false);
     });
   });
 });

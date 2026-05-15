@@ -12,6 +12,7 @@ import {
   canDeleteTeam,
   canEditTeam,
   canManageTeamMembers,
+  canTransferCaptaincy,
   computeTeamPermissions,
 } from "./authority/core";
 import { enrichWithRelations } from "./lib/helpers";
@@ -601,44 +602,67 @@ export const transferCaptaincy = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const currentCaptainMembership = await validateIsTeamMember(ctx, {
-      teamId: args.teamId,
-      userId: user._id,
-      captain: true,
-    });
+    await canTransferCaptaincy.require(ctx, user._id, { teamId: args.teamId });
 
-    const newCaptainMembership = await validateIsTeamMember(ctx, {
-      teamId: args.teamId,
-      userId: args.newCaptainId,
-    });
+    const members = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .collect();
+
+    const currentCaptainMembership = members.find((m) => m.role === "captain");
+    if (!currentCaptainMembership) {
+      throw new Error("Team has no current captain");
+    }
+
+    const newCaptainMembership = members.find(
+      (m) => m.userId === args.newCaptainId,
+    );
+    if (!newCaptainMembership) {
+      throw new Error("Team membership required");
+    }
+
+    if (currentCaptainMembership._id === newCaptainMembership._id) {
+      throw new Error("New captain must be a different team member");
+    }
 
     const team = await ctx.db.get(args.teamId);
-    const oldCaptain = await ctx.db.get(user._id);
+    const oldCaptain = await ctx.db.get(currentCaptainMembership.userId);
     const newCaptain = await ctx.db.get(args.newCaptainId);
 
     await ctx.db.patch(currentCaptainMembership._id, { role: "member" });
     await ctx.db.patch(newCaptainMembership._id, { role: "captain" });
 
+    const actorIsOldCaptain = currentCaptainMembership.userId === user._id;
+
     // Notify new captain
     if (team && newCaptain) {
+      const toBody = actorIsOldCaptain
+        ? `${oldCaptain?.name || "The previous captain"} transferred captain role to you.`
+        : `You are now the captain of ${team.name}.`;
       await ctx.scheduler.runAfter(0, internal.notifications.create, {
         userId: args.newCaptainId,
         type: "captain_role_transferred_to",
         title: `You are now captain of ${team.name}`,
-        body: `${oldCaptain?.name || "The previous captain"} transferred captain role to you.`,
+        body: toBody,
         relatedEntityId: args.teamId,
         relatedEntityType: "team",
         actionUrl: `/teams/${args.teamId}`,
       });
     }
 
-    // Notify old captain
+    // Notify the (now former) captain
     if (team && oldCaptain) {
+      const fromTitle = actorIsOldCaptain
+        ? `You transferred captain role in ${team.name}`
+        : `Your captain role in ${team.name} was transferred`;
+      const fromBody = actorIsOldCaptain
+        ? `${newCaptain?.name || "A team member"} is now the captain.`
+        : `Your captain role in ${team.name} was transferred to ${newCaptain?.name || "another team member"}.`;
       await ctx.scheduler.runAfter(0, internal.notifications.create, {
-        userId: user._id,
+        userId: currentCaptainMembership.userId,
         type: "captain_role_transferred_from",
-        title: `You transferred captain role in ${team.name}`,
-        body: `${newCaptain?.name || "A team member"} is now the captain.`,
+        title: fromTitle,
+        body: fromBody,
         relatedEntityId: args.teamId,
         relatedEntityType: "team",
         actionUrl: `/teams/${args.teamId}`,

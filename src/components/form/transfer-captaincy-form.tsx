@@ -34,6 +34,7 @@ type Props = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   teamId: Id<"teams">;
+  isViewerCaptain?: boolean;
   children?: React.ReactNode;
 };
 
@@ -41,6 +42,7 @@ export function TransferCaptaincyFormDialog({
   open: controlledOpen,
   onOpenChange,
   teamId,
+  isViewerCaptain = false,
   children,
 }: Props) {
   const formId = useId();
@@ -52,15 +54,17 @@ export function TransferCaptaincyFormDialog({
   const transferCaptaincy = useMutation(api.teams.transferCaptaincy);
   const teamMembers = useQuery(
     api.teams.listTeamMembers,
-    teamId ? { teamId, excludeSelf: true } : "skip",
+    teamId ? { teamId } : "skip",
   );
 
   const memberOptions = useMemo(
     () =>
-      teamMembers?.map((member) => ({
-        value: member._id,
-        label: `${member.name || "unknown name"} (${member.email})`,
-      })) ?? [],
+      teamMembers
+        ?.filter((member) => member.role !== "captain")
+        .map((member) => ({
+          value: member._id,
+          label: `${member.name || "unknown name"} (${member.email})`,
+        })) ?? [],
     [teamMembers],
   );
 
@@ -103,9 +107,9 @@ export function TransferCaptaincyFormDialog({
           <DialogHeader>
             <DialogTitle>Transfer Captaincy</DialogTitle>
             <DialogDescription>
-              Select a team member to transfer the captain role to. Once
-              transferred, you will become a regular member and lose captain
-              privileges.
+              {isViewerCaptain
+                ? "Select a team member to transfer the captain role to. Once transferred, you will become a regular member and lose captain privileges."
+                : "Select a team member to transfer the captain role to. The current captain will be demoted to a regular member."}
             </DialogDescription>
           </DialogHeader>
 
