@@ -50,21 +50,17 @@ export const listJoinRequests = query({
   },
 });
 
-export const getUserJoinRequest = query({
-  args: {
-    teamId: v.id("teams"),
-  },
-  handler: async (ctx, args) => {
+export const listUserJoinRequests = query({
+  args: {},
+  handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const req = await ctx.db
+    return await ctx.db
       .query("joinRequests")
-      .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", args.teamId).eq("userId", user._id),
+      .withIndex("by_user_and_status", (q) =>
+        q.eq("userId", user._id).eq("status", "pending"),
       )
-      .first();
-
-    return req;
+      .collect();
   },
 });
 

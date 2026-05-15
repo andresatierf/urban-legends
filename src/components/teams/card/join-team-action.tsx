@@ -23,14 +23,15 @@ export function JoinTeamButton({
   const isHidden =
     data.isUserInTeam || data.team.joinPolicy === "closed" || isFull;
 
-  const joinRequest = useQuery(
-    api.joinRequests.getUserJoinRequest,
-    isHidden || demo ? "skip" : { teamId: data.team._id },
+  const joinRequests = useQuery(
+    api.joinRequests.listUserJoinRequests,
+    isHidden || demo ? "skip" : {},
   );
+  const joinRequest = joinRequests?.find((r) => r.teamId === data.team._id);
   const cancelRequest = useMutation(api.joinRequests.cancelJoinRequest);
 
   const handleCancel = useCallback(() => {
-    if (joinRequest?.status !== "pending") return;
+    if (!joinRequest) return;
     void tryMutate({
       fn: () => cancelRequest({ requestId: joinRequest._id }),
       successToast: "Join request cancelled",
@@ -40,7 +41,7 @@ export function JoinTeamButton({
 
   if (isHidden) return null;
 
-  if (joinRequest?.status === "pending") {
+  if (joinRequest) {
     return (
       <Button
         variant="outline"
