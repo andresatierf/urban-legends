@@ -10,6 +10,9 @@ const DEMO_PAGES = [
   { to: "/dev/inputs", label: "Inputs" },
   { to: "/dev/badges", label: "Badges" },
   { to: "/dev/table", label: "Table" },
+  { to: "/dev/submissions-hub-a", label: "Submissions A" },
+  { to: "/dev/submissions-hub-b", label: "Submissions B" },
+  { to: "/dev/submissions-hub-c", label: "Submissions C" },
 ] as const;
 
 export function DemoPageSwitcher() {
