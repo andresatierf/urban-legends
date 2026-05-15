@@ -428,7 +428,11 @@ export const canLeaveTeam: TeamRule = teamRule("canLeaveTeam", (facts) => {
 
 export const canTransferCaptaincy: TeamRule = teamRule(
   "canTransferCaptaincy",
-  (facts) => facts.isCaptain && facts.memberCount > 1,
+  (facts) =>
+    (isAdminOrDev(facts.systemRoles) ||
+      facts.tournamentRoles.includes("tournament_manager") ||
+      facts.isCaptain) &&
+    facts.memberCount > 1,
 );
 
 export const canManageTeamMembers: TeamRule = teamRule(
@@ -713,7 +717,8 @@ export async function computeTeamPermissions(
     canDelete: isPrivileged || facts.isCaptain,
     canInvite: isPrivileged || facts.isCaptain,
     canLeave: facts.isMember && (!facts.isCaptain || facts.memberCount === 1),
-    canTransferCaptaincy: facts.isCaptain && facts.memberCount > 1,
+    canTransferCaptaincy:
+      (isPrivileged || facts.isCaptain) && facts.memberCount > 1,
     canManageMembers: isPrivileged || facts.isCaptain,
   };
 }

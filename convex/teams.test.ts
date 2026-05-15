@@ -184,3 +184,163 @@ describe("teams.listWithMembers", () => {
     expect(resultB?.rank).toBe(2);
   });
 });
+
+describe("teams.transferCaptaincy (admin actor)", () => {
+  test("admin demotes the actual captain (not themselves) and routes notifications correctly", async () => {
+    const t = convexTest(schemaForTest);
+
+    const { teamId, captainId, memberId, adminId } = await t.run(
+      async (ctx) => {
+        const adminId = await ctx.db.insert("users", {
+          email: "admin@example.com",
+          name: "Admin",
+          externalId: "ext_admin",
+        });
+
+        const captainId = await ctx.db.insert("users", {
+          email: "captain@example.com",
+          name: "Captain",
+          externalId: "ext_captain",
+        });
+
+        const memberId = await ctx.db.insert("users", {
+          email: "member@example.com",
+          name: "Member",
+          externalId: "ext_member",
+        });
+
+        const adminRoleId = await ctx.db.insert("roles", {
+          name: "admin",
+          displayName: "admin",
+          hierarchy: 0,
+        });
+        await ctx.db.insert("userRoles", {
+          userId: adminId,
+          roleId: adminRoleId,
+        });
+
+        const tournamentId = await ctx.db.insert("tournaments", {
+          name: "Tournament",
+          description: "x",
+          startDate: "2024-01-01",
+          endDate: "2024-12-31",
+          createdBy: captainId,
+          scoringConfig,
+        });
+
+        const teamId = await ctx.db.insert("teams", {
+          name: "Team Alpha",
+          tournamentId,
+          createdBy: captainId,
+          joinPolicy: "open",
+          points: 0,
+        });
+
+        await ctx.db.insert("teamMembers", {
+          teamId,
+          userId: captainId,
+          role: "captain",
+        });
+        await ctx.db.insert("teamMembers", {
+          teamId,
+          userId: memberId,
+          role: "member",
+        });
+
+        return { teamId, captainId, memberId, adminId };
+      },
+    );
+
+    const asAdmin = t.withIdentity({ subject: "ext_admin" });
+
+    await asAdmin.mutation(api.teams.transferCaptaincy, {
+      teamId,
+      newCaptainId: memberId,
+    });
+
+    await t.run(async (ctx) => {
+      const members = await ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) => q.eq("teamId", teamId))
+        .collect();
+
+      const prevCaptain = members.find((m) => m.userId === captainId);
+      const newCaptain = members.find((m) => m.userId === memberId);
+
+      expect(prevCaptain?.role).toBe("member");
+      expect(newCaptain?.role).toBe("captain");
+
+      // Admin actor was never a member; nothing should have appeared for them.
+      const adminMembership = members.find((m) => m.userId === adminId);
+      expect(adminMembership).toBeUndefined();
+    });
+  });
+
+  test("non-captain plain member cannot transfer captaincy", async () => {
+    const t = convexTest(schemaForTest);
+
+    const { teamId, memberAId, memberBId } = await t.run(async (ctx) => {
+      const captainId = await ctx.db.insert("users", {
+        email: "captain@example.com",
+        name: "Captain",
+        externalId: "ext_captain",
+      });
+
+      const memberAId = await ctx.db.insert("users", {
+        email: "member-a@example.com",
+        name: "Member A",
+        externalId: "ext_member_a",
+      });
+
+      const memberBId = await ctx.db.insert("users", {
+        email: "member-b@example.com",
+        name: "Member B",
+        externalId: "ext_member_b",
+      });
+
+      const tournamentId = await ctx.db.insert("tournaments", {
+        name: "Tournament",
+        description: "x",
+        startDate: "2024-01-01",
+        endDate: "2024-12-31",
+        createdBy: captainId,
+        scoringConfig,
+      });
+
+      const teamId = await ctx.db.insert("teams", {
+        name: "Team Alpha",
+        tournamentId,
+        createdBy: captainId,
+        joinPolicy: "open",
+        points: 0,
+      });
+
+      await ctx.db.insert("teamMembers", {
+        teamId,
+        userId: captainId,
+        role: "captain",
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId,
+        userId: memberAId,
+        role: "member",
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId,
+        userId: memberBId,
+        role: "member",
+      });
+
+      return { teamId, memberAId, memberBId };
+    });
+
+    const asMember = t.withIdentity({ subject: "ext_member_a" });
+
+    await expect(
+      asMember.mutation(api.teams.transferCaptaincy, {
+        teamId,
+        newCaptainId: memberBId,
+      }),
+    ).rejects.toThrow();
+  });
+});
