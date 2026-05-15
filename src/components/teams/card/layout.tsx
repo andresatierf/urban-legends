@@ -8,7 +8,7 @@ import type { BadgeProps } from "@/components/ui/badge";
 
 import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
 import { Skeleton } from "../../ui/skeleton";
-import { ActivityBars } from "./activity-bars";
+import { ActivityGraph } from "./activity-graph";
 import { MemberRoster } from "./member-roster";
 import { RoleBanner } from "./role-banner";
 import type { TeamCardData } from "./types";
@@ -79,7 +79,7 @@ export function TeamCard({ data, onLeave, joinSlot }: Props) {
       badge={badge}
       actions={actions}
     >
-      <ActivityBars recentActivity={team.recentActivity} />
+      <ActivityGraph recentActivity={team.recentActivity} />
       <MemberRoster data={data} />
       <RoleBanner data={data} />
     </ComposedCard>
