@@ -57,6 +57,63 @@ async function updateTeamPoints(
     .collect();
   const total = approved.reduce((sum, s) => sum + (s.pointsEarned ?? 0), 0);
   await ctx.db.patch(teamId, { points: total, lastActivityAt: nowUTC() });
+  await recomputeRecentActivity(ctx, teamId);
+}
+
+// Returns the last 7 calendar dates (UTC) ending today, oldest → newest.
+export function last7Dates(today: Date = new Date()): string[] {
+  const base = new Date(today);
+  base.setUTCHours(0, 0, 0, 0);
+  const out: string[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(base);
+    d.setUTCDate(d.getUTCDate() - i);
+    out.push(d.toISOString().split("T")[0]);
+  }
+  return out;
+}
+
+// Recomputes the precomputed 7-day activity rollup on the team.
+export async function recomputeRecentActivity(
+  ctx: MutationCtx,
+  teamId: Id<"teams">,
+): Promise<void> {
+  const dates = last7Dates();
+  const startDate = dates[0];
+
+  const submissions = await ctx.db
+    .query("submissions")
+    .withIndex("by_team_and_date", (q) =>
+      q.eq("teamId", teamId).gte("date", startDate),
+    )
+    .collect();
+
+  const buckets = new Map<
+    string,
+    { approved: number; pending: number; rejected: number; points: number }
+  >();
+  for (const date of dates) {
+    buckets.set(date, { approved: 0, pending: 0, rejected: 0, points: 0 });
+  }
+
+  for (const s of submissions) {
+    // s.date may be either YYYY-MM-DD or full ISO (e.g. "2024-01-15T00:00:00.000Z")
+    // depending on insertion path. Bucket by the calendar day prefix.
+    const bucket = buckets.get(s.date.slice(0, 10));
+    if (!bucket) continue;
+    if (s.state === "approved") {
+      bucket.approved++;
+      bucket.points += s.pointsEarned ?? 0;
+    } else if (s.state === "pending") bucket.pending++;
+    else if (s.state === "rejected") bucket.rejected++;
+  }
+
+  await ctx.db.patch(teamId, {
+    recentActivity: {
+      updatedAt: nowUTC(),
+      days: dates.map((date) => ({ date, ...buckets.get(date)! })),
+    },
+  });
 }
 
 export type ScoringConfig = {
@@ -332,6 +389,8 @@ export async function submit(
       date,
     });
   }
+
+  await recomputeRecentActivity(ctx, args.teamId);
 
   return submissionId;
 }
@@ -632,6 +691,8 @@ export async function edit(
       date: newDate,
     });
   }
+
+  await recomputeRecentActivity(ctx, submission.teamId);
 }
 
 // evictFromGroup exported for use by later lifecycle slices (edit, softDelete).

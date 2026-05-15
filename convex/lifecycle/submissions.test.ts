@@ -8,8 +8,10 @@ import {
   IllegalTransition,
   approve,
   edit,
+  last7Dates,
   previewIsTeamExercise,
   recompute,
+  recomputeRecentActivity,
   reject,
   score,
   softDelete,
@@ -2124,5 +2126,159 @@ describe("recompute", () => {
 
       await assertSubmissionInvariant(ctx, { teamId, tournamentId });
     });
+  });
+});
+
+describe("recomputeRecentActivity", () => {
+  function todayMinus(n: number): string {
+    const d = new Date();
+    d.setUTCHours(0, 0, 0, 0);
+    d.setUTCDate(d.getUTCDate() - n);
+    return d.toISOString().split("T")[0];
+  }
+
+  async function seedTeam(
+    ctx: Parameters<Parameters<ReturnType<typeof convexTest>["run"]>[0]>[0],
+  ): Promise<{
+    userId: Id<"users">;
+    teamId: Id<"teams">;
+    tournamentId: Id<"tournaments">;
+  }> {
+    const userId = await ctx.db.insert("users", {
+      email: "ra@example.com",
+      name: "RA User",
+      externalId: "ext_ra",
+    });
+    const tournamentId = await ctx.db.insert("tournaments", {
+      name: "RA Tournament",
+      description: "",
+      startDate: "2024-01-01",
+      endDate: "2030-12-31",
+      createdBy: userId,
+      scoringConfig,
+    });
+    const teamId = await ctx.db.insert("teams", {
+      name: "RA Team",
+      tournamentId,
+      createdBy: userId,
+      joinPolicy: "open",
+      points: 0,
+    });
+    await ctx.db.insert("teamMembers", { teamId, userId, role: "captain" });
+    return { userId, teamId, tournamentId };
+  }
+
+  test("last7Dates returns exactly 7 dates ending today, oldest first", () => {
+    const dates = last7Dates();
+    expect(dates).toHaveLength(7);
+    expect(dates[6]).toBe(todayMinus(0));
+    expect(dates[0]).toBe(todayMinus(6));
+  });
+
+  test("writes a 7-day window of zeros for a team with no submissions", async () => {
+    const t = convexTest(schemaForTest);
+    const { teamId } = await t.run(seedTeam);
+
+    await t.run(async (ctx) => {
+      await recomputeRecentActivity(ctx, teamId);
+    });
+
+    await t.run(async (ctx) => {
+      const team = await ctx.db.get(teamId);
+      expect(team?.recentActivity?.days).toHaveLength(7);
+      expect(team?.recentActivity?.days.every((d) => d.approved === 0)).toBe(
+        true,
+      );
+      expect(team?.recentActivity?.updatedAt).toBeDefined();
+    });
+  });
+
+  test("counts approved, pending, and rejected per day within the window", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedTeam);
+    const today = todayMinus(0);
+    const twoDaysAgo = todayMinus(2);
+
+    await t.run(async (ctx) => {
+      await ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: today,
+        tier: "base",
+        submissionType: "individual",
+        state: "approved",
+        createdBy: userId,
+        pointsEarned: 0,
+        evidenceStorageIds: [],
+      });
+      await ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: today,
+        tier: "base",
+        submissionType: "individual",
+        state: "pending",
+        createdBy: userId,
+        pointsEarned: 0,
+        evidenceStorageIds: [],
+      });
+      await ctx.db.insert("submissions", {
+        userId,
+        teamId,
+        tournamentId,
+        date: twoDaysAgo,
+        tier: "base",
+        submissionType: "individual",
+        state: "rejected",
+        createdBy: userId,
+        pointsEarned: 0,
+        evidenceStorageIds: [],
+      });
+      await recomputeRecentActivity(ctx, teamId);
+    });
+
+    await t.run(async (ctx) => {
+      const team = await ctx.db.get(teamId);
+      const days = team?.recentActivity?.days ?? [];
+      const todayBucket = days.find((d) => d.date === today)!;
+      const twoBack = days.find((d) => d.date === twoDaysAgo)!;
+      expect(todayBucket.approved).toBe(1);
+      expect(todayBucket.pending).toBe(1);
+      expect(twoBack.rejected).toBe(1);
+    });
+  });
+
+  test("submit + approve advances recentActivity counts", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId } = await t.run(seedTeam);
+    const today = todayMinus(0);
+
+    const submissionId = await t.run(async (ctx) => {
+      return await submit(ctx, {
+        userId,
+        teamId,
+        date: today,
+        type: "individual",
+      });
+    });
+
+    const afterSubmit = await t.run(async (ctx) => {
+      const team = await ctx.db.get(teamId);
+      return team?.recentActivity;
+    });
+    expect(afterSubmit?.days.find((d) => d.date === today)?.pending).toBe(1);
+
+    await t.run(async (ctx) => {
+      await approve(ctx, submissionId, userId);
+    });
+
+    const afterApprove = await t.run(async (ctx) => {
+      const team = await ctx.db.get(teamId);
+      return team?.recentActivity;
+    });
+    expect(afterApprove?.days.find((d) => d.date === today)?.approved).toBe(1);
+    expect(afterApprove?.days.find((d) => d.date === today)?.pending).toBe(0);
   });
 });
