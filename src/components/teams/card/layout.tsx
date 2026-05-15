@@ -10,11 +10,12 @@ import { tryMutate } from "@/lib/utils";
 import { api } from "../../../../convex/_generated/api";
 import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
 import { CaptainSpotlight } from "./captain-spotlight";
-import { joinTeamAction } from "./join-team-action";
+import { JoinTeamButton } from "./join-team-action";
 import { MomentumCell } from "./momentum-cell";
 import { SparklineCell } from "./sparkline-cell";
 import { StatsStrip } from "./stats-strip";
 import type { TeamCardData } from "./types";
+import { ViewTeamButton } from "./view-team-button";
 import { ViewerRoleRibbon } from "./viewer-role-ribbon";
 
 export { TeamCardSkeleton } from "./skeleton";
@@ -67,16 +68,6 @@ export function TeamCard({ data }: Props) {
       to: "/teams/$teamId",
       params: { teamId: team._id },
     });
-  } else {
-    const join = joinTeamAction(data);
-    if (join) actions.push(join);
-    actions.push({
-      label: "View",
-      variant: "default",
-      align: "end",
-      to: "/teams/$teamId",
-      params: { teamId: team._id },
-    });
   }
 
   const borderClass = isCaptain
@@ -88,6 +79,8 @@ export function TeamCard({ data }: Props) {
   return (
     <div className="relative">
       <ViewerRoleRibbon userRole={userRole} />
+      <JoinTeamButton data={data} />
+      <ViewTeamButton data={data} />
       <ComposedCard
         className={borderClass}
         title={team.name}

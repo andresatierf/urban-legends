@@ -20,7 +20,7 @@ export function TeamRosters({ data, sortedTeams }: Props) {
   return (
     <>
       <SectionHeader as="h2" title="Teams" Icon={Users} />
-      <div className="grid gap-3 gap-y-6 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-3 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
         {sortedTeams.map((team, idx) => {
           const isUserMember = data.userTeam?._id === team._id;
           const userRole =
