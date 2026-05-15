@@ -84,7 +84,7 @@ const plan = await sandcastle.run({
   sandbox,
   name: "planner",
   maxIterations: 1,
-  agent: sandcastle.claudeCode("claude-opus-4-6"),
+  agent: sandcastle.claudeCode("claude-sonnet-4-6"),
   promptFile: "./.sandcastle/plan-prompt.md",
 });
 
@@ -134,7 +134,7 @@ const settled = await Promise.allSettled(
         maxIterations: 100,
         idleTimeoutSeconds: 1200,
         completionSignal: "<promise>COMPLETE</promise>",
-        agent: sandcastle.claudeCode("claude-opus-4-6"),
+        agent: sandcastle.claudeCode("claude-opus-4-7"),
         promptFile: "./.sandcastle/implement-prompt.md",
         promptArgs: {
           TASK_ID: issue.id,
@@ -154,7 +154,7 @@ const settled = await Promise.allSettled(
           name: `review-${issue.id}-r${round}`,
           maxIterations: 1,
           completionSignal: "<promise>COMPLETE</promise>",
-          agent: sandcastle.claudeCode("claude-opus-4-6"),
+          agent: sandcastle.claudeCode("claude-sonnet-4-6"),
           promptFile: "./.sandcastle/review-prompt.md",
           promptArgs: {
             BRANCH: issue.branch,
