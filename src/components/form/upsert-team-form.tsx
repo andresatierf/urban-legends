@@ -137,7 +137,7 @@ export function UpsertTeamFormDialog({
             {!tournamentId && (
               <form.AppField name="tournamentId">
                 {(field) => (
-                  <field.ComboboxField
+                  <field.SelectField
                     label="Tournament"
                     options={tournamentOptions}
                     placeholder="Select a tournament"
