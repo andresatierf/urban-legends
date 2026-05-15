@@ -262,7 +262,7 @@ function IndividualPortrait({
           </>
         )}
         <div className="absolute right-2 bottom-2 left-2 flex items-center gap-2">
-          <Avatar size="sm" className="ring-background ring-2">
+          <Avatar size="sm">
             {submitterImageUrl && (
               <AvatarImage src={submitterImageUrl} alt={submitterName} />
             )}
@@ -401,10 +401,7 @@ function SubmitterStrip({
                 }
                 className="h-full w-full object-cover"
               />
-              <Avatar
-                size="sm"
-                className="ring-background absolute -right-1 -bottom-1 size-5 ring-2"
-              >
+              <Avatar size="sm" className="absolute -right-1 -bottom-1 size-5">
                 {se.submitterImageUrl && (
                   <AvatarImage
                     src={se.submitterImageUrl}
