@@ -94,6 +94,7 @@ export function CarouselReviewCard({
         <Link
           to="/submissions/$submissionId"
           params={{ submissionId: detailsSubmissionId }}
+          search={{ from: "review" }}
           className="hover:bg-muted/40 block transition-colors"
           aria-label="View submission details"
         >

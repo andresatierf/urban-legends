@@ -42,7 +42,7 @@ export function AdminQuickActions() {
         </Button>
 
         <Button variant="outline" className="h-auto flex-1" asChild>
-          <Link to="/manage/submissions">
+          <Link to="/submissions/review">
             <FileText className="h-8 w-8" />
             <div className="text-center">
               <div className="font-medium">View Submissions</div>

@@ -55,7 +55,7 @@ export function AdminPendingActionsPanel({
               {pendingActions.pendingSubmissions}
             </Badge>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/manage/submissions">View</Link>
+              <Link to="/submissions/review">View</Link>
             </Button>
           </div>
         </div>

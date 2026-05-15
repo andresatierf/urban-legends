@@ -6,7 +6,6 @@ import { Calendar, List } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { UpsertSubmissionFormDialog } from "@/components/form/upsert-submission-form";
-import { SectionHeader } from "@/components/section-header";
 import { CalendarStatistics } from "@/components/submissions/listing/calendar/calendar-statistics";
 import { SubmissionCalendar } from "@/components/submissions/listing/calendar/submission-calendar";
 import { SubmissionCardList } from "@/components/submissions/listing/card/submission-card-list";
@@ -26,10 +25,9 @@ import type { UserWithRoles } from "../../../../convex/users";
 
 type Props = {
   user: UserWithRoles;
-  showSectionHeader?: boolean;
 };
 
-export function PlayerSection({ user, showSectionHeader = false }: Props) {
+export function PlayerSection({ user }: Props) {
   const navigate = useNavigate();
   const remove = useMutation(api.submissions.remove);
 
@@ -161,8 +159,6 @@ export function PlayerSection({ user, showSectionHeader = false }: Props) {
         submission={selectedSubmission}
         date={selectedDate}
       />
-
-      {showSectionHeader && <SectionHeader title="Your Submissions" />}
 
       <Tabs defaultValue="calendar">
         <TabsList className="ml-auto">
