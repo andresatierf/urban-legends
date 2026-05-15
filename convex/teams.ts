@@ -143,11 +143,9 @@ export const listWithMembers = query({
       tournamentIds.map(async (tournamentId) => {
         const rankedTeams = await ctx.db
           .query("teams")
-          .withIndex("by_tournament_and_points", (q) =>
-            q.eq("tournamentId", tournamentId),
-          )
-          .order("desc")
+          .withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId))
           .collect();
+        rankedTeams.sort((a, b) => b.points - a.points);
         rankedTeams.forEach((t, idx) => {
           rankings.set(t._id, {
             rank: idx + 1,
@@ -858,15 +856,15 @@ export const getStatistics = query({
       .size;
     const completionRate = daysSoFar > 0 ? uniqueSubmissionDays / daysSoFar : 0;
 
-    const rankedTeams = await ctx.db
+    const tournamentTeams = await ctx.db
       .query("teams")
-      .withIndex("by_tournament_and_points", (q) =>
+      .withIndex("by_tournament", (q) =>
         q.eq("tournamentId", team.tournamentId),
       )
-      .order("desc")
       .collect();
-    const totalTeams = rankedTeams.length;
-    const rank = rankedTeams.findIndex((t) => t._id === args.teamId) + 1;
+    tournamentTeams.sort((a, b) => b.points - a.points);
+    const totalTeams = tournamentTeams.length;
+    const rank = tournamentTeams.findIndex((t) => t._id === args.teamId) + 1;
 
     return {
       totalSubmissions: allSubmissions.length,
