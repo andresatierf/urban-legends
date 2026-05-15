@@ -85,11 +85,14 @@ export function RaceChart({
     <ChartContext.Provider value={{ config }}>
       <div
         className={cn(
-          "border-fab-ink bg-fab-surface shadow-fd-md rounded-2xl border-2 px-5 pt-4 pb-[1.1rem]",
+          "border-fab-ink bg-fab-surface shadow-fd-md flex min-h-0 flex-col rounded-2xl border-2 px-5 pt-4 pb-[1.1rem] min-[960px]:h-full",
           className,
         )}
       >
-        <ChartContainer config={config} className="h-[480px] w-full">
+        <ChartContainer
+          config={config}
+          className="aspect-auto h-[480px] w-full min-[960px]:h-auto min-[960px]:min-h-0 min-[960px]:flex-1"
+        >
           <LineChart
             data={data}
             margin={{ top: 12, right: 56, left: 0, bottom: 0 }}

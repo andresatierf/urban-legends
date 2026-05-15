@@ -70,7 +70,7 @@ export function StandingsRaceCard({
       badge={badge}
     >
       <div className="grid grid-cols-1 min-[960px]:grid-cols-[1.4fr_1fr] min-[960px]:[grid-template-rows:544px]">
-        <div className="min-w-0 px-4 pt-4 pb-2">
+        <div className="flex min-h-0 min-w-0 flex-col px-4 pt-4 pb-2">
           {chartData && chartData.series.length > 0 && (
             <RaceChart
               days={chartData.days}
