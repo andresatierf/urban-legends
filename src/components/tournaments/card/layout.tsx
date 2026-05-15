@@ -32,6 +32,7 @@ export function TournamentOverviewCard({ data }: { data: TournamentCardData }) {
       bottomRight={<ViewTournamentButton data={data} />}
     >
       <ComposedCard
+        className="pb-2"
         title={data.name}
         eyebrow={`${format(data.startDate, "long")} – ${format(data.endDate, "long")}`}
         badge={{

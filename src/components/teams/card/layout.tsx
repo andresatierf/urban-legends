@@ -1,5 +1,6 @@
 import { ComposedCard } from "@/components/common/card/composed-card";
 import { EdgeOverlay } from "@/components/common/card/edge-overlay";
+import { cn } from "@/lib/utils";
 
 import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
 import { CaptainSpotlight } from "./captain-spotlight";
@@ -34,12 +35,6 @@ export function TeamCard({ data, demo = false }: Props) {
         } as const),
   ];
 
-  const borderClass = isCaptain
-    ? "border-warning"
-    : isUserMember
-      ? "border-sky"
-      : undefined;
-
   return (
     <EdgeOverlay
       topRight={<ViewerRoleRibbon userRole={userRole} />}
@@ -57,7 +52,10 @@ export function TeamCard({ data, demo = false }: Props) {
       }
     >
       <ComposedCard
-        className={borderClass}
+        className={cn("pb-2", {
+          "border-warning": isCaptain,
+          "border-sky": isUserMember,
+        })}
         title={team.name}
         eyebrow={
           tournament
