@@ -4,7 +4,6 @@ import { useMutation, useQuery } from "convex/react";
 import { UserPlus } from "lucide-react";
 import { useCallback } from "react";
 
-import { EdgeOverlay } from "@/components/common/card/edge-overlay";
 import { JoinTeamFormDialog } from "@/components/form/join-team-form";
 import { Button } from "@/components/ui/button";
 import { tryMutate } from "@/lib/utils";
@@ -34,27 +33,23 @@ export function JoinTeamButton({ data }: { data: TeamCardData }) {
 
   if (joinRequest?.status === "pending") {
     return (
-      <EdgeOverlay position="bottom-left">
-        <Button
-          variant="outline"
-          size="sm"
-          className="shadow-sm"
-          onClick={handleCancel}
-        >
-          Cancel Request
-        </Button>
-      </EdgeOverlay>
+      <Button
+        variant="outline"
+        size="sm"
+        className="shadow-sm"
+        onClick={handleCancel}
+      >
+        Cancel Request
+      </Button>
     );
   }
 
   return (
-    <EdgeOverlay position="bottom-left">
-      <JoinTeamFormDialog teamId={data.team._id} teamName={data.team.name}>
-        <Button size="sm" variant="grass" className="shadow-sm">
-          <UserPlus />
-          Request to Join
-        </Button>
-      </JoinTeamFormDialog>
-    </EdgeOverlay>
+    <JoinTeamFormDialog teamId={data.team._id} teamName={data.team.name}>
+      <Button size="sm" variant="grass" className="shadow-sm">
+        <UserPlus />
+        Request to Join
+      </Button>
+    </JoinTeamFormDialog>
   );
 }

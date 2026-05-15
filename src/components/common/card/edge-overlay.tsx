@@ -1,29 +1,34 @@
-import { cva, type VariantProps } from "class-variance-authority";
-
 import { cn } from "@/lib/utils";
 
-const edgeOverlayVariants = cva("absolute z-10", {
-  variants: {
-    position: {
-      "top-left": "-top-2 -left-2",
-      "top-center": "-top-2 left-1/2 -translate-x-1/2",
-      "top-right": "-top-3 right-6",
-      "bottom-left": "-bottom-3 left-4",
-      "bottom-center": "-bottom-2 left-1/2 -translate-x-1/2",
-      "bottom-right": "right-4 -bottom-3",
-    },
-  },
-});
+const SLOT_CLASSES = {
+  topLeft: "-top-2 -left-2",
+  topCenter: "-top-2 left-1/2 -translate-x-1/2",
+  topRight: "-top-3 right-6",
+  bottomLeft: "-bottom-3 left-4",
+  bottomCenter: "-bottom-2 left-1/2 -translate-x-1/2",
+  bottomRight: "right-4 -bottom-3",
+} as const;
 
-type Props = VariantProps<typeof edgeOverlayVariants> & {
-  className?: string;
+type SlotKey = keyof typeof SLOT_CLASSES;
+
+type Props = {
   children: React.ReactNode;
-};
+  className?: string;
+} & Partial<Record<SlotKey, React.ReactNode>>;
 
-export function EdgeOverlay({ position, className, children }: Props) {
+export function EdgeOverlay({ children, className, ...slots }: Props) {
   return (
-    <div className={cn(edgeOverlayVariants({ position }), className)}>
+    <div className={cn("relative grid", className)}>
       {children}
+      {(Object.keys(SLOT_CLASSES) as SlotKey[]).map((key) => {
+        const node = slots[key];
+        if (!node) return null;
+        return (
+          <div key={key} className={cn("absolute z-10", SLOT_CLASSES[key])}>
+            {node}
+          </div>
+        );
+      })}
     </div>
   );
 }
