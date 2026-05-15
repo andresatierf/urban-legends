@@ -723,6 +723,107 @@ describe("reject", () => {
     });
   });
 
+  test("rejection stores rejectionReason on the submission", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      return await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-15",
+        type: "individual",
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await reject(ctx, submissionId, userId, {
+        rejectionReason: "Blurry photo, please resubmit",
+      });
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.state).toBe("rejected");
+      expect(sub?.rejectionReason).toBe("Blurry photo, please resubmit");
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("rejection without reason leaves rejectionReason undefined", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const submissionId = await t.run(async (ctx) => {
+      return await submit(ctx, {
+        userId,
+        teamId,
+        date: "2024-01-15",
+        type: "individual",
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await reject(ctx, submissionId, userId);
+    });
+
+    await t.run(async (ctx) => {
+      const sub = await ctx.db.get(submissionId);
+      expect(sub?.state).toBe("rejected");
+      expect(sub?.rejectionReason).toBeUndefined();
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
+  test("team-type rejection stores rejectionReason on all siblings", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId: captainId, teamId, tournamentId } = await t.run(seedWorld);
+
+    const memberId = await t.run(async (ctx) => {
+      const id = await ctx.db.insert("users", {
+        email: "member-reason@example.com",
+        name: "Member Reason",
+        externalId: "ext_member_reason",
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId,
+        userId: id,
+        role: "member",
+      });
+      return id;
+    });
+
+    const [sub1Id, sub2Id] = await t.run(async (ctx) => {
+      const s1 = await submit(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-01-15",
+        type: "team",
+      });
+      const s2 = await submit(ctx, {
+        userId: memberId,
+        teamId,
+        date: "2024-01-15",
+        type: "team",
+      });
+      return [s1, s2];
+    });
+
+    await t.run(async (ctx) => {
+      await reject(ctx, sub1Id, captainId, {
+        rejectionReason: "Wrong activity date",
+      });
+    });
+
+    await t.run(async (ctx) => {
+      const s1 = await ctx.db.get(sub1Id);
+      const s2 = await ctx.db.get(sub2Id);
+      expect(s1?.rejectionReason).toBe("Wrong activity date");
+      expect(s2?.rejectionReason).toBe("Wrong activity date");
+      await assertSubmissionInvariant(ctx, { teamId, tournamentId });
+    });
+  });
+
   test("team-type reject fans out to all non-terminal siblings: group state=rejected, pointsEarned=0", async () => {
     const t = convexTest(schemaForTest);
     const { userId: captainId, teamId, tournamentId } = await t.run(seedWorld);

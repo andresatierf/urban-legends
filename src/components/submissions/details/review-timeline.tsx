@@ -46,6 +46,14 @@ export function ReviewTimeline({ submission, managedByUser }: Props) {
           <span>{reviewedLabel(submission.state)}</span>
           <span>{reviewedValue}</span>
         </div>
+        {submission.state === "rejected" && submission.rejectionReason && (
+          <div className="border-destructive/20 bg-destructive/5 mt-2 rounded-md border p-2">
+            <p className="text-destructive text-body-sm font-medium">Reason</p>
+            <p className="text-foreground mt-0.5">
+              {submission.rejectionReason}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -44,9 +44,17 @@ export const approve = mutation({
 });
 
 export const reject = mutation({
-  args: { groupId: v.id("submissionGroups") },
+  args: {
+    groupId: v.id("submissionGroups"),
+    reason: v.string(),
+  },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
+
+    const reason = args.reason.trim();
+    if (reason.length === 0) {
+      throw new Error("Rejection reason is required");
+    }
 
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Submission group not found");
@@ -67,7 +75,9 @@ export const reject = mutation({
       submissionId: child._id,
     });
 
-    await lifecycleReject(ctx, child._id, user._id);
+    await lifecycleReject(ctx, child._id, user._id, {
+      rejectionReason: reason,
+    });
   },
 });
 

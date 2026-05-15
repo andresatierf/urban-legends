@@ -1,7 +1,5 @@
 "use client";
 
-import { Toaster } from "sonner";
-
 import { useUnreadCount } from "@/hooks/use-unread-count";
 import { useUser } from "@/hooks/useUser";
 
@@ -31,7 +29,6 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
           <main className="mt-8 flex w-full flex-1 flex-col gap-4 p-4">
             {children}
           </main>
-          <Toaster />
         </div>
       </SidebarProvider>
     </SubmissionDialogProvider>

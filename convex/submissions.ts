@@ -449,9 +449,17 @@ export const approve = mutation({
 });
 
 export const reject = mutation({
-  args: { submissionId: v.id("submissions") },
+  args: {
+    submissionId: v.id("submissions"),
+    reason: v.string(),
+  },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
+
+    const reason = args.reason.trim();
+    if (reason.length === 0) {
+      throw new Error("Rejection reason is required");
+    }
 
     await canRejectSubmission.require(ctx, user._id, {
       submissionId: args.submissionId,
@@ -463,7 +471,9 @@ export const reject = mutation({
     }
 
     const wasAlreadyRejected = submission.state === "rejected";
-    await lifecycleReject(ctx, args.submissionId, user._id);
+    await lifecycleReject(ctx, args.submissionId, user._id, {
+      rejectionReason: reason,
+    });
 
     // T026: Notify team members about submission rejection (only when state changed)
     if (!wasAlreadyRejected) {
@@ -481,7 +491,7 @@ export const reject = mutation({
           submissionId: args.submissionId,
           teamName: team.name,
           description: submission.description,
-          reason: undefined,
+          reason,
         });
       }
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { CardContent } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useDebounce } from "@/hooks/useDebounce";
 
+import { RejectReasonDialog } from "../reject-reason-dialog";
 import { CarouselReviewCard } from "./submission-review-card-carousel";
 import { filterReviewItems, sortReviewItems } from "./transforms";
 import type { ReviewItem } from "./types";
@@ -22,16 +23,12 @@ import type { ReviewItem } from "./types";
 export interface SubmissionReviewListProps {
   items: ReviewItem[];
   onApprove: (item: ReviewItem) => Promise<void>;
-  onReject: (item: ReviewItem) => Promise<void>;
+  onReject: (item: ReviewItem, reason: string) => Promise<void>;
   showFilters?: boolean;
   defaultSortBy?: "date-desc" | "date-asc" | "points-desc" | "points-asc";
   emptyMessage?: string;
 }
 
-/**
- * Filterable, sortable list of review items with search
- * Supports both individual submissions and submission groups
- */
 export function SubmissionReviewList({
   items,
   onApprove,
@@ -44,28 +41,45 @@ export function SubmissionReviewList({
   const [sortBy, setSortBy] = useState<
     "date-desc" | "date-asc" | "points-desc" | "points-asc"
   >(defaultSortBy);
+  const [rejectingItem, setRejectingItem] = useState<ReviewItem | null>(null);
+  const [isRejecting, setIsRejecting] = useState(false);
 
-  // Debounce search for performance
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // Filter and sort items
   const filteredAndSortedItems = useMemo(() => {
     let result = items;
-
-    // Apply search filter
     if (debouncedSearch) {
       result = filterReviewItems(result, debouncedSearch);
     }
-
-    // Apply sorting
     result = sortReviewItems(result, sortBy);
-
     return result;
   }, [items, debouncedSearch, sortBy]);
 
+  const handleRejectConfirm = useCallback(
+    async (reason: string) => {
+      if (!rejectingItem) return;
+      setIsRejecting(true);
+      try {
+        await onReject(rejectingItem, reason);
+      } finally {
+        setIsRejecting(false);
+        setRejectingItem(null);
+      }
+    },
+    [rejectingItem, onReject],
+  );
+
   return (
     <div className="space-y-4">
-      {/* Filters */}
+      <RejectReasonDialog
+        open={rejectingItem !== null}
+        onOpenChange={(open) => {
+          if (!open) setRejectingItem(null);
+        }}
+        onConfirm={handleRejectConfirm}
+        isSubmitting={isRejecting}
+      />
+
       {showFilters && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative max-w-md flex-1">
@@ -96,7 +110,6 @@ export function SubmissionReviewList({
         </div>
       )}
 
-      {/* Count */}
       {items.length > 0 && (
         <p className="text-muted-foreground text-sm">
           Showing {filteredAndSortedItems.length} of {items.length}{" "}
@@ -104,7 +117,6 @@ export function SubmissionReviewList({
         </p>
       )}
 
-      {/* Empty state */}
       {filteredAndSortedItems.length === 0 && (
         <div className="rounded-lg border border-dashed">
           <CardContent>
@@ -118,7 +130,6 @@ export function SubmissionReviewList({
         </div>
       )}
 
-      {/* Submissions grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filteredAndSortedItems.map((item) => {
           const key =
@@ -131,7 +142,7 @@ export function SubmissionReviewList({
               key={key}
               item={item}
               onApprove={() => onApprove(item)}
-              onReject={() => onReject(item)}
+              onReject={async () => setRejectingItem(item)}
             />
           );
         })}
