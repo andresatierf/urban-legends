@@ -116,28 +116,20 @@ function SideRail({
     <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
       <div className="flex items-center justify-between gap-2">
         <div className="bg-muted text-muted-foreground inline-flex rounded-lg p-[3px]">
-          <button
-            type="button"
-            onClick={() => setPanel("review")}
-            className={cn(
-              "rounded-md border-2 border-transparent px-3 py-1 text-xs font-medium transition-colors",
-              panel === "review" &&
-                "border-foreground bg-background text-foreground shadow-[2px_2px_0_var(--color-shadow)]",
-            )}
-          >
-            Review
-          </button>
-          <button
-            type="button"
-            onClick={() => setPanel("manage")}
-            className={cn(
-              "rounded-md border-2 border-transparent px-3 py-1 text-xs font-medium transition-colors",
-              panel === "manage" &&
-                "border-foreground bg-background text-foreground shadow-[2px_2px_0_var(--color-shadow)]",
-            )}
-          >
-            Manage
-          </button>
+          {(["review", "manage"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setPanel(value)}
+              className={cn(
+                "rounded-md border-2 border-transparent px-3 py-1 text-xs font-medium capitalize transition-colors",
+                panel === value &&
+                  "border-foreground bg-background text-foreground shadow-[2px_2px_0_var(--color-shadow)]",
+              )}
+            >
+              {value}
+            </button>
+          ))}
         </div>
         <Button
           variant="ghost"
@@ -158,7 +150,7 @@ function ReviewRail() {
   const allPending = DEMO_REVIEW_ITEMS.filter(
     (i) => i.data.state === "pending",
   );
-  const pending = allPending.length;
+  const pendingCount = allPending.length;
   const pendingItems = allPending.slice(0, 5);
   return (
     <Card variant="deep" size="sm" className="gap-3">
@@ -166,11 +158,11 @@ function ReviewRail() {
         <div>
           <Eyebrow color="gold">Review queue</Eyebrow>
           <p className="text-muted-foreground text-xs">
-            {pending} awaiting · oldest first
+            {pendingCount} awaiting · oldest first
           </p>
         </div>
         <Badge variant="warning" size="sm">
-          {pending}
+          {pendingCount}
         </Badge>
       </div>
       <div className="space-y-2">

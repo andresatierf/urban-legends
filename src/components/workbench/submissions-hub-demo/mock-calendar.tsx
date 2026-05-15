@@ -53,9 +53,9 @@ export function MockCalendar({ monthLabel = "May 2026", compact }: Props) {
           ))}
         </div>
         <div className="grid grid-cols-7 gap-2">
-          {days.map((d, i) => (
+          {days.map((d) => (
             <div
-              key={`${d.date}-${i}`}
+              key={d.date}
               className={cn(
                 "relative flex flex-col items-center justify-center rounded-lg border-2 text-xs font-medium transition-colors",
                 compact ? "aspect-square" : "aspect-square sm:aspect-[5/4]",
