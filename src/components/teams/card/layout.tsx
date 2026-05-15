@@ -7,6 +7,7 @@ import {
 
 import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
 import { CaptainSpotlight } from "./captain-spotlight";
+import { joinTeamAction } from "./join-team-action";
 import { MomentumCell } from "./momentum-cell";
 import { SparklineCell } from "./sparkline-cell";
 import { StatsStrip } from "./stats-strip";
@@ -18,10 +19,9 @@ export { TeamCardSkeleton } from "./skeleton";
 type Props = {
   data: TeamCardData;
   onLeave?: () => void;
-  joinSlot?: React.ReactNode;
 };
 
-export function TeamCard({ data, onLeave, joinSlot }: Props) {
+export function TeamCard({ data, onLeave }: Props) {
   const { team, tournament, memberCount, isUserMember, userRole } = data;
   const isFull = team.maxMembers != null && memberCount >= team.maxMembers;
   const isCaptain = userRole === "captain";
@@ -57,7 +57,8 @@ export function TeamCard({ data, onLeave, joinSlot }: Props) {
       params: { teamId: team._id },
     });
   } else {
-    if (joinSlot) actions.push({ slot: joinSlot });
+    const join = joinTeamAction(data, isFull);
+    if (join) actions.push(join);
     actions.push({
       label: "View",
       variant: "default",
