@@ -7,6 +7,7 @@ type Props = {
 };
 
 export function RulesCard({ tournament }: Props) {
+  const { individualPoints, teamExercisePoints } = tournament.scoringConfig;
   return (
     <Card>
       <CardHeader>
@@ -24,19 +25,16 @@ export function RulesCard({ tournament }: Props) {
           <span>{tournament.maxSubmissionsPerDay ?? "∞"}</span>
         </div>
         <Separator />
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Individual</span>
-          <span>
-            {tournament.scoringConfig.individualPoints.base}/
-            {tournament.scoringConfig.individualPoints.advanced}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Team exercise</span>
-          <span>
-            {tournament.scoringConfig.teamExercisePoints.base}/
-            {tournament.scoringConfig.teamExercisePoints.advanced}
-          </span>
+        <div className="grid grid-cols-[auto_1fr_1fr] gap-x-3 gap-y-1">
+          <span />
+          <span className="text-muted-foreground text-center">Individual</span>
+          <span className="text-muted-foreground text-center">Team</span>
+          <span className="text-muted-foreground">Base</span>
+          <span className="text-center">{individualPoints.base}</span>
+          <span className="text-center">{teamExercisePoints.base}</span>
+          <span className="text-muted-foreground">Advanced</span>
+          <span className="text-center">{individualPoints.advanced}</span>
+          <span className="text-center">{teamExercisePoints.advanced}</span>
         </div>
       </CardContent>
     </Card>
