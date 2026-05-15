@@ -14,4 +14,6 @@ export type TeamCardData = {
   isUserMember: boolean;
   isUserInTeam: boolean;
   userRole?: "captain" | "member" | null;
+  rank?: number;
+  totalTeams?: number;
 };

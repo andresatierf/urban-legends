@@ -4,14 +4,16 @@ import {
   ComposedCard,
   type ComposedCardAction,
 } from "@/components/common/card/composed-card";
-import type { BadgeProps } from "@/components/ui/badge";
 
 import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
-import { Skeleton } from "../../ui/skeleton";
-import { ActivityGraph } from "./activity-graph";
-import { MemberRoster } from "./member-roster";
-import { RoleBanner } from "./role-banner";
+import { CaptainSpotlight } from "./captain-spotlight";
+import { MomentumCell } from "./momentum-cell";
+import { SparklineCell } from "./sparkline-cell";
+import { StatsStrip } from "./stats-strip";
 import type { TeamCardData } from "./types";
+import { ViewerRoleRibbon } from "./viewer-role-ribbon";
+
+export { TeamCardSkeleton } from "./skeleton";
 
 type Props = {
   data: TeamCardData;
@@ -22,15 +24,15 @@ type Props = {
 export function TeamCard({ data, onLeave, joinSlot }: Props) {
   const { team, tournament, memberCount, isUserMember, userRole } = data;
   const isFull = team.maxMembers != null && memberCount >= team.maxMembers;
+  const isCaptain = userRole === "captain";
 
-  const badge: BadgeProps[] = [
-    { variant: "warning", children: `${team.points.toLocaleString()} pts` },
+  const badge = [
     isFull
-      ? { variant: "error", children: "Full" }
-      : {
+      ? ({ variant: "error" as const, children: "Full" } as const)
+      : ({
           variant: team.joinPolicy === "open" ? "success" : "neutral",
           children: team.joinPolicy === "open" ? "Open" : "Closed",
-        },
+        } as const),
   ];
 
   const canLeave =
@@ -65,52 +67,37 @@ export function TeamCard({ data, onLeave, joinSlot }: Props) {
     });
   }
 
-  return (
-    <ComposedCard
-      className={isUserMember ? "border-sky" : undefined}
-      title={team.name}
-      eyebrow={
-        tournament
-          ? `${tournament.name} · ${STATUS_LABEL[getTournamentStatus(tournament)]}`
-          : undefined
-      }
-      eyebrowTo={tournament ? "/tournaments/$tournamentId" : undefined}
-      eyebrowParams={tournament ? { tournamentId: tournament._id } : undefined}
-      badge={badge}
-      actions={actions}
-    >
-      <ActivityGraph recentActivity={team.recentActivity} />
-      <MemberRoster data={data} />
-      <RoleBanner data={data} />
-    </ComposedCard>
-  );
-}
+  const borderClass = isCaptain
+    ? "border-warning"
+    : isUserMember
+      ? "border-sky"
+      : undefined;
 
-export function TeamCardSkeleton() {
   return (
-    <div className="border-ink shadow-fd-lg bg-card flex flex-col gap-0 overflow-visible rounded-2xl border-2">
-      <header className="border-ink bg-paper-deep flex items-center justify-between gap-3 rounded-t-[18px] border-b-2 px-4 py-3">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Skeleton className="h-3 w-32" />
-          <Skeleton className="h-5 w-40" />
+    <div className="relative">
+      <ViewerRoleRibbon userRole={userRole} />
+      <ComposedCard
+        className={borderClass}
+        title={team.name}
+        eyebrow={
+          tournament
+            ? `${tournament.name} · ${STATUS_LABEL[getTournamentStatus(tournament)]}`
+            : undefined
+        }
+        eyebrowTo={tournament ? "/tournaments/$tournamentId" : undefined}
+        eyebrowParams={
+          tournament ? { tournamentId: tournament._id } : undefined
+        }
+        badge={badge}
+        actions={actions}
+      >
+        <StatsStrip data={data} />
+        <div className="grid grid-cols-2 gap-2">
+          <MomentumCell data={data} />
+          <SparklineCell data={data} />
         </div>
-        <Skeleton className="h-5 w-12" />
-      </header>
-      <div className="flex flex-1 flex-col gap-3 px-4 py-3">
-        <Skeleton className="h-12 w-full rounded-md" />
-        <div className="space-y-1.5">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <Skeleton className="size-6 rounded-full" />
-              <Skeleton className="h-3 flex-1" />
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="-mb-3.5 flex items-center gap-2 px-4">
-        <Skeleton className="h-7 w-16" />
-        <Skeleton className="ml-auto h-7 w-24" />
-      </div>
+        <CaptainSpotlight data={data} />
+      </ComposedCard>
     </div>
   );
 }

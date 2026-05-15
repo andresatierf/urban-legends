@@ -43,6 +43,7 @@ export default defineSchema({
             approved: v.number(),
             pending: v.number(),
             rejected: v.number(),
+            points: v.optional(v.number()),
           }),
         ),
       }),

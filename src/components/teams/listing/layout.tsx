@@ -200,6 +200,8 @@ export function TeamListing({
                     isUserMember,
                     isUserInTeam: userTournamentIds.has(team.tournamentId),
                     userRole: role,
+                    rank: team.rank,
+                    totalTeams: team.totalTeams,
                   }}
                 />
               );

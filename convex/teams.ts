@@ -135,12 +135,40 @@ export const listWithMembers = query({
       },
     });
 
+    const tournamentIds = Array.from(
+      new Set(enriched.map((t) => t.tournamentId)),
+    );
+    const rankings = new Map<string, { rank: number; totalTeams: number }>();
+    await Promise.all(
+      tournamentIds.map(async (tournamentId) => {
+        const rankedTeams = await ctx.db
+          .query("teams")
+          .withIndex("by_tournament_and_points", (q) =>
+            q.eq("tournamentId", tournamentId),
+          )
+          .order("desc")
+          .collect();
+        rankedTeams.forEach((t, idx) => {
+          rankings.set(t._id, {
+            rank: idx + 1,
+            totalTeams: rankedTeams.length,
+          });
+        });
+      }),
+    );
+
     return enriched.map((enrichedTeam) => {
       const { teamMembers, ...team } = enrichedTeam;
       const members = teamMembers
         .map((m) => (m.user ? { ...m.user, memberRole: m.role } : null))
         .filter((m): m is NonNullable<typeof m> => m !== null);
-      return { ...team, members };
+      const ranking = rankings.get(team._id);
+      return {
+        ...team,
+        members,
+        rank: ranking?.rank,
+        totalTeams: ranking?.totalTeams,
+      };
     });
   },
 });

@@ -90,10 +90,10 @@ export async function recomputeRecentActivity(
 
   const buckets = new Map<
     string,
-    { approved: number; pending: number; rejected: number }
+    { approved: number; pending: number; rejected: number; points: number }
   >();
   for (const date of dates) {
-    buckets.set(date, { approved: 0, pending: 0, rejected: 0 });
+    buckets.set(date, { approved: 0, pending: 0, rejected: 0, points: 0 });
   }
 
   for (const s of submissions) {
@@ -101,8 +101,10 @@ export async function recomputeRecentActivity(
     // depending on insertion path. Bucket by the calendar day prefix.
     const bucket = buckets.get(s.date.slice(0, 10));
     if (!bucket) continue;
-    if (s.state === "approved") bucket.approved++;
-    else if (s.state === "pending") bucket.pending++;
+    if (s.state === "approved") {
+      bucket.approved++;
+      bucket.points += s.pointsEarned ?? 0;
+    } else if (s.state === "pending") bucket.pending++;
     else if (s.state === "rejected") bucket.rejected++;
   }
 
