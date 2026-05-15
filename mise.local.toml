@@ -1,7 +1,0 @@
-[tasks."ralph:once"]
-description = "Run a single ralph iteration against the current ready-for-agent issues"
-run = "bash ralph/once.sh"
-
-[tasks."ralph"]
-description = "Run ralph in a sandboxed loop for N iterations — usage: mise run ralph:afk <iterations>"
-run = "bash ralph/afk.sh"
