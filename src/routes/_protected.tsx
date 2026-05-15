@@ -1,7 +1,7 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
-import { Toaster } from "sonner";
 
 import { Layout } from "@/components/layout";
+import { ThemedToaster } from "@/components/themed-toaster";
 import { fetchClerkAuth } from "@/utils/auth-server";
 
 export const Route = createFileRoute("/_protected")({
@@ -22,7 +22,7 @@ function ProtectedLayout() {
           <Outlet />
         </Layout>
       </main>
-      <Toaster />
+      <ThemedToaster />
     </div>
   );
 }
