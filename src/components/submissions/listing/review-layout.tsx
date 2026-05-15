@@ -22,7 +22,7 @@ export function SubmissionReviewListing({ authority }: Props) {
       <div className="rounded-lg border border-dashed p-12 text-center">
         <p className="text-muted-foreground">
           You don't have reviewer permissions. Looking for{" "}
-          <Link to="/submissions" className="text-foreground underline">
+          <Link to="/submissions/mine" className="text-foreground underline">
             your submissions
           </Link>
           ?

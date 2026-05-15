@@ -88,7 +88,8 @@ function useSidebarItems(
           },
           {
             title: "My Submissions",
-            href: "/submissions",
+            href: "/submissions/mine",
+            roles: ["player"],
             icon: ClipboardList,
             exact: true,
           },
