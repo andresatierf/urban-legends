@@ -22,18 +22,8 @@ type Props = {
 };
 
 export function TeamCard({ data, demo = false }: Props) {
-  const { team, tournament, memberCount, isUserMember, userRole } = data;
-  const isFull = team.maxMembers != null && memberCount >= team.maxMembers;
+  const { team, tournament, isUserMember, userRole } = data;
   const isCaptain = userRole === "captain";
-
-  const badge = [
-    isFull
-      ? ({ variant: "error" as const, children: "Full" } as const)
-      : ({
-          variant: team.joinPolicy === "open" ? "success" : "neutral",
-          children: team.joinPolicy === "open" ? "Open" : "Closed",
-        } as const),
-  ];
 
   return (
     <EdgeOverlay
@@ -53,8 +43,8 @@ export function TeamCard({ data, demo = false }: Props) {
     >
       <ComposedCard
         className={cn("pb-2", {
-          "border-warning": isCaptain,
           "border-sky": isUserMember,
+          "border-warning": isCaptain,
         })}
         title={team.name}
         eyebrow={
@@ -66,7 +56,6 @@ export function TeamCard({ data, demo = false }: Props) {
         eyebrowParams={
           tournament ? { tournamentId: tournament._id } : undefined
         }
-        badge={badge}
       >
         <StatsStrip data={data} />
         <div className="grid grid-cols-2 gap-2">

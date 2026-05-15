@@ -20,8 +20,7 @@ export function JoinTeamButton({
 }) {
   const isFull =
     data.team.maxMembers != null && data.memberCount >= data.team.maxMembers;
-  const isHidden =
-    data.isUserInTeam || data.team.joinPolicy === "closed" || isFull;
+  const isHidden = data.isUserInTeam;
 
   const joinRequests = useQuery(
     api.joinRequests.listUserJoinRequests,
@@ -44,12 +43,28 @@ export function JoinTeamButton({
   if (joinRequest) {
     return (
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
         className="shadow-sm"
         onClick={handleCancel}
       >
         Cancel Request
+      </Button>
+    );
+  }
+
+  if (isFull) {
+    return (
+      <Button variant="destructive" size="sm" className="shadow-sm" disabled>
+        Full
+      </Button>
+    );
+  }
+
+  if (data.team.joinPolicy === "closed") {
+    return (
+      <Button variant="destructive" size="sm" className="shadow-sm" disabled>
+        Closed to Invitations
       </Button>
     );
   }
