@@ -141,15 +141,15 @@ export const listWithMembers = query({
     const rankings = new Map<string, { rank: number; totalTeams: number }>();
     await Promise.all(
       tournamentIds.map(async (tournamentId) => {
-        const rankedTeams = await ctx.db
+        const tournamentTeams = await ctx.db
           .query("teams")
           .withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId))
           .collect();
-        rankedTeams.sort((a, b) => b.points - a.points);
-        rankedTeams.forEach((t, idx) => {
+        tournamentTeams.sort((a, b) => b.points - a.points);
+        tournamentTeams.forEach((t, idx) => {
           rankings.set(t._id, {
             rank: idx + 1,
-            totalTeams: rankedTeams.length,
+            totalTeams: tournamentTeams.length,
           });
         });
       }),
