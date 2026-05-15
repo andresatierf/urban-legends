@@ -11,10 +11,22 @@ import { tryMutate } from "@/lib/utils";
 import { api } from "../../../../convex/_generated/api";
 import type { TeamCardData } from "./types";
 
-export function JoinTeamButton({ data }: { data: TeamCardData }) {
-  const joinRequest = useQuery(api.joinRequests.getUserJoinRequest, {
-    teamId: data.team._id,
-  });
+export function JoinTeamButton({
+  data,
+  demo = false,
+}: {
+  data: TeamCardData;
+  demo?: boolean;
+}) {
+  const isFull =
+    data.team.maxMembers != null && data.memberCount >= data.team.maxMembers;
+  const isHidden =
+    data.isUserInTeam || data.team.joinPolicy === "closed" || isFull;
+
+  const joinRequest = useQuery(
+    api.joinRequests.getUserJoinRequest,
+    isHidden || demo ? "skip" : { teamId: data.team._id },
+  );
   const cancelRequest = useMutation(api.joinRequests.cancelJoinRequest);
 
   const handleCancel = useCallback(() => {
@@ -26,10 +38,7 @@ export function JoinTeamButton({ data }: { data: TeamCardData }) {
     });
   }, [cancelRequest, joinRequest]);
 
-  if (data.isUserInTeam) return null;
-  if (data.team.joinPolicy === "closed") return null;
-  if (data.team.maxMembers != null && data.memberCount >= data.team.maxMembers)
-    return null;
+  if (isHidden) return null;
 
   if (joinRequest?.status === "pending") {
     return (

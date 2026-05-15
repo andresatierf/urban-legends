@@ -17,9 +17,10 @@ export { TeamCardSkeleton } from "./skeleton";
 
 type Props = {
   data: TeamCardData;
+  demo?: boolean;
 };
 
-export function TeamCard({ data }: Props) {
+export function TeamCard({ data, demo = false }: Props) {
   const { team, tournament, memberCount, isUserMember, userRole } = data;
   const isFull = team.maxMembers != null && memberCount >= team.maxMembers;
   const isCaptain = userRole === "captain";
@@ -44,7 +45,7 @@ export function TeamCard({ data }: Props) {
       topRight={<ViewerRoleRibbon userRole={userRole} />}
       bottomLeft={
         <>
-          <JoinTeamButton data={data} />
+          <JoinTeamButton data={data} demo={demo} />
           <LeaveTeamButton data={data} />
         </>
       }

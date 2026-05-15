@@ -16,6 +16,7 @@ export function TeamSection() {
         {DEMO_TEAM_ITEMS.map((item) => (
           <div key={item.team._id}>
             <TeamCard
+              demo
               data={{
                 team: item.team,
                 tournament: item.tournament,
