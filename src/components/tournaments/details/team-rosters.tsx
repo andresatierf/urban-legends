@@ -3,7 +3,7 @@ import { Users } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 
 import { SectionHeader } from "../../section-header";
-import { TeamCardContainer } from "../../teams/card/container";
+import { TeamCard } from "../../teams/card/layout";
 import type { TournamentDetails, TournamentTeam } from "./types";
 
 type Props = {
@@ -30,7 +30,7 @@ export function TeamRosters({ data, sortedTeams }: Props) {
               : null;
 
           return (
-            <TeamCardContainer
+            <TeamCard
               key={team._id}
               data={{
                 team,

@@ -1,10 +1,13 @@
+import { useMutation } from "convex/react";
 import { LogOut, Settings } from "lucide-react";
 
 import {
   ComposedCard,
   type ComposedCardAction,
 } from "@/components/common/card/composed-card";
+import { tryMutate } from "@/lib/utils";
 
+import { api } from "../../../../convex/_generated/api";
 import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
 import { CaptainSpotlight } from "./captain-spotlight";
 import { joinTeamAction } from "./join-team-action";
@@ -18,13 +21,21 @@ export { TeamCardSkeleton } from "./skeleton";
 
 type Props = {
   data: TeamCardData;
-  onLeave?: () => void;
 };
 
-export function TeamCard({ data, onLeave }: Props) {
+export function TeamCard({ data }: Props) {
   const { team, tournament, memberCount, isUserMember, userRole } = data;
   const isFull = team.maxMembers != null && memberCount >= team.maxMembers;
   const isCaptain = userRole === "captain";
+
+  const leaveTeam = useMutation(api.teams.leaveTeam);
+  const handleLeave = () => {
+    void tryMutate({
+      fn: () => leaveTeam({ teamId: team._id }),
+      successToast: "Successfully left the team",
+      defaultFailureToast: "Failed to leave team",
+    });
+  };
 
   const badge = [
     isFull
@@ -40,12 +51,12 @@ export function TeamCard({ data, onLeave }: Props) {
 
   const actions: ComposedCardAction[] = [];
   if (isUserMember) {
-    if (canLeave && onLeave) {
+    if (canLeave) {
       actions.push({
         label: "Leave",
         icon: <LogOut className="size-3.5" />,
         variant: "destructive",
-        onClick: onLeave,
+        onClick: handleLeave,
       });
     }
     actions.push({
