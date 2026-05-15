@@ -1,27 +1,27 @@
-import { LogOut, Settings } from "lucide-react";
-
-import {
-  ComposedCard,
-  type ComposedCardAction,
-} from "@/components/common/card/composed-card";
+import { ComposedCard } from "@/components/common/card/composed-card";
+import { EdgeOverlay } from "@/components/common/card/edge-overlay";
+import { cn } from "@/lib/utils";
 
 import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
 import { CaptainSpotlight } from "./captain-spotlight";
+import { JoinTeamButton } from "./join-team-action";
+import { LeaveTeamButton } from "./leave-team-button";
+import { ManageTeamButton } from "./manage-team-button";
 import { MomentumCell } from "./momentum-cell";
 import { SparklineCell } from "./sparkline-cell";
 import { StatsStrip } from "./stats-strip";
 import type { TeamCardData } from "./types";
+import { ViewTeamButton } from "./view-team-button";
 import { ViewerRoleRibbon } from "./viewer-role-ribbon";
 
 export { TeamCardSkeleton } from "./skeleton";
 
 type Props = {
   data: TeamCardData;
-  onLeave?: () => void;
-  joinSlot?: React.ReactNode;
+  demo?: boolean;
 };
 
-export function TeamCard({ data, onLeave, joinSlot }: Props) {
+export function TeamCard({ data, demo = false }: Props) {
   const { team, tournament, memberCount, isUserMember, userRole } = data;
   const isFull = team.maxMembers != null && memberCount >= team.maxMembers;
   const isCaptain = userRole === "captain";
@@ -35,49 +35,27 @@ export function TeamCard({ data, onLeave, joinSlot }: Props) {
         } as const),
   ];
 
-  const canLeave =
-    userRole === "member" || (userRole === "captain" && memberCount === 1);
-
-  const actions: ComposedCardAction[] = [];
-  if (isUserMember) {
-    if (canLeave && onLeave) {
-      actions.push({
-        label: "Leave",
-        icon: <LogOut className="size-3.5" />,
-        variant: "destructive",
-        onClick: onLeave,
-      });
-    }
-    actions.push({
-      label: "Manage",
-      icon: <Settings className="size-3.5" />,
-      variant: "default",
-      align: "end",
-      to: "/teams/$teamId",
-      params: { teamId: team._id },
-    });
-  } else {
-    if (joinSlot) actions.push({ slot: joinSlot });
-    actions.push({
-      label: "View",
-      variant: "default",
-      align: "end",
-      to: "/teams/$teamId",
-      params: { teamId: team._id },
-    });
-  }
-
-  const borderClass = isCaptain
-    ? "border-warning"
-    : isUserMember
-      ? "border-sky"
-      : undefined;
-
   return (
-    <div className="relative">
-      <ViewerRoleRibbon userRole={userRole} />
+    <EdgeOverlay
+      topRight={<ViewerRoleRibbon userRole={userRole} />}
+      bottomLeft={
+        <>
+          <JoinTeamButton data={data} demo={demo} />
+          <LeaveTeamButton data={data} />
+        </>
+      }
+      bottomRight={
+        <>
+          <ViewTeamButton data={data} />
+          <ManageTeamButton data={data} />
+        </>
+      }
+    >
       <ComposedCard
-        className={borderClass}
+        className={cn("pb-2", {
+          "border-warning": isCaptain,
+          "border-sky": isUserMember,
+        })}
         title={team.name}
         eyebrow={
           tournament
@@ -89,7 +67,6 @@ export function TeamCard({ data, onLeave, joinSlot }: Props) {
           tournament ? { tournamentId: tournament._id } : undefined
         }
         badge={badge}
-        actions={actions}
       >
         <StatsStrip data={data} />
         <div className="grid grid-cols-2 gap-2">
@@ -98,6 +75,6 @@ export function TeamCard({ data, onLeave, joinSlot }: Props) {
         </div>
         <CaptainSpotlight data={data} />
       </ComposedCard>
-    </div>
+    </EdgeOverlay>
   );
 }

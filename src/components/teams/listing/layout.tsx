@@ -10,8 +10,7 @@ import type { Doc } from "../../../../convex/_generated/dataModel";
 import { TournamentSwitcher } from "../../dashboard/tournament-switcher";
 import { getTournamentStatus } from "../../tournaments/utils";
 import { Skeleton } from "../../ui/skeleton";
-import { TeamCardContainer } from "../card/container";
-import { TeamCardSkeleton } from "../card/layout";
+import { TeamCard, TeamCardSkeleton } from "../card/layout";
 import { JoinTeamCard } from "../join-team-card";
 import type { TeamWithMembers, TournamentMap } from "./types";
 
@@ -187,7 +186,7 @@ export function TeamListing({
                       ?.memberRole ?? null)
                   : null;
               return (
-                <TeamCardContainer
+                <TeamCard
                   key={team._id}
                   data={{
                     team,

@@ -1,5 +1,6 @@
 import { Crown } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 import type { TeamCardData } from "./types";
@@ -12,15 +13,15 @@ export function ViewerRoleRibbon({
   if (!userRole) return null;
   const isCaptain = userRole === "captain";
   return (
-    <div
-      aria-label={`You are ${userRole} of this team`}
+    <Badge
+      variant="info"
       className={cn(
-        "border-ink absolute -top-2 -right-2 z-10 flex items-center gap-1 rounded-md border-2 px-2 py-0.5 font-mono text-[0.6rem] font-bold tracking-widest uppercase shadow-sm",
-        isCaptain ? "bg-warning text-ink" : "bg-sky text-paper",
+        "bg-sky text-paper! text-label-caps font-bold tracking-widest",
+        { "bg-warning text-ink!": isCaptain },
       )}
     >
       {isCaptain && <Crown className="size-2.5" />}
       {isCaptain ? "Captain" : "You"}
-    </div>
+    </Badge>
   );
 }

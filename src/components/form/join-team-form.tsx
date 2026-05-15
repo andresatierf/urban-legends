@@ -1,8 +1,7 @@
 "use client";
 
-import type { VariantProps } from "class-variance-authority";
-import { useMutation, useQuery } from "convex/react";
-import { Loader2, UserPlus } from "lucide-react";
+import { useMutation } from "convex/react";
+import { Loader2 } from "lucide-react";
 import { useId, useState } from "react";
 import z from "zod";
 
@@ -10,8 +9,8 @@ import { useAppForm } from "@/hooks/form";
 import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../convex/_generated/api";
-import type { Doc, Id } from "../../../convex/_generated/dataModel";
-import { Button, buttonVariants } from "../ui/button";
+import type { Id } from "../../../convex/_generated/dataModel";
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogClose,
@@ -30,33 +29,26 @@ const formSchema = z.object({
 
 type Props = {
   teamId: Id<"teams">;
-  team: Doc<"teams">;
-  currentMemberCount: number;
-  isUserInTeam: boolean;
-  isUserMember: boolean;
-  size?: VariantProps<typeof buttonVariants>["size"];
-  variant?: VariantProps<typeof buttonVariants>["variant"];
+  teamName: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children?: React.ReactNode;
 };
 
-export function JoinTeamFormButton({
+export function JoinTeamFormDialog({
   teamId,
-  team,
-  currentMemberCount,
-  isUserInTeam,
-  isUserMember,
-  size,
-  variant,
+  teamName,
+  open: controlledOpen,
+  onOpenChange,
+  children,
 }: Props) {
   const formId = useId();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
 
-  const joinRequest = useQuery(api.joinRequests.getUserJoinRequest, { teamId });
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
+
   const requestToJoin = useMutation(api.joinRequests.requestToJoin);
-  const cancelRequest = useMutation(api.joinRequests.cancelJoinRequest);
-
-  const isFull = team.maxMembers && currentMemberCount >= team.maxMembers;
-  const isClosed = team.joinPolicy === "closed";
-  const hasPendingRequest = joinRequest?.status === "pending";
 
   const form = useAppForm({
     defaultValues: {
@@ -69,57 +61,12 @@ export function JoinTeamFormButton({
       await tryMutate({
         fn: () =>
           requestToJoin({ teamId, message: message?.trim() || undefined }),
-        onSuccess: () => {
-          setOpen(false);
-        },
+        onSuccess: () => setOpen(false),
         successToast: "Join request sent successfully!",
         defaultFailureToast: "Failed to send join request",
       });
     },
   });
-
-  const handleCancelRequest = async () => {
-    if (!joinRequest) return;
-
-    await tryMutate({
-      fn: () => cancelRequest({ requestId: joinRequest._id }),
-      successToast: "Join request cancelled",
-      defaultFailureToast: "Failed to cancel join request",
-    });
-  };
-
-  // Pending request - show cancel option
-  if (hasPendingRequest) {
-    return (
-      <Button variant="outline" size={size} onClick={handleCancelRequest}>
-        Cancel Request
-      </Button>
-    );
-  }
-
-  // Don't show button if user is already a member
-  if (isUserMember) {
-    return (
-      <Button variant="outline" size={size} disabled>
-        Already Joined
-      </Button>
-    );
-  }
-
-  // User already in a team — no action available
-  if (isUserInTeam) return null;
-
-  // Closed teams can't be joined via request — no action available
-  if (isClosed) return null;
-
-  // Team is full
-  if (isFull) {
-    return (
-      <Button variant="outline" size={size} disabled>
-        Team Full
-      </Button>
-    );
-  }
 
   return (
     <Dialog
@@ -136,15 +83,10 @@ export function JoinTeamFormButton({
           form.handleSubmit();
         }}
       >
-        <DialogTrigger asChild>
-          <Button size={size} variant={variant}>
-            <UserPlus />
-            Request to Join
-          </Button>
-        </DialogTrigger>
+        {children && <DialogTrigger asChild>{children}</DialogTrigger>}
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Request to Join {team.name}</DialogTitle>
+            <DialogTitle>Request to Join {teamName}</DialogTitle>
             <DialogDescription>
               Send a request to join this team. The team captain will review
               your request.

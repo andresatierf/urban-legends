@@ -3,7 +3,7 @@ import { Users } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 
 import { SectionHeader } from "../../section-header";
-import { TeamCardContainer } from "../../teams/card/container";
+import { TeamCard } from "../../teams/card/layout";
 import type { TournamentDetails, TournamentTeam } from "./types";
 
 type Props = {
@@ -20,7 +20,7 @@ export function TeamRosters({ data, sortedTeams }: Props) {
   return (
     <>
       <SectionHeader as="h2" title="Teams" Icon={Users} />
-      <div className="grid gap-3 gap-y-6 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-3 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
         {sortedTeams.map((team, idx) => {
           const isUserMember = data.userTeam?._id === team._id;
           const userRole =
@@ -30,7 +30,7 @@ export function TeamRosters({ data, sortedTeams }: Props) {
               : null;
 
           return (
-            <TeamCardContainer
+            <TeamCard
               key={team._id}
               data={{
                 team,
