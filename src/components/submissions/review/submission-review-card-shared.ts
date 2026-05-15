@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { BadgeProps } from "@/components/ui/badge";
-import { tryMutate } from "@/lib/utils";
 
 import type { ReviewItem } from "./types";
 
@@ -82,33 +81,21 @@ export function useReviewActions(
   const handleApprove = async () => {
     if (!onApprove) return;
     setIsApproving(true);
-    await tryMutate({
-      fn: onApprove,
-      successToast:
-        item.type === "group"
-          ? "Team activity approved"
-          : "Submission approved",
-      defaultFailureToast: "Failed to approve",
-      onFinally: () => {
-        if (mountedRef.current) setIsApproving(false);
-      },
-    });
+    try {
+      await onApprove();
+    } finally {
+      if (mountedRef.current) setIsApproving(false);
+    }
   };
 
   const handleReject = async () => {
     if (!onReject) return;
     setIsRejecting(true);
-    await tryMutate({
-      fn: onReject,
-      successToast:
-        item.type === "group"
-          ? "Team activity rejected"
-          : "Submission rejected",
-      defaultFailureToast: "Failed to reject",
-      onFinally: () => {
-        if (mountedRef.current) setIsRejecting(false);
-      },
-    });
+    try {
+      await onReject();
+    } finally {
+      if (mountedRef.current) setIsRejecting(false);
+    }
   };
 
   return { isApproving, isRejecting, handleApprove, handleReject };
