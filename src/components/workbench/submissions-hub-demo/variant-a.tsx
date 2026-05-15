@@ -162,15 +162,11 @@ function ManagerPanel() {
         <TabsTrigger value="pending">Pending</TabsTrigger>
         <TabsTrigger value="done">Done</TabsTrigger>
       </TabsList>
-      <TabsContent value="all">
-        <MockReviewList filter="all" showFilters />
-      </TabsContent>
-      <TabsContent value="pending">
-        <MockReviewList filter="pending" showFilters />
-      </TabsContent>
-      <TabsContent value="done">
-        <MockReviewList filter="done" showFilters />
-      </TabsContent>
+      {(["all", "pending", "done"] as const).map((tab) => (
+        <TabsContent key={tab} value={tab}>
+          <MockReviewList filter={tab} showFilters />
+        </TabsContent>
+      ))}
     </Tabs>
   );
 }

@@ -58,7 +58,8 @@ export function MockCalendar({ monthLabel = "May 2026", compact }: Props) {
               key={d.date}
               className={cn(
                 "relative flex flex-col items-center justify-center rounded-lg border-2 text-xs font-medium transition-colors",
-                compact ? "aspect-square" : "aspect-square sm:aspect-[5/4]",
+                "aspect-square",
+                !compact && "sm:aspect-[5/4]",
                 STATE_STYLES[d.state],
                 !d.inMonth && "opacity-30",
               )}
