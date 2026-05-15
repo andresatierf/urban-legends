@@ -35,7 +35,7 @@ export function useReviewActions() {
         fn: () =>
           reject({
             submissionId: item.data.submission._id,
-            reason: reason || undefined,
+            reason,
           }),
         successToast: "Submission rejected successfully",
         defaultFailureToast: "Failed to reject submission",
@@ -45,7 +45,7 @@ export function useReviewActions() {
         fn: () =>
           rejectGroup({
             groupId: item.data.group._id,
-            reason: reason || undefined,
+            reason,
           }),
         successToast: "Team activity rejected successfully",
         defaultFailureToast: "Failed to reject team activity",

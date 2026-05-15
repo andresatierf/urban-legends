@@ -58,7 +58,7 @@ export function Sidebar({ data }: { data: SubmissionDetailsData }) {
           fn: () =>
             rejectSubmission({
               submissionId: submission._id,
-              reason: reason || undefined,
+              reason,
             }),
           successToast: "Submission rejected successfully",
           defaultFailureToast: "Failed to reject submission",
