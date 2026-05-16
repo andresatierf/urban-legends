@@ -47,6 +47,21 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     label: "Submission Card",
     group: "components",
   },
+  {
+    path: "/workbench/components/join-team-card",
+    label: "Join Team Card",
+    group: "components",
+  },
+  {
+    path: "/workbench/components/podium",
+    label: "Podium",
+    group: "components",
+  },
+  {
+    path: "/workbench/states/empty-loading",
+    label: "Empty & Loading",
+    group: "states",
+  },
 ];
 
 export const GROUPED_WORKBENCH_ENTRIES: Map<string, WorkbenchEntry[]> =
