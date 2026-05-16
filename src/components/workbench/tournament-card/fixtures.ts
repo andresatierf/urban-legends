@@ -3,7 +3,19 @@ import type { TournamentStatus } from "@/components/tournaments/utils";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 import type { TournamentWithAuthority } from "../../../../convex/tournaments";
 
-type PlayerContext = "none" | "member" | "captain";
+export type PlayerContext = "none" | "member" | "captain";
+
+export const TOURNAMENT_STATUSES: readonly TournamentStatus[] = [
+  "active",
+  "upcoming",
+  "ended",
+] as const;
+
+export const PLAYER_CONTEXTS: readonly PlayerContext[] = [
+  "none",
+  "member",
+  "captain",
+] as const;
 
 export type TournamentDemoItem = {
   tournament: TournamentWithAuthority;
@@ -149,3 +161,19 @@ export const DEMO_TOURNAMENT_ITEMS: TournamentDemoItem[] = MATRIX.map(
     return makeItem(idx, name, status, ctx, teams, pending);
   },
 );
+
+const TOURNAMENT_LOOKUP = new Map<string, TournamentDemoItem>(
+  DEMO_TOURNAMENT_ITEMS.map((item) => [
+    `${item.status}:${item.playerContext}`,
+    item,
+  ]),
+);
+
+export function getTournamentDemoItem(
+  status: TournamentStatus,
+  playerContext: PlayerContext,
+): TournamentDemoItem | undefined {
+  return TOURNAMENT_LOOKUP.get(`${status}:${playerContext}`);
+}
+
+export const PLAYER_CONTEXT_LABELS = CONTEXT_LABELS;

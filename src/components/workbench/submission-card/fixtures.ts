@@ -7,8 +7,37 @@ import type {
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 import type { UserWithRoles } from "../../../../convex/users";
 
-type State = "pending" | "approved" | "rejected" | "deleted";
-type Tier = "base" | "advanced";
+export type SubmissionState = "pending" | "approved" | "rejected" | "deleted";
+type State = SubmissionState;
+export type SubmissionTier = "base" | "advanced";
+type Tier = SubmissionTier;
+export type SubmissionType = "individual" | "group";
+
+export const SUBMISSION_STATES: readonly SubmissionState[] = [
+  "pending",
+  "approved",
+  "rejected",
+  "deleted",
+] as const;
+
+export const SUBMISSION_TIERS: readonly SubmissionTier[] = [
+  "base",
+  "advanced",
+] as const;
+
+export const SUBMISSION_TYPES: readonly SubmissionType[] = [
+  "individual",
+  "group",
+] as const;
+
+export type EvidenceCount = "1" | "2" | "3" | "4" | "5";
+export const EVIDENCE_COUNTS: readonly EvidenceCount[] = [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+] as const;
 
 type IndividualReviewItem = Extract<ReviewItem, { type: "individual" }>;
 type GroupReviewItem = Extract<ReviewItem, { type: "group" }>;
@@ -104,8 +133,8 @@ let individualCounter = 0;
 function makeIndividual(
   state: State,
   evidenceCount: number,
+  tier: Tier,
 ): IndividualReviewItem {
-  const tier: Tier = evidenceCount >= 4 ? "advanced" : "base";
   const idx = individualCounter++;
   const seed = `ind-${idx}`;
   const evidence = Array.from({ length: evidenceCount }, (_, i) =>
@@ -139,8 +168,11 @@ function makeIndividual(
 }
 
 let groupCounter = 0;
-function makeGroup(state: State, submitterCount: number): GroupReviewItem {
-  const tier: Tier = submitterCount >= 4 ? "advanced" : "base";
+function makeGroup(
+  state: State,
+  submitterCount: number,
+  tier: Tier,
+): GroupReviewItem {
   const idx = groupCounter++;
   const seed = `grp-${idx}`;
   const submitters = Array.from({ length: submitterCount }, (_, i) =>
@@ -190,13 +222,42 @@ function makeGroup(state: State, submitterCount: number): GroupReviewItem {
   };
 }
 
-const STATES: State[] = ["pending", "approved", "rejected", "deleted"];
-const COUNTS = [1, 2, 3, 4, 5];
+const COUNTS = [1, 2, 3, 4, 5] as const;
 
-export const DEMO_INDIVIDUAL_ITEMS: IndividualReviewItem[] = STATES.flatMap(
-  (state) => COUNTS.map((count) => makeIndividual(state, count)),
-);
+type SubmissionDemoKey = {
+  type: SubmissionType;
+  tier: SubmissionTier;
+  state: SubmissionState;
+  count: EvidenceCount;
+};
 
-export const DEMO_GROUP_ITEMS: GroupReviewItem[] = STATES.flatMap((state) =>
-  COUNTS.map((count) => makeGroup(state, count)),
-);
+const SUBMISSION_LOOKUP = new Map<string, ReviewItem>();
+
+function keyOf(k: SubmissionDemoKey): string {
+  return `${k.type}:${k.tier}:${k.state}:${k.count}`;
+}
+
+for (const tier of SUBMISSION_TIERS) {
+  for (const state of SUBMISSION_STATES) {
+    for (const count of COUNTS) {
+      const evidenceCountStr = String(count) as EvidenceCount;
+      SUBMISSION_LOOKUP.set(
+        keyOf({ type: "individual", tier, state, count: evidenceCountStr }),
+        makeIndividual(state, count, tier),
+      );
+      SUBMISSION_LOOKUP.set(
+        keyOf({ type: "group", tier, state, count: evidenceCountStr }),
+        makeGroup(state, count, tier),
+      );
+    }
+  }
+}
+
+export function getSubmissionDemoItem(
+  type: SubmissionType,
+  tier: SubmissionTier,
+  state: SubmissionState,
+  count: EvidenceCount,
+): ReviewItem | undefined {
+  return SUBMISSION_LOOKUP.get(keyOf({ type, tier, state, count }));
+}

@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { EyebrowSpecimens } from "@/components/workbench/eyebrow-specimens";
 import { TokenWorkbench } from "@/components/workbench/tokens";
 import { TypeScaleSpecimens } from "@/components/workbench/type-scale-specimens";
 
@@ -15,7 +14,6 @@ function TokenWorkbenchPage() {
     <div className="space-y-12">
       <TokenWorkbench />
       <TypeScaleSpecimens />
-      <EyebrowSpecimens />
     </div>
   );
 }

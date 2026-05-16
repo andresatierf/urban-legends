@@ -27,6 +27,26 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "primitives",
   },
   { path: "/workbench/primitives/table", label: "Table", group: "primitives" },
+  {
+    path: "/workbench/components/eyebrow",
+    label: "Eyebrow",
+    group: "components",
+  },
+  {
+    path: "/workbench/components/tournament-card",
+    label: "Tournament Card",
+    group: "components",
+  },
+  {
+    path: "/workbench/components/team-card",
+    label: "Team Card",
+    group: "components",
+  },
+  {
+    path: "/workbench/components/submission-card",
+    label: "Submission Card",
+    group: "components",
+  },
 ];
 
 export const GROUPED_WORKBENCH_ENTRIES: Map<string, WorkbenchEntry[]> =
