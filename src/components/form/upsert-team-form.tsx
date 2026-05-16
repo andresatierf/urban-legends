@@ -104,24 +104,24 @@ export function UpsertTeamFormDialog({
         form.reset();
       }}
     >
-      <form
-        id={formId}
-        onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}
-      >
-        {children ? (
-          <DialogTrigger render={children as React.ReactElement} />
-        ) : (
-          controlledOpen === undefined &&
-          onOpenChange === undefined && (
-            <DialogTrigger render={<Button />}>
-              {team ? "Update Team" : "Create Team"}
-            </DialogTrigger>
-          )
-        )}
-        <DialogContent className="sm:max-w-lg">
+      {children ? (
+        <DialogTrigger render={children as React.ReactElement} />
+      ) : (
+        controlledOpen === undefined &&
+        onOpenChange === undefined && (
+          <DialogTrigger render={<Button />}>
+            {team ? "Update Team" : "Create Team"}
+          </DialogTrigger>
+        )
+      )}
+      <DialogContent className="sm:max-w-lg">
+        <form
+          id={formId}
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+        >
           <DialogHeader>
             <DialogTitle>
               {team ? "Update Team" : "Create Team"}
@@ -219,8 +219,8 @@ export function UpsertTeamFormDialog({
               </DialogFooter>
             )}
           </form.Subscribe>
-        </DialogContent>
-      </form>
+        </form>
+      </DialogContent>
     </Dialog>
   );
 }

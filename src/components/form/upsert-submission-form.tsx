@@ -133,24 +133,24 @@ export function UpsertSubmissionFormDialog({
         setUploaderKey((k) => k + 1);
       }}
     >
-      <form
-        id={formId}
-        onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}
-      >
-        {children ? (
-          <DialogTrigger render={children as React.ReactElement} />
-        ) : (
-          controlledOpen === undefined &&
-          onOpenChange === undefined && (
-            <DialogTrigger render={<Button type="button" />}>
-              {submission ? "Edit Submission" : "Create Submission"}
-            </DialogTrigger>
-          )
-        )}
-        <DialogContent className="sm:max-w-lg">
+      {children ? (
+        <DialogTrigger render={children as React.ReactElement} />
+      ) : (
+        controlledOpen === undefined &&
+        onOpenChange === undefined && (
+          <DialogTrigger render={<Button type="button" />}>
+            {submission ? "Edit Submission" : "Create Submission"}
+          </DialogTrigger>
+        )
+      )}
+      <DialogContent className="sm:max-w-lg">
+        <form
+          id={formId}
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+        >
           <DialogHeader>
             <DialogTitle>
               {submission ? "Edit Submission" : "Create Submission"}
@@ -281,8 +281,8 @@ export function UpsertSubmissionFormDialog({
               );
             }}
           </form.Subscribe>
-        </DialogContent>
-      </form>
+        </form>
+      </DialogContent>
     </Dialog>
   );
 }

@@ -111,25 +111,25 @@ export function InviteMemberFormDialog({
         form.reset();
       }}
     >
-      <form
-        id={formId}
-        onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}
-      >
-        {children ? (
-          <DialogTrigger render={children as React.ReactElement} />
-        ) : (
-          controlledOpen === undefined &&
-          onOpenChange === undefined && (
-            <DialogTrigger render={<Button type="button" />}>
-              <UserPlus />
-              Invite Member
-            </DialogTrigger>
-          )
-        )}
-        <DialogContent className="sm:max-w-lg">
+      {children ? (
+        <DialogTrigger render={children as React.ReactElement} />
+      ) : (
+        controlledOpen === undefined &&
+        onOpenChange === undefined && (
+          <DialogTrigger render={<Button type="button" />}>
+            <UserPlus />
+            Invite Member
+          </DialogTrigger>
+        )
+      )}
+      <DialogContent className="sm:max-w-lg">
+        <form
+          id={formId}
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Invite Team Member</DialogTitle>
             <DialogDescription>
@@ -185,8 +185,8 @@ export function InviteMemberFormDialog({
               </DialogFooter>
             )}
           </form.Subscribe>
-        </DialogContent>
-      </form>
+        </form>
+      </DialogContent>
     </Dialog>
   );
 }

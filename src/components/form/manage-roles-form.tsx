@@ -89,22 +89,22 @@ export function ManageRolesFormDialog({
         form.reset();
       }}
     >
-      <form
-        id={formId}
-        onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}
-      >
-        {children ? (
-          <DialogTrigger render={children as React.ReactElement} />
-        ) : (
-          controlledOpen === undefined &&
-          onOpenChange === undefined && (
-            <DialogTrigger render={<Button />}>Manage roles</DialogTrigger>
-          )
-        )}
-        <DialogContent className="sm:max-w-lg">
+      {children ? (
+        <DialogTrigger render={children as React.ReactElement} />
+      ) : (
+        controlledOpen === undefined &&
+        onOpenChange === undefined && (
+          <DialogTrigger render={<Button />}>Manage roles</DialogTrigger>
+        )
+      )}
+      <DialogContent className="sm:max-w-lg">
+        <form
+          id={formId}
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Manage Roles for {userName}</DialogTitle>
             <DialogDescription>
@@ -240,8 +240,8 @@ export function ManageRolesFormDialog({
               </DialogFooter>
             )}
           </form.Subscribe>
-        </DialogContent>
-      </form>
+        </form>
+      </DialogContent>
     </Dialog>
   );
 }

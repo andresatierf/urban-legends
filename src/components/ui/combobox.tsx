@@ -33,7 +33,7 @@ function ComboboxTrigger({
       data-slot="combobox-trigger"
       render={<Button variant="outline" size="sm" />}
       className={cn(
-        "[&_svg:not([class*='size-'])]:size-3.5 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
         className,
       )}
       {...props}

@@ -116,25 +116,25 @@ export function UpsertTournamentFormDialog({
         form.reset();
       }}
     >
-      <form
-        id={formId}
-        onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}
-        className="flex"
-      >
-        {children ? (
-          <DialogTrigger render={children as React.ReactElement} />
-        ) : (
-          controlledOpen === undefined &&
-          onOpenChange === undefined && (
-            <DialogTrigger render={<Button />}>
-              {tournament ? "Edit Tournament" : "Create Tournament"}
-            </DialogTrigger>
-          )
-        )}
-        <DialogContent className="sm:max-w-2xl">
+      {children ? (
+        <DialogTrigger render={children as React.ReactElement} />
+      ) : (
+        controlledOpen === undefined &&
+        onOpenChange === undefined && (
+          <DialogTrigger render={<Button />}>
+            {tournament ? "Edit Tournament" : "Create Tournament"}
+          </DialogTrigger>
+        )
+      )}
+      <DialogContent className="sm:max-w-2xl">
+        <form
+          id={formId}
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+          className="flex"
+        >
           <DialogHeader>
             <DialogTitle>
               {tournament ? "Edit Tournament" : "Create Tournament"}
@@ -322,8 +322,8 @@ export function UpsertTournamentFormDialog({
               </DialogFooter>
             )}
           </form.Subscribe>
-        </DialogContent>
-      </form>
+        </form>
+      </DialogContent>
     </Dialog>
   );
 }
