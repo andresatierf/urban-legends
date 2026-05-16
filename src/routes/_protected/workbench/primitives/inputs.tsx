@@ -1,36 +1,14 @@
 "use client";
 
-import {
-  CaretDownIcon,
-  CaretUpDownIcon,
-  MapPinIcon,
-  PlusIcon,
-} from "@phosphor-icons/react";
+import { MapPinIcon } from "@phosphor-icons/react";
 import { createFileRoute } from "@tanstack/react-router";
 import * as React from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Combobox,
-  ComboboxChip,
-  ComboboxChipRemove,
-  ComboboxChips,
-  ComboboxClear,
-  ComboboxCollection,
-  ComboboxEmpty,
-  ComboboxGroup,
-  ComboboxGroupLabel,
-  ComboboxIcon,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxItemIndicator,
-  ComboboxList,
-  ComboboxPopup,
-  ComboboxPositioner,
-  ComboboxSeparator,
-  ComboboxTrigger,
-  ComboboxValue,
-} from "@/components/ui/combobox";
+  ComboboxSelect,
+  type ComboboxOption,
+} from "@/components/ui/combobox-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -107,20 +85,35 @@ const FOOD_GROUPS: FoodGroup[] = [
   },
 ];
 
-interface Country {
-  code: string;
-  value: string | null;
+const COUNTRIES: ComboboxOption[] = [
+  { value: "portugal", label: "Portugal" },
+  { value: "united-states", label: "United States" },
+  { value: "united-kingdom", label: "United Kingdom" },
+  { value: "germany", label: "Germany" },
+  { value: "france", label: "France" },
+  { value: "japan", label: "Japan" },
+];
+
+const LANGUAGE_OPTION_LIST: ComboboxOption[] = LANGUAGE_OPTIONS.map((l) => ({
+  value: l.id,
+  label: l.value,
+}));
+
+const FOOD_GROUP_OPTIONS = FOOD_GROUPS.map((g) => ({
+  label: g.value,
+  items: g.items,
+}));
+
+interface CreatableLabel {
+  value: string;
   label: string;
 }
 
-const COUNTRIES: Country[] = [
-  { code: "", value: null, label: "Select country" },
-  { code: "pt", value: "portugal", label: "Portugal" },
-  { code: "us", value: "united-states", label: "United States" },
-  { code: "gb", value: "united-kingdom", label: "United Kingdom" },
-  { code: "de", value: "germany", label: "Germany" },
-  { code: "fr", value: "france", label: "France" },
-  { code: "jp", value: "japan", label: "Japan" },
+const INITIAL_LABELS: CreatableLabel[] = [
+  { value: "bug", label: "bug" },
+  { value: "docs", label: "documentation" },
+  { value: "enhancement", label: "enhancement" },
+  { value: "help-wanted", label: "help wanted" },
 ];
 
 function Section({
@@ -293,10 +286,10 @@ function PickersMatrix() {
           </Select>
         </MatrixCell>
         <MatrixCell>
-          <Combobox items={FRUIT_OPTIONS}>
-            <FruitInput />
-            <FruitPopup />
-          </Combobox>
+          <ComboboxSelect
+            options={FRUIT_OPTIONS}
+            placeholder="Search fruits..."
+          />
         </MatrixCell>
       </MatrixRow>
       <MatrixRow label="With value">
@@ -315,10 +308,11 @@ function PickersMatrix() {
           </Select>
         </MatrixCell>
         <MatrixCell>
-          <Combobox items={FRUIT_OPTIONS} defaultValue={FRUIT_OPTIONS[1]}>
-            <FruitInput />
-            <FruitPopup />
-          </Combobox>
+          <ComboboxSelect
+            options={FRUIT_OPTIONS}
+            defaultValue="banana"
+            placeholder="Search fruits..."
+          />
         </MatrixCell>
       </MatrixRow>
       <MatrixRow label="Focus">
@@ -337,10 +331,11 @@ function PickersMatrix() {
           </Select>
         </MatrixCell>
         <MatrixCell>
-          <Combobox items={FRUIT_OPTIONS}>
-            <FruitInput className="pseudo-focus" placeholder="Focused" />
-            <FruitPopup />
-          </Combobox>
+          <ComboboxSelect
+            options={FRUIT_OPTIONS}
+            className="pseudo-focus"
+            placeholder="Focused"
+          />
         </MatrixCell>
       </MatrixRow>
       <MatrixRow label="Invalid">
@@ -360,10 +355,11 @@ function PickersMatrix() {
         </MatrixCell>
         <MatrixCell>
           <div className="space-y-1">
-            <Combobox items={FRUIT_OPTIONS}>
-              <FruitInput aria-invalid="true" placeholder="Required field..." />
-              <FruitPopup />
-            </Combobox>
+            <ComboboxSelect
+              options={FRUIT_OPTIONS}
+              aria-invalid
+              placeholder="Required field..."
+            />
             <p className="text-destructive text-xs">Please pick a fruit</p>
           </div>
         </MatrixCell>
@@ -384,308 +380,39 @@ function PickersMatrix() {
           </Select>
         </MatrixCell>
         <MatrixCell>
-          <Combobox items={FRUIT_OPTIONS}>
-            <FruitInput disabled placeholder="Disabled combobox" />
-            <FruitPopup />
-          </Combobox>
+          <ComboboxSelect
+            options={FRUIT_OPTIONS}
+            disabled
+            placeholder="Disabled combobox"
+          />
         </MatrixCell>
       </MatrixRow>
     </MatrixSection>
   );
 }
 
-type FruitOption = (typeof FRUIT_OPTIONS)[number];
-
-function FruitInput({
-  placeholder = "Search fruits...",
-  ...inputProps
-}: React.ComponentProps<typeof ComboboxInput>) {
-  return (
-    <div className="relative">
-      <ComboboxInput
-        placeholder={placeholder}
-        className="pr-12"
-        {...inputProps}
-      />
-      <div className="text-muted-foreground absolute inset-y-0 right-1.5 flex items-center justify-center gap-0.5">
-        <ComboboxClear />
-        <ComboboxTrigger
-          aria-label="Open popup"
-          className="text-muted-foreground h-5 w-5 border-none bg-transparent p-0 shadow-none hover:bg-transparent"
-        >
-          <CaretDownIcon className="size-3.5" />
-        </ComboboxTrigger>
-      </div>
-    </div>
-  );
-}
-
-function FruitPopup() {
-  return (
-    <ComboboxPositioner sideOffset={6}>
-      <ComboboxPopup>
-        <ComboboxEmpty>No results found.</ComboboxEmpty>
-        <ComboboxList>
-          {(option: FruitOption) => (
-            <ComboboxItem key={option.value} value={option}>
-              <ComboboxItemIndicator />
-              <div className="col-start-2">{option.label}</div>
-            </ComboboxItem>
-          )}
-        </ComboboxList>
-      </ComboboxPopup>
-    </ComboboxPositioner>
-  );
-}
-
-function ChipsRow() {
-  const containerRef = React.useRef<HTMLDivElement | null>(null);
-  return (
-    <Combobox items={LANGUAGE_OPTIONS} multiple>
-      <ComboboxChips ref={containerRef}>
-        <ComboboxValue>
-          {(value: Language[]) => (
-            <>
-              {value.map((lang) => (
-                <ComboboxChip key={lang.id} aria-label={lang.value}>
-                  {lang.value}
-                  <ComboboxChipRemove />
-                </ComboboxChip>
-              ))}
-              <ComboboxInput
-                placeholder={value.length > 0 ? "" : "e.g. TypeScript"}
-                className="h-6 flex-1 border-0 bg-transparent pl-2 shadow-none outline-none focus-visible:ring-0"
-              />
-            </>
-          )}
-        </ComboboxValue>
-      </ComboboxChips>
-
-      <ComboboxPositioner sideOffset={6} anchor={containerRef}>
-        <ComboboxPopup>
-          <ComboboxEmpty>No languages found.</ComboboxEmpty>
-          <ComboboxList>
-            {(lang: Language) => (
-              <ComboboxItem key={lang.id} value={lang}>
-                <ComboboxItemIndicator />
-                <div className="col-start-2">{lang.value}</div>
-              </ComboboxItem>
-            )}
-          </ComboboxList>
-        </ComboboxPopup>
-      </ComboboxPositioner>
-    </Combobox>
-  );
-}
-
-interface CreatableLabel {
-  id: string;
-  value: string;
-  creatable?: string;
-}
-
-const INITIAL_LABELS: CreatableLabel[] = [
-  { id: "bug", value: "bug" },
-  { id: "docs", value: "documentation" },
-  { id: "enhancement", value: "enhancement" },
-  { id: "help-wanted", value: "help wanted" },
-];
-
 function CreatableRow() {
-  const [labels, setLabels] = React.useState<CreatableLabel[]>(INITIAL_LABELS);
-  const [selected, setSelected] = React.useState<CreatableLabel[]>([]);
-  const [query, setQuery] = React.useState("");
-  const containerRef = React.useRef<HTMLDivElement | null>(null);
-
-  const trimmed = query.trim();
-  const lowered = trimmed.toLocaleLowerCase();
-  const exactExists = labels.some(
-    (l) => l.value.trim().toLocaleLowerCase() === lowered,
-  );
-  const itemsForView: CreatableLabel[] =
-    trimmed !== "" && !exactExists
-      ? [
-          ...labels,
-          {
-            creatable: trimmed,
-            id: `create:${lowered}`,
-            value: `Create "${trimmed}"`,
-          },
-        ]
-      : labels;
+  const [labels, setLabels] = React.useState<ComboboxOption[]>(INITIAL_LABELS);
+  const [selected, setSelected] = React.useState<string[]>([]);
 
   return (
-    <Combobox
-      items={itemsForView}
+    <ComboboxSelect
       multiple
+      options={labels}
       value={selected}
-      inputValue={query}
-      onInputValueChange={setQuery}
-      onValueChange={(items) => {
-        const next = items as CreatableLabel[];
-        const last = next[next.length - 1];
-        if (last && last.creatable) {
-          const created: CreatableLabel = {
-            id: `${last.creatable.replace(/\s+/g, "-").toLocaleLowerCase()}`,
-            value: last.creatable,
-          };
-          setLabels((prev) =>
-            prev.some((l) => l.id === created.id) ? prev : [...prev, created],
-          );
-          setSelected((prev) =>
-            prev.some((l) => l.id === created.id) ? prev : [...prev, created],
-          );
-          setQuery("");
-          return;
-        }
-        setSelected(next.filter((i) => !i.creatable));
-        setQuery("");
+      onValueChange={setSelected}
+      onCreate={(label) => {
+        const opt: ComboboxOption = {
+          value: label.replace(/\s+/g, "-").toLocaleLowerCase(),
+          label,
+        };
+        setLabels((prev) =>
+          prev.some((l) => l.value === opt.value) ? prev : [...prev, opt],
+        );
+        return opt;
       }}
-    >
-      <ComboboxChips ref={containerRef}>
-        <ComboboxValue>
-          {(value: CreatableLabel[]) => (
-            <>
-              {value.map((label) => (
-                <ComboboxChip key={label.id} aria-label={label.value}>
-                  {label.value}
-                  <ComboboxChipRemove />
-                </ComboboxChip>
-              ))}
-              <ComboboxInput
-                placeholder={value.length > 0 ? "" : "e.g. bug"}
-                className="h-6 flex-1 border-0 bg-transparent pl-2 shadow-none outline-none focus-visible:ring-0"
-              />
-            </>
-          )}
-        </ComboboxValue>
-      </ComboboxChips>
-
-      <ComboboxPositioner sideOffset={4} anchor={containerRef}>
-        <ComboboxPopup>
-          <ComboboxEmpty>No labels found.</ComboboxEmpty>
-          <ComboboxList>
-            {(item: CreatableLabel) =>
-              item.creatable ? (
-                <ComboboxItem key={item.id} value={item}>
-                  <span className="col-start-1">
-                    <PlusIcon className="size-3" />
-                  </span>
-                  <div className="col-start-2">
-                    Create &quot;{item.creatable}&quot;
-                  </div>
-                </ComboboxItem>
-              ) : (
-                <ComboboxItem key={item.id} value={item}>
-                  <ComboboxItemIndicator />
-                  <div className="col-start-2">{item.value}</div>
-                </ComboboxItem>
-              )
-            }
-          </ComboboxList>
-        </ComboboxPopup>
-      </ComboboxPositioner>
-    </Combobox>
-  );
-}
-
-type FoodItem = FoodGroup["items"][number];
-
-function GroupsRow() {
-  return (
-    <Combobox items={FOOD_GROUPS}>
-      <FruitInput placeholder="e.g. Apple" />
-      <ComboboxPositioner sideOffset={6}>
-        <ComboboxPopup className="pt-0">
-          <ComboboxEmpty className="not-empty:pt-3">
-            No results found.
-          </ComboboxEmpty>
-          <ComboboxList>
-            {(group: FoodGroup) => (
-              <ComboboxGroup key={group.value} items={group.items}>
-                <ComboboxGroupLabel className="mb-1 border-b">
-                  {group.value}
-                </ComboboxGroupLabel>
-                <ComboboxCollection>
-                  {(item: FoodItem) => (
-                    <ComboboxItem key={item.value} value={item}>
-                      <ComboboxItemIndicator />
-                      <div className="col-start-2">{item.label}</div>
-                    </ComboboxItem>
-                  )}
-                </ComboboxCollection>
-              </ComboboxGroup>
-            )}
-          </ComboboxList>
-        </ComboboxPopup>
-      </ComboboxPositioner>
-    </Combobox>
-  );
-}
-
-function SeparatorRow() {
-  return (
-    <Combobox items={FOOD_GROUPS}>
-      <FruitInput placeholder="e.g. Apple" />
-      <ComboboxPositioner sideOffset={6}>
-        <ComboboxPopup>
-          <ComboboxEmpty className="not-empty:pt-3">
-            No foods found.
-          </ComboboxEmpty>
-          <ComboboxList>
-            {(group: FoodGroup) => (
-              <ComboboxGroup
-                key={group.value}
-                items={group.items}
-                className="group"
-              >
-                <ComboboxCollection>
-                  {(item: FoodItem) => (
-                    <ComboboxItem key={item.value} value={item}>
-                      <ComboboxItemIndicator />
-                      <div className="col-start-2">{item.label}</div>
-                    </ComboboxItem>
-                  )}
-                </ComboboxCollection>
-                <ComboboxSeparator className="group-last:hidden my-3" />
-              </ComboboxGroup>
-            )}
-          </ComboboxList>
-        </ComboboxPopup>
-      </ComboboxPositioner>
-    </Combobox>
-  );
-}
-
-function InsidePopupRow() {
-  return (
-    <Combobox items={COUNTRIES} defaultValue={COUNTRIES[0]}>
-      <ComboboxTrigger className="bg-chip w-full max-w-[14rem] justify-between">
-        <div className="flex items-center gap-2">
-          <MapPinIcon />
-          <ComboboxValue />
-        </div>
-        <ComboboxIcon className="flex">
-          <CaretUpDownIcon />
-        </ComboboxIcon>
-      </ComboboxTrigger>
-      <ComboboxPositioner align="start" sideOffset={4}>
-        <ComboboxPopup className="w-full pt-0" aria-label="Select country">
-          <div className="bg-popover sticky top-0 z-1 w-64 p-2 text-center">
-            <ComboboxInput placeholder="e.g. United Kingdom" />
-          </div>
-          <ComboboxEmpty>No countries found.</ComboboxEmpty>
-          <ComboboxList>
-            {(country: Country) => (
-              <ComboboxItem key={country.code} value={country}>
-                <ComboboxItemIndicator />
-                <div className="col-start-2">{country.label}</div>
-              </ComboboxItem>
-            )}
-          </ComboboxList>
-        </ComboboxPopup>
-      </ComboboxPositioner>
-    </Combobox>
+      placeholder="e.g. bug"
+    />
   );
 }
 
@@ -694,19 +421,38 @@ function ComboboxVariantsSection() {
     <Section title="Combobox variants">
       <div className="space-y-4">
         <StateRow label="Chips">
-          <ChipsRow />
+          <ComboboxSelect
+            multiple
+            options={LANGUAGE_OPTION_LIST}
+            placeholder="e.g. TypeScript"
+          />
         </StateRow>
         <StateRow label="Creatable">
           <CreatableRow />
         </StateRow>
         <StateRow label="Groups">
-          <GroupsRow />
+          <ComboboxSelect
+            options={FOOD_GROUP_OPTIONS}
+            placeholder="e.g. Apple"
+          />
         </StateRow>
         <StateRow label="Separator">
-          <SeparatorRow />
+          <ComboboxSelect
+            options={FOOD_GROUP_OPTIONS}
+            separator
+            placeholder="e.g. Apple"
+          />
         </StateRow>
         <StateRow label="Inside popup">
-          <InsidePopupRow />
+          <ComboboxSelect
+            options={COUNTRIES}
+            presentation="trigger"
+            triggerIcon={<MapPinIcon />}
+            triggerPlaceholder="Select country"
+            placeholder="e.g. United Kingdom"
+            defaultValue="portugal"
+            className="max-w-[14rem]"
+          />
         </StateRow>
       </div>
     </Section>
