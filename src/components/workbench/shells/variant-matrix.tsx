@@ -44,48 +44,42 @@ export function VariantMatrix<TVariant extends string, TColumn extends string>({
   };
 
   return (
-    <div className="overflow-x-auto">
+    <div
+      role="table"
+      className="grid items-stretch gap-x-3 gap-y-4"
+      style={gridStyle}
+    >
       <div
-        role="table"
-        className="grid min-w-full items-stretch gap-x-3 gap-y-4"
-        style={gridStyle}
+        role="columnheader"
+        className="text-label-caps text-muted-foreground bg-paper-deep px-4 py-2 text-left"
       >
-        <div
-          role="columnheader"
-          className="text-label-caps text-muted-foreground bg-paper-deep px-4 py-2 text-left"
-        >
-          Variant
-        </div>
-        {columns.map((col) => (
-          <div
-            key={col}
-            role="columnheader"
-            className="text-label-caps text-muted-foreground bg-paper-deep px-4 py-2 text-center"
-          >
-            {columnLabel(col)}
-          </div>
-        ))}
-
-        {variants.map((variant) => (
-          <div
-            key={variant}
-            role="row"
-            className="border-foreground/10 contents"
-          >
-            <div
-              role="rowheader"
-              className="text-body-sm flex items-center px-4 py-4 font-medium"
-            >
-              {variantLabel(variant)}
-            </div>
-            {columns.map((col) => (
-              <div key={col} role="cell" className={cellClass}>
-                {renderCell(variant, col)}
-              </div>
-            ))}
-          </div>
-        ))}
+        Variant
       </div>
+      {columns.map((col) => (
+        <div
+          key={col}
+          role="columnheader"
+          className="text-label-caps text-muted-foreground bg-paper-deep px-4 py-2 text-center"
+        >
+          {columnLabel(col)}
+        </div>
+      ))}
+
+      {variants.map((variant) => (
+        <div key={variant} role="row" className="border-foreground/10 contents">
+          <div
+            role="rowheader"
+            className="text-body-sm flex items-center px-4 py-4 font-medium"
+          >
+            {variantLabel(variant)}
+          </div>
+          {columns.map((col) => (
+            <div key={col} role="cell" className={cellClass}>
+              {renderCell(variant, col)}
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
