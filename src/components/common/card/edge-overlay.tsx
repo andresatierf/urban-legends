@@ -1,11 +1,11 @@
 import { cn } from "@/lib/utils";
 
 const SLOT_CLASSES = {
-  topLeft: "-top-2 -left-2",
-  topCenter: "-top-2 left-1/2 -translate-x-1/2",
+  topLeft: "-top-3 left-4",
+  topCenter: "-top-3 left-1/2 -translate-x-1/2",
   topRight: "-top-3 right-6",
   bottomLeft: "-bottom-3 left-4",
-  bottomCenter: "-bottom-2 left-1/2 -translate-x-1/2",
+  bottomCenter: "-bottom-3 left-1/2 -translate-x-1/2",
   bottomRight: "right-4 -bottom-3",
 } as const;
 

@@ -123,10 +123,10 @@ function StatsGridSection() {
       <SectionHeader
         as="h1"
         title="StatsGrid"
-        description="Three-column stats display. Two variants: 'divided' (in-card rule) and 'tiles' (separate chunky cards)."
+        description="Three-column stats display. Variants: 'divided' (in-card rule), 'tiles' (separate chunky cards), 'strip' (dashed-bordered compact strip, label-above-value)."
       />
 
-      <div className="bg-paper grid gap-6 rounded-lg p-6 sm:grid-cols-2">
+      <div className="bg-paper grid gap-6 rounded-lg p-6 sm:grid-cols-3">
         <div className="space-y-2">
           <h3 className="text-label-caps text-muted-foreground">divided</h3>
           <StatsGrid items={items} variant="divided" />
@@ -134,6 +134,17 @@ function StatsGridSection() {
         <div className="space-y-2">
           <h3 className="text-label-caps text-muted-foreground">tiles</h3>
           <StatsGrid items={items} variant="tiles" />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-label-caps text-muted-foreground">strip</h3>
+          <StatsGrid
+            variant="strip"
+            items={[
+              { label: "Rank", value: "#3" },
+              { label: "Total", value: "540" },
+              { label: "Pending", value: "2" },
+            ]}
+          />
         </div>
       </div>
     </section>
