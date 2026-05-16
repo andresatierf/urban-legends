@@ -129,7 +129,7 @@ export function InvitationCard({
             )}
           </div>
         </div>
-        {showActions && (primaryAction || secondaryAction) && (
+        {showActions && (
           <div className="flex gap-2 self-end sm:self-auto">
             {secondaryAction && (
               <Button
@@ -165,7 +165,6 @@ function resolveActions({
   if (viewerIsSender) {
     return { primaryAction: null, secondaryAction: "Cancel" };
   }
-  // Recipient
   if (initiator === "team") {
     return { primaryAction: "Accept", secondaryAction: "Decline" };
   }
