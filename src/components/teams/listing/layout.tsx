@@ -12,6 +12,7 @@ import { getTournamentStatus } from "../../tournaments/utils";
 import { Skeleton } from "../../ui/skeleton";
 import { TeamCard, TeamCardSkeleton } from "../card/layout";
 import { JoinTeamCard } from "../join-team-card";
+import { useTeamCardActions } from "../use-team-card-actions";
 import type { TeamWithMembers, TournamentMap } from "./types";
 
 const STATUS_ORDER: Record<ReturnType<typeof getTournamentStatus>, number> = {
@@ -35,6 +36,7 @@ export function TeamListing({
 }: Props) {
   const { user } = useUser({ shouldThrow: false });
   const currentUserId = user?._id;
+  const getCardActions = useTeamCardActions();
   const [filter, setFilter] = useState<string>(() => {
     const tournamentIds = Array.from(
       new Set(allTeams.map((t) => t.tournamentId)),
@@ -185,6 +187,7 @@ export function TeamListing({
                   ? (team.members.find((m) => m._id === currentUserId)
                       ?.memberRole ?? null)
                   : null;
+              const actions = getCardActions(team._id);
               return (
                 <TeamCard
                   key={team._id}
@@ -202,6 +205,10 @@ export function TeamListing({
                     rank: team.rank,
                     totalTeams: team.totalTeams,
                   }}
+                  joinRequest={actions.joinRequest}
+                  onRequestJoin={actions.onRequestJoin}
+                  onCancelRequest={actions.onCancelRequest}
+                  onLeave={actions.onLeave}
                 />
               );
             })}

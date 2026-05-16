@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
 import { CaptainSpotlight } from "./captain-spotlight";
-import { JoinTeamButtonContainer } from "./join-team-action";
+import { JoinTeamButton, type JoinTeamRequestState } from "./join-team-button";
 import { LeaveTeamButton } from "./leave-team-button";
 import { ManageTeamButton } from "./manage-team-button";
 import { MomentumCell } from "./momentum-cell";
@@ -18,10 +18,19 @@ export { TeamCardSkeleton } from "./skeleton";
 
 type Props = {
   data: TeamCardData;
-  demo?: boolean;
+  joinRequest: JoinTeamRequestState;
+  onRequestJoin: (message: string | undefined) => Promise<void> | void;
+  onCancelRequest: () => void;
+  onLeave: () => void;
 };
 
-export function TeamCard({ data, demo = false }: Props) {
+export function TeamCard({
+  data,
+  joinRequest,
+  onRequestJoin,
+  onCancelRequest,
+  onLeave,
+}: Props) {
   const { team, tournament, isUserMember, userRole } = data;
   const isCaptain = userRole === "captain";
 
@@ -30,8 +39,13 @@ export function TeamCard({ data, demo = false }: Props) {
       topRight={<ViewerRoleRibbon userRole={userRole} />}
       bottomLeft={
         <>
-          <JoinTeamButtonContainer data={data} demo={demo} />
-          <LeaveTeamButton data={data} />
+          <JoinTeamButton
+            data={data}
+            joinRequest={joinRequest}
+            onRequestJoin={onRequestJoin}
+            onCancelRequest={onCancelRequest}
+          />
+          <LeaveTeamButton data={data} onClick={onLeave} />
         </>
       }
       bottomRight={
