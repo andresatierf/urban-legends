@@ -7,13 +7,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "../button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../select";
+import { ComposedSelect } from "../composed-select";
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>;
@@ -32,23 +26,16 @@ export function DataTablePagination<TData>({
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex items-center space-x-2">
           <p className="text-label-caps text-muted-foreground">Rows per page</p>
-          <Select
+          <ComposedSelect
             value={`${table.getState().pagination.pageSize}`}
-            onValueChange={(value) => {
-              table.setPageSize(Number(value));
-            }}
-          >
-            <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={table.getState().pagination.pageSize} />
-            </SelectTrigger>
-            <SelectContent side="top">
-              {[10, 20, 25, 30, 40, 50].map((pageSize) => (
-                <SelectItem key={pageSize} value={`${pageSize}`}>
-                  {pageSize}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onValueChange={(value) => table.setPageSize(Number(value))}
+            side="top"
+            className="h-8 w-[70px]"
+            options={[10, 20, 25, 30, 40, 50].map((n) => ({
+              value: `${n}`,
+              label: `${n}`,
+            }))}
+          />
         </div>
         {!isSinglePage && (
           <>

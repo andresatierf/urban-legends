@@ -112,12 +112,12 @@ export function UpsertTeamFormDialog({
         }}
       >
         {children ? (
-          <DialogTrigger asChild>{children}</DialogTrigger>
+          <DialogTrigger render={children as React.ReactElement} />
         ) : (
           controlledOpen === undefined &&
           onOpenChange === undefined && (
-            <DialogTrigger asChild>
-              <Button>{team ? "Update Team" : "Create Team"}</Button>
+            <DialogTrigger render={<Button />}>
+              {team ? "Update Team" : "Create Team"}
             </DialogTrigger>
           )
         )}
@@ -137,7 +137,7 @@ export function UpsertTeamFormDialog({
             {!tournamentId && (
               <form.AppField name="tournamentId">
                 {(field) => (
-                  <field.SelectField
+                  <field.ComboboxField
                     label="Tournament"
                     options={tournamentOptions}
                     placeholder="Select a tournament"
@@ -197,14 +197,16 @@ export function UpsertTeamFormDialog({
                 >
                   Reset
                 </Button>
-                <DialogClose asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
+                <DialogClose
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isSubmitting}
+                    />
+                  }
+                >
+                  Cancel
                 </DialogClose>
                 <Button
                   type="submit"

@@ -1,21 +1,18 @@
 import { useStore } from "@tanstack/react-form";
 import { useCallback } from "react";
 
+import {
+  ComposedCombobox,
+  type ComboboxOption,
+} from "@/components/ui/composed-combobox";
 import { useFieldContext } from "@/hooks/form-context";
 
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "../../ui/combobox";
 import { Field, FieldError, FieldLabel } from "../../ui/field";
 
-export type ComboboxFieldProps<T> = {
+export type ComboboxFieldProps<T extends string> = {
   label: string;
-  options: { value: T; label: string }[];
-  onChange?: (value: T) => void;
+  options: ComboboxOption<T>[];
+  onChange?: (value: T | "") => void;
   placeholder?: string;
   children?: React.ReactNode;
 };
@@ -34,11 +31,10 @@ export function ComboboxField<T extends string>({
     state.meta.errors,
   ]);
 
-  const handleOnChange = useCallback(
-    (value: T | null) => {
-      if (value === null) return;
-      field.handleChange(value);
-      onChange?.(value);
+  const handleChange = useCallback(
+    (next: T | "") => {
+      field.handleChange(next as T);
+      onChange?.(next);
     },
     [field, onChange],
   );
@@ -46,27 +42,15 @@ export function ComboboxField<T extends string>({
   return (
     <Field data-invalid={isInvalid}>
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-      <Combobox
-        items={options.map((o) => o.value)}
+      <ComposedCombobox<T>
+        id={field.name}
+        name={field.name}
+        options={options}
+        placeholder={placeholder}
         value={field.state.value}
-        onValueChange={handleOnChange}
-      >
-        <ComboboxInput
-          id={field.name}
-          name={field.name}
-          placeholder={placeholder}
-          aria-invalid={isInvalid}
-        />
-        <ComboboxContent>
-          <ComboboxList>
-            {options.map((option) => (
-              <ComboboxItem key={option.value} value={option.value}>
-                {option.label}
-              </ComboboxItem>
-            ))}
-          </ComboboxList>
-        </ComboboxContent>
-      </Combobox>
+        onValueChange={handleChange}
+        aria-invalid={isInvalid}
+      />
       {children}
       {isInvalid && <FieldError errors={errors} />}
     </Field>

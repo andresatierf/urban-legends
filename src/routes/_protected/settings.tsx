@@ -6,13 +6,7 @@ import { useEffect, useId, useState } from "react";
 import { SectionHeader } from "@/components/section-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ComposedSelect } from "@/components/ui/composed-select";
 import {
   FULL_DATE_FORMATS,
   type FormatLength,
@@ -131,24 +125,16 @@ function SettingsPage() {
                     Choose which day your calendar week begins
                   </p>
                 </div>
-                <Select
+                <ComposedSelect
+                  id={weekStartSelectId}
+                  className="w-full sm:w-[180px]"
                   value={weekStartsOn.toString()}
                   onValueChange={handleWeekStartChange}
-                >
-                  <SelectTrigger
-                    id={weekStartSelectId}
-                    className="w-full sm:w-[180px]"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {WEEKDAY_LABELS_FULL.map((day, index) => (
-                      <SelectItem key={day} value={index.toString()}>
-                        {day}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  options={WEEKDAY_LABELS_FULL.map((day, index) => ({
+                    value: index.toString(),
+                    label: day,
+                  }))}
+                />
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -163,33 +149,27 @@ function SettingsPage() {
                     Compact numeric formats for lists and cards
                   </p>
                 </div>
-                <Select
+                <ComposedSelect
+                  id={dateFormatShortSelectId}
+                  className="w-full sm:w-[220px]"
                   value={dateFormatShort}
                   onValueChange={(value) =>
                     handleDateFormatChange(value, "short")
                   }
-                >
-                  <SelectTrigger
-                    id={dateFormatShortSelectId}
-                    className="w-full sm:w-[220px]"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.keys(SHORT_DATE_FORMATS).map((format) => (
-                      <SelectItem key={format} value={format}>
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="font-mono text-sm">{format}</span>
-                          <span className="text-muted-foreground text-xs">
-                            {getFormatPreview(
-                              format as keyof typeof SHORT_DATE_FORMATS,
-                            )}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  options={Object.keys(SHORT_DATE_FORMATS).map((format) => ({
+                    value: format,
+                    label: (
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="font-mono text-sm">{format}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {getFormatPreview(
+                            format as keyof typeof SHORT_DATE_FORMATS,
+                          )}
+                        </span>
+                      </div>
+                    ),
+                  }))}
+                />
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -204,33 +184,27 @@ function SettingsPage() {
                     Verbose text-based formats for headers and announcements
                   </p>
                 </div>
-                <Select
+                <ComposedSelect
+                  id={dateFormatLongSelectId}
+                  className="w-full sm:w-[220px]"
                   value={dateFormatLong}
                   onValueChange={(value) =>
                     handleDateFormatChange(value, "long")
                   }
-                >
-                  <SelectTrigger
-                    id={dateFormatLongSelectId}
-                    className="w-full sm:w-[220px]"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.keys(LONG_DATE_FORMATS).map((format) => (
-                      <SelectItem key={format} value={format}>
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="font-mono text-sm">{format}</span>
-                          <span className="text-muted-foreground text-xs">
-                            {getFormatPreview(
-                              format as keyof typeof LONG_DATE_FORMATS,
-                            )}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  options={Object.keys(LONG_DATE_FORMATS).map((format) => ({
+                    value: format,
+                    label: (
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="font-mono text-sm">{format}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {getFormatPreview(
+                            format as keyof typeof LONG_DATE_FORMATS,
+                          )}
+                        </span>
+                      </div>
+                    ),
+                  }))}
+                />
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -245,33 +219,27 @@ function SettingsPage() {
                     Includes day of week for detailed displays (e.g., titles)
                   </p>
                 </div>
-                <Select
+                <ComposedSelect
+                  id={dateFormatFullSelectId}
+                  className="w-full sm:w-[280px]"
                   value={dateFormatFull}
                   onValueChange={(value) =>
                     handleDateFormatChange(value, "full")
                   }
-                >
-                  <SelectTrigger
-                    id={dateFormatFullSelectId}
-                    className="w-full sm:w-[280px]"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.keys(FULL_DATE_FORMATS).map((format) => (
-                      <SelectItem key={format} value={format}>
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="font-mono text-sm">{format}</span>
-                          <span className="text-muted-foreground text-xs">
-                            {getFormatPreview(
-                              format as keyof typeof FULL_DATE_FORMATS,
-                            )}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  options={Object.keys(FULL_DATE_FORMATS).map((format) => ({
+                    value: format,
+                    label: (
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="font-mono text-sm">{format}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {getFormatPreview(
+                            format as keyof typeof FULL_DATE_FORMATS,
+                          )}
+                        </span>
+                      </div>
+                    ),
+                  }))}
+                />
               </div>
 
               <Card className="rounded-md">

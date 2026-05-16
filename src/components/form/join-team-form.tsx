@@ -74,7 +74,7 @@ export function JoinTeamFormDialog({
           form.handleSubmit();
         }}
       >
-        {children && <DialogTrigger asChild>{children}</DialogTrigger>}
+        {children && <DialogTrigger render={children as React.ReactElement} />}
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Request to Join {teamName}</DialogTitle>
@@ -114,14 +114,16 @@ export function JoinTeamFormDialog({
                 >
                   Reset
                 </Button>
-                <DialogClose asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
+                <DialogClose
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isSubmitting}
+                    />
+                  }
+                >
+                  Cancel
                 </DialogClose>
                 <Button
                   type="submit"

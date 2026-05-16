@@ -125,14 +125,12 @@ export function UpsertTournamentFormDialog({
         className="flex"
       >
         {children ? (
-          <DialogTrigger asChild>{children}</DialogTrigger>
+          <DialogTrigger render={children as React.ReactElement} />
         ) : (
           controlledOpen === undefined &&
           onOpenChange === undefined && (
-            <DialogTrigger asChild>
-              <Button>
-                {tournament ? "Edit Tournament" : "Create Tournament"}
-              </Button>
+            <DialogTrigger render={<Button />}>
+              {tournament ? "Edit Tournament" : "Create Tournament"}
             </DialogTrigger>
           )
         )}
@@ -302,14 +300,16 @@ export function UpsertTournamentFormDialog({
                 >
                   Reset
                 </Button>
-                <DialogClose asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
+                <DialogClose
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isSubmitting}
+                    />
+                  }
+                >
+                  Cancel
                 </DialogClose>
                 <Button
                   type="submit"

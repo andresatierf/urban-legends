@@ -1,27 +1,18 @@
 "use client";
 
+import { MapPinIcon } from "@phosphor-icons/react";
 import { createFileRoute } from "@tanstack/react-router";
 import * as React from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
+  ComposedCombobox,
+  type ComboboxOption,
+} from "@/components/ui/composed-combobox";
+import { ComposedSelect } from "@/components/ui/composed-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +28,86 @@ const FRUIT_OPTIONS = [
   { value: "banana", label: "Banana" },
   { value: "cherry", label: "Cherry" },
   { value: "date", label: "Date" },
+  { value: "elderberry", label: "Elderberry" },
+  { value: "fig", label: "Fig" },
+];
+
+interface Language {
+  id: string;
+  value: string;
+}
+
+const LANGUAGE_OPTIONS: Language[] = [
+  { id: "ts", value: "TypeScript" },
+  { id: "js", value: "JavaScript" },
+  { id: "py", value: "Python" },
+  { id: "go", value: "Go" },
+  { id: "rust", value: "Rust" },
+  { id: "ruby", value: "Ruby" },
+  { id: "java", value: "Java" },
+];
+
+interface FoodGroup {
+  value: string;
+  items: { value: string; label: string }[];
+}
+
+const FOOD_GROUPS: FoodGroup[] = [
+  {
+    value: "Fruits",
+    items: [
+      { value: "apple", label: "Apple" },
+      { value: "banana", label: "Banana" },
+      { value: "mango", label: "Mango" },
+    ],
+  },
+  {
+    value: "Vegetables",
+    items: [
+      { value: "carrot", label: "Carrot" },
+      { value: "broccoli", label: "Broccoli" },
+      { value: "spinach", label: "Spinach" },
+    ],
+  },
+  {
+    value: "Dairy",
+    items: [
+      { value: "milk", label: "Milk" },
+      { value: "cheese", label: "Cheese" },
+      { value: "yogurt", label: "Yogurt" },
+    ],
+  },
+];
+
+const COUNTRIES: ComboboxOption[] = [
+  { value: "portugal", label: "Portugal" },
+  { value: "united-states", label: "United States" },
+  { value: "united-kingdom", label: "United Kingdom" },
+  { value: "germany", label: "Germany" },
+  { value: "france", label: "France" },
+  { value: "japan", label: "Japan" },
+];
+
+const LANGUAGE_OPTION_LIST: ComboboxOption[] = LANGUAGE_OPTIONS.map((l) => ({
+  value: l.id,
+  label: l.value,
+}));
+
+const FOOD_GROUP_OPTIONS = FOOD_GROUPS.map((g) => ({
+  label: g.value,
+  items: g.items,
+}));
+
+interface CreatableLabel {
+  value: string;
+  label: string;
+}
+
+const INITIAL_LABELS: CreatableLabel[] = [
+  { value: "bug", label: "bug" },
+  { value: "docs", label: "documentation" },
+  { value: "enhancement", label: "enhancement" },
+  { value: "help-wanted", label: "help wanted" },
 ];
 
 function Section({
@@ -73,289 +144,289 @@ function StateRow({
   );
 }
 
-function InputSection() {
+function MatrixSection({
+  title,
+  columns,
+  children,
+}: {
+  title: string;
+  columns: string[];
+  children: React.ReactNode;
+}) {
   return (
-    <Section title="Input">
-      <div className="space-y-4">
-        <StateRow label="Default">
+    <section className="space-y-4">
+      <h3 className="text-h3">{title}</h3>
+      <div className="bg-card border-border rounded-xl border-2 p-6 shadow-[4px_4px_0_var(--shadow)]">
+        <div
+          className="grid gap-x-6 gap-y-4"
+          style={{
+            gridTemplateColumns: `120px repeat(${columns.length}, minmax(0, 1fr))`,
+          }}
+        >
+          <div />
+          {columns.map((col) => (
+            <div
+              key={col}
+              className="text-label-caps text-muted-foreground pb-2"
+            >
+              {col}
+            </div>
+          ))}
+          {children}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MatrixRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <span className="text-label-caps text-muted-foreground pt-1.5">
+        {label}
+      </span>
+      {children}
+    </>
+  );
+}
+
+function MatrixCell({ children }: { children?: React.ReactNode }) {
+  return <div className="min-w-0">{children}</div>;
+}
+
+function FieldsMatrix() {
+  return (
+    <MatrixSection title="Fields" columns={["Input", "Textarea"]}>
+      <MatrixRow label="Default">
+        <MatrixCell>
           <Input placeholder="Type something..." />
-        </StateRow>
-        <StateRow label="With value">
+        </MatrixCell>
+        <MatrixCell>
+          <Textarea placeholder="Write a description..." />
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="With value">
+        <MatrixCell>
           <Input defaultValue="Hello world" />
-        </StateRow>
-        <StateRow label="Focus">
+        </MatrixCell>
+        <MatrixCell>
+          <Textarea defaultValue="This is a multi-line text area with some content that demonstrates the Field Day treatment." />
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="Focus">
+        <MatrixCell>
           <Input className="pseudo-focus" placeholder="Focused" />
-        </StateRow>
-        <StateRow label="Invalid">
+        </MatrixCell>
+        <MatrixCell>
+          <Textarea className="pseudo-focus" placeholder="Focused" />
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="Invalid">
+        <MatrixCell>
           <div className="space-y-1">
             <Input aria-invalid="true" defaultValue="Bad value" />
             <p className="text-destructive text-xs">This field is required</p>
           </div>
-        </StateRow>
-        <StateRow label="Disabled">
-          <Input disabled placeholder="Disabled input" />
-        </StateRow>
-        <StateRow label="Date">
-          <Input type="date" defaultValue="2026-05-14" />
-        </StateRow>
-      </div>
-    </Section>
-  );
-}
-
-function TextareaSection() {
-  return (
-    <Section title="Textarea">
-      <div className="space-y-4">
-        <StateRow label="Default">
-          <Textarea placeholder="Write a description..." />
-        </StateRow>
-        <StateRow label="With value">
-          <Textarea defaultValue="This is a multi-line text area with some content that demonstrates the Field Day treatment." />
-        </StateRow>
-        <StateRow label="Focus">
-          <Textarea className="pseudo-focus" placeholder="Focused" />
-        </StateRow>
-        <StateRow label="Invalid">
+        </MatrixCell>
+        <MatrixCell>
           <div className="space-y-1">
             <Textarea aria-invalid="true" defaultValue="Bad content" />
             <p className="text-destructive text-xs">
               Description must be at least 20 characters
             </p>
           </div>
-        </StateRow>
-        <StateRow label="Disabled">
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="Disabled">
+        <MatrixCell>
+          <Input disabled placeholder="Disabled input" />
+        </MatrixCell>
+        <MatrixCell>
           <Textarea disabled placeholder="Disabled textarea" />
-        </StateRow>
-      </div>
-    </Section>
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="Date">
+        <MatrixCell>
+          <Input type="date" defaultValue="2026-05-14" />
+        </MatrixCell>
+        <MatrixCell />
+      </MatrixRow>
+    </MatrixSection>
   );
 }
 
-function SelectSection() {
+function PickersMatrix() {
   return (
-    <Section title="Select">
-      <div className="space-y-4">
-        <StateRow label="Default">
-          <Select>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Choose a fruit..." />
-            </SelectTrigger>
-            <SelectContent>
-              {FRUIT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </StateRow>
-        <StateRow label="With value">
-          <Select defaultValue="banana">
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {FRUIT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </StateRow>
-        <StateRow label="Focus">
-          <Select>
-            <SelectTrigger className="pseudo-focus w-full">
-              <SelectValue placeholder="Focused" />
-            </SelectTrigger>
-            <SelectContent>
-              {FRUIT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </StateRow>
-        <StateRow label="Invalid">
-          <Select>
-            <SelectTrigger className="w-full" aria-invalid="true">
-              <SelectValue placeholder="Required field..." />
-            </SelectTrigger>
-            <SelectContent>
-              {FRUIT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </StateRow>
-        <StateRow label="Disabled">
-          <Select disabled>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Disabled select" />
-            </SelectTrigger>
-            <SelectContent>
-              {FRUIT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </StateRow>
-      </div>
-    </Section>
-  );
-}
-
-function ComboboxSection() {
-  return (
-    <Section title="Combobox">
-      <div className="space-y-4">
-        <StateRow label="Default">
-          <Combobox items={FRUIT_OPTIONS.map((o) => o.value)}>
-            <ComboboxInput placeholder="Search fruits..." />
-            <ComboboxContent>
-              <ComboboxList>
-                <ComboboxEmpty>No results</ComboboxEmpty>
-                {FRUIT_OPTIONS.map((opt) => (
-                  <ComboboxItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </ComboboxItem>
-                ))}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
-        </StateRow>
-        <StateRow label="With value">
-          <Combobox
-            items={FRUIT_OPTIONS.map((o) => o.value)}
+    <MatrixSection title="Pickers" columns={["Select", "Combobox"]}>
+      <MatrixRow label="Default">
+        <MatrixCell>
+          <ComposedSelect
+            options={FRUIT_OPTIONS}
+            placeholder="Choose a fruit..."
+          />
+        </MatrixCell>
+        <MatrixCell>
+          <ComposedCombobox
+            options={FRUIT_OPTIONS}
+            placeholder="Search fruits..."
+          />
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="With value">
+        <MatrixCell>
+          <ComposedSelect options={FRUIT_OPTIONS} defaultValue="banana" />
+        </MatrixCell>
+        <MatrixCell>
+          <ComposedCombobox
+            options={FRUIT_OPTIONS}
             defaultValue="banana"
-          >
-            <ComboboxInput placeholder="Search fruits..." />
-            <ComboboxContent>
-              <ComboboxList>
-                <ComboboxEmpty>No results</ComboboxEmpty>
-                {FRUIT_OPTIONS.map((opt) => (
-                  <ComboboxItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </ComboboxItem>
-                ))}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
-        </StateRow>
-        <StateRow label="Focus">
-          <Combobox items={FRUIT_OPTIONS.map((o) => o.value)}>
-            <ComboboxInput className="pseudo-focus" placeholder="Focused" />
-            <ComboboxContent>
-              <ComboboxList>
-                <ComboboxEmpty>No results</ComboboxEmpty>
-                {FRUIT_OPTIONS.map((opt) => (
-                  <ComboboxItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </ComboboxItem>
-                ))}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
-        </StateRow>
-        <StateRow label="Invalid">
+            placeholder="Search fruits..."
+          />
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="Focus">
+        <MatrixCell>
+          <ComposedSelect
+            options={FRUIT_OPTIONS}
+            className="pseudo-focus"
+            placeholder="Focused"
+          />
+        </MatrixCell>
+        <MatrixCell>
+          <ComposedCombobox
+            options={FRUIT_OPTIONS}
+            className="pseudo-focus"
+            placeholder="Focused"
+          />
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="Invalid">
+        <MatrixCell>
+          <ComposedSelect
+            options={FRUIT_OPTIONS}
+            aria-invalid
+            placeholder="Required field..."
+          />
+        </MatrixCell>
+        <MatrixCell>
           <div className="space-y-1">
-            <Combobox items={FRUIT_OPTIONS.map((o) => o.value)}>
-              <ComboboxInput
-                aria-invalid="true"
-                placeholder="Required field..."
-              />
-              <ComboboxContent>
-                <ComboboxList>
-                  <ComboboxEmpty>No results</ComboboxEmpty>
-                  {FRUIT_OPTIONS.map((opt) => (
-                    <ComboboxItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </ComboboxItem>
-                  ))}
-                </ComboboxList>
-              </ComboboxContent>
-            </Combobox>
+            <ComposedCombobox
+              options={FRUIT_OPTIONS}
+              aria-invalid
+              placeholder="Required field..."
+            />
             <p className="text-destructive text-xs">Please pick a fruit</p>
           </div>
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="Disabled">
+        <MatrixCell>
+          <ComposedSelect
+            options={FRUIT_OPTIONS}
+            disabled
+            placeholder="Disabled select"
+          />
+        </MatrixCell>
+        <MatrixCell>
+          <ComposedCombobox
+            options={FRUIT_OPTIONS}
+            disabled
+            placeholder="Disabled combobox"
+          />
+        </MatrixCell>
+      </MatrixRow>
+    </MatrixSection>
+  );
+}
+
+function CreatableRow() {
+  const [labels, setLabels] = React.useState<ComboboxOption[]>(INITIAL_LABELS);
+  const [selected, setSelected] = React.useState<string[]>([]);
+
+  return (
+    <ComposedCombobox
+      multiple
+      options={labels}
+      value={selected}
+      onValueChange={setSelected}
+      onCreate={(label) => {
+        const opt: ComboboxOption = {
+          value: label.replace(/\s+/g, "-").toLocaleLowerCase(),
+          label,
+        };
+        setLabels((prev) =>
+          prev.some((l) => l.value === opt.value) ? prev : [...prev, opt],
+        );
+        return opt;
+      }}
+      placeholder="e.g. bug"
+    />
+  );
+}
+
+function ComboboxVariantsSection() {
+  return (
+    <Section title="Combobox variants">
+      <div className="space-y-4">
+        <StateRow label="Chips">
+          <ComposedCombobox
+            multiple
+            options={LANGUAGE_OPTION_LIST}
+            placeholder="e.g. TypeScript"
+          />
         </StateRow>
-        <StateRow label="Disabled">
-          <Combobox items={FRUIT_OPTIONS.map((o) => o.value)}>
-            <ComboboxInput disabled placeholder="Disabled combobox" />
-            <ComboboxContent>
-              <ComboboxList>
-                {FRUIT_OPTIONS.map((opt) => (
-                  <ComboboxItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </ComboboxItem>
-                ))}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+        <StateRow label="Creatable">
+          <CreatableRow />
+        </StateRow>
+        <StateRow label="Groups">
+          <ComposedCombobox
+            options={FOOD_GROUP_OPTIONS}
+            placeholder="e.g. Apple"
+          />
+        </StateRow>
+        <StateRow label="Separator">
+          <ComposedCombobox
+            options={FOOD_GROUP_OPTIONS}
+            separator
+            placeholder="e.g. Apple"
+          />
+        </StateRow>
+        <StateRow label="Inside popup">
+          <ComposedCombobox
+            options={COUNTRIES}
+            presentation="trigger"
+            triggerIcon={<MapPinIcon />}
+            triggerPlaceholder="Select country"
+            placeholder="e.g. United Kingdom"
+            defaultValue="portugal"
+            className="max-w-[14rem]"
+          />
         </StateRow>
       </div>
     </Section>
   );
 }
 
-function CheckboxSection() {
+function TogglesMatrix() {
   return (
-    <Section title="Checkbox">
-      <div className="space-y-4">
-        <StateRow label="Default">
+    <MatrixSection
+      title="Toggles"
+      columns={["Checkbox", "Radio Group", "Switch"]}
+    >
+      <MatrixRow label="Default">
+        <MatrixCell>
           <div className="flex items-center gap-2">
             <Checkbox id="cb-default" />
             <Label htmlFor="cb-default">Accept terms</Label>
           </div>
-        </StateRow>
-        <StateRow label="Checked">
-          <div className="flex items-center gap-2">
-            <Checkbox id="cb-checked" defaultChecked />
-            <Label htmlFor="cb-checked">Subscribed</Label>
-          </div>
-        </StateRow>
-        <StateRow label="Invalid">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Checkbox id="cb-invalid" aria-invalid="true" />
-              <Label htmlFor="cb-invalid">Required checkbox</Label>
-            </div>
-            <p className="text-destructive pl-6 text-xs">
-              You must accept the terms
-            </p>
-          </div>
-        </StateRow>
-        <StateRow label="Disabled">
-          <div className="flex items-center gap-2">
-            <Checkbox id="cb-disabled" disabled />
-            <Label htmlFor="cb-disabled" className="opacity-50">
-              Disabled option
-            </Label>
-          </div>
-        </StateRow>
-        <StateRow label="Disabled checked">
-          <div className="flex items-center gap-2">
-            <Checkbox id="cb-disabled-checked" disabled defaultChecked />
-            <Label htmlFor="cb-disabled-checked" className="opacity-50">
-              Locked selection
-            </Label>
-          </div>
-        </StateRow>
-      </div>
-    </Section>
-  );
-}
-
-function RadioSection() {
-  return (
-    <Section title="Radio Group">
-      <div className="space-y-4">
-        <StateRow label="Default">
+        </MatrixCell>
+        <MatrixCell>
           <RadioGroup defaultValue="option-1">
             <div className="flex items-center gap-2">
               <RadioGroupItem value="option-1" id="r1" />
@@ -370,8 +441,42 @@ function RadioSection() {
               <Label htmlFor="r3">Option Three</Label>
             </div>
           </RadioGroup>
-        </StateRow>
-        <StateRow label="Invalid">
+        </MatrixCell>
+        <MatrixCell>
+          <div className="flex items-center gap-2">
+            <Switch id="sw-default" />
+            <Label htmlFor="sw-default">Notifications</Label>
+          </div>
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="Checked">
+        <MatrixCell>
+          <div className="flex items-center gap-2">
+            <Checkbox id="cb-checked" defaultChecked />
+            <Label htmlFor="cb-checked">Subscribed</Label>
+          </div>
+        </MatrixCell>
+        <MatrixCell />
+        <MatrixCell>
+          <div className="flex items-center gap-2">
+            <Switch id="sw-checked" defaultChecked />
+            <Label htmlFor="sw-checked">Dark mode</Label>
+          </div>
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="Invalid">
+        <MatrixCell>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Checkbox id="cb-invalid" aria-invalid="true" />
+              <Label htmlFor="cb-invalid">Required checkbox</Label>
+            </div>
+            <p className="text-destructive pl-6 text-xs">
+              You must accept the terms
+            </p>
+          </div>
+        </MatrixCell>
+        <MatrixCell>
           <div className="space-y-1">
             <RadioGroup>
               <div className="flex items-center gap-2">
@@ -393,8 +498,27 @@ function RadioSection() {
             </RadioGroup>
             <p className="text-destructive text-xs">Please select an option</p>
           </div>
-        </StateRow>
-        <StateRow label="Disabled">
+        </MatrixCell>
+        <MatrixCell>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Switch id="sw-invalid" aria-invalid="true" />
+              <Label htmlFor="sw-invalid">Required toggle</Label>
+            </div>
+            <p className="text-destructive text-xs">You must enable this</p>
+          </div>
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="Disabled">
+        <MatrixCell>
+          <div className="flex items-center gap-2">
+            <Checkbox id="cb-disabled" disabled />
+            <Label htmlFor="cb-disabled" className="opacity-50">
+              Disabled option
+            </Label>
+          </div>
+        </MatrixCell>
+        <MatrixCell>
           <RadioGroup defaultValue="option-a" disabled>
             <div className="flex items-center gap-2">
               <RadioGroupItem value="option-a" id="r-d1" />
@@ -409,55 +533,36 @@ function RadioSection() {
               </Label>
             </div>
           </RadioGroup>
-        </StateRow>
-      </div>
-    </Section>
-  );
-}
-
-function SwitchSection() {
-  return (
-    <Section title="Switch">
-      <div className="space-y-4">
-        <StateRow label="Default">
-          <div className="flex items-center gap-2">
-            <Switch id="sw-default" />
-            <Label htmlFor="sw-default">Notifications</Label>
-          </div>
-        </StateRow>
-        <StateRow label="Checked">
-          <div className="flex items-center gap-2">
-            <Switch id="sw-checked" defaultChecked />
-            <Label htmlFor="sw-checked">Dark mode</Label>
-          </div>
-        </StateRow>
-        <StateRow label="Invalid">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Switch id="sw-invalid" aria-invalid="true" />
-              <Label htmlFor="sw-invalid">Required toggle</Label>
-            </div>
-            <p className="text-destructive text-xs">You must enable this</p>
-          </div>
-        </StateRow>
-        <StateRow label="Disabled">
+        </MatrixCell>
+        <MatrixCell>
           <div className="flex items-center gap-2">
             <Switch id="sw-disabled" disabled />
             <Label htmlFor="sw-disabled" className="opacity-50">
               Disabled off
             </Label>
           </div>
-        </StateRow>
-        <StateRow label="Disabled checked">
+        </MatrixCell>
+      </MatrixRow>
+      <MatrixRow label="Disabled checked">
+        <MatrixCell>
+          <div className="flex items-center gap-2">
+            <Checkbox id="cb-disabled-checked" disabled defaultChecked />
+            <Label htmlFor="cb-disabled-checked" className="opacity-50">
+              Locked selection
+            </Label>
+          </div>
+        </MatrixCell>
+        <MatrixCell />
+        <MatrixCell>
           <div className="flex items-center gap-2">
             <Switch id="sw-disabled-checked" disabled defaultChecked />
             <Label htmlFor="sw-disabled-checked" className="opacity-50">
               Disabled on
             </Label>
           </div>
-        </StateRow>
-      </div>
-    </Section>
+        </MatrixCell>
+      </MatrixRow>
+    </MatrixSection>
   );
 }
 
@@ -501,13 +606,10 @@ function InputsWorkbenchPage() {
         Every form input primitive in every state — default, focus, invalid,
         disabled, with helper text.
       </p>
-      <InputSection />
-      <TextareaSection />
-      <SelectSection />
-      <ComboboxSection />
-      <CheckboxSection />
-      <RadioSection />
-      <SwitchSection />
+      <FieldsMatrix />
+      <PickersMatrix />
+      <ComboboxVariantsSection />
+      <TogglesMatrix />
       <SliderSection />
     </div>
   );

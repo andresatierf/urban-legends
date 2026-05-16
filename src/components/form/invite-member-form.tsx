@@ -119,15 +119,13 @@ export function InviteMemberFormDialog({
         }}
       >
         {children ? (
-          <DialogTrigger asChild>{children}</DialogTrigger>
+          <DialogTrigger render={children as React.ReactElement} />
         ) : (
           controlledOpen === undefined &&
           onOpenChange === undefined && (
-            <DialogTrigger asChild>
-              <Button type="button">
-                <UserPlus />
-                Invite Member
-              </Button>
+            <DialogTrigger render={<Button type="button" />}>
+              <UserPlus />
+              Invite Member
             </DialogTrigger>
           )
         )}
@@ -145,7 +143,7 @@ export function InviteMemberFormDialog({
             {!teamId && (
               <form.AppField name="teamId">
                 {(field) => (
-                  <field.SelectField label="Team" options={teamOptions} />
+                  <field.ComboboxField label="Team" options={teamOptions} />
                 )}
               </form.AppField>
             )}
@@ -165,14 +163,16 @@ export function InviteMemberFormDialog({
           >
             {([isPristine, canSubmit, isSubmitting]) => (
               <DialogFooter>
-                <DialogClose asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
+                <DialogClose
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isSubmitting}
+                    />
+                  }
+                >
+                  Cancel
                 </DialogClose>
                 <Button
                   type="submit"
