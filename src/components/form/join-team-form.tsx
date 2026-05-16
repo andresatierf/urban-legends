@@ -1,15 +1,11 @@
 "use client";
 
-import { useMutation } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useId, useState } from "react";
 import z from "zod";
 
 import { useAppForm } from "@/hooks/form";
-import { tryMutate } from "@/lib/utils";
 
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -27,17 +23,19 @@ const formSchema = z.object({
   message: z.string().optional(),
 });
 
+export type JoinTeamFormValues = { message?: string };
+
 type Props = {
-  teamId: Id<"teams">;
   teamName: string;
+  onSubmit: (values: JoinTeamFormValues) => Promise<void> | void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   children?: React.ReactNode;
 };
 
 export function JoinTeamFormDialog({
-  teamId,
   teamName,
+  onSubmit,
   open: controlledOpen,
   onOpenChange,
   children,
@@ -48,8 +46,6 @@ export function JoinTeamFormDialog({
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
 
-  const requestToJoin = useMutation(api.joinRequests.requestToJoin);
-
   const form = useAppForm({
     defaultValues: {
       message: "",
@@ -58,13 +54,8 @@ export function JoinTeamFormDialog({
       onChange: formSchema,
     },
     onSubmit: async ({ value: { message } }) => {
-      await tryMutate({
-        fn: () =>
-          requestToJoin({ teamId, message: message?.trim() || undefined }),
-        onSuccess: () => setOpen(false),
-        successToast: "Join request sent successfully!",
-        defaultFailureToast: "Failed to send join request",
-      });
+      await onSubmit({ message: message?.trim() || undefined });
+      setOpen(false);
     },
   });
 

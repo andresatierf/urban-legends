@@ -1,4 +1,3 @@
-import type { Id } from "../../../convex/_generated/dataModel";
 import { UpsertTeamFormDialog } from "../form/upsert-team-form";
 import { Card, CardContent } from "../ui/card";
 import {
@@ -9,28 +8,24 @@ import {
 } from "../ui/empty";
 
 type Props = {
-  tournamentId?: Id<"tournaments">;
+  /** Whether the user has no teams yet. Changes copy. */
   first?: boolean;
+  /** Override the action slot. Defaults to <UpsertTeamFormDialog />. */
+  action?: React.ReactNode;
 };
 
-export function JoinTeamCard({ tournamentId, first }: Props) {
+export function JoinTeamCard({ first, action }: Props) {
   return (
     <Card>
       <CardContent>
         <Empty className="gap-3 py-2!">
-          <EmptyHeader>
-            {tournamentId || first ? "No teams yet" : "Join a Team"}
-          </EmptyHeader>
+          <EmptyHeader>{first ? "No teams yet" : "Join a Team"}</EmptyHeader>
           <EmptyDescription>
-            {tournamentId
-              ? "Be the first to create a team for this tournament!"
-              : first
-                ? "Create a team to play in a tournament"
-                : "You can join a team by selecting from the list below or you can create your own."}
+            {first
+              ? "Create a team to play in a tournament"
+              : "You can join a team by selecting from the list below or you can create your own."}
           </EmptyDescription>
-          <EmptyContent>
-            <UpsertTeamFormDialog tournamentId={tournamentId} />
-          </EmptyContent>
+          <EmptyContent>{action ?? <UpsertTeamFormDialog />}</EmptyContent>
         </Empty>
       </CardContent>
     </Card>

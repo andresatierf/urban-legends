@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { JoinTeamCardSpecimens } from "@/components/workbench/join-team-card-specimens";
+import { JoinTeamCardSection } from "@/components/workbench/join-team-card/section";
 
 export const Route = createFileRoute(
   "/_protected/workbench/components/join-team-card",
@@ -9,5 +9,5 @@ export const Route = createFileRoute(
 });
 
 function JoinTeamCardWorkbenchPage() {
-  return <JoinTeamCardSpecimens />;
+  return <JoinTeamCardSection />;
 }

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
 import { CaptainSpotlight } from "./captain-spotlight";
-import { JoinTeamButton } from "./join-team-action";
+import { JoinTeamButtonContainer } from "./join-team-action";
 import { LeaveTeamButton } from "./leave-team-button";
 import { ManageTeamButton } from "./manage-team-button";
 import { MomentumCell } from "./momentum-cell";
@@ -30,7 +30,7 @@ export function TeamCard({ data, demo = false }: Props) {
       topRight={<ViewerRoleRibbon userRole={userRole} />}
       bottomLeft={
         <>
-          <JoinTeamButton data={data} demo={demo} />
+          <JoinTeamButtonContainer data={data} demo={demo} />
           <LeaveTeamButton data={data} />
         </>
       }

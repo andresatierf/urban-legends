@@ -9,34 +9,27 @@ import { Button } from "@/components/ui/button";
 import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 import type { TeamCardData } from "./types";
+
+export type JoinTeamRequestState = { _id: string } | null;
+
+type Props = {
+  data: TeamCardData;
+  joinRequest: JoinTeamRequestState;
+  onRequestJoin: (message: string | undefined) => Promise<void> | void;
+  onCancelRequest: () => void;
+};
 
 export function JoinTeamButton({
   data,
-  demo = false,
-}: {
-  data: TeamCardData;
-  demo?: boolean;
-}) {
+  joinRequest,
+  onRequestJoin,
+  onCancelRequest,
+}: Props) {
   const isFull =
     data.team.maxMembers != null && data.memberCount >= data.team.maxMembers;
   const isHidden = data.isUserInTeam;
-
-  const joinRequests = useQuery(
-    api.joinRequests.listUserJoinRequests,
-    isHidden || demo ? "skip" : {},
-  );
-  const joinRequest = joinRequests?.find((r) => r.teamId === data.team._id);
-  const cancelRequest = useMutation(api.joinRequests.cancelJoinRequest);
-
-  const handleCancel = useCallback(() => {
-    if (!joinRequest) return;
-    void tryMutate({
-      fn: () => cancelRequest({ requestId: joinRequest._id }),
-      successToast: "Join request cancelled",
-      defaultFailureToast: "Failed to cancel join request",
-    });
-  }, [cancelRequest, joinRequest]);
 
   if (isHidden) return null;
 
@@ -46,7 +39,7 @@ export function JoinTeamButton({
         variant="secondary"
         size="sm"
         className="shadow-sm"
-        onClick={handleCancel}
+        onClick={onCancelRequest}
       >
         Cancel Request
       </Button>
@@ -70,11 +63,63 @@ export function JoinTeamButton({
   }
 
   return (
-    <JoinTeamFormDialog teamId={data.team._id} teamName={data.team.name}>
+    <JoinTeamFormDialog
+      teamName={data.team.name}
+      onSubmit={({ message }) => onRequestJoin(message)}
+    >
       <Button size="sm" variant="grass" className="shadow-sm">
         <UserPlus />
         Request to Join
       </Button>
     </JoinTeamFormDialog>
+  );
+}
+
+export function JoinTeamButtonContainer({
+  data,
+  demo = false,
+}: {
+  data: TeamCardData;
+  demo?: boolean;
+}) {
+  const isHidden = data.isUserInTeam;
+
+  const joinRequests = useQuery(
+    api.joinRequests.listUserJoinRequests,
+    isHidden || demo ? "skip" : {},
+  );
+  const joinRequest =
+    joinRequests?.find((r) => r.teamId === data.team._id) ?? null;
+  const cancelMutation = useMutation(api.joinRequests.cancelJoinRequest);
+  const requestToJoinMutation = useMutation(api.joinRequests.requestToJoin);
+
+  const handleCancel = useCallback(() => {
+    if (!joinRequest) return;
+    void tryMutate({
+      fn: () =>
+        cancelMutation({ requestId: joinRequest._id as Id<"joinRequests"> }),
+      successToast: "Join request cancelled",
+      defaultFailureToast: "Failed to cancel join request",
+    });
+  }, [cancelMutation, joinRequest]);
+
+  const handleRequest = useCallback(
+    async (message: string | undefined) => {
+      await tryMutate({
+        fn: () => requestToJoinMutation({ teamId: data.team._id, message }),
+        successToast: "Join request sent successfully!",
+        defaultFailureToast: "Failed to send join request",
+      });
+    },
+    [requestToJoinMutation, data.team._id],
+  );
+
+  return (
+    <JoinTeamButton
+      data={data}
+      joinRequest={joinRequest}
+      onRequestJoin={handleRequest}
+      onCancelRequest={handleCancel}
+    />
   );
 }
