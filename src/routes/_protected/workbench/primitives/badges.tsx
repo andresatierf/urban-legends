@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { VariantMatrix } from "@/components/workbench/shells/variant-matrix";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_protected/workbench/primitives/badges")(
   {
@@ -92,7 +93,10 @@ function BadgesWorkbenchPage() {
           columns={SURFACES}
           renderCell={(variant, surface) => (
             <div
-              className={`flex items-center justify-center rounded-md p-3 ${SURFACE_CLASS[surface]}`}
+              className={cn(
+                "flex items-center justify-center rounded-md p-3",
+                SURFACE_CLASS[surface],
+              )}
             >
               <Badge variant={variant}>{variant}</Badge>
             </div>
