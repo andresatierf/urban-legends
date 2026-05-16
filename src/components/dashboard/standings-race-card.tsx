@@ -1,23 +1,12 @@
 "use client";
 
 import { ComposedCard } from "@/components/common/card/composed-card";
-import type { BadgeProps } from "@/components/ui/badge";
 
-import type { Doc } from "../../../convex/_generated/dataModel";
-import { RaceChart, type RaceChartSeries } from "./race-chart";
-import type { DashboardTeam } from "./types";
+import { RaceChart } from "./race-chart";
+import type { StandingsChartData, StandingsGroup } from "./utils";
 
-export type StandingsGroup = {
-  tournament: Doc<"tournaments">;
-  teams: DashboardTeam[];
-  maxPts: number;
-};
-
-export type StandingsRaceChartData = {
-  days: number[];
-  maxPoints: number;
-  series: RaceChartSeries[];
-};
+export type StandingsRaceChartData = StandingsChartData;
+export type { StandingsGroup };
 
 export type StandingsRaceCardProps = {
   group: StandingsGroup;
@@ -33,41 +22,15 @@ const CHART_OVERRIDE =
 
 export function StandingsRaceCard({
   group,
-  isActive,
   chartData,
   userTeamId,
 }: StandingsRaceCardProps) {
-  const leader = group.teams[0];
-  const badge: BadgeProps[] = [];
-  if (leader) {
-    badge.push({
-      variant: "neutral",
-      size: "lg",
-      children: (
-        <span className="inline-flex items-center gap-2">
-          <span className="text-mute text-label-caps">Leading</span>
-          <span className="font-heading text-sm font-bold">
-            {leader.team.name}
-          </span>
-          <span className="text-sunset font-mono text-xs font-semibold">
-            {leader.team.points} pts
-          </span>
-        </span>
-      ),
-    });
-  }
-  badge.push({
-    variant: isActive ? "success" : "neutral",
-    size: "lg",
-    children: isActive ? "Active" : "Ended",
-  });
   return (
     <ComposedCard
       bodyClassName="p-0"
       eyebrow="The Race · Live Standings"
       title={group.tournament.name}
       titleSize="lg"
-      badge={badge}
     >
       <div className="grid grid-cols-1 min-[960px]:grid-cols-[1.4fr_1fr] min-[960px]:[grid-template-rows:544px]">
         <div className="flex min-h-0 min-w-0 flex-col px-4 pt-4 pb-2">

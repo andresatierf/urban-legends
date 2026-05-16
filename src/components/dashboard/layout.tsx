@@ -17,55 +17,41 @@ import {
   WhistleSvgSmall,
 } from "./svg-icons";
 import { TournamentSwitcher } from "./tournament-switcher";
-import { DashboardData, DashboardTeam } from "./types";
-import { activityDotColorClass, formatRelative } from "./utils";
+import { DashboardData } from "./types";
+import {
+  activityDotColorClass,
+  buildStandingsChartData,
+  buildStandingsGroups,
+  countApprovedSince,
+  countApprovedToday,
+  formatRelative,
+  getActiveTeams,
+  getApprovedSparkline,
+  getMvpEntry,
+  getStreakDays,
+  getStreakSparkline,
+  getTournamentProgress,
+  getWeekNumber,
+  getWeekStartMs,
+  isTournamentActive,
+  sortByPointsDesc,
+  toIsoDate,
+} from "./utils";
 
 export function DashboardLayout({ data }: { data: DashboardData }) {
   const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = toIsoDate(today);
   const dateLabel = today.toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   });
 
-  const startOfYear = new Date(today.getFullYear(), 0, 1);
-  const weekNo = Math.ceil(
-    ((today.getTime() - startOfYear.getTime()) / 86_400_000 +
-      startOfYear.getDay() +
-      1) /
-      7,
-  );
+  const weekNo = getWeekNumber(today);
+  const activeTeams = getActiveTeams(data.teams, todayStr);
+  const standings = sortByPointsDesc(data.teams);
 
-  const activeTeams = data.teams.filter(
-    (t) =>
-      t.tournament.startDate <= todayStr && t.tournament.endDate >= todayStr,
-  );
-
-  const standings = [...data.teams].sort(
-    (a, b) => b.team.points - a.team.points,
-  );
-
-  const mvpStats = data.teams.map((t) => ({
-    team: t,
-    submissionsToday: data.activities.filter(
-      (a) =>
-        a.type === "submission_approved" &&
-        a.description.includes(t.team.name) &&
-        new Date(a.timestamp).toISOString().slice(0, 10) === todayStr,
-    ).length,
-    submissionsAllTime: data.activities.filter(
-      (a) =>
-        a.type === "submission_approved" && a.description.includes(t.team.name),
-    ).length,
-  }));
-  const mvpEntry =
-    [...mvpStats].sort(
-      (a, b) =>
-        b.submissionsToday - a.submissionsToday ||
-        b.submissionsAllTime - a.submissionsAllTime ||
-        b.team.team.points - a.team.team.points,
-    )[0] ?? null;
+  const mvpEntry = getMvpEntry(data.teams, data.activities, todayStr);
   const mvpTeam = mvpEntry?.team ?? data.teams[0] ?? null;
   const mvpCountToday = mvpEntry?.submissionsToday ?? 0;
   const mvpCountTotal = mvpEntry?.submissionsAllTime ?? 0;
@@ -77,79 +63,25 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
       ? Math.min(...data.deadlines.map((d) => d.daysUntilEnd))
       : null;
 
-  const last7 = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    return d.toISOString().slice(0, 10);
-  });
-  const activeDaySet = new Set(
-    data.activities.map((a) =>
-      new Date(a.timestamp).toISOString().slice(0, 10),
-    ),
+  const streakDays = getStreakDays(data.activities, today);
+  const weekApproved = countApprovedSince(
+    data.activities,
+    getWeekStartMs(today),
   );
-  const streakDays = last7.filter((d) => activeDaySet.has(d)).length;
-
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - 6);
-  weekStart.setHours(0, 0, 0, 0);
-  const weekApproved = data.activities.filter(
-    (a) =>
-      a.type === "submission_approved" && a.timestamp >= weekStart.getTime(),
-  ).length;
-
-  const todayApproved = data.activities.filter((a) => {
-    const d = new Date(a.timestamp).toISOString().slice(0, 10);
-    return a.type === "submission_approved" && d === todayStr;
-  }).length;
+  const todayApproved = countApprovedToday(data.activities, todayStr);
 
   const userTopTeam = standings.length > 0 ? standings[0] : null;
   const squadRank = userTopTeam
     ? standings.findIndex((t) => t.team._id === userTopTeam.team._id) + 1
     : 1;
 
-  const sparkline = last7
-    .slice()
-    .reverse()
-    .map(
-      (d) =>
-        data.activities.filter(
-          (a) =>
-            a.type === "submission_approved" &&
-            new Date(a.timestamp).toISOString().slice(0, 10) === d,
-        ).length,
-    );
+  const sparkline = getApprovedSparkline(data.activities, today);
+  const streakSparkline = getStreakSparkline(data.activities, today);
 
-  const allTeams = [...data.teams, ...data.competingTeams];
-  type StandingGroup = {
-    tournament: DashboardTeam["tournament"];
-    teams: DashboardTeam[];
-  };
-  const standingsGroupsMap = new Map<string, StandingGroup>();
-  for (const t of allTeams) {
-    const id = t.tournament._id;
-    const existing = standingsGroupsMap.get(id);
-    if (existing) {
-      existing.teams.push(t);
-    } else {
-      standingsGroupsMap.set(id, { tournament: t.tournament, teams: [t] });
-    }
-  }
-  const standingsGroups = [...standingsGroupsMap.values()].map((g) => ({
-    tournament: g.tournament,
-    teams: [...g.teams].sort((a, b) => b.team.points - a.team.points),
-    maxPts: Math.max(...g.teams.map((x) => x.team.points), 1),
-  }));
-  standingsGroups.sort((a, b) => {
-    const aActive =
-      a.tournament.startDate <= todayStr && a.tournament.endDate >= todayStr
-        ? 0
-        : 1;
-    const bActive =
-      b.tournament.startDate <= todayStr && b.tournament.endDate >= todayStr
-        ? 0
-        : 1;
-    return aActive - bActive;
-  });
+  const standingsGroups = buildStandingsGroups(
+    [...data.teams, ...data.competingTeams],
+    todayStr,
+  );
 
   const defaultTourId =
     activeTeams[0]?.tournament._id ?? standingsGroups[0]?.tournament._id ?? "";
@@ -160,7 +92,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
     null;
   const selectedTour = selectedGroup?.tournament ?? null;
   const isSelectedActive = selectedTour
-    ? selectedTour.startDate <= todayStr && selectedTour.endDate >= todayStr
+    ? isTournamentActive(selectedTour, todayStr)
     : false;
   const selectedUserTeam = selectedGroup
     ? (selectedGroup.teams.find((t) => t.userRole !== "rival") ??
@@ -177,50 +109,9 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
       ? selectedUserTeam.team.points - selectedRival.team.points
       : 0;
 
-  let chartData: {
-    days: number[];
-    maxPoints: number;
-    series: Array<{
-      teamId: string;
-      teamName: string;
-      points: number[];
-      total: number;
-    }>;
-  } | null = null;
-  if (selectedGroup) {
-    const startMs = new Date(selectedGroup.tournament.startDate).getTime();
-    const endMs = Math.min(
-      new Date(selectedGroup.tournament.endDate).getTime(),
-      today.getTime(),
-    );
-    const totalDays = Math.max(Math.ceil((endMs - startMs) / 86_400_000), 1);
-    const days = Array.from(
-      { length: totalDays + 1 },
-      (_, i) => startMs + i * 86_400_000,
-    );
-    const timelinesByTeam = new Map(
-      data.standingsTimelines.map((tl) => [tl.teamId, tl.events]),
-    );
-    const series = selectedGroup.teams.map((t) => {
-      const events = (timelinesByTeam.get(t.team._id) ?? []).filter(
-        (e) => e.timestamp >= startMs && e.timestamp <= endMs,
-      );
-      const points = days.map((d) =>
-        events.reduce((sum, e) => (e.timestamp <= d ? sum + e.points : sum), 0),
-      );
-      if (points.length > 0 && events.length > 0) {
-        points[points.length - 1] = t.team.points;
-      }
-      return {
-        teamId: t.team._id,
-        teamName: t.team.name,
-        points,
-        total: t.team.points,
-      };
-    });
-    const maxPoints = Math.max(...series.flatMap((s) => s.points), 1);
-    chartData = { days, maxPoints, series };
-  }
+  const chartData = selectedGroup
+    ? buildStandingsChartData(selectedGroup, data.standingsTimelines, today)
+    : null;
 
   const hasInbox =
     data.invitations.length > 0 ||
@@ -238,7 +129,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               tournaments={data.activeTournaments}
               selectedTournamentId={selectedTour._id}
               onSelect={setSelectedTourId}
-              className="sm:absolute sm:-top-4 sm:left-5 sm:z-[3]"
+              className="sm:absolute sm:-top-4 sm:left-5 sm:z-3"
             />
           </div>
         )}
@@ -280,14 +171,14 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
           <LogActivityFab
             teamName={selectedUserTeam.team.name}
             tournamentName={selectedTour.name}
-            className="sm:absolute sm:right-5 sm:bottom-[-38px] sm:z-[3]"
+            className="sm:absolute sm:right-5 sm:-bottom-9.5 sm:z-3"
           />
         )}
       </section>
 
       {selectedGroup && (
         <section
-          className="relative mt-15 [animation:va-fadein-up_0.4s_ease_both] motion-reduce:animate-none"
+          className="relative mt-15 animate-[va-fadein-up_0.4s_ease_both] motion-reduce:animate-none"
           style={{ animationDelay: "120ms" }}
         >
           <RibbonBanner label="Standings" />
@@ -305,15 +196,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
           <RibbonBanner label="MY SQUADS" small />
           <div className="grid grid-cols-1 gap-4">
             {data.teams.map((t) => {
-              const tournStart = new Date(t.tournament.startDate).getTime();
-              const tournEnd = new Date(t.tournament.endDate).getTime();
-              const now = Date.now();
-              const totalDuration = Math.max(tournEnd - tournStart, 1);
-              const elapsed = Math.min(
-                Math.max(now - tournStart, 0),
-                totalDuration,
-              );
-              const progress = Math.round((elapsed / totalDuration) * 100);
+              const progress = getTournamentProgress(t.tournament, Date.now());
               return (
                 <DashboardTeamCard
                   key={t.team._id}
@@ -417,10 +300,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               value={streakDays}
               unit="DAYS"
               color="var(--sky)"
-              sparkline={last7
-                .slice()
-                .reverse()
-                .map((d) => (activeDaySet.has(d) ? 1 : 0))}
+              sparkline={streakSparkline}
             />
             <MetricTile
               label="THIS WEEK"
