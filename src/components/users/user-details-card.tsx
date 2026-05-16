@@ -1,10 +1,14 @@
 import type { FunctionReturnType } from "convex/server";
-import { Settings, Trophy, Users } from "lucide-react";
+import { startCase } from "lodash";
+import { Settings } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { cn } from "@/lib/utils";
+
 import type { api } from "../../../convex/_generated/api";
-import { DetailsCard } from "../details-card";
 import { ManageRolesFormDialog } from "../form/manage-roles-form";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";
 import { RolesBadgeList } from "./roles-badge-list";
 
@@ -35,38 +39,6 @@ export const UserDetailsCard = ({ data, className }: UserDetailsCardProps) => {
     ];
   }, [data]);
 
-  const actions = useMemo(() => {
-    if (!data) return [];
-
-    return [
-      {
-        label: "View Teams",
-        icon: Users,
-        // condition: data.teams.length > 0,
-        condition: false, // TODO: handle this
-        onClick: () => {
-          // Could navigate to a teams list view
-        },
-      },
-      {
-        label: "View Submissions",
-        icon: Trophy,
-        // condition: data.statistics.submissionCount > 0,
-        condition: false, // TODO: handle this
-        onClick: () => {
-          // Could navigate to submissions list view
-        },
-      },
-      {
-        label: "Manage Roles",
-        icon: Settings,
-        condition: data.canManageRoles,
-        onClick: () => setAssignDialogOpen(true),
-        separator: "before" as const,
-      },
-    ];
-  }, [data]);
-
   if (!data) {
     return <DetailsCardSkeleton detailsCount={3} className={className} />;
   }
@@ -80,12 +52,32 @@ export const UserDetailsCard = ({ data, className }: UserDetailsCardProps) => {
         userName={data.user.name}
         currentRoles={data.user.roleNames}
       />
-      <DetailsCard
-        title={data.user.name}
-        details={details}
-        actions={actions}
-        className={className}
-      />
+      <Card className={cn("min-w-fit", className)}>
+        <CardHeader>
+          <CardTitle className="flex justify-between text-xl">
+            {data.user.name}
+            {data.canManageRoles && (
+              <Button
+                variant="outline"
+                onClick={() => setAssignDialogOpen(true)}
+              >
+                <Settings className="h-4 w-4" />
+                Manage Roles
+              </Button>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-2">
+            {details.map((detail) => (
+              <div key={detail.key} className="flex flex-col">
+                <strong>{startCase(detail.key)}:</strong>
+                <span className="text-muted-foreground">{detail.value}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </>
   );
 };
