@@ -1,6 +1,6 @@
 "use client";
 
-import { UserPlus } from "lucide-react";
+import { LogOut, UserPlus } from "lucide-react";
 
 import { JoinTeamFormDialog } from "@/components/form/join-team-form";
 import { Button } from "@/components/ui/button";
@@ -14,19 +14,36 @@ type Props = {
   joinRequest: JoinTeamRequestState;
   onRequestJoin: (message: string | undefined) => Promise<void> | void;
   onCancelRequest: () => void;
+  onLeave: () => void;
 };
 
-export function JoinTeamButton({
+export function MembershipButton({
   data,
   joinRequest,
   onRequestJoin,
   onCancelRequest,
+  onLeave,
 }: Props) {
-  const isFull =
-    data.team.maxMembers != null && data.memberCount >= data.team.maxMembers;
-  const isHidden = data.isUserInTeam;
+  if (data.isUserMember) {
+    const canLeave =
+      data.userRole === "member" ||
+      (data.userRole === "captain" && data.memberCount === 1);
+    if (!canLeave) return null;
 
-  if (isHidden) return null;
+    return (
+      <Button
+        variant="destructive"
+        size="sm"
+        className="shadow-sm"
+        onClick={onLeave}
+      >
+        <LogOut className="size-3.5" />
+        Leave
+      </Button>
+    );
+  }
+
+  if (data.isUserInTeam) return null;
 
   if (joinRequest) {
     return (
@@ -41,6 +58,8 @@ export function JoinTeamButton({
     );
   }
 
+  const isFull =
+    data.team.maxMembers != null && data.memberCount >= data.team.maxMembers;
   if (isFull) {
     return (
       <Button variant="destructive" size="sm" className="shadow-sm" disabled>

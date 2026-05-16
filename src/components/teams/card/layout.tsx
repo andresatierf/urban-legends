@@ -4,15 +4,16 @@ import { cn } from "@/lib/utils";
 
 import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
 import { CaptainSpotlight } from "./captain-spotlight";
-import { JoinTeamButton, type JoinTeamRequestState } from "./join-team-button";
-import { LeaveTeamButton } from "./leave-team-button";
-import { ManageTeamButton } from "./manage-team-button";
+import {
+  type JoinTeamRequestState,
+  MembershipButton,
+} from "./membership-button";
 import { MomentumCell } from "./momentum-cell";
+import { OpenTeamButton } from "./open-team-button";
 import { SparklineCell } from "./sparkline-cell";
 import { StatsStrip } from "./stats-strip";
 import type { TeamCardData } from "./types";
-import { ViewTeamButton } from "./view-team-button";
-import { ViewerRoleRibbon } from "./viewer-role-ribbon";
+import { ViewerRoleBadge } from "./viewer-role-badge";
 
 export { TeamCardSkeleton } from "./skeleton";
 
@@ -36,24 +37,17 @@ export function TeamCard({
 
   return (
     <EdgeOverlay
-      topRight={<ViewerRoleRibbon userRole={userRole} />}
+      topRight={<ViewerRoleBadge data={data} />}
       bottomLeft={
-        <>
-          <JoinTeamButton
-            data={data}
-            joinRequest={joinRequest}
-            onRequestJoin={onRequestJoin}
-            onCancelRequest={onCancelRequest}
-          />
-          <LeaveTeamButton data={data} onClick={onLeave} />
-        </>
+        <MembershipButton
+          data={data}
+          joinRequest={joinRequest}
+          onRequestJoin={onRequestJoin}
+          onCancelRequest={onCancelRequest}
+          onLeave={onLeave}
+        />
       }
-      bottomRight={
-        <>
-          <ViewTeamButton data={data} />
-          <ManageTeamButton data={data} />
-        </>
-      }
+      bottomRight={<OpenTeamButton data={data} />}
     >
       <ComposedCard
         className={cn("pb-2", {

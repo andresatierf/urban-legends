@@ -1,5 +1,5 @@
 import { SectionHeader } from "@/components/section-header";
-import { JoinTeamButton } from "@/components/teams/card/join-team-button";
+import { MembershipButton } from "@/components/teams/card/membership-button";
 import { JoinTeamCard } from "@/components/teams/join-team-card";
 import { Button } from "@/components/ui/button";
 
@@ -56,11 +56,12 @@ export function JoinTeamCardSection() {
                 description={JOIN_BUTTON_STATE_DESCRIPTIONS[state]}
               >
                 <div className="flex min-h-9 items-center gap-2">
-                  <JoinTeamButton
+                  <MembershipButton
                     data={fixture.data}
                     joinRequest={fixture.joinRequest}
                     onRequestJoin={noop}
                     onCancelRequest={() => {}}
+                    onLeave={() => {}}
                   />
                   {state === "member" && (
                     <span className="text-muted-foreground text-xs italic">

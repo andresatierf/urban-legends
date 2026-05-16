@@ -1,12 +1,12 @@
 import { cn } from "@/lib/utils";
 
 const SLOT_CLASSES = {
-  topLeft: "-top-3 left-4",
+  topLeft: "top-0 left-4 -translate-y-1/2",
   topCenter: "-top-3 left-1/2 -translate-x-1/2",
-  topRight: "-top-3 right-6",
-  bottomLeft: "-bottom-3 left-4",
+  topRight: "top-0 right-6 -translate-y-1/2",
+  bottomLeft: "bottom-0 left-5 translate-y-1/2",
   bottomCenter: "-bottom-3 left-1/2 -translate-x-1/2",
-  bottomRight: "right-4 -bottom-3",
+  bottomRight: "right-5 bottom-0 translate-y-1/2",
 } as const;
 
 type SlotKey = keyof typeof SLOT_CLASSES;

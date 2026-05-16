@@ -8,7 +8,7 @@ import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import type { JoinTeamRequestState } from "./card/join-team-button";
+import type { JoinTeamRequestState } from "./card/membership-button";
 
 type TeamCardActions = {
   joinRequest: JoinTeamRequestState;
