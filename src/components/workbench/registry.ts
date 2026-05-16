@@ -83,6 +83,16 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "components",
   },
   {
+    path: "/workbench/components/dashboard-surfaces",
+    label: "Dashboard Surfaces",
+    group: "components",
+  },
+  {
+    path: "/workbench/components/invitations",
+    label: "Invitations",
+    group: "components",
+  },
+  {
     path: "/workbench/states/empty-loading",
     label: "Empty & Loading",
     group: "states",
