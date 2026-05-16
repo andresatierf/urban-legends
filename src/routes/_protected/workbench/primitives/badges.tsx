@@ -89,9 +89,9 @@ function BadgesWorkbenchPage() {
       <section className="space-y-4">
         <h3 className="text-h3">Semantic variants by surface</h3>
         <VariantMatrix
-          variants={SEMANTIC_VARIANTS}
-          columns={SURFACES}
-          renderCell={(variant, surface) => (
+          variants={SURFACES}
+          columns={SEMANTIC_VARIANTS}
+          renderCell={(surface, variant) => (
             <div
               className={cn(
                 "flex items-center justify-center rounded-md p-3",
@@ -107,9 +107,9 @@ function BadgesWorkbenchPage() {
       <section className="space-y-4">
         <h3 className="text-h3">Sizes</h3>
         <VariantMatrix
-          variants={SEMANTIC_VARIANTS}
-          columns={SIZES}
-          renderCell={(variant, size) => (
+          variants={SIZES}
+          columns={SEMANTIC_VARIANTS}
+          renderCell={(size, variant) => (
             <div className="flex items-center justify-center">
               <Badge variant={variant} size={size}>
                 {variant}
