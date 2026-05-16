@@ -1,15 +1,13 @@
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 
 import type { Id } from "../_generated/dataModel";
+import type { QueryCtx } from "../_generated/server";
 import { query } from "../_generated/server";
 import { IllegalAccess, hasSomeReviewAccess } from "../authority/core";
 import { batchGetDocuments, toIdMap } from "../lib/helpers";
 import { getCurrentUserOrThrow } from "../users";
 
-/**
- * Get the count of pending submissions (both individual and groups) for reviewers.
- * Only accessible to users with reviewer or admin roles.
- */
 export const getPendingCount = query({
   args: {},
   handler: async (ctx) => {
@@ -34,90 +32,94 @@ export const getPendingCount = query({
   },
 });
 
-/**
- * Get paginated pending submissions for review queue.
- * Returns both individual submissions and submission groups with full context.
- */
-export const getPendingSubmissions = query({
+const stateValidator = v.union(
+  v.literal("pending"),
+  v.literal("approved"),
+  v.literal("rejected"),
+);
+
+export const listForReview = query({
   args: {
-    limit: v.optional(v.number()),
-    offset: v.optional(v.number()),
+    paginationOpts: paginationOptsValidator,
     tournamentId: v.optional(v.id("tournaments")),
-    teamId: v.optional(v.id("teams")),
+    state: v.optional(v.array(stateValidator)),
+    search: v.optional(v.string()),
+    orderBy: v.optional(
+      v.union(
+        v.literal("date-desc"),
+        v.literal("date-asc"),
+        v.literal("points-desc"),
+        v.literal("points-asc"),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
-
     if (!(await hasSomeReviewAccess(ctx, user._id)))
       throw new IllegalAccess("reviewer");
 
-    const limit = args.limit ?? 20;
-    const offset = args.offset ?? 0;
+    const states = args.state ?? ["pending"];
+    const order =
+      args.orderBy === "date-asc" || args.orderBy === "points-asc"
+        ? ("asc" as const)
+        : ("desc" as const);
 
-    let individualQuery = ctx.db
-      .query("submissions")
-      .withIndex("by_state", (q) => q.eq("state", "pending"))
-      .filter((q) => q.eq(q.field("submissionType"), "individual"));
+    const matching = await loadMatchingSubmissions(ctx, args, states, order);
 
-    let groupQuery = ctx.db
-      .query("submissionGroups")
-      .withIndex("by_state", (q) => q.eq("state", "pending"));
+    const individualSubs = matching.filter(
+      (s) => s.submissionType === "individual",
+    );
+    const teamSubs = matching.filter((s) => s.submissionType === "team");
 
-    if (args.tournamentId) {
-      individualQuery = individualQuery.filter((q) =>
-        q.eq(q.field("tournamentId"), args.tournamentId),
-      );
-      groupQuery = groupQuery.filter((q) =>
-        q.eq(q.field("tournamentId"), args.tournamentId),
-      );
+    const seenGroupIds = new Set<string>();
+    const uniqueGroupSubs = teamSubs.filter((s) => {
+      if (!s.submissionGroupId) return false;
+      const gid = s.submissionGroupId as string;
+      if (seenGroupIds.has(gid)) return false;
+      seenGroupIds.add(gid);
+      return true;
+    });
+
+    const groupIds = uniqueGroupSubs
+      .map((s) => s.submissionGroupId)
+      .filter((id): id is Id<"submissionGroups"> => id != null);
+    const groupDocs = await batchGetDocuments(
+      ctx,
+      "submissionGroups",
+      groupIds,
+    );
+    const groupMap = toIdMap(groupDocs);
+
+    const groupMemberSubs = new Map<string, typeof teamSubs>();
+    for (const gid of groupIds) {
+      const members = await ctx.db
+        .query("submissions")
+        .withIndex("by_group", (q) => q.eq("submissionGroupId", gid))
+        .collect();
+      groupMemberSubs.set(gid as string, members);
     }
 
-    if (args.teamId) {
-      individualQuery = individualQuery.filter((q) =>
-        q.eq(q.field("teamId"), args.teamId),
-      );
-      groupQuery = groupQuery.filter((q) =>
-        q.eq(q.field("teamId"), args.teamId),
-      );
+    const allTeamIds = new Set<Id<"teams">>();
+    const allTournamentIds = new Set<Id<"tournaments">>();
+    const allUserIds = new Set<Id<"users">>();
+
+    for (const s of individualSubs) {
+      allTeamIds.add(s.teamId);
+      allTournamentIds.add(s.tournamentId);
+      allUserIds.add(s.userId);
     }
-
-    const [individualSubmissions, submissionGroups] = await Promise.all([
-      individualQuery.collect(),
-      groupQuery.collect(),
-    ]);
-
-    const teamIds = Array.from(
-      new Set([
-        ...individualSubmissions.map((s) => s.teamId),
-        ...submissionGroups.map((s) => s.teamId),
-      ]),
-    ) as Id<"teams">[];
-    const tournamentIds = Array.from(
-      new Set([
-        ...individualSubmissions.map((s) => s.tournamentId),
-        ...submissionGroups.map((s) => s.tournamentId),
-      ]),
-    ) as Id<"tournaments">[];
-
-    const userIds = Array.from(
-      new Set(individualSubmissions.map((s) => s.userId)),
-    ) as Id<"users">[];
+    for (const s of uniqueGroupSubs) {
+      allTeamIds.add(s.teamId);
+      allTournamentIds.add(s.tournamentId);
+    }
+    for (const [, members] of groupMemberSubs) {
+      for (const m of members) allUserIds.add(m.userId);
+    }
 
     const [teams, tournaments, users] = await Promise.all([
-      ctx.db
-        .query("teams")
-        .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))))
-        .collect(),
-      ctx.db
-        .query("tournaments")
-        .filter((q) =>
-          q.or(...tournamentIds.map((id) => q.eq(q.field("_id"), id))),
-        )
-        .collect(),
-      ctx.db
-        .query("users")
-        .filter((q) => q.or(...userIds.map((id) => q.eq(q.field("_id"), id))))
-        .collect(),
+      batchGetDocuments(ctx, "teams", [...allTeamIds]),
+      batchGetDocuments(ctx, "tournaments", [...allTournamentIds]),
+      batchGetDocuments(ctx, "users", [...allUserIds]),
     ]);
 
     const teamMap = toIdMap(teams);
@@ -126,30 +128,15 @@ export const getPendingSubmissions = query({
 
     const enrichedIndividual = (
       await Promise.all(
-        individualSubmissions.map(async (submission) => {
+        individualSubs.map(async (submission) => {
           const team = teamMap.get(submission.teamId);
           const tournament = tournamentMap.get(submission.tournamentId);
           const submitter = userMap.get(submission.userId);
+          if (!team || !tournament || !submitter) return null;
 
-          if (!team || !tournament || !submitter) {
-            return null;
-          }
-
-          const evidenceResolved = await Promise.all(
-            (submission.evidenceStorageIds ?? []).map(
-              async (storageId, idx) => {
-                const url = await ctx.storage.getUrl(storageId);
-                if (!url) return null;
-                return {
-                  _id: storageId as string,
-                  url,
-                  filename: `evidence-${idx + 1}.jpg`,
-                };
-              },
-            ),
-          );
-          const evidence = evidenceResolved.filter(
-            (e): e is NonNullable<typeof e> => e !== null,
+          const evidence = await resolveEvidence(
+            ctx,
+            submission.evidenceStorageIds,
           );
 
           return {
@@ -165,47 +152,37 @@ export const getPendingSubmissions = query({
           };
         }),
       )
-    ).filter((item): item is NonNullable<typeof item> => item !== null);
+    ).filter((i): i is NonNullable<typeof i> => i != null);
 
     const enrichedGroups = (
       await Promise.all(
-        submissionGroups.map(async (group) => {
+        uniqueGroupSubs.map(async (sub) => {
+          const group = sub.submissionGroupId
+            ? groupMap.get(sub.submissionGroupId)
+            : null;
+          if (!group) return null;
+
           const team = teamMap.get(group.teamId);
           const tournament = tournamentMap.get(group.tournamentId);
+          if (!team || !tournament) return null;
 
-          if (!team || !tournament) {
-            return null;
-          }
-
-          const groupSubmissions = await ctx.db
-            .query("submissions")
-            .withIndex("by_group", (q) => q.eq("submissionGroupId", group._id))
-            .collect();
-
-          const userIds = groupSubmissions.map((s) => s.userId);
-          const submitters = await batchGetDocuments(ctx, "users", userIds);
+          const memberSubs = groupMemberSubs.get(group._id as string) ?? [];
+          const submitters = memberSubs
+            .map((s) => userMap.get(s.userId))
+            .filter((u): u is NonNullable<typeof u> => u != null);
 
           const submitterEvidence = await Promise.all(
-            groupSubmissions.map(async (sub) => {
-              const submitter = submitters.find((u) => u._id === sub.userId);
-              const evidenceResolved = await Promise.all(
-                (sub.evidenceStorageIds ?? []).map(async (storageId, idx) => {
-                  const url = await ctx.storage.getUrl(storageId);
-                  if (!url) return null;
-                  return {
-                    _id: storageId as string,
-                    url,
-                    filename: `evidence-${idx + 1}.jpg`,
-                  };
-                }),
+            memberSubs.map(async (ms) => {
+              const submitter = userMap.get(ms.userId);
+              const evidence = await resolveEvidence(
+                ctx,
+                ms.evidenceStorageIds,
               );
               return {
-                userId: sub.userId as string,
+                userId: ms.userId as string,
                 submitterName: submitter?.name ?? "Unknown",
                 submitterImageUrl: submitter?.imageUrl,
-                evidence: evidenceResolved.filter(
-                  (e): e is NonNullable<typeof e> => e !== null,
-                ),
+                evidence,
               };
             }),
           );
@@ -216,7 +193,7 @@ export const getPendingSubmissions = query({
             group,
             team,
             tournament,
-            submissions: groupSubmissions,
+            submissions: memberSubs,
             submitters,
             submitterEvidence,
             date: group.date,
@@ -224,25 +201,126 @@ export const getPendingSubmissions = query({
           };
         }),
       )
-    ).filter((item): item is NonNullable<typeof item> => item !== null);
+    ).filter((i): i is NonNullable<typeof i> => i != null);
 
-    const combined = [...enrichedIndividual, ...enrichedGroups].sort((a, b) =>
-      b.createdAt.localeCompare(a.createdAt),
-    );
+    let items = [...enrichedIndividual, ...enrichedGroups];
 
-    const paginated = combined.slice(offset, offset + limit);
+    if (args.search) {
+      const q = args.search.toLowerCase();
+      items = items.filter((item) => {
+        if (item.type === "individual") {
+          return (
+            item.team.name.toLowerCase().includes(q) ||
+            item.tournament.name.toLowerCase().includes(q) ||
+            item.submitter.name.toLowerCase().includes(q) ||
+            (item.submission.description?.toLowerCase().includes(q) ?? false)
+          );
+        }
+        return (
+          item.team.name.toLowerCase().includes(q) ||
+          item.tournament.name.toLowerCase().includes(q) ||
+          item.submitters.some((s) => s.name.toLowerCase().includes(q))
+        );
+      });
+    }
+
+    if (args.orderBy === "points-desc" || args.orderBy === "points-asc") {
+      const dir = args.orderBy === "points-desc" ? -1 : 1;
+      items.sort((a, b) => {
+        const pa =
+          a.type === "individual"
+            ? a.submission.pointsEarned
+            : a.group.pointsEarned;
+        const pb =
+          b.type === "individual"
+            ? b.submission.pointsEarned
+            : b.group.pointsEarned;
+        return (pa - pb) * dir;
+      });
+    } else {
+      const dir = order === "asc" ? 1 : -1;
+      items.sort((a, b) => a.date.localeCompare(b.date) * dir);
+    }
+
+    const offset = parseOffset(args.paginationOpts.cursor);
+    const numItems = args.paginationOpts.numItems;
+    const slice = items.slice(offset, offset + numItems);
+    const nextOffset = offset + slice.length;
 
     return {
-      items: paginated,
-      total: combined.length,
-      hasMore: offset + limit < combined.length,
+      page: slice,
+      isDone: nextOffset >= items.length,
+      continueCursor: String(nextOffset),
     };
   },
 });
 
-/**
- * Get reviewer statistics for the current user.
- */
+function parseOffset(cursor: string | null): number {
+  if (!cursor) return 0;
+  const n = parseInt(cursor, 10);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+async function loadMatchingSubmissions(
+  ctx: QueryCtx,
+  args: { tournamentId?: Id<"tournaments"> },
+  states: Array<"pending" | "approved" | "rejected">,
+  order: "asc" | "desc",
+) {
+  if (states.length === 1) {
+    const state = states[0];
+
+    if (args.tournamentId) {
+      return ctx.db
+        .query("submissions")
+        .withIndex("by_tournament_state_and_date", (q) =>
+          q.eq("tournamentId", args.tournamentId!).eq("state", state),
+        )
+        .order(order)
+        .collect();
+    }
+
+    return ctx.db
+      .query("submissions")
+      .withIndex("by_state_and_date", (q) => q.eq("state", state))
+      .order(order)
+      .collect();
+  }
+
+  const perState = await Promise.all(
+    states.map((state) =>
+      args.tournamentId
+        ? ctx.db
+            .query("submissions")
+            .withIndex("by_tournament_state_and_date", (q) =>
+              q.eq("tournamentId", args.tournamentId!).eq("state", state),
+            )
+            .collect()
+        : ctx.db
+            .query("submissions")
+            .withIndex("by_state", (q) => q.eq("state", state))
+            .collect(),
+    ),
+  );
+  return perState.flat();
+}
+
+async function resolveEvidence(ctx: QueryCtx, storageIds?: Id<"_storage">[]) {
+  if (!storageIds || storageIds.length === 0) return [];
+  const resolved = await Promise.all(
+    storageIds.map(async (storageId, idx) => {
+      const url = await ctx.storage.getUrl(storageId);
+      if (!url) return null;
+      return {
+        _id: storageId as string,
+        url,
+        filename: `evidence-${idx + 1}.jpg`,
+      };
+    }),
+  );
+  return resolved.filter((e): e is NonNullable<typeof e> => e !== null);
+}
+
 export const getStatistics = query({
   args: {},
   handler: async (ctx) => {

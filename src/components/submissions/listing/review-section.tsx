@@ -1,40 +1,60 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { FileCheck } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { SectionHeader } from "@/components/section-header";
 import { SubmissionReviewList } from "@/components/submissions/review/submission-review-list";
 import type { ReviewItem } from "@/components/submissions/review/types";
-import { convertToReviewItems } from "@/dto/reviewer";
+import { convertPaginatedToReviewItems } from "@/dto/reviewer";
 
 import { api } from "../../../../convex/_generated/api";
+import type { ReviewFilters } from "./management-section";
 import { useReviewActions } from "./use-review-actions";
 
+const DEFAULT_FILTERS: ReviewFilters = {
+  search: "",
+  state: ["pending"],
+  orderBy: "date-desc",
+};
+
 export function ReviewSection() {
-  const reviewData = useQuery(api.role.reviewer.getPendingSubmissions, {
-    limit: 500,
-  });
+  const [filters, setFilters] = useState<ReviewFilters>(DEFAULT_FILTERS);
+
+  const queryArgs = useMemo(() => {
+    const args: Record<string, unknown> = {};
+    if (filters.state.length > 0) args.state = filters.state;
+    if (filters.tournamentId) args.tournamentId = filters.tournamentId;
+    if (filters.search) args.search = filters.search;
+    if (filters.orderBy !== "date-desc") args.orderBy = filters.orderBy;
+    return args;
+  }, [filters]);
+
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.role.reviewer.listForReview,
+    queryArgs,
+    { initialNumItems: 24 },
+  );
+
   const reviewItems: ReviewItem[] = useMemo(
-    () => convertToReviewItems(reviewData),
-    [reviewData],
+    () => convertPaginatedToReviewItems(results),
+    [results],
   );
 
   const { onApprove, onReject } = useReviewActions();
-  const total = reviewData?.total ?? 0;
 
   return (
     <section className="space-y-4">
-      <SectionHeader
-        title="Review Queue"
-        description={`${total} pending ${total === 1 ? "item" : "items"}`}
-        Icon={FileCheck}
-      />
+      <SectionHeader title="Review Queue" Icon={FileCheck} />
       <SubmissionReviewList
         items={reviewItems}
         onApprove={onApprove}
         onReject={onReject}
+        filters={filters}
+        onFiltersChange={setFilters}
+        paginationStatus={status}
+        onLoadMore={() => loadMore(24)}
       />
     </section>
   );

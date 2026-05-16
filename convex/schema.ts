@@ -119,6 +119,10 @@ export default defineSchema({
     .index("by_team_and_type", ["teamId", "submissionType"])
     .index("by_tournament_and_date", ["tournamentId", "date"])
     .index("by_state", ["state"])
+    .index("by_state_and_date", ["state", "date"])
+    .index("by_tournament_state_and_date", ["tournamentId", "state", "date"])
+    .index("by_team_state_and_date", ["teamId", "state", "date"])
+    .index("by_user_state_and_date", ["userId", "state", "date"])
     .index("by_user_and_state", ["userId", "state"])
     .index("by_group", ["submissionGroupId"]),
 
@@ -145,7 +149,10 @@ export default defineSchema({
     .index("by_team", ["teamId"])
     .index("by_team_and_date", ["teamId", "date"])
     .index("by_tournament_and_date", ["tournamentId", "date"])
-    .index("by_state", ["state"]),
+    .index("by_state", ["state"])
+    .index("by_state_and_date", ["state", "date"])
+    .index("by_tournament_state_and_date", ["tournamentId", "state", "date"])
+    .index("by_team_state_and_date", ["teamId", "state", "date"]),
 
   users: defineTable({
     email: v.string(),

@@ -49,25 +49,3 @@ export interface GroupWithContext {
 export type ReviewItem =
   | { type: "individual"; data: SubmissionWithContext }
   | { type: "group"; data: GroupWithContext };
-
-/**
- * Filter and sort state for submission lists
- */
-export interface ReviewListFilters {
-  search: string;
-  states: Array<"pending" | "approved" | "rejected" | "deleted">;
-  tournamentId?: Id<"tournaments">;
-  teamId?: Id<"teams">;
-  sortBy: "date-desc" | "date-asc" | "points-desc" | "points-asc";
-}
-
-/**
- * Permission checks for submission actions
- */
-export interface ReviewPermissions {
-  canApprove: boolean;
-  canReject: boolean;
-  canDelete: boolean;
-  canEdit: boolean;
-  canViewDetails: boolean;
-}
