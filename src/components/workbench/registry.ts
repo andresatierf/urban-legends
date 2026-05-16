@@ -28,8 +28,33 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
   },
   { path: "/workbench/primitives/table", label: "Table", group: "primitives" },
   {
+    path: "/workbench/primitives/avatar",
+    label: "Avatar",
+    group: "primitives",
+  },
+  {
+    path: "/workbench/primitives/progress",
+    label: "Progress",
+    group: "primitives",
+  },
+  {
+    path: "/workbench/primitives/ribbons",
+    label: "Ribbons",
+    group: "primitives",
+  },
+  {
+    path: "/workbench/primitives/overlays",
+    label: "Overlays",
+    group: "primitives",
+  },
+  {
     path: "/workbench/components/eyebrow",
     label: "Eyebrow",
+    group: "components",
+  },
+  {
+    path: "/workbench/components/card-toolkit",
+    label: "Card Toolkit",
     group: "components",
   },
   {
