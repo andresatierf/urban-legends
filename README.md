@@ -13,10 +13,11 @@ A web-based tournament tracking platform that enables administrators to create a
 
 ## 🛠️ Tech Stack
 
-- **💻 Frontend**: Next.js 15 (App Router), React 19, TypeScript
+- **💻 Framework**: TanStack Start (Vite + Nitro), React 19, TypeScript
+- **🧭 Routing**: TanStack Router (file-based routes)
 - **🚀 Backend**: Convex (serverless backend with real-time data)
-- **🔑 Authentication**: Clerk (OAuth integration)
-- **🎨 UI**: Tailwind CSS, Radix UI, shadcn/ui patterns
+- **🔑 Authentication**: Clerk via `@clerk/tanstack-react-start`
+- **🎨 UI**: Tailwind CSS v4, Radix UI, shadcn/ui patterns
 - **📝 Forms**: TanStack Form with Zod validation
 - **📋 Tables**: TanStack Table
 
@@ -59,21 +60,21 @@ NEXT_PUBLIC_CONVEX_URL=
 
 # Clerk Authentication Configuration
 # Get these values from https://dashboard.clerk.com
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+VITE_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 CLERK_JWT_ISSUER_DOMAIN=
 CLERK_WEBHOOK_SECRET=
 
 # Clerk URL Configuration
 # These control the authentication flow redirects
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/
-NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
+VITE_CLERK_SIGN_IN_URL=/sign-in
+VITE_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/
+VITE_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 ```
 
 4. 🚀 Run the development servers:
 
-**Terminal 1** 💻 - Next.js frontend:
+**Terminal 1** 💻 - TanStack Start frontend:
 
 ```bash
 bun run dev
@@ -92,22 +93,22 @@ bunx convex dev
 ### 🏃 Application
 
 ```bash
-bun run dev              # 🚀 Start Next.js dev server with Turbopack
+bun run dev              # 🚀 Start TanStack Start dev server (Vite)
 bunx convex dev          # ⚡ Start Convex backend (run in separate terminal)
-bun run build           # 🏗️ Build for production
-bun run start           # ▶️ Start production server
+bun run build           # 🏗️ Build for production (Vite)
+bun run start           # ▶️ Start production server (node .output/server/index.mjs)
 ```
 
 ### ✅ Code Quality
 
 ```bash
-bun run lint            # 🔍 Run Biome linter
+bun run lint            # 🔍 Run oxlint linter
 bun run lint:fix        # 🔧 Auto-fix linting issues
-bun run format          # 📐 Check code formatting
-bun run format:fix      # ✨ Auto-format code
+bun run format          # 📐 Check code formatting (oxfmt)
+bun run format:fix      # ✨ Auto-format code (oxfmt)
 ```
 
-**📝 Note**: This project uses [Biome](https://biomejs.dev) for linting and formatting (not ESLint/Prettier).
+**📝 Note**: This project uses the [Oxc](https://oxc.rs) toolchain — `oxlint` for linting and `oxfmt` for formatting.
 
 ## 📁 Project Structure
 
@@ -119,16 +120,18 @@ bun run format:fix      # ✨ Auto-format code
   submissions.ts         # 📊 Submission tracking
 
 📦 /src/
-  /app/                 # 🌐 Next.js App Router
-    /(auth)/             # 🔓 Public auth routes
-    /(all)/              # 🔒 Protected routes
-      /admin/             # 👑 Admin-only pages
-      /tournaments/       # 🏆 Tournament pages
-      /teams/             # 👥 Team pages
+  start.ts               # 🚦 TanStack Start instance + Clerk middleware
+  /routes/              # 🧭 TanStack Router file-based routes
+    __root.tsx           # 🌱 Root route with providers
+    _auth.tsx            # 🔓 Sign-in / sign-up layout
+    _public.tsx          # 🌐 Public layout
+    _protected.tsx       # 🔒 Authenticated layout
+    _protected/          # 👑 Admin, captain, reviewer, etc.
 
   /components/          # 🧩 React components
   /hooks/               # 🪝 Custom hooks
   /lib/                 # 🛠️ Utilities
+  /styles/globals.css   # 🎨 Tailwind v4 entrypoint
 ```
 
 ## 📚 Documentation

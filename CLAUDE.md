@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Urban Legends is a web-based tournament tracking platform built with Next.js 15, Convex (backend), and Clerk (authentication). The application allows administrators to create and manage tournaments while users can form teams, join tournaments, and submit entries for tournament activities.
+Urban Legends is a web-based tournament tracking platform built with TanStack Start (Vite), Convex (backend), and Clerk (authentication). The application allows administrators to create and manage tournaments while users can form teams, join tournaments, and submit entries for tournament activities.
 
 ## Development Commands
 
 ### Running the Application
 
 ```bash
-bun run dev              # Start Next.js dev server with Turbopack
+bun run dev              # Start TanStack Start dev server (Vite)
 bunx convex dev          # Start Convex backend in dev mode (run in separate terminal)
 ```
 
@@ -20,8 +20,8 @@ Both commands must be running simultaneously for the application to work properl
 ### Build & Production
 
 ```bash
-bun run build           # Build for production with Turbopack
-bun run start           # Start production server
+bun run build           # Build for production (Vite)
+bun run start           # Start production server (node .output/server/index.mjs)
 ```
 
 ### Code Quality
@@ -67,13 +67,13 @@ The repository follows this commit format:
 
 ### Tech Stack
 
-- **Frontend**: Next.js 15 (App Router), React 19, TypeScript
+- **Framework**: TanStack Start (Vite + Nitro), React 19, TypeScript
+- **Routing**: TanStack Router (file-based routes in `src/routes/`)
 - **Backend**: Convex (serverless backend with real-time data)
-- **Authentication**: Clerk (OAuth-based auth) integrated with Convex
-- **UI**: Tailwind CSS, Radix UI components, shadcn/ui patterns
-- **Forms**: TanStack Form (@tanstack/react-form)
-- **Tables**: TanStack Table (@tanstack/react-table)
-- **Internationalization**: next-intl
+- **Authentication**: Clerk (`@clerk/tanstack-react-start`) integrated with Convex
+- **UI**: Tailwind CSS v4 (`@tailwindcss/vite`), Radix UI components, shadcn/ui patterns
+- **Forms**: TanStack Form (`@tanstack/react-form`)
+- **Tables**: TanStack Table (`@tanstack/react-table`)
 
 ### Directory Structure
 
@@ -90,16 +90,13 @@ The repository follows this commit format:
   auth.config.ts        # Convex auth configuration
 
 /src/
-  /app/                  # Next.js App Router
-    /(auth)/            # Public auth routes (sign-in, sign-up)
-    /(all)/             # Protected routes (requires authentication)
-      /admin/           # Admin-only pages (tournaments, users, teams)
-      /dashboard/       # User dashboard
-      /tournaments/     # Tournament browsing & management
-      /teams/           # Team pages
-      /submissions/     # Submission forms & views
-    ConvexClientProvider.tsx  # Convex React client setup
-    layout.tsx         # Root layout with Clerk & Convex providers
+  start.ts              # TanStack Start instance + Clerk request middleware
+  /routes/              # TanStack Router file-based routes
+    __root.tsx          # Root route with Clerk + Convex providers
+    _auth.tsx           # Pathless layout for sign-in / sign-up
+    _public.tsx         # Pathless layout for public pages
+    _protected.tsx      # Pathless layout requiring authentication
+    _protected/         # Authenticated routes (admin, captain, reviewer, etc.)
 
   /components/          # React components
     /ui/               # Reusable UI components (shadcn/ui style)
@@ -109,8 +106,7 @@ The repository follows this commit format:
 
   /hooks/              # Custom React hooks
   /lib/               # Utilities (e.g., cn() for class merging)
-  /i18n/              # Internationalization setup
-  middleware.ts       # Clerk authentication middleware
+  /styles/globals.css  # Tailwind v4 entrypoint + theme tokens
 ```
 
 ### Database Schema
@@ -128,11 +124,11 @@ All tables use auto-generated IDs via Convex. Relationships use typed IDs like `
 
 ### Authentication Flow
 
-1. Clerk handles OAuth authentication (configured in middleware.ts)
-2. Clerk webhooks sync user data to Convex (via http.ts)
+1. Clerk handles OAuth authentication; request-side wiring lives in `src/start.ts` via `clerkMiddleware` on the TanStack Start instance
+2. Clerk webhooks sync user data to Convex (via `convex/http.ts`)
 3. Convex functions use `getCurrentUserOrThrow()` for auth checks
 4. Admin routes check `user.roles.includes("admin")`
-5. Protected routes are in `(all)` route group, public routes in `(auth)`
+5. Protected routes live under the `_protected` pathless layout in `src/routes/`; public/auth routes under `_public` / `_auth`
 
 ### Data Fetching Patterns
 
@@ -178,17 +174,19 @@ Required variables in `.env.local`:
 ```bash
 # Convex
 CONVEX_DEPLOYMENT=        # Set by convex dev
-NEXT_PUBLIC_CONVEX_URL=   # Convex backend URL
+NEXT_PUBLIC_CONVEX_URL=   # Convex backend URL (Convex CLI writes this name — kept as-is)
 
 # Clerk
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+VITE_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 CLERK_JWT_ISSUER_DOMAIN=
 CLERK_WEBHOOK_SECRET=
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/
-NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
+VITE_CLERK_SIGN_IN_URL=/sign-in
+VITE_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/
+VITE_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 ```
+
+`vite.config.ts` accepts both `VITE_` and `NEXT_PUBLIC_` prefixes via `envPrefix`; the `NEXT_PUBLIC_` allowance exists solely so the Convex CLI's auto-written `NEXT_PUBLIC_CONVEX_URL` stays consumable client-side.
 
 ## Known Issues & Technical Debt
 
@@ -200,21 +198,13 @@ NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 ## Development Notes
 
 - Always run both `bun run dev` AND `bunx convex dev` during development
-- Route groups `(auth)` and `(all)` don't affect URLs but organize code
+- Routes live in `src/routes/`; pathless layouts (`_auth`, `_public`, `_protected`) group routes without affecting URLs
+- The generated route tree is produced by `bun run routes:generate` (also runs automatically before `typecheck`)
 - Convex functions auto-generate TypeScript types in `convex/_generated/` (excluded from linting)
 - Use `@/` path alias for imports from `src/` directory
 - The `cn()` utility (in `src/lib/utils.ts`) combines `clsx` + `tailwind-merge` for optimal class merging
-- Component styling follows Tailwind + CVA (class-variance-authority) patterns
+- Component styling follows Tailwind v4 + CVA (class-variance-authority) patterns
 - UI components are built with Radix UI primitives following shadcn/ui conventions
-
-## Active Technologies
-
-- TypeScript 5.x with Next.js 15 (React 19), Convex backend + Next.js 15, React 19, Convex (serverless backend), Clerk (authentication), Tailwind CSS, Radix UI, TanStack Form, shadcn/ui patterns (001-notification-system)
-- Convex database with real-time subscriptions (001-notification-system)
-
-## Recent Changes
-
-- 001-notification-system: Added TypeScript 5.x with Next.js 15 (React 19), Convex backend + Next.js 15, React 19, Convex (serverless backend), Clerk (authentication), Tailwind CSS, Radix UI, TanStack Form, shadcn/ui patterns
 
 ## Agent skills
 

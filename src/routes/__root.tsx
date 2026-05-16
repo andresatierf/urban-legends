@@ -51,17 +51,13 @@ function RootDocument() {
       </head>
       <body className="antialiased">
         <ClerkProvider
-          publishableKey={
-            import.meta.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY as string
-          }
-          signInUrl={import.meta.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL as string}
+          publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string}
+          signInUrl={import.meta.env.VITE_CLERK_SIGN_IN_URL as string}
           signInFallbackRedirectUrl={
-            import.meta.env
-              .NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL as string
+            import.meta.env.VITE_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL as string
           }
           signUpFallbackRedirectUrl={
-            import.meta.env
-              .NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL as string
+            import.meta.env.VITE_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL as string
           }
           appearance={clerkAppearance}
         >
