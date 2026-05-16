@@ -1,5 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 
+import { cn } from "@/lib/utils";
+
 export type VariantMatrixProps<
   TVariant extends string,
   TColumn extends string,
@@ -31,10 +33,10 @@ export function VariantMatrix<TVariant extends string, TColumn extends string>({
   columnLabel = capitalize,
   cellFit = "stretch",
 }: VariantMatrixProps<TVariant, TColumn>) {
-  const cellClass =
-    cellFit === "content"
-      ? "flex h-full min-w-0 items-center justify-center px-2 py-2"
-      : "flex h-full min-w-0 items-stretch justify-center px-2 py-2 [&>*]:w-full";
+  const cellClass = cn(
+    "flex h-full min-w-0 justify-center px-2 py-2",
+    cellFit === "content" ? "items-center" : "items-stretch [&>*]:w-full",
+  );
   const gridStyle: CSSProperties = {
     gridTemplateColumns: `auto repeat(${columns.length}, minmax(0, 1fr))`,
     gridTemplateRows: "auto",
