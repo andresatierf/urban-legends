@@ -26,9 +26,11 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
-export const Route = createFileRoute("/_protected/dev/inputs")({
-  component: InputsWorkbenchPage,
-});
+export const Route = createFileRoute("/_protected/workbench/primitives/inputs")(
+  {
+    component: InputsWorkbenchPage,
+  },
+);
 
 const FRUIT_OPTIONS = [
   { value: "apple", label: "Apple" },

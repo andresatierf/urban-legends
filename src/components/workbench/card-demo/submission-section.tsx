@@ -3,7 +3,10 @@ import { CarouselReviewCard } from "@/components/submissions/review/submission-r
 import { MosaicReviewCard } from "@/components/submissions/review/submission-review-card-mosaic";
 import type { SubmissionReviewCardProps } from "@/components/submissions/review/submission-review-card-shared";
 
-import { DEMO_GROUP_ITEMS, DEMO_INDIVIDUAL_ITEMS } from "./submission-fixtures";
+import {
+  DEMO_GROUP_ITEMS,
+  DEMO_INDIVIDUAL_ITEMS,
+} from "./submission-workbench-fixtures";
 
 const VARIANTS = [
   {

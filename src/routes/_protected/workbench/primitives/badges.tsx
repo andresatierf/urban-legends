@@ -2,9 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
 
-export const Route = createFileRoute("/_protected/dev/badges")({
-  component: BadgesWorkbenchPage,
-});
+export const Route = createFileRoute("/_protected/workbench/primitives/badges")(
+  {
+    component: BadgesWorkbenchPage,
+  },
+);
 
 const SEMANTIC_VARIANTS = [
   "success",

@@ -3,6 +3,8 @@ import { Loader2, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BUTTON_VARIANTS } from "@/components/ui/button.types";
 
+import { VariantMatrix } from "./shells/variant-matrix";
+
 const VARIANTS = Object.values(BUTTON_VARIANTS);
 
 const STATES = [
@@ -20,10 +22,6 @@ const PSEUDO_CLASSES: Partial<Record<State, string>> = {
   focus: "pseudo-focus",
   active: "pseudo-active",
 };
-
-function stateLabel(state: State) {
-  return state.charAt(0).toUpperCase() + state.slice(1);
-}
 
 function DemoButton({
   variant,
@@ -79,39 +77,13 @@ export function ButtonDemo() {
         </p>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-separate border-spacing-0">
-          <thead>
-            <tr>
-              <th className="text-label-caps text-muted-foreground bg-paper-deep px-4 py-2 text-left">
-                Variant
-              </th>
-              {STATES.map((state) => (
-                <th
-                  key={state}
-                  className="text-label-caps text-muted-foreground bg-paper-deep px-4 py-2 text-center"
-                >
-                  {stateLabel(state)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {VARIANTS.map((variant) => (
-              <tr key={variant} className="border-foreground/10 border-b">
-                <td className="text-body-sm px-4 py-4 font-medium">
-                  {variant}
-                </td>
-                {STATES.map((state) => (
-                  <td key={state} className="px-4 py-4 text-center">
-                    <DemoButton variant={variant} state={state} />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <VariantMatrix
+        variants={VARIANTS}
+        columns={STATES}
+        renderCell={(variant, state) => (
+          <DemoButton variant={variant} state={state} />
+        )}
+      />
 
       <div className="space-y-4">
         <h2 className="text-h2 text-foreground">Sizes</h2>

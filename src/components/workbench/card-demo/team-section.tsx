@@ -1,7 +1,7 @@
 import { SectionHeader } from "@/components/section-header";
 import { TeamCard } from "@/components/teams/card/layout";
 
-import { DEMO_TEAM_ITEMS } from "./team-fixtures";
+import { DEMO_TEAM_ITEMS } from "./team-workbench-fixtures";
 
 export function TeamSection() {
   return (

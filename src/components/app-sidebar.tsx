@@ -7,7 +7,6 @@ import {
   ClipboardCheck,
   ClipboardList,
   Code2,
-  Layers,
   LayoutDashboard,
   type LucideIcon,
   PlusCircle,
@@ -196,14 +195,9 @@ function useSidebarItems(
         roles: ["dev"],
         items: [
           {
-            title: "Button Demo",
-            href: "/dev/button-demo",
+            title: "Workbench",
+            href: "/workbench/primitives/tokens",
             icon: Code2,
-          },
-          {
-            title: "Card Demo",
-            href: "/dev/card-demo",
-            icon: Layers,
           },
         ],
       },

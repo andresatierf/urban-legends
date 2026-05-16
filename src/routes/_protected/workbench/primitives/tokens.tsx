@@ -4,9 +4,11 @@ import { EyebrowSpecimens } from "@/components/workbench/eyebrow-specimens";
 import { TokenWorkbench } from "@/components/workbench/tokens";
 import { TypeScaleSpecimens } from "@/components/workbench/type-scale-specimens";
 
-export const Route = createFileRoute("/_protected/dev/tokens")({
-  component: TokenWorkbenchPage,
-});
+export const Route = createFileRoute("/_protected/workbench/primitives/tokens")(
+  {
+    component: TokenWorkbenchPage,
+  },
+);
 
 function TokenWorkbenchPage() {
   return (

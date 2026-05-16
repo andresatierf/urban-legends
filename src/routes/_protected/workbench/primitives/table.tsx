@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/ui/data-table/column-header";
 import { DataTable } from "@/components/ui/data-table/data-table";
 
-export const Route = createFileRoute("/_protected/dev/table")({
+export const Route = createFileRoute("/_protected/workbench/primitives/table")({
   component: TableWorkbenchPage,
 });
 
