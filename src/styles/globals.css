@@ -509,10 +509,17 @@
 }
 
 @utility pseudo-focus {
-  box-shadow:
-    0 0 0 2px var(--background),
-    0 0 0 5px color-mix(in srgb, var(--ring) 60%, transparent),
-    3px 3px 0 var(--color-shadow);
+  /* Variant scope raises specificity to (0,2,0) so the focus ring beats solid variants' resting shadow-[...] utility. */
+  &[data-variant="default"],
+  &[data-variant="secondary"],
+  &[data-variant="destructive"],
+  &[data-variant="sky"],
+  &[data-variant="grass"] {
+    box-shadow:
+      0 0 0 2px var(--background),
+      0 0 0 5px color-mix(in srgb, var(--ring) 60%, transparent),
+      3px 3px 0 var(--color-shadow);
+  }
   &[data-variant="ghost"],
   &[data-variant="icon"],
   &[data-variant="link"],
