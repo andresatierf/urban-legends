@@ -80,6 +80,7 @@ export function ButtonDemo() {
       <VariantMatrix
         variants={VARIANTS}
         columns={STATES}
+        cellFit="content"
         renderCell={(variant, state) => (
           <DemoButton variant={variant} state={state} />
         )}

@@ -9,6 +9,14 @@ export type VariantMatrixProps<
   renderCell: (variant: TVariant, column: TColumn) => ReactNode;
   variantLabel?: (variant: TVariant) => string;
   columnLabel?: (column: TColumn) => string;
+  /**
+   * How cells should size their rendered children.
+   * - `stretch` (default): children fill the cell — appropriate for cards.
+   * - `content`: children render at intrinsic width and are centered — use
+   *   for primitives like buttons or ribbons whose real-world width is
+   *   driven by their content.
+   */
+  cellFit?: "stretch" | "content";
 };
 
 function capitalize(s: string) {
@@ -21,7 +29,12 @@ export function VariantMatrix<TVariant extends string, TColumn extends string>({
   renderCell,
   variantLabel = capitalize,
   columnLabel = capitalize,
+  cellFit = "stretch",
 }: VariantMatrixProps<TVariant, TColumn>) {
+  const cellClass =
+    cellFit === "content"
+      ? "flex h-full min-w-0 items-center justify-center px-2 py-2"
+      : "flex h-full min-w-0 items-stretch justify-center px-2 py-2 [&>*]:w-full";
   const gridStyle: CSSProperties = {
     gridTemplateColumns: `auto repeat(${columns.length}, minmax(0, 1fr))`,
     gridTemplateRows: "auto",
@@ -64,11 +77,7 @@ export function VariantMatrix<TVariant extends string, TColumn extends string>({
               {variantLabel(variant)}
             </div>
             {columns.map((col) => (
-              <div
-                key={col}
-                role="cell"
-                className="flex h-full min-w-0 items-stretch justify-center px-2 py-2 [&>*]:w-full"
-              >
+              <div key={col} role="cell" className={cellClass}>
                 {renderCell(variant, col)}
               </div>
             ))}

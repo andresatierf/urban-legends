@@ -20,6 +20,7 @@ export function RibbonSpecimens() {
         <VariantMatrix
           variants={COLORS}
           columns={SIZES}
+          cellFit="content"
           renderCell={(color, size) => (
             <RibbonBanner
               label={color}
