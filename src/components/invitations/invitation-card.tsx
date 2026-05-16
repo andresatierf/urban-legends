@@ -1,21 +1,23 @@
 import { Link } from "@tanstack/react-router";
 import { capitalize } from "lodash";
-import {
-  Calendar,
-  Check,
-  Loader2,
-  Mail,
-  Trophy,
-  UserPlus,
-  X,
-} from "lucide-react";
+import { Calendar, Check, Loader2, Mail, UserPlus, X } from "lucide-react";
 
+import { ComposedCard } from "@/components/common/card/composed-card";
+import { EdgeOverlay } from "@/components/common/card/edge-overlay";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
+import { cn } from "@/lib/utils";
 
 import type { Doc } from "../../../convex/_generated/dataModel";
 import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
 import { getStatusBadge } from "./utils";
+
+const STATUS_BORDER: Record<string, string> = {
+  pending: "border-warning",
+  accepted: "border-success",
+  rejected: "border-crimson",
+  cancelled: "border-mute",
+  expired: "border-mute",
+};
 
 type InvitationDoc = Doc<"joinRequests"> & {
   counterparty: Doc<"users"> | null;
@@ -66,90 +68,100 @@ export function InvitationCard({
 
   const dateLabel = invitation.initiator === "team" ? "Invited" : "Requested";
 
+  const secondaryButton =
+    showActions && secondaryAction ? (
+      <Button
+        size="sm"
+        variant="destructive"
+        onClick={onReject}
+        disabled={processing}
+      >
+        {processing ? <Loader2 className="animate-spin" /> : <X />}
+        {secondaryAction}
+      </Button>
+    ) : null;
+
+  const primaryButton =
+    showActions && primaryAction ? (
+      <Button
+        size="sm"
+        variant="grass"
+        onClick={onAccept}
+        disabled={processing}
+      >
+        {processing ? <Loader2 className="animate-spin" /> : <Check />}
+        {primaryAction}
+      </Button>
+    ) : null;
+
   return (
-    <Card className={className}>
-      <CardContent className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <p className="font-medium">{primaryName}</p>
-            {getStatusBadge(displayStatus)}
-          </div>
-          <div className="text-muted-foreground mt-1 flex flex-col items-start gap-1 text-xs">
-            {viewer === "team" && invitation.counterparty?.email && (
-              <span className="flex items-center gap-1 text-sm">
-                <Mail className="h-3 w-3" />
-                {invitation.counterparty.email}
-              </span>
-            )}
-            {viewer === "user" && invitation.tournament && (
-              <span className="flex items-center gap-1 text-sm">
-                <Trophy className="h-4 w-4" />
-                <Link
-                  to="/tournaments/$tournamentId"
-                  params={{ tournamentId: invitation.tournament._id }}
-                  className="hover:underline"
-                >
-                  {invitation.tournament.name}
-                </Link>
-              </span>
-            )}
-            {invitation.message && (
-              <p className="text-muted-foreground mt-1 text-sm">
-                {invitation.message}
-              </p>
-            )}
-            {viewer === "user" && invitation.invitedByUser && (
-              <span className="flex items-center gap-1">
-                <UserPlus className="h-3 w-3" />
-                Invited by {invitation.invitedByUser.name}
-              </span>
-            )}
-            {isTeamOutgoingInvite && invitation.invitedByUser && (
-              <span className="flex items-center gap-1">
-                <UserPlus className="h-3 w-3" />
-                Invited by {invitation.invitedByUser.name} on{" "}
-                {format(invitation.createdAt, "short")}
-              </span>
-            )}
-            {!isTeamOutgoingInvite && (
-              <span className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                {dateLabel} {format(invitation.createdAt, "short")}
-              </span>
-            )}
-            {(invitation.respondedAt ?? invitation.expiresAt) && (
-              <span className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                {invitation.respondedAt
-                  ? `${capitalize(invitation.status)} ${format(invitation.respondedAt, "short")}`
-                  : `Expires ${format(invitation.expiresAt!, "short")}`}
-              </span>
-            )}
-          </div>
+    <EdgeOverlay
+      className={className}
+      topRight={getStatusBadge(displayStatus)}
+      bottomLeft={secondaryButton}
+      bottomRight={primaryButton}
+    >
+      <ComposedCard
+        className={cn("pb-2", STATUS_BORDER[displayStatus])}
+        title={primaryName}
+        eyebrow={
+          viewer === "user" && invitation.tournament
+            ? invitation.tournament.name
+            : undefined
+        }
+        eyebrowTo={
+          viewer === "user" && invitation.tournament
+            ? "/tournaments/$tournamentId"
+            : undefined
+        }
+        eyebrowParams={
+          viewer === "user" && invitation.tournament
+            ? { tournamentId: invitation.tournament._id }
+            : undefined
+        }
+      >
+        <div className="text-muted-foreground flex flex-col items-start gap-1 text-xs">
+          {viewer === "team" && invitation.counterparty?.email && (
+            <span className="flex items-center gap-1 text-sm">
+              <Mail className="h-3 w-3" />
+              {invitation.counterparty.email}
+            </span>
+          )}
+          {invitation.message && (
+            <p className="text-muted-foreground mt-1 text-sm">
+              {invitation.message}
+            </p>
+          )}
+          {viewer === "user" && invitation.invitedByUser && (
+            <span className="flex items-center gap-1">
+              <UserPlus className="h-3 w-3" />
+              Invited by {invitation.invitedByUser.name}
+            </span>
+          )}
+          {isTeamOutgoingInvite && invitation.invitedByUser && (
+            <span className="flex items-center gap-1">
+              <UserPlus className="h-3 w-3" />
+              Invited by {invitation.invitedByUser.name} on{" "}
+              {format(invitation.createdAt, "short")}
+            </span>
+          )}
+          {!isTeamOutgoingInvite && (
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {dateLabel} {format(invitation.createdAt, "short")}
+            </span>
+          )}
+          {(invitation.respondedAt ?? invitation.expiresAt) && (
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {invitation.respondedAt
+                ? `${capitalize(invitation.status)} ${format(invitation.respondedAt, "short")}`
+                : `Expires ${format(invitation.expiresAt!, "short")}`}
+            </span>
+          )}
         </div>
-        {showActions && (
-          <div className="flex gap-2 self-end sm:self-auto">
-            {secondaryAction && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onReject}
-                disabled={processing}
-              >
-                {processing ? <Loader2 className="animate-spin" /> : <X />}
-                {secondaryAction}
-              </Button>
-            )}
-            {primaryAction && (
-              <Button size="sm" onClick={onAccept} disabled={processing}>
-                {processing ? <Loader2 className="animate-spin" /> : <Check />}
-                {primaryAction}
-              </Button>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      </ComposedCard>
+    </EdgeOverlay>
   );
 }
 
