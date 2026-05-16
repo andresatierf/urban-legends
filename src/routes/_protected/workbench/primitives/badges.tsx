@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Badge } from "@/components/ui/badge";
+import { VariantMatrix } from "@/components/workbench/shells/variant-matrix";
 
 export const Route = createFileRoute("/_protected/workbench/primitives/badges")(
   {
@@ -19,97 +20,118 @@ const SEMANTIC_VARIANTS = [
 
 const SIZES = ["xs", "sm", "default", "lg"] as const;
 
+const SURFACES = ["paper", "paper-deep"] as const;
+
+const SURFACE_CLASS: Record<(typeof SURFACES)[number], string> = {
+  paper: "bg-paper",
+  "paper-deep": "bg-paper-deep",
+};
+
+type MappingEntry = {
+  label: string;
+  variant: (typeof SEMANTIC_VARIANTS)[number];
+};
+
+const SEMANTIC_MAPPINGS: { title: string; entries: MappingEntry[] }[] = [
+  {
+    title: "Submission status mapping",
+    entries: [
+      { label: "Approved", variant: "success" },
+      { label: "Pending", variant: "warning" },
+      { label: "Rejected", variant: "error" },
+      { label: "Deleted", variant: "neutral" },
+    ],
+  },
+  {
+    title: "Tournament states",
+    entries: [
+      { label: "Active", variant: "success" },
+      { label: "Upcoming", variant: "info" },
+      { label: "Ended", variant: "neutral" },
+    ],
+  },
+  {
+    title: "Team member roles",
+    entries: [
+      { label: "Captain", variant: "warning" },
+      { label: "Member", variant: "neutral" },
+    ],
+  },
+  {
+    title: "Team join policy",
+    entries: [
+      { label: "Open", variant: "success" },
+      { label: "Closed", variant: "neutral" },
+    ],
+  },
+  {
+    title: "Submission types",
+    entries: [
+      { label: "Individual", variant: "neutral" },
+      { label: "Team Exercise", variant: "social" },
+    ],
+  },
+  {
+    title: "Submission tiers",
+    entries: [
+      { label: "Base Tier", variant: "info" },
+      { label: "Advanced Tier", variant: "social" },
+    ],
+  },
+];
+
 function BadgesWorkbenchPage() {
   return (
     <div className="space-y-8">
       <h2 className="text-h2">Badges</h2>
 
       <section className="space-y-4">
-        <h3 className="text-h3">Semantic variants on paper</h3>
-        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
-          {SEMANTIC_VARIANTS.map((v) => (
-            <Badge key={v} variant={v}>
-              {v}
-            </Badge>
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h3 className="text-h3">Semantic variants on paper-deep</h3>
-        <div className="bg-paper-deep flex flex-wrap gap-3 rounded-lg p-6">
-          {SEMANTIC_VARIANTS.map((v) => (
-            <Badge key={v} variant={v}>
-              {v}
-            </Badge>
-          ))}
-        </div>
+        <h3 className="text-h3">Semantic variants by surface</h3>
+        <VariantMatrix
+          variants={SEMANTIC_VARIANTS}
+          columns={SURFACES}
+          renderCell={(variant, surface) => (
+            <div
+              className={`flex items-center justify-center rounded-md p-3 ${SURFACE_CLASS[surface]}`}
+            >
+              <Badge variant={variant}>{variant}</Badge>
+            </div>
+          )}
+        />
       </section>
 
       <section className="space-y-4">
         <h3 className="text-h3">Sizes</h3>
-        <div className="bg-paper space-y-3 rounded-lg p-6">
-          {SIZES.map((s) => (
-            <div key={s} className="flex flex-wrap items-center gap-3">
-              <span className="text-mute w-16 text-xs">{s}</span>
-              {SEMANTIC_VARIANTS.map((v) => (
-                <Badge key={v} variant={v} size={s}>
-                  {v}
-                </Badge>
-              ))}
+        <VariantMatrix
+          variants={SEMANTIC_VARIANTS}
+          columns={SIZES}
+          renderCell={(variant, size) => (
+            <div className="flex items-center justify-center">
+              <Badge variant={variant} size={size}>
+                {variant}
+              </Badge>
             </div>
+          )}
+        />
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-h3">Semantic mappings</h3>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {SEMANTIC_MAPPINGS.map((mapping) => (
+            <section key={mapping.title} className="space-y-2">
+              <h4 className="text-label-caps text-muted-foreground">
+                {mapping.title}
+              </h4>
+              <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
+                {mapping.entries.map((entry) => (
+                  <Badge key={entry.label} variant={entry.variant}>
+                    {entry.label}
+                  </Badge>
+                ))}
+              </div>
+            </section>
           ))}
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h3 className="text-h3">Submission status mapping</h3>
-        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
-          <Badge variant="success">Approved</Badge>
-          <Badge variant="warning">Pending</Badge>
-          <Badge variant="error">Rejected</Badge>
-          <Badge variant="neutral">Deleted</Badge>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h3 className="text-h3">Tournament states</h3>
-        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
-          <Badge variant="success">Active</Badge>
-          <Badge variant="info">Upcoming</Badge>
-          <Badge variant="neutral">Ended</Badge>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h3 className="text-h3">Team member roles</h3>
-        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
-          <Badge variant="warning">Captain</Badge>
-          <Badge variant="neutral">Member</Badge>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h3 className="text-h3">Team join policy</h3>
-        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
-          <Badge variant="success">Open</Badge>
-          <Badge variant="neutral">Closed</Badge>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h3 className="text-h3">Submission types</h3>
-        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
-          <Badge variant="neutral">Individual</Badge>
-          <Badge variant="social">Team Exercise</Badge>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <h3 className="text-h3">Submission tiers</h3>
-        <div className="bg-paper flex flex-wrap gap-3 rounded-lg p-6">
-          <Badge variant="info">Base Tier</Badge>
-          <Badge variant="social">Advanced Tier</Badge>
         </div>
       </section>
     </div>
