@@ -216,13 +216,13 @@ function ComboboxSection() {
     <Section title="Combobox">
       <div className="space-y-4">
         <StateRow label="Default">
-          <Combobox items={FRUIT_OPTIONS.map((o) => o.value)}>
+          <Combobox items={FRUIT_OPTIONS}>
             <ComboboxInput placeholder="Search fruits..." />
             <ComboboxContent>
               <ComboboxList>
                 <ComboboxEmpty>No results</ComboboxEmpty>
                 {FRUIT_OPTIONS.map((opt) => (
-                  <ComboboxItem key={opt.value} value={opt.value}>
+                  <ComboboxItem key={opt.value} value={opt}>
                     {opt.label}
                   </ComboboxItem>
                 ))}
@@ -231,16 +231,13 @@ function ComboboxSection() {
           </Combobox>
         </StateRow>
         <StateRow label="With value">
-          <Combobox
-            items={FRUIT_OPTIONS.map((o) => o.value)}
-            defaultValue="banana"
-          >
+          <Combobox items={FRUIT_OPTIONS} defaultValue={FRUIT_OPTIONS[1]}>
             <ComboboxInput placeholder="Search fruits..." />
             <ComboboxContent>
               <ComboboxList>
                 <ComboboxEmpty>No results</ComboboxEmpty>
                 {FRUIT_OPTIONS.map((opt) => (
-                  <ComboboxItem key={opt.value} value={opt.value}>
+                  <ComboboxItem key={opt.value} value={opt}>
                     {opt.label}
                   </ComboboxItem>
                 ))}
@@ -249,13 +246,13 @@ function ComboboxSection() {
           </Combobox>
         </StateRow>
         <StateRow label="Focus">
-          <Combobox items={FRUIT_OPTIONS.map((o) => o.value)}>
+          <Combobox items={FRUIT_OPTIONS}>
             <ComboboxInput className="pseudo-focus" placeholder="Focused" />
             <ComboboxContent>
               <ComboboxList>
                 <ComboboxEmpty>No results</ComboboxEmpty>
                 {FRUIT_OPTIONS.map((opt) => (
-                  <ComboboxItem key={opt.value} value={opt.value}>
+                  <ComboboxItem key={opt.value} value={opt}>
                     {opt.label}
                   </ComboboxItem>
                 ))}
@@ -265,7 +262,7 @@ function ComboboxSection() {
         </StateRow>
         <StateRow label="Invalid">
           <div className="space-y-1">
-            <Combobox items={FRUIT_OPTIONS.map((o) => o.value)}>
+            <Combobox items={FRUIT_OPTIONS}>
               <ComboboxInput
                 aria-invalid="true"
                 placeholder="Required field..."
@@ -274,7 +271,7 @@ function ComboboxSection() {
                 <ComboboxList>
                   <ComboboxEmpty>No results</ComboboxEmpty>
                   {FRUIT_OPTIONS.map((opt) => (
-                    <ComboboxItem key={opt.value} value={opt.value}>
+                    <ComboboxItem key={opt.value} value={opt}>
                       {opt.label}
                     </ComboboxItem>
                   ))}
@@ -285,12 +282,12 @@ function ComboboxSection() {
           </div>
         </StateRow>
         <StateRow label="Disabled">
-          <Combobox items={FRUIT_OPTIONS.map((o) => o.value)}>
+          <Combobox items={FRUIT_OPTIONS}>
             <ComboboxInput disabled placeholder="Disabled combobox" />
             <ComboboxContent>
               <ComboboxList>
                 {FRUIT_OPTIONS.map((opt) => (
-                  <ComboboxItem key={opt.value} value={opt.value}>
+                  <ComboboxItem key={opt.value} value={opt}>
                     {opt.label}
                   </ComboboxItem>
                 ))}

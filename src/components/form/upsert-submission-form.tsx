@@ -169,7 +169,7 @@ export function UpsertSubmissionFormDialog({
             {!teamId && (
               <form.AppField name="teamId">
                 {(field) => (
-                  <field.SelectField label="Team" options={teamOptions} />
+                  <field.ComboboxField label="Team" options={teamOptions} />
                 )}
               </form.AppField>
             )}

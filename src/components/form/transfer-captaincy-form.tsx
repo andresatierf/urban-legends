@@ -116,7 +116,7 @@ export function TransferCaptaincyFormDialog({
           <FieldGroup>
             <form.AppField name="newCaptainId">
               {(field) => (
-                <field.SelectField
+                <field.ComboboxField
                   label="New Captain"
                   options={memberOptions}
                 />
