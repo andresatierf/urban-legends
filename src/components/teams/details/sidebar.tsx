@@ -125,31 +125,29 @@ export function Sidebar({ data }: { data: TeamDetails }) {
 
   return (
     <>
-      <div className="hidden">
-        {data.canInvite && (
-          <InviteMemberFormDialog
-            open={inviteDialogOpen}
-            onOpenChange={setInviteDialogOpen}
-            teamId={team._id}
-          />
-        )}
-        {data.canEdit && (
-          <UpsertTeamFormDialog
-            open={editTeamDialogOpen}
-            onOpenChange={setEditTeamDialogOpen}
-            tournamentId={team.tournamentId}
-            team={team}
-          />
-        )}
-        {data.canTransferCaptaincy && (
-          <TransferCaptaincyFormDialog
-            open={transferCaptaincyDialogOpen}
-            onOpenChange={setTransferCaptaincyDialogOpen}
-            teamId={team._id}
-            isViewerCaptain={userMembership?.role === "captain"}
-          />
-        )}
-      </div>
+      {data.canInvite && (
+        <InviteMemberFormDialog
+          open={inviteDialogOpen}
+          onOpenChange={setInviteDialogOpen}
+          teamId={team._id}
+        />
+      )}
+      {data.canEdit && (
+        <UpsertTeamFormDialog
+          open={editTeamDialogOpen}
+          onOpenChange={setEditTeamDialogOpen}
+          tournamentId={team.tournamentId}
+          team={team}
+        />
+      )}
+      {data.canTransferCaptaincy && (
+        <TransferCaptaincyFormDialog
+          open={transferCaptaincyDialogOpen}
+          onOpenChange={setTransferCaptaincyDialogOpen}
+          teamId={team._id}
+          isViewerCaptain={userMembership?.role === "captain"}
+        />
+      )}
 
       <SidebarCard
         icon={Users}

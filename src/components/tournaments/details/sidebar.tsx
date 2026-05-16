@@ -67,15 +67,13 @@ export function Sidebar({ data, tournamentId }: Props) {
 
   return (
     <>
-      <div className="hidden">
-        {data.canEdit && (
-          <UpsertTournamentFormDialog
-            open={editTournamentDialogOpen}
-            onOpenChange={setEditTournamentDialogOpen}
-            tournament={data.tournament}
-          />
-        )}
-      </div>
+      {data.canEdit && (
+        <UpsertTournamentFormDialog
+          open={editTournamentDialogOpen}
+          onOpenChange={setEditTournamentDialogOpen}
+          tournament={data.tournament}
+        />
+      )}
 
       <SidebarCard
         icon={Swords}

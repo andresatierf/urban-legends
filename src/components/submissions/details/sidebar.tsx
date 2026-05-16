@@ -145,15 +145,13 @@ export function Sidebar({ data }: { data: SubmissionDetailsData }) {
 
   return (
     <>
-      <div className="hidden">
-        {data.canEdit && (
-          <UpsertSubmissionFormDialog
-            open={editDialogOpen}
-            onOpenChange={setEditDialogOpen}
-            submission={submission}
-          />
-        )}
-      </div>
+      {data.canEdit && (
+        <UpsertSubmissionFormDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          submission={submission}
+        />
+      )}
 
       <RejectReasonDialog
         open={rejectDialogOpen}

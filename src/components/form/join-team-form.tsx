@@ -67,15 +67,15 @@ export function JoinTeamFormDialog({
         form.reset();
       }}
     >
-      <form
-        id={formId}
-        onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}
-      >
-        {children && <DialogTrigger render={children as React.ReactElement} />}
-        <DialogContent className="sm:max-w-lg">
+      {children && <DialogTrigger render={children as React.ReactElement} />}
+      <DialogContent className="sm:max-w-lg">
+        <form
+          id={formId}
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Request to Join {teamName}</DialogTitle>
             <DialogDescription>
@@ -136,8 +136,8 @@ export function JoinTeamFormDialog({
               </DialogFooter>
             )}
           </form.Subscribe>
-        </DialogContent>
-      </form>
+        </form>
+      </DialogContent>
     </Dialog>
   );
 }
