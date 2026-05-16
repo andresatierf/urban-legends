@@ -41,7 +41,6 @@ export const JOIN_BUTTON_STATE_DESCRIPTIONS: Record<JoinButtonState, string> = {
 };
 
 type FixtureEntry = {
-  state: JoinButtonState;
   data: TeamCardData;
   joinRequest: JoinTeamRequestState;
 };
@@ -71,17 +70,14 @@ const BASE_DATA: TeamCardData = {
 
 export const JOIN_BUTTON_FIXTURES: Record<JoinButtonState, FixtureEntry> = {
   "open-idle": {
-    state: "open-idle",
     data: BASE_DATA,
     joinRequest: null,
   },
   "open-pending": {
-    state: "open-pending",
     data: BASE_DATA,
     joinRequest: { _id: "demo-request" },
   },
   closed: {
-    state: "closed",
     data: {
       ...BASE_DATA,
       team: makeTeam({ joinPolicy: "closed" }),
@@ -89,7 +85,6 @@ export const JOIN_BUTTON_FIXTURES: Record<JoinButtonState, FixtureEntry> = {
     joinRequest: null,
   },
   full: {
-    state: "full",
     data: {
       ...BASE_DATA,
       team: makeTeam({ maxMembers: 4 }),
@@ -98,7 +93,6 @@ export const JOIN_BUTTON_FIXTURES: Record<JoinButtonState, FixtureEntry> = {
     joinRequest: null,
   },
   member: {
-    state: "member",
     data: {
       ...BASE_DATA,
       isUserMember: true,
@@ -108,7 +102,6 @@ export const JOIN_BUTTON_FIXTURES: Record<JoinButtonState, FixtureEntry> = {
     joinRequest: null,
   },
   "signed-out": {
-    state: "signed-out",
     data: BASE_DATA,
     joinRequest: null,
   },

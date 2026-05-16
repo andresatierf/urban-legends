@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { UserPlus } from "lucide-react";
 import { useCallback } from "react";
+import { toast } from "sonner";
 
 import { JoinTeamFormDialog } from "@/components/form/join-team-form";
 import { Button } from "@/components/ui/button";
@@ -105,11 +106,17 @@ export function JoinTeamButtonContainer({
 
   const handleRequest = useCallback(
     async (message: string | undefined) => {
-      await tryMutate({
-        fn: () => requestToJoinMutation({ teamId: data.team._id, message }),
-        successToast: "Join request sent successfully!",
-        defaultFailureToast: "Failed to send join request",
-      });
+      try {
+        await requestToJoinMutation({ teamId: data.team._id, message });
+        toast("Join request sent successfully!");
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to send join request",
+        );
+        throw error;
+      }
     },
     [requestToJoinMutation, data.team._id],
   );

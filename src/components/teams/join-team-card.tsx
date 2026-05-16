@@ -8,9 +8,7 @@ import {
 } from "../ui/empty";
 
 type Props = {
-  /** Whether the user has no teams yet. Changes copy. */
   first?: boolean;
-  /** Override the action slot. Defaults to <UpsertTeamFormDialog />. */
   action?: React.ReactNode;
 };
 
