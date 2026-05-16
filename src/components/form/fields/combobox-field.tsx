@@ -1,14 +1,20 @@
 import { useStore } from "@tanstack/react-form";
+import { ChevronDownIcon } from "lucide-react";
 import { useCallback, useMemo } from "react";
 
 import { useFieldContext } from "@/hooks/form-context";
 
 import {
   Combobox,
-  ComboboxContent,
+  ComboboxClear,
+  ComboboxEmpty,
   ComboboxInput,
   ComboboxItem,
+  ComboboxItemIndicator,
   ComboboxList,
+  ComboboxPopup,
+  ComboboxPositioner,
+  ComboboxTrigger,
 } from "../../ui/combobox";
 import { Field, FieldError, FieldLabel } from "../../ui/field";
 
@@ -57,22 +63,40 @@ export function ComboboxField<T extends string>({
         items={options}
         value={selectedOption}
         onValueChange={handleOnChange}
+        isItemEqualToValue={(a, b) => a?.value === b?.value}
       >
-        <ComboboxInput
-          id={field.name}
-          name={field.name}
-          placeholder={placeholder}
-          aria-invalid={isInvalid}
-        />
-        <ComboboxContent>
-          <ComboboxList>
-            {options.map((option) => (
-              <ComboboxItem key={option.value} value={option}>
-                {option.label}
-              </ComboboxItem>
-            ))}
-          </ComboboxList>
-        </ComboboxContent>
+        <div className="relative flex flex-col">
+          <ComboboxInput
+            id={field.name}
+            name={field.name}
+            placeholder={placeholder}
+            aria-invalid={isInvalid}
+            className="pr-14"
+          />
+          <div className="text-muted-foreground absolute right-2 bottom-0 flex h-9 items-center justify-center">
+            <ComboboxClear />
+            <ComboboxTrigger
+              aria-label="Open popup"
+              className="text-muted-foreground h-9 w-6 border-none bg-transparent shadow-none hover:bg-transparent"
+            >
+              <ChevronDownIcon className="size-4" />
+            </ComboboxTrigger>
+          </div>
+        </div>
+
+        <ComboboxPositioner sideOffset={6}>
+          <ComboboxPopup>
+            <ComboboxEmpty>No results found.</ComboboxEmpty>
+            <ComboboxList>
+              {(option: Option<T>) => (
+                <ComboboxItem key={option.value} value={option}>
+                  <ComboboxItemIndicator />
+                  <div className="col-start-2">{option.label}</div>
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxPopup>
+        </ComboboxPositioner>
       </Combobox>
       {children}
       {isInvalid && <FieldError errors={errors} />}

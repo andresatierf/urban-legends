@@ -97,13 +97,11 @@ export function ManageRolesFormDialog({
         }}
       >
         {children ? (
-          <DialogTrigger asChild>{children}</DialogTrigger>
+          <DialogTrigger render={children as React.ReactElement} />
         ) : (
           controlledOpen === undefined &&
           onOpenChange === undefined && (
-            <DialogTrigger asChild>
-              <Button>Manage roles</Button>
-            </DialogTrigger>
+            <DialogTrigger render={<Button />}>Manage roles</DialogTrigger>
           )
         )}
         <DialogContent className="sm:max-w-lg">
@@ -220,14 +218,16 @@ export function ManageRolesFormDialog({
                 >
                   Reset
                 </Button>
-                <DialogClose asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
+                <DialogClose
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isSubmitting}
+                    />
+                  }
+                >
+                  Cancel
                 </DialogClose>
                 <Button
                   type="submit"

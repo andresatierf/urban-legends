@@ -141,14 +141,12 @@ export function UpsertSubmissionFormDialog({
         }}
       >
         {children ? (
-          <DialogTrigger asChild>{children}</DialogTrigger>
+          <DialogTrigger render={children as React.ReactElement} />
         ) : (
           controlledOpen === undefined &&
           onOpenChange === undefined && (
-            <DialogTrigger asChild>
-              <Button type="button">
-                {submission ? "Edit Submission" : "Create Submission"}
-              </Button>
+            <DialogTrigger render={<Button type="button" />}>
+              {submission ? "Edit Submission" : "Create Submission"}
             </DialogTrigger>
           )
         )}
@@ -256,14 +254,16 @@ export function UpsertSubmissionFormDialog({
                   >
                     Reset
                   </Button>
-                  <DialogClose asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={isSubmitting}
-                    >
-                      Cancel
-                    </Button>
+                  <DialogClose
+                    render={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isSubmitting}
+                      />
+                    }
+                  >
+                    Cancel
                   </DialogClose>
                   <Button
                     type="submit"

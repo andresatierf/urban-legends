@@ -1,16 +1,35 @@
 "use client";
 
+import {
+  CaretDownIcon,
+  CaretUpDownIcon,
+  MapPinIcon,
+  PlusIcon,
+} from "@phosphor-icons/react";
 import { createFileRoute } from "@tanstack/react-router";
 import * as React from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Combobox,
-  ComboboxContent,
+  ComboboxChip,
+  ComboboxChipRemove,
+  ComboboxChips,
+  ComboboxClear,
+  ComboboxCollection,
   ComboboxEmpty,
+  ComboboxGroup,
+  ComboboxGroupLabel,
+  ComboboxIcon,
   ComboboxInput,
   ComboboxItem,
+  ComboboxItemIndicator,
   ComboboxList,
+  ComboboxPopup,
+  ComboboxPositioner,
+  ComboboxSeparator,
+  ComboboxTrigger,
+  ComboboxValue,
 } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +56,71 @@ const FRUIT_OPTIONS = [
   { value: "banana", label: "Banana" },
   { value: "cherry", label: "Cherry" },
   { value: "date", label: "Date" },
+  { value: "elderberry", label: "Elderberry" },
+  { value: "fig", label: "Fig" },
+];
+
+interface Language {
+  id: string;
+  value: string;
+}
+
+const LANGUAGE_OPTIONS: Language[] = [
+  { id: "ts", value: "TypeScript" },
+  { id: "js", value: "JavaScript" },
+  { id: "py", value: "Python" },
+  { id: "go", value: "Go" },
+  { id: "rust", value: "Rust" },
+  { id: "ruby", value: "Ruby" },
+  { id: "java", value: "Java" },
+];
+
+interface FoodGroup {
+  value: string;
+  items: { value: string; label: string }[];
+}
+
+const FOOD_GROUPS: FoodGroup[] = [
+  {
+    value: "Fruits",
+    items: [
+      { value: "apple", label: "Apple" },
+      { value: "banana", label: "Banana" },
+      { value: "mango", label: "Mango" },
+    ],
+  },
+  {
+    value: "Vegetables",
+    items: [
+      { value: "carrot", label: "Carrot" },
+      { value: "broccoli", label: "Broccoli" },
+      { value: "spinach", label: "Spinach" },
+    ],
+  },
+  {
+    value: "Dairy",
+    items: [
+      { value: "milk", label: "Milk" },
+      { value: "cheese", label: "Cheese" },
+      { value: "yogurt", label: "Yogurt" },
+    ],
+  },
+];
+
+interface Country {
+  code: string;
+  value: string | null;
+  label: string;
+}
+
+const COUNTRIES: Country[] = [
+  { code: "", value: null, label: "Select country" },
+  { code: "pt", value: "portugal", label: "Portugal" },
+  { code: "us", value: "united-states", label: "United States" },
+  { code: "gb", value: "united-kingdom", label: "United Kingdom" },
+  { code: "de", value: "germany", label: "Germany" },
+  { code: "fr", value: "france", label: "France" },
+  { code: "jp", value: "japan", label: "Japan" },
 ];
 
 function Section({
@@ -211,89 +295,352 @@ function SelectSection() {
   );
 }
 
+type FruitOption = (typeof FRUIT_OPTIONS)[number];
+
+function FruitInput({
+  placeholder = "Search fruits...",
+  ...inputProps
+}: React.ComponentProps<typeof ComboboxInput>) {
+  return (
+    <div className="relative flex flex-col">
+      <ComboboxInput
+        placeholder={placeholder}
+        className="pr-14"
+        {...inputProps}
+      />
+      <div className="text-muted-foreground absolute right-2 bottom-0 flex h-9 items-center justify-center">
+        <ComboboxClear />
+        <ComboboxTrigger
+          aria-label="Open popup"
+          className="text-muted-foreground h-9 w-6 border-none bg-transparent shadow-none hover:bg-transparent"
+        >
+          <CaretDownIcon className="size-4" />
+        </ComboboxTrigger>
+      </div>
+    </div>
+  );
+}
+
+function FruitPopup() {
+  return (
+    <ComboboxPositioner sideOffset={6}>
+      <ComboboxPopup>
+        <ComboboxEmpty>No results found.</ComboboxEmpty>
+        <ComboboxList>
+          {(option: FruitOption) => (
+            <ComboboxItem key={option.value} value={option}>
+              <ComboboxItemIndicator />
+              <div className="col-start-2">{option.label}</div>
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxPopup>
+    </ComboboxPositioner>
+  );
+}
+
+function ChipsRow() {
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  return (
+    <Combobox items={LANGUAGE_OPTIONS} multiple>
+      <ComboboxChips ref={containerRef}>
+        <ComboboxValue>
+          {(value: Language[]) => (
+            <>
+              {value.map((lang) => (
+                <ComboboxChip key={lang.id} aria-label={lang.value}>
+                  {lang.value}
+                  <ComboboxChipRemove />
+                </ComboboxChip>
+              ))}
+              <ComboboxInput
+                placeholder={value.length > 0 ? "" : "e.g. TypeScript"}
+                className="h-6 flex-1 border-0 bg-transparent pl-2 shadow-none outline-none focus-visible:ring-0"
+              />
+            </>
+          )}
+        </ComboboxValue>
+      </ComboboxChips>
+
+      <ComboboxPositioner sideOffset={6} anchor={containerRef}>
+        <ComboboxPopup>
+          <ComboboxEmpty>No languages found.</ComboboxEmpty>
+          <ComboboxList>
+            {(lang: Language) => (
+              <ComboboxItem key={lang.id} value={lang}>
+                <ComboboxItemIndicator />
+                <div className="col-start-2">{lang.value}</div>
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxPopup>
+      </ComboboxPositioner>
+    </Combobox>
+  );
+}
+
+interface CreatableLabel {
+  id: string;
+  value: string;
+  creatable?: string;
+}
+
+const INITIAL_LABELS: CreatableLabel[] = [
+  { id: "bug", value: "bug" },
+  { id: "docs", value: "documentation" },
+  { id: "enhancement", value: "enhancement" },
+  { id: "help-wanted", value: "help wanted" },
+];
+
+function CreatableRow() {
+  const [labels, setLabels] = React.useState<CreatableLabel[]>(INITIAL_LABELS);
+  const [selected, setSelected] = React.useState<CreatableLabel[]>([]);
+  const [query, setQuery] = React.useState("");
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+  const trimmed = query.trim();
+  const lowered = trimmed.toLocaleLowerCase();
+  const exactExists = labels.some(
+    (l) => l.value.trim().toLocaleLowerCase() === lowered,
+  );
+  const itemsForView: CreatableLabel[] =
+    trimmed !== "" && !exactExists
+      ? [
+          ...labels,
+          {
+            creatable: trimmed,
+            id: `create:${lowered}`,
+            value: `Create "${trimmed}"`,
+          },
+        ]
+      : labels;
+
+  return (
+    <Combobox
+      items={itemsForView}
+      multiple
+      value={selected}
+      inputValue={query}
+      onInputValueChange={setQuery}
+      onValueChange={(items) => {
+        const next = items as CreatableLabel[];
+        const last = next[next.length - 1];
+        if (last && last.creatable) {
+          const created: CreatableLabel = {
+            id: `${last.creatable.replace(/\s+/g, "-").toLocaleLowerCase()}`,
+            value: last.creatable,
+          };
+          setLabels((prev) =>
+            prev.some((l) => l.id === created.id) ? prev : [...prev, created],
+          );
+          setSelected((prev) =>
+            prev.some((l) => l.id === created.id) ? prev : [...prev, created],
+          );
+          setQuery("");
+          return;
+        }
+        setSelected(next.filter((i) => !i.creatable));
+        setQuery("");
+      }}
+    >
+      <ComboboxChips ref={containerRef}>
+        <ComboboxValue>
+          {(value: CreatableLabel[]) => (
+            <>
+              {value.map((label) => (
+                <ComboboxChip key={label.id} aria-label={label.value}>
+                  {label.value}
+                  <ComboboxChipRemove />
+                </ComboboxChip>
+              ))}
+              <ComboboxInput
+                placeholder={value.length > 0 ? "" : "e.g. bug"}
+                className="h-6 flex-1 border-0 bg-transparent pl-2 shadow-none outline-none focus-visible:ring-0"
+              />
+            </>
+          )}
+        </ComboboxValue>
+      </ComboboxChips>
+
+      <ComboboxPositioner sideOffset={4} anchor={containerRef}>
+        <ComboboxPopup>
+          <ComboboxEmpty>No labels found.</ComboboxEmpty>
+          <ComboboxList>
+            {(item: CreatableLabel) =>
+              item.creatable ? (
+                <ComboboxItem key={item.id} value={item}>
+                  <span className="col-start-1">
+                    <PlusIcon className="size-3" />
+                  </span>
+                  <div className="col-start-2">
+                    Create &quot;{item.creatable}&quot;
+                  </div>
+                </ComboboxItem>
+              ) : (
+                <ComboboxItem key={item.id} value={item}>
+                  <ComboboxItemIndicator />
+                  <div className="col-start-2">{item.value}</div>
+                </ComboboxItem>
+              )
+            }
+          </ComboboxList>
+        </ComboboxPopup>
+      </ComboboxPositioner>
+    </Combobox>
+  );
+}
+
+type FoodItem = FoodGroup["items"][number];
+
+function GroupsRow() {
+  return (
+    <Combobox items={FOOD_GROUPS}>
+      <FruitInput placeholder="e.g. Apple" />
+      <ComboboxPositioner sideOffset={6}>
+        <ComboboxPopup className="pt-0">
+          <ComboboxEmpty className="not-empty:pt-3">
+            No results found.
+          </ComboboxEmpty>
+          <ComboboxList>
+            {(group: FoodGroup) => (
+              <ComboboxGroup key={group.value} items={group.items}>
+                <ComboboxGroupLabel className="mb-1 border-b">
+                  {group.value}
+                </ComboboxGroupLabel>
+                <ComboboxCollection>
+                  {(item: FoodItem) => (
+                    <ComboboxItem key={item.value} value={item}>
+                      <ComboboxItemIndicator />
+                      <div className="col-start-2">{item.label}</div>
+                    </ComboboxItem>
+                  )}
+                </ComboboxCollection>
+              </ComboboxGroup>
+            )}
+          </ComboboxList>
+        </ComboboxPopup>
+      </ComboboxPositioner>
+    </Combobox>
+  );
+}
+
+function SeparatorRow() {
+  return (
+    <Combobox items={FOOD_GROUPS}>
+      <FruitInput placeholder="e.g. Apple" />
+      <ComboboxPositioner sideOffset={6}>
+        <ComboboxPopup>
+          <ComboboxEmpty className="not-empty:pt-3">
+            No foods found.
+          </ComboboxEmpty>
+          <ComboboxList>
+            {(group: FoodGroup) => (
+              <ComboboxGroup
+                key={group.value}
+                items={group.items}
+                className="group"
+              >
+                <ComboboxCollection>
+                  {(item: FoodItem) => (
+                    <ComboboxItem key={item.value} value={item}>
+                      <ComboboxItemIndicator />
+                      <div className="col-start-2">{item.label}</div>
+                    </ComboboxItem>
+                  )}
+                </ComboboxCollection>
+                <ComboboxSeparator className="group-last:hidden my-3" />
+              </ComboboxGroup>
+            )}
+          </ComboboxList>
+        </ComboboxPopup>
+      </ComboboxPositioner>
+    </Combobox>
+  );
+}
+
+function InsidePopupRow() {
+  return (
+    <Combobox items={COUNTRIES} defaultValue={COUNTRIES[0]}>
+      <ComboboxTrigger className="w-full max-w-[14rem] justify-between">
+        <div className="flex items-center gap-2">
+          <MapPinIcon />
+          <ComboboxValue />
+        </div>
+        <ComboboxIcon className="flex">
+          <CaretUpDownIcon />
+        </ComboboxIcon>
+      </ComboboxTrigger>
+      <ComboboxPositioner align="start" sideOffset={4}>
+        <ComboboxPopup className="w-full pt-0" aria-label="Select country">
+          <div className="bg-popover sticky top-0 z-1 w-64 p-2 text-center">
+            <ComboboxInput placeholder="e.g. United Kingdom" />
+          </div>
+          <ComboboxEmpty>No countries found.</ComboboxEmpty>
+          <ComboboxList>
+            {(country: Country) => (
+              <ComboboxItem key={country.code} value={country}>
+                <ComboboxItemIndicator />
+                <div className="col-start-2">{country.label}</div>
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxPopup>
+      </ComboboxPositioner>
+    </Combobox>
+  );
+}
+
 function ComboboxSection() {
   return (
     <Section title="Combobox">
       <div className="space-y-4">
         <StateRow label="Default">
           <Combobox items={FRUIT_OPTIONS}>
-            <ComboboxInput placeholder="Search fruits..." />
-            <ComboboxContent>
-              <ComboboxList>
-                <ComboboxEmpty>No results</ComboboxEmpty>
-                {FRUIT_OPTIONS.map((opt) => (
-                  <ComboboxItem key={opt.value} value={opt}>
-                    {opt.label}
-                  </ComboboxItem>
-                ))}
-              </ComboboxList>
-            </ComboboxContent>
+            <FruitInput />
+            <FruitPopup />
           </Combobox>
         </StateRow>
         <StateRow label="With value">
           <Combobox items={FRUIT_OPTIONS} defaultValue={FRUIT_OPTIONS[1]}>
-            <ComboboxInput placeholder="Search fruits..." />
-            <ComboboxContent>
-              <ComboboxList>
-                <ComboboxEmpty>No results</ComboboxEmpty>
-                {FRUIT_OPTIONS.map((opt) => (
-                  <ComboboxItem key={opt.value} value={opt}>
-                    {opt.label}
-                  </ComboboxItem>
-                ))}
-              </ComboboxList>
-            </ComboboxContent>
+            <FruitInput />
+            <FruitPopup />
           </Combobox>
         </StateRow>
         <StateRow label="Focus">
           <Combobox items={FRUIT_OPTIONS}>
-            <ComboboxInput className="pseudo-focus" placeholder="Focused" />
-            <ComboboxContent>
-              <ComboboxList>
-                <ComboboxEmpty>No results</ComboboxEmpty>
-                {FRUIT_OPTIONS.map((opt) => (
-                  <ComboboxItem key={opt.value} value={opt}>
-                    {opt.label}
-                  </ComboboxItem>
-                ))}
-              </ComboboxList>
-            </ComboboxContent>
+            <FruitInput className="pseudo-focus" placeholder="Focused" />
+            <FruitPopup />
           </Combobox>
         </StateRow>
         <StateRow label="Invalid">
           <div className="space-y-1">
             <Combobox items={FRUIT_OPTIONS}>
-              <ComboboxInput
-                aria-invalid="true"
-                placeholder="Required field..."
-              />
-              <ComboboxContent>
-                <ComboboxList>
-                  <ComboboxEmpty>No results</ComboboxEmpty>
-                  {FRUIT_OPTIONS.map((opt) => (
-                    <ComboboxItem key={opt.value} value={opt}>
-                      {opt.label}
-                    </ComboboxItem>
-                  ))}
-                </ComboboxList>
-              </ComboboxContent>
+              <FruitInput aria-invalid="true" placeholder="Required field..." />
+              <FruitPopup />
             </Combobox>
             <p className="text-destructive text-xs">Please pick a fruit</p>
           </div>
         </StateRow>
         <StateRow label="Disabled">
           <Combobox items={FRUIT_OPTIONS}>
-            <ComboboxInput disabled placeholder="Disabled combobox" />
-            <ComboboxContent>
-              <ComboboxList>
-                {FRUIT_OPTIONS.map((opt) => (
-                  <ComboboxItem key={opt.value} value={opt}>
-                    {opt.label}
-                  </ComboboxItem>
-                ))}
-              </ComboboxList>
-            </ComboboxContent>
+            <FruitInput disabled placeholder="Disabled combobox" />
+            <FruitPopup />
           </Combobox>
+        </StateRow>
+        <StateRow label="Chips">
+          <ChipsRow />
+        </StateRow>
+        <StateRow label="Creatable">
+          <CreatableRow />
+        </StateRow>
+        <StateRow label="Groups">
+          <GroupsRow />
+        </StateRow>
+        <StateRow label="Separator">
+          <SeparatorRow />
+        </StateRow>
+        <StateRow label="Inside popup">
+          <InsidePopupRow />
         </StateRow>
       </div>
     </Section>

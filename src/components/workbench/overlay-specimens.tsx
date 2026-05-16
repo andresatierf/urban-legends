@@ -62,8 +62,8 @@ export function OverlaySpecimens() {
 
         <div className="bg-paper flex flex-wrap items-start gap-4 rounded-lg p-6">
           <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline">Open Dialog</Button>
+            <DialogTrigger render={<Button variant="outline" />}>
+              Open Dialog
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

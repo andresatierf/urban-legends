@@ -102,7 +102,7 @@ export function TransferCaptaincyFormDialog({
           form.handleSubmit();
         }}
       >
-        {children && <DialogTrigger asChild>{children}</DialogTrigger>}
+        {children && <DialogTrigger render={children as React.ReactElement} />}
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Transfer Captaincy</DialogTitle>
@@ -133,14 +133,16 @@ export function TransferCaptaincyFormDialog({
           >
             {([isPristine, canSubmit, isSubmitting]) => (
               <DialogFooter>
-                <DialogClose asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
+                <DialogClose
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isSubmitting}
+                    />
+                  }
+                >
+                  Cancel
                 </DialogClose>
                 <Button
                   type="submit"
