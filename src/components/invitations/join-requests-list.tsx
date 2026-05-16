@@ -45,25 +45,21 @@ export function JoinRequestsList({ teamId }: Props) {
   const pendingRequests = requests.filter((req) => req.status === "pending");
   const otherRequests = requests.filter((req) => req.status !== "pending");
 
-  const handleApprove = async (requestId: Id<"joinRequests">) => {
+  const handleRespond = async (
+    requestId: Id<"joinRequests">,
+    approve: boolean,
+  ) => {
     setProcessingId(requestId);
 
     await tryMutate({
-      fn: () => respondToRequest({ requestId, approve: true }),
+      fn: () => respondToRequest({ requestId, approve }),
       onFinally: () => setProcessingId(null),
-      successToast: "Join request approved!",
-      defaultFailureToast: "Failed to approve join request",
-    });
-  };
-
-  const handleReject = async (requestId: Id<"joinRequests">) => {
-    setProcessingId(requestId);
-
-    await tryMutate({
-      fn: () => respondToRequest({ requestId, approve: false }),
-      onFinally: () => setProcessingId(null),
-      successToast: "Join request rejected",
-      defaultFailureToast: "Failed to reject join request",
+      successToast: approve
+        ? "Join request approved!"
+        : "Join request rejected",
+      defaultFailureToast: approve
+        ? "Failed to approve join request"
+        : "Failed to reject join request",
     });
   };
 
@@ -107,8 +103,8 @@ export function JoinRequestsList({ teamId }: Props) {
                 invitation={{ ...request, counterparty: request.user }}
                 viewer="team"
                 processing={processingId === request._id}
-                onAccept={() => handleApprove(request._id)}
-                onReject={() => handleReject(request._id)}
+                onAccept={() => handleRespond(request._id, true)}
+                onReject={() => handleRespond(request._id, false)}
               />
             ))}
           </div>

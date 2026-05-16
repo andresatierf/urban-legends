@@ -49,6 +49,8 @@ export function InvitationCard({
   const displayStatus = isExpired ? "expired" : invitation.status;
 
   const viewerIsSender = viewer === invitation.initiator;
+  const isTeamOutgoingInvite =
+    viewer === "team" && invitation.initiator === "team";
   const primaryName =
     viewer === "team"
       ? (invitation.counterparty?.name ?? "Unknown user")
@@ -62,8 +64,7 @@ export function InvitationCard({
   const showActions =
     !isExpired && invitation.status === "pending" && canRespond;
 
-  const dateLabel =
-    viewerIsSender || invitation.initiator === "team" ? "Invited" : "Requested";
+  const dateLabel = invitation.initiator === "team" ? "Invited" : "Requested";
 
   return (
     <Card className={className}>
@@ -112,20 +113,20 @@ export function InvitationCard({
                   {format(invitation.createdAt, "short")}
                 </span>
               )}
-            {!(viewer === "team" && invitation.initiator === "team") && (
+            {!isTeamOutgoingInvite && (
               <span className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
                 {dateLabel} {format(invitation.createdAt, "short")}
               </span>
             )}
-            <span className="flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {invitation.respondedAt
-                ? `${capitalize(invitation.status)} ${format(invitation.respondedAt, "short")}`
-                : invitation.expiresAt
-                  ? `Expires ${format(invitation.expiresAt, "short")}`
-                  : null}
-            </span>
+            {(invitation.respondedAt ?? invitation.expiresAt) && (
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {invitation.respondedAt
+                  ? `${capitalize(invitation.status)} ${format(invitation.respondedAt, "short")}`
+                  : `Expires ${format(invitation.expiresAt!, "short")}`}
+              </span>
+            )}
           </div>
         </div>
         {showActions && (primaryAction || secondaryAction) && (

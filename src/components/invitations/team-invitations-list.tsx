@@ -49,25 +49,21 @@ export function TeamInvitationsList({
     (inv) => inv.status !== "pending",
   );
 
-  const handleAccept = async (invitationId: Id<"joinRequests">) => {
+  const handleRespond = async (
+    invitationId: Id<"joinRequests">,
+    accept: boolean,
+  ) => {
     setProcessingId(invitationId);
 
     await tryMutate({
-      fn: () => respondToInvitation({ invitationId, accept: true }),
+      fn: () => respondToInvitation({ invitationId, accept }),
       onFinally: () => setProcessingId(null),
-      successToast: "Invitation accepted! You've joined the team.",
-      defaultFailureToast: "Failed to accept invitation",
-    });
-  };
-
-  const handleReject = async (invitationId: Id<"joinRequests">) => {
-    setProcessingId(invitationId);
-
-    await tryMutate({
-      fn: () => respondToInvitation({ invitationId, accept: false }),
-      onFinally: () => setProcessingId(null),
-      successToast: "Invitation declined",
-      defaultFailureToast: "Failed to decline invitation",
+      successToast: accept
+        ? "Invitation accepted! You've joined the team."
+        : "Invitation declined",
+      defaultFailureToast: accept
+        ? "Failed to accept invitation"
+        : "Failed to decline invitation",
     });
   };
 
@@ -117,8 +113,8 @@ export function TeamInvitationsList({
                 invitation={{ ...invitation, counterparty: null }}
                 viewer="user"
                 processing={processingId === invitation._id}
-                onAccept={() => handleAccept(invitation._id)}
-                onReject={() => handleReject(invitation._id)}
+                onAccept={() => handleRespond(invitation._id, true)}
+                onReject={() => handleRespond(invitation._id, false)}
               />
             ))}
           </div>
