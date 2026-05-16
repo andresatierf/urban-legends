@@ -254,7 +254,7 @@ export function ComposedCombobox<T extends string = string>(
             {(item: InternalOption<T>) => renderItem(item)}
           </ComboboxCollection>
           {separator ? (
-            <ComboboxSeparator className="group-last:hidden my-1" />
+            <ComboboxSeparator className="my-1 group-last:hidden" />
           ) : null}
         </ComboboxGroup>
       )}
