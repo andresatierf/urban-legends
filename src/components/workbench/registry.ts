@@ -48,6 +48,11 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "primitives",
   },
   {
+    path: "/workbench/primitives/tabs",
+    label: "Tabs",
+    group: "primitives",
+  },
+  {
     path: "/workbench/components/eyebrow",
     label: "Eyebrow",
     group: "components",
@@ -90,6 +95,16 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
   {
     path: "/workbench/components/invitations",
     label: "Invitations",
+    group: "components",
+  },
+  {
+    path: "/workbench/components/details-card",
+    label: "Details Card",
+    group: "components",
+  },
+  {
+    path: "/workbench/components/notification-indicator",
+    label: "Notification Indicator",
     group: "components",
   },
   {
