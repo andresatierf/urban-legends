@@ -5,13 +5,13 @@ import { cn } from "@/lib/utils";
 
 import type { TeamCardData } from "./types";
 
-export function ViewerRoleRibbon({
-  userRole,
-}: {
-  userRole: TeamCardData["userRole"];
-}) {
-  if (!userRole) return null;
-  const isCaptain = userRole === "captain";
+type Props = {
+  data: TeamCardData;
+};
+
+export function ViewerRoleBadge({ data }: Props) {
+  if (!data.userRole) return null;
+  const isCaptain = data.userRole === "captain";
   return (
     <Badge
       variant="info"

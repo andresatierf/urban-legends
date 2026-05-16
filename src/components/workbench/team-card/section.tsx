@@ -28,7 +28,6 @@ export function TeamSection() {
             if (!item) return null;
             return (
               <TeamCard
-                demo
                 data={{
                   team: item.team,
                   tournament: item.tournament,
@@ -40,6 +39,10 @@ export function TeamSection() {
                   rank: item.rank,
                   totalTeams: item.totalTeams,
                 }}
+                joinRequest={null}
+                onRequestJoin={async () => {}}
+                onCancelRequest={() => {}}
+                onLeave={() => {}}
               />
             );
           }}

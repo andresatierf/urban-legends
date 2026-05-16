@@ -4,6 +4,7 @@ import { useUser } from "@/hooks/useUser";
 
 import { SectionHeader } from "../../section-header";
 import { TeamCard } from "../../teams/card/layout";
+import { useTeamCardActions } from "../../teams/use-team-card-actions";
 import type { TournamentDetails, TournamentTeam } from "./types";
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
 export function TeamRosters({ data, sortedTeams }: Props) {
   const { user } = useUser();
   const currentUserId = user?._id;
+  const getCardActions = useTeamCardActions();
 
   if (sortedTeams.length === 0) return null;
 
@@ -29,6 +31,7 @@ export function TeamRosters({ data, sortedTeams }: Props) {
                   ?.memberRole ?? null)
               : null;
 
+          const actions = getCardActions(team._id);
           return (
             <TeamCard
               key={team._id}
@@ -45,6 +48,10 @@ export function TeamRosters({ data, sortedTeams }: Props) {
                 rank: idx + 1,
                 totalTeams: sortedTeams.length,
               }}
+              joinRequest={actions.joinRequest}
+              onRequestJoin={actions.onRequestJoin}
+              onCancelRequest={actions.onCancelRequest}
+              onLeave={actions.onLeave}
             />
           );
         })}

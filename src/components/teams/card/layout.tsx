@@ -4,42 +4,50 @@ import { cn } from "@/lib/utils";
 
 import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
 import { CaptainSpotlight } from "./captain-spotlight";
-import { JoinTeamButton } from "./join-team-action";
-import { LeaveTeamButton } from "./leave-team-button";
-import { ManageTeamButton } from "./manage-team-button";
+import {
+  type JoinTeamRequestState,
+  MembershipButton,
+} from "./membership-button";
 import { MomentumCell } from "./momentum-cell";
+import { OpenTeamButton } from "./open-team-button";
 import { SparklineCell } from "./sparkline-cell";
 import { StatsStrip } from "./stats-strip";
 import type { TeamCardData } from "./types";
-import { ViewTeamButton } from "./view-team-button";
-import { ViewerRoleRibbon } from "./viewer-role-ribbon";
+import { ViewerRoleBadge } from "./viewer-role-badge";
 
 export { TeamCardSkeleton } from "./skeleton";
 
 type Props = {
   data: TeamCardData;
-  demo?: boolean;
+  joinRequest: JoinTeamRequestState;
+  onRequestJoin: (message: string | undefined) => Promise<void> | void;
+  onCancelRequest: () => void;
+  onLeave: () => void;
 };
 
-export function TeamCard({ data, demo = false }: Props) {
+export function TeamCard({
+  data,
+  joinRequest,
+  onRequestJoin,
+  onCancelRequest,
+  onLeave,
+}: Props) {
   const { team, tournament, isUserMember, userRole } = data;
   const isCaptain = userRole === "captain";
 
   return (
     <EdgeOverlay
-      topRight={<ViewerRoleRibbon userRole={userRole} />}
+      topRight={<ViewerRoleBadge data={data} />}
       bottomLeft={
-        <>
-          <JoinTeamButton data={data} demo={demo} />
-          <LeaveTeamButton data={data} />
-        </>
+        <MembershipButton
+          data={data}
+          joinRequest={joinRequest}
+          onRequestJoin={onRequestJoin}
+          onCancelRequest={onCancelRequest}
+          onLeave={onLeave}
+        />
       }
-      bottomRight={
-        <>
-          <ViewTeamButton data={data} />
-          <ManageTeamButton data={data} />
-        </>
-      }
+      bottomRight={<OpenTeamButton data={data} />}
     >
       <ComposedCard
         className={cn("pb-2", {
