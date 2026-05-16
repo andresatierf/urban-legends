@@ -7,15 +7,15 @@ import { cn } from "@/lib/utils";
 const buttonVariants = cva(
   [
     // layout
-    "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-lg font-medium",
+    "inline-flex shrink-0 items-center justify-center rounded-lg font-medium whitespace-nowrap",
     // interaction
-    "select-none outline-none transition-[color,background-color,border-color,box-shadow,transform]",
+    "transition-[color,background-color,border-color,box-shadow,transform] outline-none select-none",
     // focus
     "focus-visible:ring-ring/60 focus-visible:ring-offset-background focus-visible:ring-[3px] focus-visible:ring-offset-2",
     // invalid
     "aria-invalid:ring-destructive/40 aria-invalid:ring-[3px]",
     // disabled
-    "disabled:pointer-events-none disabled:saturate-50 disabled:brightness-95 disabled:hover:brightness-95",
+    "disabled:pointer-events-none disabled:brightness-95 disabled:saturate-50 disabled:hover:brightness-95",
     // svg children
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   ],

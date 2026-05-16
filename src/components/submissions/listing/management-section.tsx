@@ -18,8 +18,6 @@ type SortOption = "date-desc" | "date-asc" | "points-desc" | "points-asc";
 export type ReviewFilters = {
   search: string;
   tournamentId?: Id<"tournaments">;
-  teamId?: Id<"teams">;
-  userId?: Id<"users">;
   state: SubmissionState[];
   orderBy: SortOption;
 };
@@ -37,8 +35,6 @@ export function ManagementSection() {
     const args: Record<string, unknown> = {};
     if (filters.state.length > 0) args.state = filters.state;
     if (filters.tournamentId) args.tournamentId = filters.tournamentId;
-    if (filters.teamId) args.teamId = filters.teamId;
-    if (filters.userId) args.userId = filters.userId;
     if (filters.search) args.search = filters.search;
     if (filters.orderBy !== "date-desc") args.orderBy = filters.orderBy;
     return args;

@@ -42,8 +42,6 @@ export const listForReview = query({
   args: {
     paginationOpts: paginationOptsValidator,
     tournamentId: v.optional(v.id("tournaments")),
-    teamId: v.optional(v.id("teams")),
-    userId: v.optional(v.id("users")),
     state: v.optional(v.array(stateValidator)),
     search: v.optional(v.string()),
     orderBy: v.optional(
@@ -66,12 +64,12 @@ export const listForReview = query({
         ? ("asc" as const)
         : ("desc" as const);
 
-    const paginated = await paginateSubmissions(ctx, args, states, order);
+    const matching = await loadMatchingSubmissions(ctx, args, states, order);
 
-    const individualSubs = paginated.page.filter(
+    const individualSubs = matching.filter(
       (s) => s.submissionType === "individual",
     );
-    const teamSubs = paginated.page.filter((s) => s.submissionType === "team");
+    const teamSubs = matching.filter((s) => s.submissionType === "team");
 
     const seenGroupIds = new Set<string>();
     const uniqueGroupSubs = teamSubs.filter((s) => {
@@ -239,48 +237,38 @@ export const listForReview = query({
             : b.group.pointsEarned;
         return (pa - pb) * dir;
       });
+    } else {
+      const dir = order === "asc" ? 1 : -1;
+      items.sort((a, b) => a.date.localeCompare(b.date) * dir);
     }
 
+    const offset = parseOffset(args.paginationOpts.cursor);
+    const numItems = args.paginationOpts.numItems;
+    const slice = items.slice(offset, offset + numItems);
+    const nextOffset = offset + slice.length;
+
     return {
-      page: items,
-      isDone: paginated.isDone,
-      continueCursor: paginated.continueCursor,
+      page: slice,
+      isDone: nextOffset >= items.length,
+      continueCursor: String(nextOffset),
     };
   },
 });
 
-function paginateSubmissions(
+function parseOffset(cursor: string | null): number {
+  if (!cursor) return 0;
+  const n = parseInt(cursor, 10);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+async function loadMatchingSubmissions(
   ctx: QueryCtx,
-  args: {
-    paginationOpts: {
-      numItems: number;
-      cursor: string | null;
-      endCursor?: string | null;
-      id?: number;
-      maximumRowsRead?: number;
-      maximumBytesRead?: number;
-    };
-    tournamentId?: Id<"tournaments">;
-    teamId?: Id<"teams">;
-    userId?: Id<"users">;
-  },
+  args: { tournamentId?: Id<"tournaments"> },
   states: Array<"pending" | "approved" | "rejected">,
   order: "asc" | "desc",
 ) {
-  const opts = args.paginationOpts;
-
   if (states.length === 1) {
     const state = states[0];
-
-    if (args.teamId) {
-      return ctx.db
-        .query("submissions")
-        .withIndex("by_team_state_and_date", (q) =>
-          q.eq("teamId", args.teamId!).eq("state", state),
-        )
-        .order(order)
-        .paginate(opts);
-    }
 
     if (args.tournamentId) {
       return ctx.db
@@ -289,40 +277,32 @@ function paginateSubmissions(
           q.eq("tournamentId", args.tournamentId!).eq("state", state),
         )
         .order(order)
-        .paginate(opts);
-    }
-
-    if (args.userId) {
-      return ctx.db
-        .query("submissions")
-        .withIndex("by_user_state_and_date", (q) =>
-          q.eq("userId", args.userId!).eq("state", state),
-        )
-        .order(order)
-        .paginate(opts);
+        .collect();
     }
 
     return ctx.db
       .query("submissions")
       .withIndex("by_state_and_date", (q) => q.eq("state", state))
       .order(order)
-      .paginate(opts);
+      .collect();
   }
 
-  return ctx.db
-    .query("submissions")
-    .order(order)
-    .filter((q) =>
-      q.and(
-        q.or(...states.map((s) => q.eq(q.field("state"), s))),
-        ...(args.tournamentId
-          ? [q.eq(q.field("tournamentId"), args.tournamentId)]
-          : []),
-        ...(args.teamId ? [q.eq(q.field("teamId"), args.teamId)] : []),
-        ...(args.userId ? [q.eq(q.field("userId"), args.userId)] : []),
-      ),
-    )
-    .paginate(opts);
+  const perState = await Promise.all(
+    states.map((state) =>
+      args.tournamentId
+        ? ctx.db
+            .query("submissions")
+            .withIndex("by_tournament_state_and_date", (q) =>
+              q.eq("tournamentId", args.tournamentId!).eq("state", state),
+            )
+            .collect()
+        : ctx.db
+            .query("submissions")
+            .withIndex("by_state", (q) => q.eq("state", state))
+            .collect(),
+    ),
+  );
+  return perState.flat();
 }
 
 async function resolveEvidence(ctx: QueryCtx, storageIds?: Id<"_storage">[]) {

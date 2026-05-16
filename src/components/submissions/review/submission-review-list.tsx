@@ -1,14 +1,20 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { Loader2, Search } from "lucide-react";
+import { Filter, Loader2, Search, X } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import type { ReviewFilters } from "@/components/submissions/listing/management-section";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -40,6 +46,15 @@ export interface SubmissionReviewListProps {
   onLoadMore: () => void;
 }
 
+const STATE_OPTIONS: Array<{
+  value: "pending" | "approved" | "rejected";
+  label: string;
+}> = [
+  { value: "pending", label: "Pending" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+];
+
 export function SubmissionReviewList({
   items,
   onApprove,
@@ -59,11 +74,6 @@ export function SubmissionReviewList({
   }
 
   const tournaments = useQuery(api.tournaments.list, {});
-  const teams = useQuery(
-    api.teams.list,
-    filters.tournamentId ? { tournamentId: filters.tournamentId } : {},
-  );
-  const users = useQuery(api.users.list, {});
 
   const handleRejectConfirm = useCallback(
     async (reason: string) => {
@@ -79,15 +89,6 @@ export function SubmissionReviewList({
     [rejectingItem, onReject],
   );
 
-  const stateOptions: Array<{
-    value: "pending" | "approved" | "rejected";
-    label: string;
-  }> = [
-    { value: "pending", label: "Pending" },
-    { value: "approved", label: "Approved" },
-    { value: "rejected", label: "Rejected" },
-  ];
-
   const toggleState = (state: "pending" | "approved" | "rejected") => {
     const current = filters.state;
     const next = current.includes(state)
@@ -95,6 +96,12 @@ export function SubmissionReviewList({
       : [...current, state];
     onFiltersChange({ ...filters, state: next.length > 0 ? next : [state] });
   };
+
+  const tournament = tournaments?.find((t) => t._id === filters.tournamentId);
+  const statusDeviates = !(
+    filters.state.length === 1 && filters.state[0] === "pending"
+  );
+  const activeCount = (filters.tournamentId ? 1 : 0) + (statusDeviates ? 1 : 0);
 
   return (
     <div className="space-y-4">
@@ -108,11 +115,11 @@ export function SubmissionReviewList({
       />
 
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative max-w-md flex-1">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
             <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
-              placeholder="Search by team, tournament, or submitter..."
+              placeholder="Search submissions..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-9"
@@ -129,7 +136,7 @@ export function SubmissionReviewList({
               })
             }
           >
-            <SelectTrigger className="w-[200px]" aria-label="Sort submissions">
+            <SelectTrigger className="w-[180px]" aria-label="Sort submissions">
               <SelectValue placeholder="Sort by..." />
             </SelectTrigger>
             <SelectContent>
@@ -139,100 +146,98 @@ export function SubmissionReviewList({
               <SelectItem value="points-asc">Lowest Points</SelectItem>
             </SelectContent>
           </Select>
-        </div>
 
-        <div className="flex flex-wrap gap-2">
-          <div className="flex gap-1">
-            {stateOptions.map((opt) => (
-              <Button
-                key={opt.value}
-                variant={
-                  filters.state.includes(opt.value) ? "default" : "outline"
-                }
-                size="sm"
-                onClick={() => toggleState(opt.value)}
-              >
-                {opt.label}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Filters
+                {activeCount > 0 && (
+                  <Badge variant="neutral" className="ml-1">
+                    {activeCount}
+                  </Badge>
+                )}
               </Button>
-            ))}
-          </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-[320px]" align="end">
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="text-muted-foreground mb-2 block text-xs font-medium uppercase">
+                    Status
+                  </label>
+                  <div className="flex flex-wrap gap-1">
+                    {STATE_OPTIONS.map((opt) => (
+                      <Button
+                        key={opt.value}
+                        variant={
+                          filters.state.includes(opt.value)
+                            ? "default"
+                            : "outline"
+                        }
+                        size="sm"
+                        onClick={() => toggleState(opt.value)}
+                      >
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
 
-          <Select
-            value={filters.tournamentId ?? "all"}
-            onValueChange={(value) =>
-              onFiltersChange({
-                ...filters,
-                tournamentId:
-                  value === "all" ? undefined : (value as Id<"tournaments">),
-                teamId: undefined,
-                userId: undefined,
-              })
-            }
-          >
-            <SelectTrigger
-              className="w-[180px]"
-              aria-label="Filter by tournament"
-            >
-              <SelectValue placeholder="All tournaments" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All tournaments</SelectItem>
-              {tournaments?.map((t) => (
-                <SelectItem key={t._id} value={t._id}>
-                  {t.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filters.teamId ?? "all"}
-            onValueChange={(value) =>
-              onFiltersChange({
-                ...filters,
-                teamId: value === "all" ? undefined : (value as Id<"teams">),
-                userId: undefined,
-              })
-            }
-          >
-            <SelectTrigger className="w-[180px]" aria-label="Filter by team">
-              <SelectValue placeholder="All teams" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All teams</SelectItem>
-              {teams?.map((t) => (
-                <SelectItem key={t._id} value={t._id}>
-                  {t.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filters.userId ?? "all"}
-            onValueChange={(value) =>
-              onFiltersChange({
-                ...filters,
-                userId: value === "all" ? undefined : (value as Id<"users">),
-              })
-            }
-          >
-            <SelectTrigger
-              className="w-[180px]"
-              aria-label="Filter by submitter"
-            >
-              <SelectValue placeholder="All submitters" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All submitters</SelectItem>
-              {users?.map((u) => (
-                <SelectItem key={u._id} value={u._id}>
-                  {u.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                <div>
+                  <label className="text-muted-foreground mb-2 block text-xs font-medium uppercase">
+                    Tournament
+                  </label>
+                  <Select
+                    value={filters.tournamentId ?? "all"}
+                    onValueChange={(value) =>
+                      onFiltersChange({
+                        ...filters,
+                        tournamentId:
+                          value === "all"
+                            ? undefined
+                            : (value as Id<"tournaments">),
+                      })
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All tournaments" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All tournaments</SelectItem>
+                      {tournaments?.map((t) => (
+                        <SelectItem key={t._id} value={t._id}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
+
+        {activeCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-muted-foreground text-xs">Active:</span>
+            {statusDeviates &&
+              filters.state.map((s) => (
+                <ActiveChip
+                  key={s}
+                  label={`Status: ${s}`}
+                  onRemove={() => toggleState(s)}
+                />
+              ))}
+            {tournament && (
+              <ActiveChip
+                label={`Tournament: ${tournament.name}`}
+                onRemove={() =>
+                  onFiltersChange({ ...filters, tournamentId: undefined })
+                }
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {paginationStatus === "LoadingFirstPage" && (
@@ -288,5 +293,27 @@ export function SubmissionReviewList({
         </div>
       )}
     </div>
+  );
+}
+
+function ActiveChip({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: () => void;
+}) {
+  return (
+    <Badge variant="neutral" className="gap-1">
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${label}`}
+        className="hover:bg-muted-foreground/20 rounded-sm"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </Badge>
   );
 }
