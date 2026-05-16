@@ -532,6 +532,8 @@
   &[data-slot="input"],
   &[data-slot="textarea"],
   &[data-slot="select-trigger"],
+  &[data-slot="combobox-input"],
+  &[data-slot="combobox-chips"],
   &[data-slot="input-group"] {
     border-color: var(--ring);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
