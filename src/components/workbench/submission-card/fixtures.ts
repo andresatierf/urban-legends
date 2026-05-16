@@ -30,14 +30,7 @@ export const SUBMISSION_TYPES: readonly SubmissionType[] = [
   "group",
 ] as const;
 
-export type EvidenceCount = "1" | "2" | "3" | "4" | "5";
-export const EVIDENCE_COUNTS: readonly EvidenceCount[] = [
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-] as const;
+export type EvidenceCount = "1" | "2";
 
 type IndividualReviewItem = Extract<ReviewItem, { type: "individual" }>;
 type GroupReviewItem = Extract<ReviewItem, { type: "group" }>;
@@ -222,7 +215,7 @@ function makeGroup(
   };
 }
 
-const COUNTS = [1, 2, 3, 4, 5] as const;
+const COUNTS = [1, 2] as const;
 
 type SubmissionDemoKey = {
   type: SubmissionType;
