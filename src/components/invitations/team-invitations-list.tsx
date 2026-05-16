@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Empty, EmptyDescription, EmptyTitle } from "../ui/empty";
-import { TeamInvitationCard } from "./team-invitation-card";
+import { InvitationCard } from "./invitation-card";
 
 export function TeamInvitationsList({
   pendingOnly,
@@ -112,9 +112,10 @@ export function TeamInvitationsList({
               <h3 className="text-sm font-medium">Pending Invitations</h3>
             )}
             {pendingInvitations.map((invitation) => (
-              <TeamInvitationCard
+              <InvitationCard
                 key={invitation._id}
-                invitation={invitation}
+                invitation={{ ...invitation, counterparty: null }}
+                viewer="user"
                 processing={processingId === invitation._id}
                 onAccept={() => handleAccept(invitation._id)}
                 onReject={() => handleReject(invitation._id)}
@@ -127,12 +128,10 @@ export function TeamInvitationsList({
           <div className="space-y-3">
             <h3 className="text-sm font-medium">Past Invitations</h3>
             {otherInvitations.map((invitation) => (
-              <TeamInvitationCard
+              <InvitationCard
                 key={invitation._id}
-                invitation={invitation}
-                processing={false}
-                onAccept={() => {}}
-                onReject={() => {}}
+                invitation={{ ...invitation, counterparty: null }}
+                viewer="user"
                 className="bg-muted/50"
               />
             ))}

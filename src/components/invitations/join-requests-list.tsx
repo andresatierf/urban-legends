@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Empty, EmptyDescription, EmptyTitle } from "../ui/empty";
-import { JoinRequestCard } from "./join-request-card";
+import { InvitationCard } from "./invitation-card";
 
 type Props = {
   teamId: Id<"teams">;
@@ -102,11 +102,12 @@ export function JoinRequestsList({ teamId }: Props) {
           <div className="space-y-3">
             <h3 className="text-sm font-medium">Pending Requests</h3>
             {pendingRequests.map((request) => (
-              <JoinRequestCard
+              <InvitationCard
                 key={request._id}
-                request={request}
+                invitation={{ ...request, counterparty: request.user }}
+                viewer="team"
                 processing={processingId === request._id}
-                onApprove={() => handleApprove(request._id)}
+                onAccept={() => handleApprove(request._id)}
                 onReject={() => handleReject(request._id)}
               />
             ))}
@@ -117,12 +118,10 @@ export function JoinRequestsList({ teamId }: Props) {
           <div className="space-y-3">
             <h3 className="text-sm font-medium">Past Requests</h3>
             {otherRequests.map((request) => (
-              <JoinRequestCard
+              <InvitationCard
                 key={request._id}
-                request={request}
-                processing={processingId === request._id}
-                onApprove={() => {}}
-                onReject={() => {}}
+                invitation={{ ...request, counterparty: request.user }}
+                viewer="team"
                 className="bg-muted/50"
               />
             ))}

@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Empty, EmptyDescription, EmptyTitle } from "../ui/empty";
-import { InvitedUserCard } from "./invited-user-card";
+import { InvitationCard } from "./invitation-card";
 
 type Props = {
   teamId: Id<"teams">;
@@ -95,12 +95,16 @@ export function InvitedUsersList({ teamId, canCancel }: Props) {
           <div className="space-y-3">
             <h3 className="text-sm font-medium">Pending Invitations</h3>
             {pendingInvitations.map((invitation) => (
-              <InvitedUserCard
+              <InvitationCard
                 key={invitation._id}
-                invitation={invitation}
+                invitation={{
+                  ...invitation,
+                  counterparty: invitation.invitedUser,
+                }}
+                viewer="team"
                 processing={processingId === invitation._id}
-                onClick={() => handleCancelInvitation(invitation._id)}
-                canCancel={canCancel}
+                onReject={() => handleCancelInvitation(invitation._id)}
+                canRespond={canCancel}
               />
             ))}
           </div>
@@ -110,11 +114,13 @@ export function InvitedUsersList({ teamId, canCancel }: Props) {
           <div className="space-y-3">
             <h3 className="text-sm font-medium">Past Invitations</h3>
             {otherInvitations.map((invitation) => (
-              <InvitedUserCard
+              <InvitationCard
                 key={invitation._id}
-                invitation={invitation}
-                processing={false}
-                onClick={() => {}}
+                invitation={{
+                  ...invitation,
+                  counterparty: invitation.invitedUser,
+                }}
+                viewer="team"
                 className="bg-muted/50"
               />
             ))}
