@@ -509,11 +509,7 @@
 }
 
 @utility pseudo-focus {
-  /* Solid variants carry a resting Tailwind `shadow-[...]` arbitrary
-     utility with the same (0,1,0) specificity as a bare `.pseudo-focus`
-     rule, so source order would decide the winner. Scope the override
-     to `&[data-variant=...]` (specificity 0,2,0) so the focus ring +
-     offset shadow reliably wins. */
+  /* Variant scope raises specificity to (0,2,0) so the focus ring beats solid variants' resting shadow-[...] utility. */
   &[data-variant="default"],
   &[data-variant="secondary"],
   &[data-variant="destructive"],
