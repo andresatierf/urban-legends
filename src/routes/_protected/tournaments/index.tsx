@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { useState } from "react";
 
-import { UpsertTournamentFormDialog } from "@/components/form/upsert-tournament-form";
 import { SectionHeader } from "@/components/section-header";
+import { UpsertTournamentFormDialog } from "@/components/tournaments/form";
 import {
   TournamentListing,
   TournamentListingSkeleton,
-} from "@/components/tournaments/listing/layout";
+} from "@/components/tournaments/listing";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 

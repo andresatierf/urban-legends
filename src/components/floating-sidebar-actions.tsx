@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 
-import { UpsertSubmissionFormDialog } from "@/components/form/upsert-submission-form";
+import { UpsertSubmissionFormDialog } from "@/components/submissions/form";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useUser } from "@/hooks/useUser";

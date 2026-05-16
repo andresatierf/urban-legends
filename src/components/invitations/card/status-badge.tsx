@@ -1,8 +1,8 @@
-import { Check, Clock, X } from "lucide-react";
+import { Check, Clock, Hourglass, X } from "lucide-react";
 
-import { Badge } from "../ui/badge";
+import { Badge } from "../../ui/badge";
 
-export const getStatusBadge = (status: string) => {
+export function StatusBadge({ status }: { status: string }) {
   switch (status) {
     case "pending":
       return (
@@ -28,8 +28,21 @@ export const getStatusBadge = (status: string) => {
     case "cancelled":
       return <Badge variant="neutral">Cancelled</Badge>;
     case "expired":
-      return <Badge variant="neutral">Expired</Badge>;
+      return (
+        <Badge variant="neutral">
+          <Hourglass className="h-3 w-3" />
+          Expired
+        </Badge>
+      );
     default:
       return <Badge variant="neutral">{status}</Badge>;
   }
+}
+
+export const STATUS_BORDER: Record<string, string> = {
+  pending: "border-warning",
+  accepted: "border-success",
+  rejected: "border-crimson",
+  cancelled: "border-mute",
+  expired: "border-mute",
 };

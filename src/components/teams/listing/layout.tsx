@@ -2,13 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { TournamentSwitcher } from "@/components/dashboard/tournament-switcher";
 import { SectionHeader } from "@/components/section-header";
+import { getTournamentStatus } from "@/components/tournaments/utils";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 
 import type { Doc } from "../../../../convex/_generated/dataModel";
-import { TournamentSwitcher } from "../../dashboard/tournament-switcher";
-import { getTournamentStatus } from "../../tournaments/utils";
 import { Skeleton } from "../../ui/skeleton";
 import { TeamCard, TeamCardSkeleton } from "../card/layout";
 import { JoinTeamCard } from "../join-team-card";

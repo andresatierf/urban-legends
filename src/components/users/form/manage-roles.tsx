@@ -5,15 +5,8 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { useId, useState } from "react";
 import z from "zod";
 
-import { useAppForm } from "@/hooks/form";
-import { useUser } from "@/hooks/useUser";
-import { toastFormValues } from "@/lib/form";
-import { tryMutate } from "@/lib/utils";
-
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { Button } from "../ui/button";
-import { Checkbox } from "../ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -23,8 +16,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
-import { Field, FieldGroup, FieldLabel } from "../ui/field";
+} from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { useAppForm } from "@/hooks/form";
+import { useUser } from "@/hooks/useUser";
+import { toastFormValues } from "@/lib/form";
+import { tryMutate } from "@/lib/utils";
+
+import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 const formSchema = z.object({
   roles: z.array(z.string()),

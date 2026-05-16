@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { InviteMemberFormDialog } from "@/components/teams/form";
 import {
   Sidebar,
   SidebarContent,
@@ -37,7 +38,6 @@ import { useActiveRoute } from "@/hooks/useActiveRoute";
 import { useUser } from "@/hooks/useUser";
 
 import { api } from "../../convex/_generated/api";
-import { InviteMemberFormDialog } from "./form/invite-member-form";
 import { LoggedUserCard } from "./logged-user-card";
 import { useSubmissionDialog } from "./submission-dialog-context";
 

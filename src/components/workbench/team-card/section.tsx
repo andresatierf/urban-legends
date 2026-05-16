@@ -1,5 +1,5 @@
 import { SectionHeader } from "@/components/section-header";
-import { TeamCard } from "@/components/teams/card/layout";
+import { TeamCard } from "@/components/teams/card";
 
 import { VariantMatrix } from "../shells/variant-matrix";
 import {

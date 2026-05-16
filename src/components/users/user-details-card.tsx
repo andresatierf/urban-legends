@@ -3,10 +3,10 @@ import { startCase } from "lodash";
 import { Settings } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { ManageRolesFormDialog } from "@/components/users/form";
 import { cn } from "@/lib/utils";
 
 import type { api } from "../../../convex/_generated/api";
-import { ManageRolesFormDialog } from "../form/manage-roles-form";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { DetailsCardSkeleton } from "../ui/details-card-skeleton";

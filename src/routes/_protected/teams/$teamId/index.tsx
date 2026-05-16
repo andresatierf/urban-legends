@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 
-import { TeamDetailsLayout } from "@/components/teams/details/layout";
+import { TeamDetailsLayout } from "@/components/teams/details";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 
 import { api } from "../../../../../convex/_generated/api";

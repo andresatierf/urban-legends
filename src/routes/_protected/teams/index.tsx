@@ -2,10 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { Trophy } from "lucide-react";
 
-import {
-  TeamListing,
-  TeamListingSkeleton,
-} from "@/components/teams/listing/layout";
+import { TeamListing, TeamListingSkeleton } from "@/components/teams/listing";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 

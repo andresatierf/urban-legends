@@ -2,8 +2,9 @@ import { linkOptions } from "@tanstack/react-router";
 import { Pencil, Swords, Trophy } from "lucide-react";
 import { useState } from "react";
 
+import { UpsertTournamentFormDialog } from "@/components/tournaments/form";
+
 import type { Id } from "../../../../convex/_generated/dataModel";
-import { UpsertTournamentFormDialog } from "../../form/upsert-tournament-form";
 import {
   SidebarCard,
   type SidebarCardAction,

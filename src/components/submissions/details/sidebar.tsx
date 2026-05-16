@@ -13,10 +13,10 @@ import {
 } from "lucide-react";
 import { useCallback, useState } from "react";
 
+import { UpsertSubmissionFormDialog } from "@/components/submissions/form";
 import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../../convex/_generated/api";
-import { UpsertSubmissionFormDialog } from "../../form/upsert-submission-form";
 import {
   SidebarCard,
   type SidebarCardAction,

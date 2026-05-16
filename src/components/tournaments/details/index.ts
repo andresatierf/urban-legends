@@ -1,0 +1,1 @@
+export { TournamentDetailsLayout } from "./layout";

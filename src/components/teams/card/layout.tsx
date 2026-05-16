@@ -1,8 +1,11 @@
 import { ComposedCard } from "@/components/common/card/composed-card";
 import { EdgeOverlay } from "@/components/common/card/edge-overlay";
+import {
+  getTournamentStatus,
+  STATUS_LABEL,
+} from "@/components/tournaments/utils";
 import { cn } from "@/lib/utils";
 
-import { getTournamentStatus, STATUS_LABEL } from "../../tournaments/utils";
 import { CaptainSpotlight } from "./captain-spotlight";
 import {
   type JoinTeamRequestState,

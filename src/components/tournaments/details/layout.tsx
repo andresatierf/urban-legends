@@ -2,9 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 
 import { DetailsPageLayout } from "@/components/details-page-layout";
+import { UpsertTeamFormDialog } from "@/components/teams/form";
 
 import type { Id } from "../../../../convex/_generated/dataModel";
-import { UpsertTeamFormDialog } from "../../form/upsert-team-form";
 import { Button } from "../../ui/button";
 import { Sidebar } from "./sidebar";
 import { Standings } from "./standings";

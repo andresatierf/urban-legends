@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { Crown, Shield } from "lucide-react";
 
+import { getInitials } from "@/components/users/utils";
+
 import { Avatar, AvatarFallback } from "../../ui/avatar";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
-import { getInitials } from "../../users/utils";
 import type { TournamentDetails } from "./types";
 
 type Props = {

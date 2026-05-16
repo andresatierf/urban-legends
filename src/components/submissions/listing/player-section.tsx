@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { Calendar } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { UpsertSubmissionFormDialog } from "@/components/form/upsert-submission-form";
+import { UpsertSubmissionFormDialog } from "@/components/submissions/form";
 import { CalendarStatistics } from "@/components/submissions/listing/calendar/calendar-statistics";
 import { DayDetailPanel } from "@/components/submissions/listing/calendar/day-detail-panel";
 import { SubmissionCalendar } from "@/components/submissions/listing/calendar/submission-calendar";

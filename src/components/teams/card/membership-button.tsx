@@ -2,7 +2,7 @@
 
 import { LogOut, UserPlus } from "lucide-react";
 
-import { JoinTeamFormDialog } from "@/components/form/join-team-form";
+import { JoinTeamFormDialog } from "@/components/teams/form";
 import { Button } from "@/components/ui/button";
 
 import type { TeamCardData } from "./types";

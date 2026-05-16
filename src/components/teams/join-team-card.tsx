@@ -1,4 +1,5 @@
-import { UpsertTeamFormDialog } from "../form/upsert-team-form";
+import { UpsertTeamFormDialog } from "@/components/teams/form";
+
 import { Card, CardContent } from "../ui/card";
 import {
   Empty,

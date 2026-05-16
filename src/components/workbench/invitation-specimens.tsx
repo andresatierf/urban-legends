@@ -1,6 +1,4 @@
-import { InvitedUserCard } from "@/components/invitations/invited-user-card";
-import { JoinRequestCard } from "@/components/invitations/join-request-card";
-import { TeamInvitationCard } from "@/components/invitations/team-invitation-card";
+import { InvitationCard } from "@/components/invitations/card";
 import { SectionHeader } from "@/components/section-header";
 
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
@@ -8,7 +6,7 @@ import { VariantMatrix } from "./shells/variant-matrix";
 
 const noop = () => {};
 
-const SHARED_USER: Doc<"users"> = {
+const RECIPIENT: Doc<"users"> = {
   _id: "user-recipient" as Id<"users">,
   _creationTime: 0,
   name: "Joana Machado",
@@ -54,7 +52,10 @@ const PAST = new Date(Date.now() - 7 * 86_400_000).toISOString();
 const NOW = new Date(Date.now() - 3 * 86_400_000).toISOString();
 
 type Status = "pending" | "accepted" | "rejected" | "expired";
-type CardKind = "invited-user" | "join-request" | "team-invitation";
+type Scenario =
+  | "team-invitation-sender"
+  | "team-invitation-recipient"
+  | "join-request-recipient";
 
 const STATUSES: readonly Status[] = [
   "pending",
@@ -63,25 +64,29 @@ const STATUSES: readonly Status[] = [
   "expired",
 ] as const;
 
-const CARDS: readonly CardKind[] = [
-  "invited-user",
-  "join-request",
-  "team-invitation",
+const SCENARIOS: readonly Scenario[] = [
+  "team-invitation-sender",
+  "team-invitation-recipient",
+  "join-request-recipient",
 ] as const;
 
-const CARD_LABEL: Record<CardKind, string> = {
-  "invited-user": "InvitedUserCard",
-  "join-request": "JoinRequestCard",
-  "team-invitation": "TeamInvitationCard",
+const SCENARIO_LABEL: Record<Scenario, string> = {
+  "team-invitation-sender": "Captain · sent invite",
+  "team-invitation-recipient": "Player · received invite",
+  "join-request-recipient": "Captain · received request",
 };
 
-function baseInvitation(status: Status, key: string) {
+function baseInvitation(
+  status: Status,
+  initiator: "team" | "user",
+  key: string,
+) {
   return {
     _id: `inv-${key}` as Id<"joinRequests">,
     _creationTime: 0,
     teamId: TEAM._id,
-    userId: SHARED_USER._id,
-    status: status === "expired" ? "pending" : status,
+    userId: RECIPIENT._id,
+    status: status === "expired" ? ("pending" as const) : status,
     createdAt: NOW,
     respondedAt:
       status === "accepted" || status === "rejected" ? NOW : undefined,
@@ -89,8 +94,8 @@ function baseInvitation(status: Status, key: string) {
       status === "accepted" || status === "rejected"
         ? (INVITER._id as Id<"users">)
         : undefined,
-    initiator: "team" as const,
-    createdBy: INVITER._id,
+    initiator,
+    createdBy: initiator === "team" ? INVITER._id : RECIPIENT._id,
     expiresAt: status === "expired" ? PAST : FUTURE,
   };
 }
@@ -101,56 +106,58 @@ export function InvitationSpecimens() {
       <SectionHeader
         as="h1"
         title="Invitations"
-        description="The three invitation card variants — captain-facing (InvitedUserCard), captain-facing inbound (JoinRequestCard), and player-facing (TeamInvitationCard) — across the pending/accepted/rejected/expired status axis."
+        description="A single InvitationCard renders both sides of a team invitation. The viewer prop swaps copy and actions while the visual identity stays the same across perspectives and statuses."
       />
 
       <VariantMatrix
         variants={STATUSES}
-        columns={CARDS}
-        columnLabel={(c) => CARD_LABEL[c]}
-        renderCell={(status, card) => {
-          const key = `${card}-${status}`;
-          const inv = baseInvitation(status, key);
-          if (card === "invited-user") {
+        columns={SCENARIOS}
+        columnLabel={(s) => SCENARIO_LABEL[s]}
+        renderCell={(status, scenario) => {
+          const key = `${scenario}-${status}`;
+          if (scenario === "team-invitation-sender") {
+            const inv = baseInvitation(status, "team", key);
             return (
-              <InvitedUserCard
+              <InvitationCard
                 invitation={{
                   ...inv,
-                  invitedUser: SHARED_USER,
+                  counterparty: RECIPIENT,
                   invitedByUser: INVITER,
                 }}
-                processing={false}
-                onClick={noop}
-                canCancel={status === "pending"}
+                viewer="team"
+                onReject={noop}
+                canRespond
               />
             );
           }
-          if (card === "join-request") {
+          if (scenario === "team-invitation-recipient") {
+            const inv = baseInvitation(status, "team", key);
             return (
-              <JoinRequestCard
-                request={{
+              <InvitationCard
+                invitation={{
                   ...inv,
-                  user: SHARED_USER,
-                  message:
-                    status === "pending"
-                      ? "I'd love to join — I've been running 5k three times a week."
-                      : undefined,
+                  counterparty: null,
+                  team: TEAM,
+                  tournament: TOURNAMENT,
+                  invitedByUser: INVITER,
                 }}
-                processing={false}
-                onApprove={noop}
+                viewer="user"
+                onAccept={noop}
                 onReject={noop}
               />
             );
           }
+          const inv = {
+            ...baseInvitation(status, "user", key),
+            message:
+              status === "pending"
+                ? "I'd love to join — I've been running 5k three times a week."
+                : undefined,
+          };
           return (
-            <TeamInvitationCard
-              invitation={{
-                ...inv,
-                team: TEAM,
-                tournament: TOURNAMENT,
-                invitedByUser: INVITER,
-              }}
-              processing={false}
+            <InvitationCard
+              invitation={{ ...inv, counterparty: RECIPIENT }}
+              viewer="team"
               onAccept={noop}
               onReject={noop}
             />
