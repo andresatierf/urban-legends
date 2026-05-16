@@ -6,13 +6,7 @@ import { Loader2, UserPlus } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 import z from "zod";
 
-import { useAppForm } from "@/hooks/form";
-import { useUser } from "@/hooks/useUser";
-import { tryMutate } from "@/lib/utils";
-
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -22,8 +16,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
-import { FieldGroup } from "../ui/field";
+} from "@/components/ui/dialog";
+import { FieldGroup } from "@/components/ui/field";
+import { useAppForm } from "@/hooks/form";
+import { useUser } from "@/hooks/useUser";
+import { tryMutate } from "@/lib/utils";
+
+import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 const formSchema = z.object({
   teamId: z.custom<Id<"teams">>(

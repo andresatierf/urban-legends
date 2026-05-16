@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useCallback, useState } from "react";
 
-import { UpsertSubmissionFormDialog } from "@/components/form/upsert-submission-form";
+import { UpsertSubmissionFormDialog } from "@/components/submissions/form";
 import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../../convex/_generated/api";

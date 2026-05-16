@@ -1,16 +1,10 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
-import { useId, useMemo, useState } from "react";
+import { useId, useState } from "react";
 import z from "zod";
 
-import { useAppForm } from "@/hooks/form";
-import { tryMutate } from "@/lib/utils";
-
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -20,29 +14,29 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
-import { FieldGroup } from "../ui/field";
+} from "@/components/ui/dialog";
+import { FieldGroup } from "@/components/ui/field";
+import { useAppForm } from "@/hooks/form";
 
 const formSchema = z.object({
-  newCaptainId: z.custom<Id<"users">>(
-    (val) => typeof val === "string" && val.length >= 1,
-    "Please select a new captain",
-  ),
+  message: z.string().optional(),
 });
 
+export type JoinTeamFormValues = { message?: string };
+
 type Props = {
+  teamName: string;
+  onSubmit: (values: JoinTeamFormValues) => Promise<void> | void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  teamId: Id<"teams">;
-  isViewerCaptain?: boolean;
   children?: React.ReactNode;
 };
 
-export function TransferCaptaincyFormDialog({
+export function JoinTeamFormDialog({
+  teamName,
+  onSubmit,
   open: controlledOpen,
   onOpenChange,
-  teamId,
-  isViewerCaptain = false,
   children,
 }: Props) {
   const formId = useId();
@@ -51,39 +45,16 @@ export function TransferCaptaincyFormDialog({
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
 
-  const transferCaptaincy = useMutation(api.teams.transferCaptaincy);
-  const teamMembers = useQuery(
-    api.teams.listTeamMembers,
-    teamId ? { teamId } : "skip",
-  );
-
-  const memberOptions = useMemo(
-    () =>
-      teamMembers
-        ?.filter((member) => member.role !== "captain")
-        .map((member) => ({
-          value: member._id,
-          label: `${member.name || "unknown name"} (${member.email})`,
-        })) ?? [],
-    [teamMembers],
-  );
-
   const form = useAppForm({
     defaultValues: {
-      newCaptainId: "",
+      message: "",
     } as z.input<typeof formSchema>,
     validators: {
       onChange: formSchema,
     },
-    onSubmit: async ({ value: { newCaptainId } }) => {
-      await tryMutate({
-        fn: () => transferCaptaincy({ teamId, newCaptainId }),
-        onSuccess: () => {
-          setOpen(false);
-        },
-        successToast: "Captaincy transferred successfully!",
-        defaultFailureToast: "Failed to transfer captaincy",
-      });
+    onSubmit: async ({ value: { message } }) => {
+      await onSubmit({ message: message?.trim() || undefined });
+      setOpen(false);
     },
   });
 
@@ -105,20 +76,20 @@ export function TransferCaptaincyFormDialog({
           }}
         >
           <DialogHeader>
-            <DialogTitle>Transfer Captaincy</DialogTitle>
+            <DialogTitle>Request to Join {teamName}</DialogTitle>
             <DialogDescription>
-              {isViewerCaptain
-                ? "Select a team member to transfer the captain role to. Once transferred, you will become a regular member and lose captain privileges."
-                : "Select a team member to transfer the captain role to. The current captain will be demoted to a regular member."}
+              Send a request to join this team. The team captain will review
+              your request.
             </DialogDescription>
           </DialogHeader>
 
           <FieldGroup>
-            <form.AppField name="newCaptainId">
+            <form.AppField name="message">
               {(field) => (
-                <field.ComboboxField
-                  label="New Captain"
-                  options={memberOptions}
+                <field.TextareaField
+                  label="Message (optional)"
+                  placeholder="Introduce yourself or explain why you want to join..."
+                  rows={4}
                 />
               )}
             </form.AppField>
@@ -133,6 +104,15 @@ export function TransferCaptaincyFormDialog({
           >
             {([isPristine, canSubmit, isSubmitting]) => (
               <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => form.reset()}
+                  disabled={isPristine || isSubmitting}
+                  className="mr-auto"
+                >
+                  Reset
+                </Button>
                 <DialogClose
                   render={
                     <Button
@@ -147,10 +127,10 @@ export function TransferCaptaincyFormDialog({
                 <Button
                   type="submit"
                   form={formId}
-                  disabled={isSubmitting || isPristine || !canSubmit}
+                  disabled={isSubmitting || !canSubmit}
                 >
                   {isSubmitting && <Loader2 className="animate-spin" />}
-                  Transfer Captaincy
+                  Send Request
                 </Button>
               </DialogFooter>
             )}

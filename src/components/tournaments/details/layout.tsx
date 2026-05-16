@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 
 import { DetailsPageLayout } from "@/components/details-page-layout";
-import { UpsertTeamFormDialog } from "@/components/form/upsert-team-form";
+import { UpsertTeamFormDialog } from "@/components/teams/form";
 
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { Button } from "../../ui/button";

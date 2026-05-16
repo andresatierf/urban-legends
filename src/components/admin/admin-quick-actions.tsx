@@ -3,7 +3,7 @@
 import { Link } from "@tanstack/react-router";
 import { Activity, FileText, Plus, Trophy, UserCog, Users } from "lucide-react";
 
-import { UpsertTournamentFormDialog } from "@/components/form/upsert-tournament-form";
+import { UpsertTournamentFormDialog } from "@/components/tournaments/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 

@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { useState } from "react";
 
-import { UpsertTournamentFormDialog } from "@/components/form/upsert-tournament-form";
 import { SectionHeader } from "@/components/section-header";
+import { UpsertTournamentFormDialog } from "@/components/tournaments/form";
 import {
   TournamentListing,
   TournamentListingSkeleton,

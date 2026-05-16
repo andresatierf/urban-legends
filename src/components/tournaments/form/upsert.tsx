@@ -4,14 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useId, useState } from "react";
 import * as z from "zod";
 
-import { useAppForm } from "@/hooks/form";
-import { useUser } from "@/hooks/useUser";
-import { toastFormValues } from "@/lib/form";
-import { tryMutate } from "@/lib/utils";
-
-import { api } from "../../../convex/_generated/api";
-import type { Doc } from "../../../convex/_generated/dataModel";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -21,9 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
-import { Eyebrow } from "../ui/eyebrow";
-import { FieldGroup } from "../ui/field";
+} from "@/components/ui/dialog";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { FieldGroup } from "@/components/ui/field";
+import { useAppForm } from "@/hooks/form";
+import { useUser } from "@/hooks/useUser";
+import { toastFormValues } from "@/lib/form";
+import { tryMutate } from "@/lib/utils";
+
+import { api } from "../../../../convex/_generated/api";
+import type { Doc } from "../../../../convex/_generated/dataModel";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name can't be empty"),
