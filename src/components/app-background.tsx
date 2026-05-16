@@ -4,7 +4,7 @@ const wrapper: CSSProperties = {
   position: "fixed",
   inset: 0,
   pointerEvents: "none",
-  zIndex: 0,
+  zIndex: -1,
   overflow: "hidden",
 };
 
