@@ -3,8 +3,8 @@ import { ArrowLeft } from "lucide-react";
 
 import { DetailsPageLayout } from "@/components/details-page-layout";
 
-import { InvitedUsersList } from "../../invitations/invited-users-list";
-import { JoinRequestsList } from "../../invitations/join-requests-list";
+import { InvitedUsersList } from "../../invitations/listing/invited-users";
+import { JoinRequestsList } from "../../invitations/listing/join-requests";
 import { Button } from "../../ui/button";
 import { MemberRoster } from "./member-roster";
 import { Sidebar } from "./sidebar";

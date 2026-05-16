@@ -5,9 +5,9 @@ import { useState } from "react";
 
 import { tryMutate } from "@/lib/utils";
 
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { InvitationsList } from "./invitations-list";
+import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
+import { InvitationsList } from "./layout";
 
 type Props = {
   teamId: Id<"teams">;
