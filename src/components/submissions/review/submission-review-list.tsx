@@ -8,6 +8,7 @@ import type { ReviewFilters } from "@/components/submissions/listing/management-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
+import { ComposedSelect } from "@/components/ui/composed-select";
 import { Empty, EmptyDescription, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,13 +16,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useDebounce } from "@/hooks/useDebounce";
 
 import { api } from "../../../../convex/_generated/api";
@@ -127,7 +121,7 @@ export function SubmissionReviewList({
             />
           </div>
 
-          <Select
+          <ComposedSelect
             value={filters.orderBy}
             onValueChange={(value) =>
               onFiltersChange({
@@ -135,17 +129,16 @@ export function SubmissionReviewList({
                 orderBy: value as ReviewFilters["orderBy"],
               })
             }
-          >
-            <SelectTrigger className="w-[180px]" aria-label="Sort submissions">
-              <SelectValue placeholder="Sort by..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date-desc">Newest First</SelectItem>
-              <SelectItem value="date-asc">Oldest First</SelectItem>
-              <SelectItem value="points-desc">Highest Points</SelectItem>
-              <SelectItem value="points-asc">Lowest Points</SelectItem>
-            </SelectContent>
-          </Select>
+            className="w-[180px]"
+            ariaLabel="Sort submissions"
+            placeholder="Sort by..."
+            options={[
+              { value: "date-desc", label: "Newest First" },
+              { value: "date-asc", label: "Oldest First" },
+              { value: "points-desc", label: "Highest Points" },
+              { value: "points-asc", label: "Lowest Points" },
+            ]}
+          />
 
           <Popover>
             <PopoverTrigger asChild>
@@ -187,7 +180,7 @@ export function SubmissionReviewList({
                   <label className="text-muted-foreground mb-2 block text-xs font-medium uppercase">
                     Tournament
                   </label>
-                  <Select
+                  <ComposedSelect
                     value={filters.tournamentId ?? "all"}
                     onValueChange={(value) =>
                       onFiltersChange({
@@ -198,19 +191,15 @@ export function SubmissionReviewList({
                             : (value as Id<"tournaments">),
                       })
                     }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All tournaments" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All tournaments</SelectItem>
-                      {tournaments?.map((t) => (
-                        <SelectItem key={t._id} value={t._id}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="All tournaments"
+                    options={[
+                      { value: "all", label: "All tournaments" },
+                      ...(tournaments?.map((t) => ({
+                        value: t._id,
+                        label: t.name,
+                      })) ?? []),
+                    ]}
+                  />
                 </div>
               </div>
             </PopoverContent>

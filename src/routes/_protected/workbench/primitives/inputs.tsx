@@ -6,19 +6,13 @@ import * as React from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  ComboboxSelect,
+  ComposedCombobox,
   type ComboboxOption,
-} from "@/components/ui/combobox-select";
+} from "@/components/ui/composed-combobox";
+import { ComposedSelect } from "@/components/ui/composed-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -272,21 +266,13 @@ function PickersMatrix() {
     <MatrixSection title="Pickers" columns={["Select", "Combobox"]}>
       <MatrixRow label="Default">
         <MatrixCell>
-          <Select>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Choose a fruit..." />
-            </SelectTrigger>
-            <SelectContent>
-              {FRUIT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ComposedSelect
+            options={FRUIT_OPTIONS}
+            placeholder="Choose a fruit..."
+          />
         </MatrixCell>
         <MatrixCell>
-          <ComboboxSelect
+          <ComposedCombobox
             options={FRUIT_OPTIONS}
             placeholder="Search fruits..."
           />
@@ -294,21 +280,10 @@ function PickersMatrix() {
       </MatrixRow>
       <MatrixRow label="With value">
         <MatrixCell>
-          <Select defaultValue="banana">
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {FRUIT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ComposedSelect options={FRUIT_OPTIONS} defaultValue="banana" />
         </MatrixCell>
         <MatrixCell>
-          <ComboboxSelect
+          <ComposedCombobox
             options={FRUIT_OPTIONS}
             defaultValue="banana"
             placeholder="Search fruits..."
@@ -317,21 +292,14 @@ function PickersMatrix() {
       </MatrixRow>
       <MatrixRow label="Focus">
         <MatrixCell>
-          <Select>
-            <SelectTrigger className="pseudo-focus w-full">
-              <SelectValue placeholder="Focused" />
-            </SelectTrigger>
-            <SelectContent>
-              {FRUIT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ComposedSelect
+            options={FRUIT_OPTIONS}
+            className="pseudo-focus"
+            placeholder="Focused"
+          />
         </MatrixCell>
         <MatrixCell>
-          <ComboboxSelect
+          <ComposedCombobox
             options={FRUIT_OPTIONS}
             className="pseudo-focus"
             placeholder="Focused"
@@ -340,22 +308,15 @@ function PickersMatrix() {
       </MatrixRow>
       <MatrixRow label="Invalid">
         <MatrixCell>
-          <Select>
-            <SelectTrigger className="w-full" aria-invalid="true">
-              <SelectValue placeholder="Required field..." />
-            </SelectTrigger>
-            <SelectContent>
-              {FRUIT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ComposedSelect
+            options={FRUIT_OPTIONS}
+            aria-invalid
+            placeholder="Required field..."
+          />
         </MatrixCell>
         <MatrixCell>
           <div className="space-y-1">
-            <ComboboxSelect
+            <ComposedCombobox
               options={FRUIT_OPTIONS}
               aria-invalid
               placeholder="Required field..."
@@ -366,21 +327,14 @@ function PickersMatrix() {
       </MatrixRow>
       <MatrixRow label="Disabled">
         <MatrixCell>
-          <Select disabled>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Disabled select" />
-            </SelectTrigger>
-            <SelectContent>
-              {FRUIT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ComposedSelect
+            options={FRUIT_OPTIONS}
+            disabled
+            placeholder="Disabled select"
+          />
         </MatrixCell>
         <MatrixCell>
-          <ComboboxSelect
+          <ComposedCombobox
             options={FRUIT_OPTIONS}
             disabled
             placeholder="Disabled combobox"
@@ -396,7 +350,7 @@ function CreatableRow() {
   const [selected, setSelected] = React.useState<string[]>([]);
 
   return (
-    <ComboboxSelect
+    <ComposedCombobox
       multiple
       options={labels}
       value={selected}
@@ -421,7 +375,7 @@ function ComboboxVariantsSection() {
     <Section title="Combobox variants">
       <div className="space-y-4">
         <StateRow label="Chips">
-          <ComboboxSelect
+          <ComposedCombobox
             multiple
             options={LANGUAGE_OPTION_LIST}
             placeholder="e.g. TypeScript"
@@ -431,20 +385,20 @@ function ComboboxVariantsSection() {
           <CreatableRow />
         </StateRow>
         <StateRow label="Groups">
-          <ComboboxSelect
+          <ComposedCombobox
             options={FOOD_GROUP_OPTIONS}
             placeholder="e.g. Apple"
           />
         </StateRow>
         <StateRow label="Separator">
-          <ComboboxSelect
+          <ComposedCombobox
             options={FOOD_GROUP_OPTIONS}
             separator
             placeholder="e.g. Apple"
           />
         </StateRow>
         <StateRow label="Inside popup">
-          <ComboboxSelect
+          <ComposedCombobox
             options={COUNTRIES}
             presentation="trigger"
             triggerIcon={<MapPinIcon />}

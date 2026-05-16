@@ -2,9 +2,9 @@ import { useStore } from "@tanstack/react-form";
 import { useCallback } from "react";
 
 import {
-  ComboboxSelect,
+  ComposedCombobox,
   type ComboboxOption,
-} from "@/components/ui/combobox-select";
+} from "@/components/ui/composed-combobox";
 import { useFieldContext } from "@/hooks/form-context";
 
 import { Field, FieldError, FieldLabel } from "../../ui/field";
@@ -42,7 +42,7 @@ export function ComboboxField<T extends string>({
   return (
     <Field data-invalid={isInvalid}>
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-      <ComboboxSelect<T>
+      <ComposedCombobox<T>
         id={field.name}
         name={field.name}
         options={options}

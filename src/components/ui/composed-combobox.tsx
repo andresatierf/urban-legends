@@ -76,7 +76,7 @@ type MultipleProps<T extends string> = {
   onValueChange?: (value: T[]) => void;
 };
 
-export type ComboboxSelectProps<T extends string = string> = CommonProps<T> &
+export type ComposedComboboxProps<T extends string = string> = CommonProps<T> &
   (SingleProps<T> | MultipleProps<T>);
 
 type InternalOption<T extends string> = ComboboxOption<T> & {
@@ -92,14 +92,14 @@ function isGrouped<T extends string>(
   return options.length > 0 && "items" in options[0];
 }
 
-export function ComboboxSelect<T extends string = string>(
-  props: ComboboxSelectProps<T>,
+export function ComposedCombobox<T extends string = string>(
+  props: ComposedComboboxProps<T>,
 ) {
   const {
     options,
     separator,
     emptyMessage = "No results found.",
-    placeholder,
+    placeholder = "Search for an item...",
     presentation = "input",
     triggerPlaceholder = "Select…",
     triggerIcon,
@@ -265,6 +265,14 @@ export function ComboboxSelect<T extends string = string>(
 
   const chipsRef = React.useRef<HTMLDivElement | null>(null);
 
+  // When the popup is open, flatten the edge of the closed control that touches
+  // the popup, and flatten the matching edge of the popup itself, so the two
+  // shapes read as one unified container.
+  const openTriggerRadiusClass =
+    "data-[popup-open]:data-[popup-side=bottom]:rounded-b-sm data-[popup-open]:data-[popup-side=top]:rounded-t-sm";
+  const popupRadiusClass =
+    "data-[side=bottom]:rounded-t-sm data-[side=top]:rounded-b-sm";
+
   // ---- Closed-control + popup composition per mode
   if (multiple) {
     return (
@@ -281,7 +289,10 @@ export function ComboboxSelect<T extends string = string>(
           (a as ComboboxOption<T>)?.value === (b as ComboboxOption<T>)?.value
         }
       >
-        <ComboboxChips ref={chipsRef} className={className}>
+        <ComboboxChips
+          ref={chipsRef}
+          className={cn(openTriggerRadiusClass, className)}
+        >
           <ComboboxValue>
             {(value: ComboboxOption<T>[]) => (
               <>
@@ -304,7 +315,7 @@ export function ComboboxSelect<T extends string = string>(
         </ComboboxChips>
 
         <ComboboxPositioner sideOffset={6} anchor={chipsRef}>
-          <ComboboxPopup>
+          <ComboboxPopup className={popupRadiusClass}>
             <ComboboxEmpty>{emptyMessage}</ComboboxEmpty>
             {list}
           </ComboboxPopup>
@@ -330,6 +341,7 @@ export function ComboboxSelect<T extends string = string>(
         <ComboboxTrigger
           className={cn(
             "bg-chip w-full justify-between",
+            openTriggerRadiusClass,
             ariaInvalid && "border-destructive ring-destructive/20 ring-[3px]",
             className,
           )}
@@ -347,7 +359,7 @@ export function ComboboxSelect<T extends string = string>(
         </ComboboxTrigger>
 
         <ComboboxPositioner align="start" sideOffset={4}>
-          <ComboboxPopup className="pt-0">
+          <ComboboxPopup className={cn("pt-0", popupRadiusClass)}>
             <div className="bg-chip sticky top-0 z-1 p-1">
               <ComboboxInput placeholder={placeholder} />
             </div>
@@ -380,7 +392,7 @@ export function ComboboxSelect<T extends string = string>(
           placeholder={placeholder}
           aria-invalid={ariaInvalid}
           disabled={disabled}
-          className="pr-12"
+          className={cn("pr-12", openTriggerRadiusClass)}
         />
         <div className="text-muted-foreground absolute inset-y-0 right-1.5 flex items-center justify-center gap-0.5">
           <ComboboxClear />
@@ -394,7 +406,7 @@ export function ComboboxSelect<T extends string = string>(
       </div>
 
       <ComboboxPositioner sideOffset={6}>
-        <ComboboxPopup>
+        <ComboboxPopup className={popupRadiusClass}>
           <ComboboxEmpty>{emptyMessage}</ComboboxEmpty>
           {list}
         </ComboboxPopup>

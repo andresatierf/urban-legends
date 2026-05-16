@@ -1,20 +1,17 @@
 import { useStore } from "@tanstack/react-form";
 
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  ComposedSelect,
+  type SelectOption,
+} from "@/components/ui/composed-select";
 import { useFieldContext } from "@/hooks/form-context";
 
 import { Field, FieldError, FieldLabel } from "../../ui/field";
 
-export type SelectFieldProps<T> = {
+export type SelectFieldProps<T extends string> = {
   label: string;
   placeholder?: string;
-  options: { value: T; label: string }[];
+  options: SelectOption<T>[];
 };
 
 export function SelectField<T extends string>({
@@ -22,7 +19,7 @@ export function SelectField<T extends string>({
   placeholder,
   options,
 }: SelectFieldProps<T>) {
-  const field = useFieldContext<string>();
+  const field = useFieldContext<T>();
 
   const [isInvalid, errors] = useStore(field.store, (state) => [
     state.meta.isTouched && !state.meta.isValid,
@@ -32,21 +29,15 @@ export function SelectField<T extends string>({
   return (
     <Field data-invalid={isInvalid}>
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-      <Select
+      <ComposedSelect<T>
+        id={field.name}
+        name={field.name}
+        options={options}
+        placeholder={placeholder}
         value={field.state.value}
-        onValueChange={(value) => field.handleChange(value)}
-      >
-        <SelectTrigger id={field.name}>
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        onValueChange={(next) => field.handleChange(next as T)}
+        aria-invalid={isInvalid}
+      />
       {isInvalid && <FieldError errors={errors} />}
     </Field>
   );
