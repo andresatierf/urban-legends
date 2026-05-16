@@ -509,10 +509,21 @@
 }
 
 @utility pseudo-focus {
-  box-shadow:
-    0 0 0 2px var(--background),
-    0 0 0 5px color-mix(in srgb, var(--ring) 60%, transparent),
-    3px 3px 0 var(--color-shadow);
+  /* Solid variants carry a resting Tailwind `shadow-[...]` arbitrary
+     utility with the same (0,1,0) specificity as a bare `.pseudo-focus`
+     rule, so source order would decide the winner. Scope the override
+     to `&[data-variant=...]` (specificity 0,2,0) so the focus ring +
+     offset shadow reliably wins. */
+  &[data-variant="default"],
+  &[data-variant="secondary"],
+  &[data-variant="destructive"],
+  &[data-variant="sky"],
+  &[data-variant="grass"] {
+    box-shadow:
+      0 0 0 2px var(--background),
+      0 0 0 5px color-mix(in srgb, var(--ring) 60%, transparent),
+      3px 3px 0 var(--color-shadow);
+  }
   &[data-variant="ghost"],
   &[data-variant="icon"],
   &[data-variant="link"],
