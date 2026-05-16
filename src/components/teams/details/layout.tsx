@@ -2,8 +2,11 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 
 import { DetailsPageLayout } from "@/components/details-page-layout";
+import {
+  InvitedUsersList,
+  JoinRequestsList,
+} from "@/components/invitations/listing";
 
-import { InvitedUsersList, JoinRequestsList } from "../../invitations/listing";
 import { Button } from "../../ui/button";
 import { MemberRoster } from "./member-roster";
 import { Sidebar } from "./sidebar";

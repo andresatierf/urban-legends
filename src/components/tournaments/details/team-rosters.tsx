@@ -1,10 +1,10 @@
 import { Users } from "lucide-react";
 
+import { TeamCard } from "@/components/teams/card/layout";
+import { useTeamCardActions } from "@/components/teams/use-team-card-actions";
 import { useUser } from "@/hooks/useUser";
 
 import { SectionHeader } from "../../section-header";
-import { TeamCard } from "../../teams/card/layout";
-import { useTeamCardActions } from "../../teams/use-team-card-actions";
 import type { TournamentDetails, TournamentTeam } from "./types";
 
 type Props = {

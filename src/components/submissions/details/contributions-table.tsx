@@ -1,6 +1,7 @@
 import { Users } from "lucide-react";
 
 import { SectionHeader } from "@/components/section-header";
+import { getInitials } from "@/components/users/utils";
 
 import type { UserWithRoles } from "../../../../convex/users";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
@@ -14,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "../../ui/table";
-import { getInitials } from "../../users/utils";
 
 type Props = {
   submitter: UserWithRoles;

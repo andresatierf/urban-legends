@@ -12,12 +12,12 @@ import {
 } from "lucide-react";
 import { useCallback, useState } from "react";
 
+import { InviteMemberFormDialog } from "@/components/form/invite-member-form";
+import { TransferCaptaincyFormDialog } from "@/components/form/transfer-captaincy-form";
+import { UpsertTeamFormDialog } from "@/components/form/upsert-team-form";
 import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../../convex/_generated/api";
-import { InviteMemberFormDialog } from "../../form/invite-member-form";
-import { TransferCaptaincyFormDialog } from "../../form/transfer-captaincy-form";
-import { UpsertTeamFormDialog } from "../../form/upsert-team-form";
 import {
   SidebarCard,
   type SidebarCardAction,

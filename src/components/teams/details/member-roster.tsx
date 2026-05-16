@@ -1,6 +1,7 @@
 import { useMutation } from "convex/react";
 import { Crown, DoorOpen, Mail, Users } from "lucide-react";
 
+import { getInitials } from "@/components/users/utils";
 import { useUser } from "@/hooks/useUser";
 import { tryMutate } from "@/lib/utils";
 
@@ -15,7 +16,6 @@ import {
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
-import { getInitials } from "../../users/utils";
 import type { TeamDetails } from "./types";
 
 export function MemberRoster({ data }: { data: TeamDetails }) {

@@ -2,8 +2,8 @@ import { Crown } from "lucide-react";
 import { useState } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { getInitials } from "@/components/users/utils";
 
-import { getInitials } from "../../users/utils";
 import type { TeamCardData } from "./types";
 
 export function CaptainSpotlight({ data }: { data: TeamCardData }) {
