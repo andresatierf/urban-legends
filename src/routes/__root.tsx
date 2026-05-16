@@ -9,6 +9,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 
+import { AppBackground } from "@/components/app-background";
 import { ThemeScript } from "@/components/theme-script";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { clerkAppearance } from "@/lib/clerk-appearance";
@@ -66,6 +67,7 @@ function RootDocument() {
         >
           <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
             <ThemeProvider>
+              <AppBackground />
               <Outlet />
             </ThemeProvider>
           </ConvexProviderWithClerk>
