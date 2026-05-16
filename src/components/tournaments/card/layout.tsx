@@ -1,15 +1,18 @@
+import { Clock, Trophy, Users } from "lucide-react";
+
 import { ComposedCard } from "@/components/common/card/composed-card";
 import { EdgeOverlay } from "@/components/common/card/edge-overlay";
+import { StatsGrid } from "@/components/common/card/stats-grid";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 
 import {
+  daysUntil,
   getTournamentStatus,
   STATUS_LABEL,
   type TournamentStatus,
 } from "../utils";
 import { ManageTournamentButton } from "./manage-tournament-button";
 import { PendingReviews } from "./pending-reviews";
-import { StatsGrid } from "./stats-grid";
 import { TeamMembership } from "./team-membership";
 import { Timeline } from "./timeline";
 import type { TournamentCardData } from "./types";
@@ -22,9 +25,20 @@ const STATUS_VARIANT: Record<TournamentStatus, "success" | "info" | "neutral"> =
     ended: "neutral",
   };
 
+const DAYS_LABEL: Record<TournamentStatus, string> = {
+  active: "Left",
+  upcoming: "Until start",
+  ended: "Ended",
+};
+
 export function TournamentOverviewCard({ data }: { data: TournamentCardData }) {
   const { format } = useFormattedDate();
   const status = getTournamentStatus(data);
+  const { authority, teamCount } = data;
+
+  let daysValue: string | number = "—";
+  if (status === "active") daysValue = `${daysUntil(data.endDate)}d`;
+  else if (status === "upcoming") daysValue = `${daysUntil(data.startDate)}d`;
 
   return (
     <EdgeOverlay
@@ -46,7 +60,22 @@ export function TournamentOverviewCard({ data }: { data: TournamentCardData }) {
           </p>
         )}
         <Timeline data={data} />
-        <StatsGrid data={data} />
+        <StatsGrid
+          variant="tiles"
+          items={[
+            {
+              icon: Users,
+              value: teamCount,
+              label: teamCount === 1 ? "Team" : "Teams",
+            },
+            { icon: Clock, value: daysValue, label: DAYS_LABEL[status] },
+            {
+              icon: Trophy,
+              value: authority.team ? authority.team.points : "—",
+              label: "Points",
+            },
+          ]}
+        />
         <TeamMembership data={data} />
         <PendingReviews data={data} />
       </ComposedCard>

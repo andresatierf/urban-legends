@@ -1,16 +1,10 @@
-import { Crown, Star, Trophy, Users } from "lucide-react";
+import { Star, Trophy, Users } from "lucide-react";
 
 import { ComposedCard } from "@/components/common/card/composed-card";
 import { EdgeOverlay } from "@/components/common/card/edge-overlay";
 import { StatsGrid } from "@/components/common/card/stats-grid";
-import { StatusBand } from "@/components/common/card/status-band";
 import { SectionHeader } from "@/components/section-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-
-import type { TournamentStatus } from "../tournaments/utils";
-
-const STATUSES: TournamentStatus[] = ["active", "upcoming", "ended"];
 
 export function CardToolkitSpecimens() {
   return (
@@ -18,7 +12,6 @@ export function CardToolkitSpecimens() {
       <ComposedCardSection />
       <EdgeOverlaySection />
       <StatsGridSection />
-      <StatusBandSection />
     </div>
   );
 }
@@ -141,45 +134,6 @@ function StatsGridSection() {
         <div className="space-y-2">
           <h3 className="text-label-caps text-muted-foreground">tiles</h3>
           <StatsGrid items={items} variant="tiles" />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function StatusBandSection() {
-  return (
-    <section className="space-y-6">
-      <SectionHeader
-        as="h1"
-        title="StatusBand"
-        description="Tournament-status colored strip. Vivid and semantic palettes across active/upcoming/ended."
-      />
-
-      <div className="bg-paper grid gap-6 rounded-lg p-6 sm:grid-cols-2">
-        <div className="space-y-2">
-          <h3 className="text-label-caps text-muted-foreground">vivid</h3>
-          <div className="overflow-hidden rounded-md">
-            {STATUSES.map((s) => (
-              <StatusBand key={s} status={s} palette="vivid">
-                <span className="font-medium capitalize">{s}</span>
-                <Crown className="size-4 opacity-70" />
-              </StatusBand>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-2">
-          <h3 className="text-label-caps text-muted-foreground">semantic</h3>
-          <div className="overflow-hidden rounded-md">
-            {STATUSES.map((s) => (
-              <StatusBand key={s} status={s} palette="semantic">
-                <span className="font-medium capitalize">{s}</span>
-                <Button size="sm" variant="ghost">
-                  Action
-                </Button>
-              </StatusBand>
-            ))}
-          </div>
         </div>
       </div>
     </section>

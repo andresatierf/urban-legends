@@ -1,9 +1,23 @@
+"use client";
+
 import { SectionHeader } from "@/components/section-header";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -16,6 +30,9 @@ import {
 import {
   Popover,
   PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
@@ -36,98 +53,108 @@ import {
 export function OverlaySpecimens() {
   return (
     <TooltipProvider>
-      <section className="space-y-8">
+      <section className="space-y-6">
         <SectionHeader
           as="h1"
           title="Overlays"
-          description="The full set of layered surfaces — dialog (modal), sheet (drawer), popover (anchored), hover card (anchored on hover), tooltip (caption)."
+          description="Dialog, AlertDialog, Sheet, Popover, Tooltip, and HoverCard — all wearing the Field Day card treatment (2px ink border, 4px hard offset shadow, 14px radius)."
         />
 
-        <div className="bg-paper grid gap-4 rounded-lg p-6 sm:grid-cols-2 lg:grid-cols-3">
-          <Specimen label="Dialog">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button>Open dialog</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Confirm submission</DialogTitle>
-                  <DialogDescription>
-                    Once submitted, your teammates will see this in their review
-                    queue.
-                  </DialogDescription>
-                </DialogHeader>
-              </DialogContent>
-            </Dialog>
-          </Specimen>
+        <div className="bg-paper flex flex-wrap items-start gap-4 rounded-lg p-6">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">Open Dialog</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Dialog Title</DialogTitle>
+                <DialogDescription>
+                  This dialog wears the Field Day card treatment: 2px ink
+                  border, 4px hard offset shadow, 14px radius, card fill.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" size="sm">
+                  Cancel
+                </Button>
+                <Button size="sm">Confirm</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
-          <Specimen label="Sheet">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline">Open sheet</Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Edit team</SheetTitle>
-                  <SheetDescription>
-                    Update name and join policy for your team.
-                  </SheetDescription>
-                </SheetHeader>
-              </SheetContent>
-            </Sheet>
-          </Specimen>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline">Open AlertDialog</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. The alert dialog uses the same
+                  card surface treatment as all other Field Day modals.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction variant="destructive">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
-          <Specimen label="Popover">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline">Open popover</Button>
-              </PopoverTrigger>
-              <PopoverContent>
-                <p className="text-body-sm">
-                  Anchored to its trigger, dismissible on outside click.
-                </p>
-              </PopoverContent>
-            </Popover>
-          </Specimen>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline">Open Sheet</Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Sheet Title</SheetTitle>
+                <SheetDescription>
+                  Edge-pinned surface with card fill and 2px ink border on the
+                  leading edge.
+                </SheetDescription>
+              </SheetHeader>
+            </SheetContent>
+          </Sheet>
 
-          <Specimen label="HoverCard">
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <Button variant="ghost">Hover me</Button>
-              </HoverCardTrigger>
-              <HoverCardContent>
-                <p className="text-body-sm">
-                  Shows on hover, used for inline previews.
-                </p>
-              </HoverCardContent>
-            </HoverCard>
-          </Specimen>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">Open Popover</Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <PopoverHeader>
+                <PopoverTitle>Popover Title</PopoverTitle>
+                <PopoverDescription>
+                  Floating surface anchored to its trigger, with the full card
+                  treatment.
+                </PopoverDescription>
+              </PopoverHeader>
+            </PopoverContent>
+          </Popover>
 
-          <Specimen label="Tooltip">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost">Hover for tip</Button>
-              </TooltipTrigger>
-              <TooltipContent>Single-line caption.</TooltipContent>
-            </Tooltip>
-          </Specimen>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline">Hover for Tooltip</Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Tooltip with card border and shadow</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Button variant="outline">Hover for HoverCard</Button>
+            </HoverCardTrigger>
+            <HoverCardContent>
+              <p className="text-body-sm">
+                HoverCard with the full Field Day card treatment — 2px ink
+                border, 4px hard offset shadow, 14px radius.
+              </p>
+            </HoverCardContent>
+          </HoverCard>
         </div>
       </section>
     </TooltipProvider>
-  );
-}
-
-function Specimen({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <h3 className="text-label-caps text-muted-foreground">{label}</h3>
-      <div>{children}</div>
-    </div>
   );
 }
