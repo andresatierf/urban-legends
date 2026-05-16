@@ -7,15 +7,7 @@ import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { Empty, EmptyDescription, EmptyTitle } from "../ui/empty";
-import { InvitationCard } from "./invitation-card";
+import { InvitationsList } from "./invitations-list";
 
 type Props = {
   teamId: Id<"teams">;
@@ -26,24 +18,8 @@ export function JoinRequestsList({ teamId }: Props) {
     null,
   );
 
-  const requests = useQuery(api.joinRequests.listJoinRequests, {
-    teamId,
-  });
+  const requests = useQuery(api.joinRequests.listJoinRequests, { teamId });
   const respondToRequest = useMutation(api.joinRequests.respondToJoinRequest);
-
-  if (requests === undefined) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Join Requests</CardTitle>
-          <CardDescription>Loading...</CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
-  const pendingRequests = requests.filter((req) => req.status === "pending");
-  const otherRequests = requests.filter((req) => req.status !== "pending");
 
   const handleRespond = async (
     requestId: Id<"joinRequests">,
@@ -63,67 +39,21 @@ export function JoinRequestsList({ teamId }: Props) {
     });
   };
 
-  if (requests.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Join Requests</CardTitle>
-          <CardDescription>No pending requests</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Empty>
-            <EmptyTitle>No pending requests</EmptyTitle>
-            <EmptyDescription>
-              When users request to join your team, they'll appear here.
-            </EmptyDescription>
-          </Empty>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Join Requests</CardTitle>
-        <CardDescription>
-          {pendingRequests.length} pending request
-          {pendingRequests.length !== 1 ? "s" : ""}
-          {otherRequests.length > 0 &&
-            ` · ${otherRequests.length} past request${otherRequests.length !== 1 ? "s" : ""}`}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {pendingRequests.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">Pending Requests</h3>
-            {pendingRequests.map((request) => (
-              <InvitationCard
-                key={request._id}
-                invitation={{ ...request, counterparty: request.user }}
-                viewer="team"
-                processing={processingId === request._id}
-                onAccept={() => handleRespond(request._id, true)}
-                onReject={() => handleRespond(request._id, false)}
-              />
-            ))}
-          </div>
-        )}
-
-        {otherRequests.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">Past Requests</h3>
-            {otherRequests.map((request) => (
-              <InvitationCard
-                key={request._id}
-                invitation={{ ...request, counterparty: request.user }}
-                viewer="team"
-                className="bg-muted/50"
-              />
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <InvitationsList
+      title="Join Requests"
+      itemLabel={{ singular: "request", plural: "requests" }}
+      emptyTitle="No pending requests"
+      emptyDescription="When users request to join your team, they'll appear here."
+      loading={requests === undefined}
+      invitations={(requests ?? []).map((request) => ({
+        key: request._id,
+        invitation: { ...request, counterparty: request.user },
+        viewer: "team",
+        processing: processingId === request._id,
+        onAccept: () => handleRespond(request._id, true),
+        onReject: () => handleRespond(request._id, false),
+      }))}
+    />
   );
 }
