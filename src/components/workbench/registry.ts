@@ -29,12 +29,10 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
   { path: "/workbench/primitives/table", label: "Table", group: "primitives" },
 ];
 
-export function groupedEntries(): Map<string, WorkbenchEntry[]> {
-  const groups = new Map<string, WorkbenchEntry[]>();
-  for (const entry of WORKBENCH_ENTRIES) {
+export const GROUPED_WORKBENCH_ENTRIES: Map<string, WorkbenchEntry[]> =
+  WORKBENCH_ENTRIES.reduce((groups, entry) => {
     const list = groups.get(entry.group) ?? [];
     list.push(entry);
     groups.set(entry.group, list);
-  }
-  return groups;
-}
+    return groups;
+  }, new Map<string, WorkbenchEntry[]>());

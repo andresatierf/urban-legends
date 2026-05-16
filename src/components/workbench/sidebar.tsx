@@ -3,15 +3,14 @@ import { Link } from "@tanstack/react-router";
 import { useActiveRoute } from "@/hooks/useActiveRoute";
 import { cn } from "@/lib/utils";
 
-import { groupedEntries } from "./registry";
+import { GROUPED_WORKBENCH_ENTRIES } from "./registry";
 
 export function WorkbenchSidebar() {
   const { isActive } = useActiveRoute();
-  const groups = groupedEntries();
 
   return (
     <nav aria-label="Workbench entries" className="space-y-4">
-      {[...groups.entries()].map(([group, entries]) => (
+      {[...GROUPED_WORKBENCH_ENTRIES.entries()].map(([group, entries]) => (
         <div key={group}>
           <h3 className="text-label-caps text-muted-foreground mb-1 px-2">
             {group}
