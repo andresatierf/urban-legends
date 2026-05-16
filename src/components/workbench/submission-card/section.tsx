@@ -2,6 +2,7 @@ import { SectionHeader } from "@/components/section-header";
 import { CarouselReviewCard } from "@/components/submissions/review/submission-review-card-carousel";
 import { MosaicReviewCard } from "@/components/submissions/review/submission-review-card-mosaic";
 import type { SubmissionReviewCardProps } from "@/components/submissions/review/submission-review-card-shared";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { VariantMatrix } from "../shells/variant-matrix";
 import {
@@ -17,11 +18,13 @@ import {
 const VARIANTS = [
   {
     id: "mosaic",
+    label: "Mosaic",
     title: "Mosaic — Landscape lead, mosaic groups, footer actions",
     Component: MosaicReviewCard,
   },
   {
     id: "carousel",
+    label: "Carousel",
     title: "Carousel — Portrait lead, submitter strip groups, split footer",
     Component: CarouselReviewCard,
   },
@@ -46,9 +49,20 @@ export function SubmissionSection() {
         description="The two evidence-led review card variants used by /submissions, across the full state × evidence-count × tier × type matrix."
       />
 
-      {VARIANTS.map(({ id, title, Component }) => (
-        <VariantBlock key={id} title={title} Component={Component} />
-      ))}
+      <Tabs defaultValue={VARIANTS[0].id} className="mt-6">
+        <TabsList>
+          {VARIANTS.map(({ id, label }) => (
+            <TabsTrigger key={id} value={id}>
+              {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {VARIANTS.map(({ id, title, Component }) => (
+          <TabsContent key={id} value={id}>
+            <VariantBlock title={title} Component={Component} />
+          </TabsContent>
+        ))}
+      </Tabs>
     </section>
   );
 }
