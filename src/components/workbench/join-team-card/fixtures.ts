@@ -1,5 +1,7 @@
-import type { JoinTeamRequestState } from "@/components/teams/card/membership-button";
-import type { TeamCardData } from "@/components/teams/card/types";
+import type {
+  JoinTeamRequestState,
+  TeamCardData,
+} from "@/components/teams/card";
 
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 

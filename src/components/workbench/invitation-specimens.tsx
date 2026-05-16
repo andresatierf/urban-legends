@@ -1,4 +1,4 @@
-import { InvitationCard } from "@/components/invitations/card/layout";
+import { InvitationCard } from "@/components/invitations/card";
 import { SectionHeader } from "@/components/section-header";
 
 import type { Doc, Id } from "../../../convex/_generated/dataModel";

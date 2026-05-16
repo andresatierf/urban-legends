@@ -1,5 +1,5 @@
 import { SectionHeader } from "@/components/section-header";
-import { MembershipButton } from "@/components/teams/card/membership-button";
+import { MembershipButton } from "@/components/teams/card";
 import { JoinTeamCard } from "@/components/teams/join-team-card";
 import { Button } from "@/components/ui/button";
 

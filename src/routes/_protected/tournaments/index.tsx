@@ -7,7 +7,7 @@ import { SectionHeader } from "@/components/section-header";
 import {
   TournamentListing,
   TournamentListingSkeleton,
-} from "@/components/tournaments/listing/layout";
+} from "@/components/tournaments/listing";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 

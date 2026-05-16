@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "../../ui/card";
 import { Empty, EmptyDescription, EmptyTitle } from "../../ui/empty";
-import { InvitationCard } from "../card/layout";
+import { InvitationCard } from "../card";
 
 type InvitationProps = React.ComponentProps<typeof InvitationCard> & {
   key: string;

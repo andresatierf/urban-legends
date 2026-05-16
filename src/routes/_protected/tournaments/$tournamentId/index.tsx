@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 
-import { TournamentDetailsLayout } from "@/components/tournaments/details/layout";
+import { TournamentDetailsLayout } from "@/components/tournaments/details";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
 
 import { api } from "../../../../../convex/_generated/api";
