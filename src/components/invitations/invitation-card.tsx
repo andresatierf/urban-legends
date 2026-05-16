@@ -104,15 +104,13 @@ export function InvitationCard({
                 Invited by {invitation.invitedByUser.name}
               </span>
             )}
-            {viewer === "team" &&
-              invitation.initiator === "team" &&
-              invitation.invitedByUser && (
-                <span className="flex items-center gap-1">
-                  <UserPlus className="h-3 w-3" />
-                  Invited by {invitation.invitedByUser.name} on{" "}
-                  {format(invitation.createdAt, "short")}
-                </span>
-              )}
+            {isTeamOutgoingInvite && invitation.invitedByUser && (
+              <span className="flex items-center gap-1">
+                <UserPlus className="h-3 w-3" />
+                Invited by {invitation.invitedByUser.name} on{" "}
+                {format(invitation.createdAt, "short")}
+              </span>
+            )}
             {!isTeamOutgoingInvite && (
               <span className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
