@@ -98,6 +98,11 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "components",
   },
   {
+    path: "/workbench/components/invitation-lists",
+    label: "Invitation Lists",
+    group: "components",
+  },
+  {
     path: "/workbench/components/notification-indicator",
     label: "Notification Indicator",
     group: "components",

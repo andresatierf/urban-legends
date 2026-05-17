@@ -7,7 +7,7 @@ import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
-import { InvitationsList } from "./layout";
+import { InvitedUsersListView } from "./invited-users-view";
 
 type Props = {
   teamId: Id<"teams">;
@@ -25,7 +25,7 @@ export function InvitedUsersList({ teamId, canCancel }: Props) {
   });
   const cancelInvitation = useMutation(api.joinRequests.cancel);
 
-  const handleCancelInvitation = async (invitationId: Id<"joinRequests">) => {
+  const handleCancel = async (invitationId: Id<"joinRequests">) => {
     setProcessingId(invitationId);
     await tryMutate({
       fn: () => cancelInvitation({ requestId: invitationId }),
@@ -36,20 +36,11 @@ export function InvitedUsersList({ teamId, canCancel }: Props) {
   };
 
   return (
-    <InvitationsList
-      title="Invited Users"
-      itemLabel={{ singular: "invitation", plural: "invitations" }}
-      emptyTitle="No invitations sent"
-      emptyDescription={`Use the "Invite Member" button to invite users to join your team.`}
-      loading={invitations === undefined}
-      invitations={(invitations ?? []).map((invitation) => ({
-        key: invitation._id,
-        invitation: { ...invitation, counterparty: invitation.user },
-        viewer: "team",
-        processing: processingId === invitation._id,
-        onReject: () => handleCancelInvitation(invitation._id),
-        canRespond: canCancel,
-      }))}
+    <InvitedUsersListView
+      invitations={invitations}
+      processingId={processingId}
+      onCancel={handleCancel}
+      canCancel={canCancel}
     />
   );
 }
