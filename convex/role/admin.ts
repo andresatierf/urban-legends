@@ -5,10 +5,10 @@ import { internalMutation, mutation, query } from "../_generated/server";
 import { requireAdmin } from "../authority/core";
 import { nowUTC } from "../lib/dates";
 import { detectOrphanedRecords } from "../lib/helpers";
-import {
-  notifyRoleGranted,
-  notifyRoleRevoked,
-} from "../notifications/triggers";
+import { grant as grantRole } from "../lifecycle/roles";
+import type { NotificationEvent } from "../notifications/events";
+import { publish as publishNotifications } from "../notifications/notifier";
+import { notifyRoleRevoked } from "../notifications/triggers";
 import { getCurrentUserOrThrow } from "../users";
 
 /**
@@ -151,24 +151,20 @@ export const updateRoles = mutation({
       }
     }
 
+    const events: NotificationEvent[] = [];
     for (const roleName of rolesToAdd) {
       const role = roleMap.get(roleName);
       if (!role) continue;
 
-      await ctx.db.insert("userRoles", {
+      const { events: grantEvents } = await grantRole(ctx, {
         userId: args.userId,
         roleId: role._id,
         assignedBy: currentUser._id,
-        assignedAt: nowUTC(),
       });
-
-      // Notify user of role grant
-      await notifyRoleGranted(ctx, {
-        userId: args.userId,
-        roleName: role.name,
-        roleDisplayName: role.displayName || role.name,
-      });
+      events.push(...grantEvents);
     }
+
+    await publishNotifications(ctx, events);
 
     return {
       success: true,
