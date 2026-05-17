@@ -2,6 +2,8 @@ import { LoggedUserCard } from "@/components/logged-user-card";
 import { SectionHeader } from "@/components/section-header";
 import { ProfileCard } from "@/components/users/details/profile-card";
 import type { UserDetails } from "@/components/users/details/types";
+import { RolesBadgeListView } from "@/components/users/roles-badge-list";
+import type { ResolvedRole } from "@/components/users/types";
 
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Specimen } from "./shells/specimen";
@@ -95,10 +97,60 @@ const PROFILE_VARIANTS: ProfileVariant[] = [
   },
 ];
 
+const ROLE_LIBRARY: Record<string, ResolvedRole> = {
+  admin: { name: "admin", displayName: "Admin", hierarchy: 1 },
+  tournament_manager: {
+    name: "tournament_manager",
+    displayName: "Tournament Manager",
+    hierarchy: 2,
+  },
+  reviewer: { name: "reviewer", displayName: "Reviewer", hierarchy: 3 },
+  player: { name: "player", displayName: "Player", hierarchy: 4 },
+  viewer: { name: "viewer", displayName: "Viewer", hierarchy: 5 },
+};
+
+function resolve(...names: Array<keyof typeof ROLE_LIBRARY>): ResolvedRole[] {
+  return names.map((n) => ROLE_LIBRARY[n]);
+}
+
+const ROLES_BADGE_VARIANTS: Array<{
+  label: string;
+  resolvedRoles: ResolvedRole[];
+  editable?: boolean;
+}> = [
+  { label: "Empty", resolvedRoles: [] },
+  { label: "Single role · read-only", resolvedRoles: resolve("reviewer") },
+  {
+    label: "Multi-role · read-only (sorted by hierarchy)",
+    resolvedRoles: resolve("reviewer", "admin", "tournament_manager"),
+  },
+  {
+    label: "All roles · read-only",
+    resolvedRoles: resolve(
+      "admin",
+      "tournament_manager",
+      "reviewer",
+      "player",
+      "viewer",
+    ),
+  },
+  {
+    label: "Single role · editable",
+    resolvedRoles: resolve("reviewer"),
+    editable: true,
+  },
+  {
+    label: "Multi-role · editable",
+    resolvedRoles: resolve("admin", "reviewer", "player"),
+    editable: true,
+  },
+];
+
 export function UserCardsSpecimens() {
   return (
     <div className="space-y-16">
       <ProfileCardSection />
+      <RolesBadgeListSection />
       <LoggedUserCardSection />
     </div>
   );
@@ -117,6 +169,29 @@ function ProfileCardSection() {
         {PROFILE_VARIANTS.map((v) => (
           <Specimen key={v.label} label={v.label}>
             <ProfileCard data={v.data} />
+          </Specimen>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function RolesBadgeListSection() {
+  return (
+    <section className="space-y-6">
+      <SectionHeader
+        as="h2"
+        title="Roles Badge List"
+        description="Presentational view that renders pre-resolved roles as badges, sorted by hierarchy. The container resolves role names via Convex; the workbench fixtures the resolved entries directly."
+      />
+      <div className="grid gap-6 sm:grid-cols-2">
+        {ROLES_BADGE_VARIANTS.map((v) => (
+          <Specimen key={v.label} label={v.label}>
+            <RolesBadgeListView
+              resolvedRoles={v.resolvedRoles}
+              editable={v.editable}
+              onRemove={v.editable ? () => undefined : undefined}
+            />
           </Specimen>
         ))}
       </div>
