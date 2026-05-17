@@ -19,7 +19,10 @@ export function JoinRequestsList({ teamId, canRespond = true }: Props) {
     null,
   );
 
-  const requests = useQuery(api.joinRequests.listJoinRequests, { teamId });
+  const requests = useQuery(api.joinRequests.list, {
+    teamId,
+    initiator: "user",
+  });
   const respondToRequest = useMutation(api.joinRequests.respondToJoinRequest);
 
   const handleRespond = async (

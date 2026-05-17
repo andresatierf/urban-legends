@@ -8,6 +8,7 @@ import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useUser } from "../../hooks/useUser";
 import type { JoinTeamRequestState } from "./card/membership-button";
 
 type TeamCardActions = {
@@ -18,7 +19,11 @@ type TeamCardActions = {
 };
 
 export function useTeamCardActions(): (teamId: Id<"teams">) => TeamCardActions {
-  const joinRequests = useQuery(api.joinRequests.listUserJoinRequests, {});
+  const { user } = useUser({ shouldThrow: false });
+  const joinRequests = useQuery(
+    api.joinRequests.list,
+    user ? { userId: user._id, status: "pending" } : "skip",
+  );
   const cancelMutation = useMutation(api.joinRequests.cancelJoinRequest);
   const requestToJoinMutation = useMutation(api.joinRequests.requestToJoin);
   const leaveTeamMutation = useMutation(api.teams.leaveTeam);
