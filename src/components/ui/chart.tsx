@@ -61,6 +61,14 @@ function ChartContainer({
 
   return (
     <ChartContext.Provider value={{ config }}>
+      {/*
+        The [stroke='#ccc'] and [stroke='#fff'] attribute selectors below match
+        recharts' undocumented default stroke colors for grid lines, polar grid,
+        reference lines, dots, and sector borders. recharts is pinned to an
+        exact version in package.json so these defaults cannot shift under us
+        in a minor bump; verify the pinned version still matches if you bump
+        recharts. Current pin: recharts 3.8.0.
+      */}
       <div
         data-slot="chart"
         data-chart={chartId}
