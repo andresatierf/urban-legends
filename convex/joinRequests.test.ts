@@ -220,7 +220,7 @@ describe("joinRequests.list", () => {
     }
   });
 
-  test("invitedByUser is null on user-initiated rows even when createdBy is populated", async () => {
+  test("invitedByUser is populated with createdBy user on team-initiated rows", async () => {
     const t = convexTest(schemaForTest);
     const { invitedId } = await t.run(seed);
     const asUser = t.withIdentity({ subject: "ext_invited" });
