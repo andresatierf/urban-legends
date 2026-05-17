@@ -15,12 +15,15 @@ export function Podium({
   const positions = ["2nd", "1st", "3rd"];
 
   return (
-    <div className="flex items-end justify-center gap-0">
+    <div
+      className="flex items-end justify-center gap-0"
+      style={{ "--podium-w": "200px" } as React.CSSProperties}
+    >
       {order.map((team, i) =>
         team ? (
           <div
             key={team.team.name}
-            className="flex max-w-[200px] flex-1 flex-col items-center"
+            className="flex max-w-[var(--podium-w)] flex-1 flex-col items-center"
           >
             <MedalSvg type={medals[i]} />
             <div className="font-heading mb-[0.2rem] px-[0.3rem] text-center text-sm leading-[1.2] font-bold">
