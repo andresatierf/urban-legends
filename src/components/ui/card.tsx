@@ -16,7 +16,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card text-card-foreground border-border flex flex-col gap-4 overflow-hidden rounded-xl border-2 p-5 text-xs/relaxed shadow-[4px_4px_0_var(--shadow)] has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:p-3 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "group/card text-card-foreground border-border text-body-sm flex flex-col gap-4 overflow-hidden rounded-xl border-2 p-5 shadow-[4px_4px_0_var(--shadow)] has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:p-3 data-[size=sm]:text-xs/relaxed *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
         variant === "deep" ? "bg-muted" : "bg-card",
         className,
       )}
@@ -42,7 +42,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
-      className={cn("font-heading text-sm font-medium", className)}
+      className={cn("text-h3", className)}
       {...props}
     />
   );
