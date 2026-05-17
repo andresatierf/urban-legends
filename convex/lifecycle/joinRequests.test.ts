@@ -409,10 +409,13 @@ describe("invite then accept (Team-direction)", () => {
   });
 });
 
-// ── symmetric lockout ────────────────────────────────────────────────────────
+// ── asymmetric rejection lockout ─────────────────────────────────────────────
 
-describe("symmetric lockout", () => {
-  test("reject user-direction request → re-invite to same (user, team) is blocked", async () => {
+describe("asymmetric rejection lockout", () => {
+  test("reject user-direction request → re-invite to same (user, team) is allowed", async () => {
+    // A rejected row blocks the user from re-requesting, but does not block the
+    // captain from inviting — rejection may have been a mistake, and the captain
+    // is the authority on the team-direction action.
     // Uses separate t.run() calls: convex-test@0.0.1 does not reflect ctx.db.patch()
     // results in ctx.db.query().collect() within the same transaction.
     const t = convexTest(schemaForTest);
@@ -424,11 +427,13 @@ describe("symmetric lockout", () => {
     );
     await t.run(async (ctx) => reject(ctx, requestId, captainId));
 
-    await t.run(async (ctx) => {
-      await expect(
-        invite(ctx, { teamId, userId: prospectId, createdBy: captainId }),
-      ).rejects.toThrow();
-    });
+    const inviteId = await t.run(async (ctx) =>
+      invite(ctx, { teamId, userId: prospectId, createdBy: captainId }),
+    );
+
+    const row = await t.run(async (ctx) => ctx.db.get(inviteId));
+    expect(row?.status).toBe("pending");
+    expect(row?.initiator).toBe("team");
   });
 
   test("reject team-direction invite → re-request by same user is blocked", async () => {

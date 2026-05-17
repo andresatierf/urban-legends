@@ -91,7 +91,10 @@ export async function request(
 }
 
 // Creates a Team-direction join request (invitation).
-// Symmetric lockout: a rejected row for (user, team) blocks re-invite.
+// No rejection lockout on this direction: a captain may invite a previously
+// rejected user, since the prior rejection may have been a mistake. The
+// user-direction `request` path remains locked out by a prior rejection so a
+// rejected user cannot pester the team.
 // Capacity and tournament-uniqueness are deferred to accept (pre-accept invariants).
 export async function invite(
   ctx: MutationCtx,
@@ -103,12 +106,6 @@ export async function invite(
   },
 ): Promise<Id<"joinRequests">> {
   const existing = await existingForPair(ctx, args.teamId, args.userId);
-
-  if (existing.some((r) => r.status === "rejected")) {
-    throw new Error(
-      "This user cannot be invited: they were previously rejected from this team",
-    );
-  }
 
   if (existing.some((r) => r.status === "pending")) {
     throw new Error(
