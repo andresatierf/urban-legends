@@ -35,7 +35,10 @@ export function TeamDetailsLayout({ data }: Props) {
       sidebar={<Sidebar data={data} />}
     >
       <MemberRoster data={data} />
-      <InvitedUsersList teamId={data.team._id} canCancel={isCaptain} />
+      <InvitedUsersList
+        teamId={data.team._id}
+        canCancel={isCaptain || data.canManageMembers}
+      />
       {canSeeJoinRequests && (
         <JoinRequestsList
           teamId={data.team._id}
