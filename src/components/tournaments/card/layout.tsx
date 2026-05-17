@@ -37,7 +37,7 @@ export function TournamentOverviewCard({ data }: { data: TournamentCardData }) {
   const status = getTournamentStatus(data);
   const { authority, teamCount } = data;
 
-  let daysValue: React.ReactNode = <EmptyValue />;
+  let daysValue: React.ReactNode = <EmptyValue label="Tournament has ended" />;
   if (status === "active") daysValue = `${daysUntil(data.endDate)}d`;
   else if (status === "upcoming") daysValue = `${daysUntil(data.startDate)}d`;
 
@@ -72,7 +72,11 @@ export function TournamentOverviewCard({ data }: { data: TournamentCardData }) {
             { icon: Clock, value: daysValue, label: DAYS_LABEL[status] },
             {
               icon: Trophy,
-              value: authority.team ? authority.team.points : <EmptyValue />,
+              value: authority.team ? (
+                authority.team.points
+              ) : (
+                <EmptyValue label="No points yet" />
+              ),
               label: "Points",
             },
           ]}

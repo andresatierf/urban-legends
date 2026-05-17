@@ -18,8 +18,8 @@ export function RulesCard({ tournament }: Props) {
         <div className="flex justify-between">
           <span className="text-muted-foreground">Team size</span>
           <span>
-            {tournament.teamMinSize ?? <EmptyValue />}–
-            {tournament.teamMaxSize ?? <EmptyValue />}
+            {tournament.teamMinSize ?? <EmptyValue label="No minimum" />}–
+            {tournament.teamMaxSize ?? <EmptyValue label="No maximum" />}
           </span>
         </div>
         <div className="flex justify-between">
