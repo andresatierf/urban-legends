@@ -64,6 +64,131 @@ async function seedWorld(ctx: Ctx) {
   return { captainId, tournamentId, teamId };
 }
 
+// ── pre-accept invariants ────────────────────────────────────────────────────
+
+describe("accept invariants", () => {
+  test("rejects when team is full (capacity)", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const captainId = await makeUser(ctx, "captain");
+      const tournamentId = await ctx.db.insert("tournaments", {
+        name: "Tournament A",
+        description: "Test tournament",
+        startDate: "2024-01-01",
+        endDate: "2024-12-31",
+        createdBy: captainId,
+        scoringConfig,
+      });
+      const teamId = await ctx.db.insert("teams", {
+        name: "Team Alpha",
+        tournamentId,
+        createdBy: captainId,
+        joinPolicy: "open",
+        points: 0,
+        maxMembers: 1,
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId,
+        userId: captainId,
+        role: "captain",
+      });
+
+      const requesterId = await makeUser(ctx, "requester");
+      const requestId = await request(ctx, { teamId, userId: requesterId });
+
+      await expect(accept(ctx, requestId, captainId)).rejects.toThrow(
+        "Team is full",
+      );
+
+      const req = await ctx.db.get(requestId);
+      expect(req?.status).toBe("pending");
+    });
+  });
+
+  test("rejects when user is already in another team of the same tournament", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { captainId, tournamentId, teamId } = await seedWorld(ctx);
+      const requesterId = await makeUser(ctx, "requester");
+
+      // Requester is already on a different team in the same tournament
+      const otherCaptainId = await makeUser(ctx, "otherCaptain");
+      const otherTeamId = await ctx.db.insert("teams", {
+        name: "Team Beta",
+        tournamentId,
+        createdBy: otherCaptainId,
+        joinPolicy: "open",
+        points: 0,
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId: otherTeamId,
+        userId: requesterId,
+        role: "member",
+      });
+
+      const requestId = await request(ctx, { teamId, userId: requesterId });
+
+      await expect(accept(ctx, requestId, captainId)).rejects.toThrow(
+        "another team",
+      );
+
+      const req = await ctx.db.get(requestId);
+      expect(req?.status).toBe("pending");
+    });
+  });
+
+  test("allows accept when user is on a team in a different tournament", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { captainId, teamId } = await seedWorld(ctx);
+      const requesterId = await makeUser(ctx, "requester");
+
+      // Requester is on a team in a different tournament
+      const otherTournamentId = await ctx.db.insert("tournaments", {
+        name: "Tournament B",
+        description: "Other",
+        startDate: "2024-01-01",
+        endDate: "2024-12-31",
+        createdBy: captainId,
+        scoringConfig,
+      });
+      const otherTeamId = await ctx.db.insert("teams", {
+        name: "Team Gamma",
+        tournamentId: otherTournamentId,
+        createdBy: captainId,
+        joinPolicy: "open",
+        points: 0,
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId: otherTeamId,
+        userId: requesterId,
+        role: "member",
+      });
+
+      const requestId = await request(ctx, { teamId, userId: requesterId });
+
+      await expect(accept(ctx, requestId, captainId)).resolves.toBeUndefined();
+    });
+  });
+
+  test("throws IllegalTransition when request is not pending", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, teamId } = await t.run(async (ctx) => seedWorld(ctx));
+    const requesterId = await t.run(async (ctx) => makeUser(ctx, "requester"));
+
+    const requestId = await t.run(async (ctx) =>
+      request(ctx, { teamId, userId: requesterId }),
+    );
+    await t.run(async (ctx) => reject(ctx, requestId, captainId));
+
+    await t.run(async (ctx) => {
+      await expect(accept(ctx, requestId, captainId)).rejects.toThrow(
+        "Illegal state transition",
+      );
+    });
+  });
+});
+
 // ── request → accept ─────────────────────────────────────────────────────────
 
 describe("request then accept", () => {

@@ -15,8 +15,6 @@ import {
   notifyJoinRequestRejected,
   notifyMemberJoined,
 } from "./notifications/triggers";
-import { validateTeamHasSpace } from "./teams";
-import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
 
 export const listJoinRequests = query({
@@ -72,18 +70,14 @@ export const requestToJoin = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const team = await validateTeamHasSpace(ctx, { teamId: args.teamId });
+    const team = await ctx.db.get(args.teamId);
+    if (!team) throw new Error("Team not found");
 
     if (team.joinPolicy !== "open") {
       throw new Error("Cannot request to join a closed team");
     }
 
     await canCreateJoinRequest.require(ctx, user._id, { teamId: args.teamId });
-
-    await validateUserNotInTournamentTeam(ctx, {
-      userId: user._id,
-      tournamentId: team.tournamentId,
-    });
 
     const requestId = await request(ctx, {
       teamId: args.teamId,
@@ -144,14 +138,10 @@ export const respondToJoinRequest = mutation({
         requestId: args.requestId,
       });
 
-      const team = await validateTeamHasSpace(ctx, { teamId: req.teamId });
-
-      await validateUserNotInTournamentTeam(ctx, {
-        userId: req.userId,
-        tournamentId: team.tournamentId,
-      });
-
       await accept(ctx, args.requestId, user._id);
+
+      const team = await ctx.db.get(req.teamId);
+      if (!team) throw new Error("Team not found");
 
       await notifyJoinRequestApproved(ctx, {
         userId: req.userId,

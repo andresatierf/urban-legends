@@ -51,8 +51,9 @@ async function existingForPair(
 }
 
 // Creates a User-direction join request.
-// Caller is responsible for checking team capacity, join policy, and tournament membership.
+// Caller is responsible for the join-policy check (open vs closed team).
 // This function enforces the lockout (rejected row blocks re-request) and duplicate-pending guard.
+// Capacity and tournament-uniqueness are deferred to accept (pre-accept invariants).
 export async function request(
   ctx: MutationCtx,
   args: {
@@ -91,7 +92,7 @@ export async function request(
 
 // Creates a Team-direction join request (invitation).
 // Symmetric lockout: a rejected row for (user, team) blocks re-invite.
-// Caller is responsible for checking team capacity and tournament membership.
+// Capacity and tournament-uniqueness are deferred to accept (pre-accept invariants).
 export async function invite(
   ctx: MutationCtx,
   args: {
@@ -133,8 +134,11 @@ export async function invite(
 
 // Accepts a pending join request (pending → accepted).
 // Lazily expires if past expiresAt before proceeding.
+// Enforces pre-accept capacity (CONTEXT rule 3) and uniqueness (CONTEXT rule 4):
+// rejects if accepting would exceed the Team's size cap, or if the User is already
+// a TeamMember in another Team of the same Tournament.
 // Inserts a TeamMember row and cascades sibling pending rows in the same Tournament.
-// Caller is responsible for authority checks and validating team capacity / tournament membership.
+// Caller is responsible for authority checks.
 export async function accept(
   ctx: MutationCtx,
   requestId: Id<"joinRequests">,
@@ -154,6 +158,39 @@ export async function accept(
   if (req.status !== "pending")
     throw new IllegalTransition(req.status, "accepted");
 
+  const team = await ctx.db.get(req.teamId);
+  if (!team) throw new Error("Team not found");
+
+  const currentMembers = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_team", (q) => q.eq("teamId", req.teamId))
+    .collect();
+
+  if (team.maxMembers && currentMembers.length >= team.maxMembers) {
+    throw new Error("Team is full");
+  }
+
+  const userTeams = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_user", (q) => q.eq("userId", req.userId))
+    .collect();
+
+  if (userTeams.length > 0) {
+    const otherTeamIds = new Set(userTeams.map((m) => m.teamId));
+    const tournamentTeams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", team.tournamentId),
+      )
+      .collect();
+    const conflict = tournamentTeams.find((t) => otherTeamIds.has(t._id));
+    if (conflict) {
+      throw new Error(
+        "User is already a member of another team in this tournament",
+      );
+    }
+  }
+
   await ctx.db.insert("teamMembers", {
     teamId: req.teamId,
     userId: req.userId,
@@ -166,14 +203,11 @@ export async function accept(
     respondedBy: by,
   });
 
-  const team = await ctx.db.get(req.teamId);
-  if (team) {
-    await cascade(ctx, {
-      userId: req.userId,
-      tournamentId: team.tournamentId,
-      excludeRequestId: requestId,
-    });
-  }
+  await cascade(ctx, {
+    userId: req.userId,
+    tournamentId: team.tournamentId,
+    excludeRequestId: requestId,
+  });
 }
 
 // Rejects a pending join request (pending → rejected).

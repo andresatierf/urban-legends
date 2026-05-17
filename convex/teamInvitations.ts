@@ -20,8 +20,6 @@ import {
   notifyMemberJoined,
   notifyTeamInvitation,
 } from "./notifications/triggers";
-import { validateTeamHasSpace } from "./teams";
-import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow } from "./users";
 
 export const listTeamInvitations = query({
@@ -112,7 +110,8 @@ export const inviteMember = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const team = await validateTeamHasSpace(ctx, { teamId: args.teamId });
+    const team = await ctx.db.get(args.teamId);
+    if (!team) throw new Error("Team not found");
 
     await canInviteToTeam.require(ctx, user._id, { teamId: args.teamId });
 
@@ -122,11 +121,6 @@ export const inviteMember = mutation({
       .first();
 
     if (!invitedUser) throw new Error("User not found with this email");
-
-    await validateUserNotInTournamentTeam(ctx, {
-      userId: invitedUser._id,
-      tournamentId: team.tournamentId,
-    });
 
     const requestId = await invite(ctx, {
       teamId: args.teamId,
@@ -177,14 +171,10 @@ export const respondToInvitation = mutation({
         requestId: args.invitationId,
       });
 
-      const team = await validateTeamHasSpace(ctx, { teamId: req.teamId });
-
-      await validateUserNotInTournamentTeam(ctx, {
-        userId: req.userId,
-        tournamentId: team.tournamentId,
-      });
-
       await accept(ctx, args.invitationId, user._id);
+
+      const team = await ctx.db.get(req.teamId);
+      if (!team) throw new Error("Team not found");
 
       await notifyJoinRequestApproved(ctx, {
         userId: req.userId,
