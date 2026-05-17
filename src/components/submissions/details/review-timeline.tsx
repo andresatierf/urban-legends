@@ -2,6 +2,7 @@ import { Clock } from "lucide-react";
 
 import type { Doc } from "../../../../convex/_generated/dataModel";
 import type { UserWithRoles } from "../../../../convex/users";
+import { EmptyValue } from "../../ui/empty-value";
 import { Eyebrow } from "../../ui/eyebrow";
 
 function formatDate(input: string | number): string {
@@ -25,11 +26,14 @@ type Props = {
 };
 
 export function ReviewTimeline({ submission, managedByUser }: Props) {
-  const reviewedValue = managedByUser
-    ? submission.reviewedAt
-      ? `${formatDate(submission.reviewedAt)} by ${managedByUser.name}`
-      : `by ${managedByUser.name}`
-    : "—";
+  let reviewedValue: React.ReactNode;
+  if (!managedByUser) {
+    reviewedValue = <EmptyValue label="Not yet reviewed" />;
+  } else if (submission.reviewedAt) {
+    reviewedValue = `${formatDate(submission.reviewedAt)} by ${managedByUser.name}`;
+  } else {
+    reviewedValue = `by ${managedByUser.name}`;
+  }
 
   return (
     <div className="space-y-3">

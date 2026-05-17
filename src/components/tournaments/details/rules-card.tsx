@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { EmptyValue } from "../../ui/empty-value";
 import { Separator } from "../../ui/separator";
 import type { TournamentDetails } from "./types";
 
@@ -17,7 +18,8 @@ export function RulesCard({ tournament }: Props) {
         <div className="flex justify-between">
           <span className="text-muted-foreground">Team size</span>
           <span>
-            {tournament.teamMinSize ?? "—"}–{tournament.teamMaxSize ?? "—"}
+            {tournament.teamMinSize ?? <EmptyValue label="No minimum" />}–
+            {tournament.teamMaxSize ?? <EmptyValue label="No maximum" />}
           </span>
         </div>
         <div className="flex justify-between">

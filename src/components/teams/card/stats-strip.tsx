@@ -1,4 +1,5 @@
 import { StatsGrid } from "@/components/common/card/stats-grid";
+import { EmptyValue } from "@/components/ui/empty-value";
 import { cn } from "@/lib/utils";
 
 import type { TeamCardData } from "./types";
@@ -24,7 +25,7 @@ export function StatsStrip({ data }: { data: TeamCardData }) {
                 </span>
               </>
             ) : (
-              <span className="text-muted-foreground font-mono text-xs">—</span>
+              <EmptyValue className="text-xs" label="No rank yet" />
             ),
         },
         {
