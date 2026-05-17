@@ -17,7 +17,6 @@ import {
 } from "./notifications/triggers";
 import { getCurrentUserOrThrow } from "./users";
 
-// Omnibus list query for JoinRequests.
 // Exactly one of `teamId` or `userId` must be supplied; supplying both or
 // neither throws. Optional `initiator` / `status` filters narrow the set.
 // Returns a uniformly enriched shape regardless of perspective: callers

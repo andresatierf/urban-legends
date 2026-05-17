@@ -106,9 +106,7 @@ async function seed(
 describe("joinRequests.list", () => {
   test("throws when neither teamId nor userId provided", async () => {
     const t = convexTest(schemaForTest);
-    await t.run(async (ctx) => {
-      await seed(ctx);
-    });
+    await t.run(seed);
     const asUser = t.withIdentity({ subject: "ext_captain" });
     await expect(asUser.query(api.joinRequests.list, {})).rejects.toThrow(
       /exactly one of teamId or userId/i,
