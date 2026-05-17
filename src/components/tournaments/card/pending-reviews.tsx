@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Trophy } from "lucide-react";
+import { ArrowRight, Trophy } from "lucide-react";
 
 import type { TournamentCardData } from "./types";
 
@@ -10,11 +10,24 @@ export function PendingReviews({ data }: { data: TournamentCardData }) {
   return (
     <Link
       to="/reviewer"
-      className="bg-primary/10 text-primary hover:bg-primary/15 flex items-center gap-2 rounded px-2.5 py-1.5 text-xs font-medium transition-colors"
+      className="border-ink bg-primary text-primary-foreground hover:bg-primary/90 group/queue shadow-fd-sm flex items-stretch gap-0 overflow-hidden rounded-xl border-2 transition-colors"
     >
-      <Trophy className="h-3.5 w-3.5" />
-      {pendingReviewCount} pending review
-      {pendingReviewCount !== 1 && "s"}
+      <div className="border-ink/20 bg-primary/80 flex items-center justify-center border-r px-3">
+        <Trophy className="size-4" strokeWidth={2.5} />
+      </div>
+      <div className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2">
+        <span className="text-metric leading-none tabular-nums">
+          {pendingReviewCount}
+        </span>
+        <span className="text-label-caps font-bold">
+          {pendingReviewCount === 1
+            ? "submission to review"
+            : "submissions to review"}
+        </span>
+      </div>
+      <div className="border-ink/20 flex items-center border-l px-3 transition-transform group-hover/queue:translate-x-0.5">
+        <ArrowRight className="size-4" strokeWidth={2.5} />
+      </div>
     </Link>
   );
 }

@@ -62,7 +62,7 @@ export function TournamentOverviewCard({ data }: { data: TournamentCardData }) {
         )}
         <Timeline data={data} />
         <StatsGrid
-          variant="tiles"
+          variant="strip"
           items={[
             {
               icon: Users,
