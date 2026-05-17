@@ -1,4 +1,4 @@
-// Thin pass-through shell — delegates to the joinRequests lifecycle module.
+// Thin pass-through shell; delegates to the joinRequests lifecycle module.
 // Public query/mutation names are preserved so the frontend keeps working.
 // IDs are now joinRequests IDs; frontend migration is a follow-up PRD.
 

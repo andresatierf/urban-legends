@@ -7,7 +7,7 @@ import type { MutationCtx } from "../_generated/server";
 // Real coverage lives in submissions.test.ts.
 test("module loads", () => {});
 
-// biome-ignore lint/suspicious/noExportsInTest: this file doubles as a helper module — see comment above.
+// biome-ignore lint/suspicious/noExportsInTest: this file doubles as a helper module; see comment above.
 export async function assertSubmissionInvariant(
   ctx: MutationCtx,
   {
@@ -31,7 +31,7 @@ export async function assertSubmissionInvariant(
   );
   expect(team?.points).toBeCloseTo(expectedPoints, 5);
 
-  // 2. No orphan groups — every non-terminal group has at least one active submission
+  // 2. No orphan groups; every non-terminal group has at least one active submission
   //    Terminal groups (rejected/deleted) may have zero active submissions.
   const groups = await ctx.db
     .query("submissionGroups")
@@ -82,6 +82,6 @@ export async function assertSubmissionInvariant(
     expect(sum).toBeCloseTo(group.pointsEarned, 5);
   }
 
-  // Satisfy the tournamentId parameter — used by callers to scope assertions
+  // Satisfy the tournamentId parameter; used by callers to scope assertions
   void tournamentId;
 }

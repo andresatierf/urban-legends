@@ -40,7 +40,7 @@ async function cascade(
   }
 }
 
-// Returns all rows for (teamId, userId) pair — used for lockout and duplicate checks.
+// Returns all rows for (teamId, userId) pair; used for lockout and duplicate checks.
 async function existingForPair(
   ctx: MutationCtx,
   teamId: Id<"teams">,
@@ -105,7 +105,7 @@ export async function invite(
 
   if (existing.some((r) => r.status === "rejected")) {
     throw new Error(
-      "This user cannot be invited — they were previously rejected from this team",
+      "This user cannot be invited: they were previously rejected from this team",
     );
   }
 

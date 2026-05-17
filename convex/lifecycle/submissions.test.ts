@@ -404,7 +404,7 @@ describe("submit", () => {
     const t = convexTest(schemaForTest);
     const { userId, teamId, tournamentId } = await t.run(seedWorld);
 
-    // schemaValidation is disabled — use a fake storage ID cast to the expected type
+    // schemaValidation is disabled; use a fake storage ID cast to the expected type
     const storageId = "fake_storage_evidence_1" as unknown as Id<"_storage">;
 
     // Pre-insert a pendingUploads row so claimUploads can find and delete it
@@ -1266,7 +1266,7 @@ describe("softDelete", () => {
     await t.run(async (ctx) => {
       const sub = await ctx.db.get(submissionId);
       expect(sub?.state).toBe("rejected");
-      // reject must not touch evidenceStorageIds — audit trail preserved for appeals
+      // reject must not touch evidenceStorageIds; audit trail preserved for appeals
       expect(sub?.evidenceStorageIds).toEqual([storageId]);
     });
   });
@@ -1695,7 +1695,7 @@ describe("edit", () => {
       });
     });
 
-    // convex-test throws when ctx.storage.delete is called with a fake ID — confirms releaseUploads fires
+    // convex-test throws when ctx.storage.delete is called with a fake ID; confirms releaseUploads fires
     await expect(
       t.run(async (ctx) => {
         await edit(
@@ -1740,7 +1740,7 @@ describe("edit", () => {
       });
     });
 
-    // storageIdB is removed and storageIdC is added — convex-test throws on storage.delete(B)
+    // storageIdB is removed and storageIdC is added; convex-test throws on storage.delete(B)
     await expect(
       t.run(async (ctx) => {
         await edit(

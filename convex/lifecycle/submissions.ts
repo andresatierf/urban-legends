@@ -26,7 +26,7 @@ async function transition(
   const from = sub.state;
   if (from === to) return "noop";
 
-  // rejected and deleted are terminal — no outbound transitions allowed
+  // rejected and deleted are terminal; no outbound transitions allowed
   if (from === "rejected" || from === "deleted") {
     throw new IllegalTransition(from, to);
   }
@@ -284,7 +284,7 @@ async function joinOrCreateGroup(
 
 // Creates a new Submission and, for team-type, joins or creates its SubmissionGroup.
 // Enforces daily submission limit and duplicate team-submission guard.
-// Does not handle authorization or notifications — those stay in the mutation shell.
+// Does not handle authorization or notifications; those stay in the mutation shell.
 export async function submit(
   ctx: MutationCtx,
   args: {
@@ -550,7 +550,7 @@ export async function reject(
 }
 
 // Soft-deletes a single submission (and cascades group metrics for team-type).
-// Only the target row transitions to deleted — siblings are not touched.
+// Only the target row transitions to deleted; siblings are not touched.
 // Idempotent on already-deleted; throws IllegalTransition for rejected source state.
 export async function softDelete(
   ctx: MutationCtx,
@@ -678,7 +678,7 @@ export async function edit(
 
   // If the submission was in a group and date or type changed, cascade on the OLD date.
   // Because the submission now has the new date/type, cascade's active filter naturally
-  // excludes it — the old group is recomputed or deleted without any extra patch needed.
+  // excludes it; the old group is recomputed or deleted without any extra patch needed.
   if (wasTeamInGroup && (dateChanged || typeChanged)) {
     await cascade(ctx, {
       teamId: submission.teamId,

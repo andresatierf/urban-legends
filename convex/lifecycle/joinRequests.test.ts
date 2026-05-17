@@ -147,7 +147,7 @@ describe("reject then re-request", () => {
       await reject(ctx, requestId, captainId);
     });
 
-    // Run 2: re-request — should be blocked
+    // Run 2: re-request; should be blocked
     await t.run(async (ctx) => {
       await expect(
         request(ctx, { teamId, userId: requesterId }),

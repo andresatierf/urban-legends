@@ -16,7 +16,7 @@ import { nowUTC } from "./lib/dates";
 
 /**
  * Public-domain placeholder images attached to seeded submissions as evidence.
- * Picsum returns a fresh JPEG per seed string — these seeds are stable so
+ * Picsum returns a fresh JPEG per seed string; these seeds are stable so
  * repeated runs land on the same pictures.
  */
 const DEMO_EVIDENCE_URLS = [
@@ -37,7 +37,7 @@ const DEFAULT_SCORING = {
   teamExerciseThreshold: 0.5,
 };
 
-/** Tournament names — both create keys and skip-if-exists anchors. */
+/** Tournament names: both create keys and skip-if-exists anchors. */
 const TOURNAMENT = {
   T2024: "Urban Legends Tournament 2024",
   T2026: "Urban Legends Tournament 2026",
@@ -315,7 +315,7 @@ export const clearAllSeeded = internalMutation({
       await ctx.db.delete(user._id);
     }
 
-    // try/catch on each storage delete — a manual clean or test fixture may
+    // try/catch on each storage delete; a manual clean or test fixture may
     // have already removed the underlying blob.
     let evidenceBlobsDeleted = 0;
     for (const sid of evidenceStorageIds) {
@@ -323,7 +323,7 @@ export const clearAllSeeded = internalMutation({
         await ctx.storage.delete(sid);
         evidenceBlobsDeleted++;
       } catch {
-        // already gone — ignore
+        // already gone; ignore
       }
     }
 
@@ -344,7 +344,7 @@ export const clearAllSeeded = internalMutation({
 });
 
 // ───────────────────────────────────────────────────────────────────────────
-// Internal helpers — orchestration
+// Internal helpers: orchestration
 // ───────────────────────────────────────────────────────────────────────────
 
 async function skipIfTournamentExists<T>(
@@ -382,7 +382,7 @@ async function upsertRoles(ctx: MutationCtx) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// Internal helpers — users and teams
+// Internal helpers: users and teams
 // ───────────────────────────────────────────────────────────────────────────
 
 async function getOrCreateUser(
@@ -511,7 +511,7 @@ async function addTeams(
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// Internal helpers — submissions and groups
+// Internal helpers: submissions and groups
 // ───────────────────────────────────────────────────────────────────────────
 
 interface IndividualSubmissionSeed {
@@ -625,7 +625,7 @@ async function insertTeamGroup(ctx: MutationCtx, s: TeamGroupSeed) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// Internal helpers — per-tournament seeders
+// Internal helpers: per-tournament seeders
 // ───────────────────────────────────────────────────────────────────────────
 
 async function createTournament(
@@ -811,7 +811,7 @@ async function seedActive(ctx: MutationCtx) {
       state: "rejected",
       tier: "base",
       date: "2026-04-15",
-      description: "Rejected — insufficient evidence",
+      description: "Rejected: insufficient evidence",
       managedByAdmin: true,
     },
     {
@@ -855,7 +855,7 @@ async function seedActive(ctx: MutationCtx) {
       state: "pending",
       tier: "advanced",
       date: "2026-05-02",
-      description: "Pending advanced team activity — full team workout",
+      description: "Pending advanced team activity: full team workout",
       memberCount: 4,
       managedByAdmin: false,
     },
@@ -863,7 +863,7 @@ async function seedActive(ctx: MutationCtx) {
       state: "approved",
       tier: "base",
       date: "2026-04-25",
-      description: "Approved base team activity — group run",
+      description: "Approved base team activity: group run",
       memberCount: 3,
       managedByAdmin: true,
     },
@@ -871,7 +871,7 @@ async function seedActive(ctx: MutationCtx) {
       state: "rejected",
       tier: "advanced",
       date: "2026-04-12",
-      description: "Rejected team activity — too few participants logged",
+      description: "Rejected team activity: too few participants logged",
       memberCount: 2,
       managedByAdmin: true,
     },
@@ -925,7 +925,7 @@ async function seedMixed(ctx: MutationCtx) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// Internal helpers — join requests and notifications
+// Internal helpers: join requests and notifications
 // ───────────────────────────────────────────────────────────────────────────
 
 async function seedJoinRequestsForCaptains(ctx: MutationCtx) {
@@ -941,7 +941,7 @@ async function seedJoinRequestsForCaptains(ctx: MutationCtx) {
     .collect();
   if (teams.length === 0) return { skipped: true, reason: "no teams" };
 
-  // Skip if any join request already targets these teams — keeps re-runs idempotent.
+  // Skip if any join request already targets these teams; keeps re-runs idempotent.
   const existing = await ctx.db
     .query("joinRequests")
     .withIndex("by_team", (q) => q.eq("teamId", teams[0]._id))
@@ -1039,7 +1039,7 @@ async function seedJoinRequestsForCaptains(ctx: MutationCtx) {
 async function seedNotificationsForAdmin(ctx: MutationCtx) {
   const admin = await getOrCreateSeedAdmin(ctx);
 
-  // Skip if any notification already exists for the admin — keeps re-runs idempotent.
+  // Skip if any notification already exists for the admin; keeps re-runs idempotent.
   const existing = await ctx.db
     .query("notifications")
     .withIndex("by_user_and_read", (q) => q.eq("userId", admin._id))
