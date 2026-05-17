@@ -4,15 +4,13 @@
 
 import { v } from "convex/values";
 
-import type { Doc } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import { mutation } from "./_generated/server";
 import {
   canAcceptJoinRequest,
   canCancelJoinRequest,
   canInviteToTeam,
   canRejectJoinRequest,
 } from "./authority/core";
-import { enrichWithRelations } from "./lib/helpers";
 import { accept, cancel, invite, reject } from "./lifecycle/joinRequests";
 import {
   notifyJoinRequestApproved,
@@ -21,86 +19,6 @@ import {
   notifyTeamInvitation,
 } from "./notifications/triggers";
 import { getCurrentUserOrThrow } from "./users";
-
-export const listTeamInvitations = query({
-  args: {
-    teamId: v.id("teams"),
-    status: v.optional(
-      v.union(
-        v.literal("pending"),
-        v.literal("accepted"),
-        v.literal("rejected"),
-        v.literal("cancelled"),
-        v.literal("expired"),
-      ),
-    ),
-  },
-  handler: async (ctx, args) => {
-    await getCurrentUserOrThrow(ctx);
-
-    let requests = await ctx.db
-      .query("joinRequests")
-      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
-      .collect();
-
-    requests = requests.filter((r) => r.initiator === "team");
-    if (args.status) {
-      requests = requests.filter((r) => r.status === args.status);
-    }
-
-    return await enrichWithRelations(ctx, requests, {
-      invitedUser: { table: "users", foreignKey: (r) => r.userId },
-      invitedByUser: {
-        table: "users",
-        foreignKey: (r) => r.createdBy ?? r.userId,
-      },
-    });
-  },
-});
-
-export const listUserInvitations = query({
-  args: {
-    status: v.optional(
-      v.union(
-        v.literal("pending"),
-        v.literal("accepted"),
-        v.literal("rejected"),
-        v.literal("cancelled"),
-        v.literal("expired"),
-      ),
-    ),
-  },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    let requests = await ctx.db
-      .query("joinRequests")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-
-    requests = requests.filter((r) => r.initiator === "team");
-    if (args.status) {
-      requests = requests.filter((r) => r.status === args.status);
-    }
-
-    const enriched = await enrichWithRelations(ctx, requests, {
-      team: { table: "teams", foreignKey: (r) => r.teamId },
-      invitedByUser: {
-        table: "users",
-        foreignKey: (r) => r.createdBy ?? r.userId,
-      },
-    });
-
-    return await Promise.all(
-      enriched.map(async (req) => ({
-        ...req,
-        tournament: req.team
-          ? await ctx.db.get((req.team as Doc<"teams">).tournamentId)
-          : null,
-      })),
-    );
-  },
-});
 
 export const inviteMember = mutation({
   args: {
