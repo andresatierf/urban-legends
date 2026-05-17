@@ -47,6 +47,14 @@ _Avoid_: SubmissionDetails, submission-with-context.
 An outstanding intent for a **User** to become a **TeamMember** of a **Team**. Created by either `request` (User-initiated) or `invite` (Team-initiated); both produce the same row shape, distinguished by an `initiator` field. Resolved by `accept` (recipient — produces a **TeamMember**), `reject` (recipient), `cancel` (initiator), or `expire` (timeout).
 _Avoid_: invitation, application, membership offer (these described the two halves separately before unification).
 
+**NotificationEvent**:
+A value produced by a domain transition that warrants user-facing notification. A discriminated union over a fixed vocabulary of transitions (e.g. `submission.approved`, `joinRequest.accepted`, `role.granted`). Carries only the IDs needed to identify the transition; the **Notifier** reads everything else from the DB. Lifecycle modules return `{ result, events: NotificationEvent[] }` from mutating functions; public mutations forward `events` to the **Notifier**. Scope is intentionally narrow — this is _not_ a generic domain-event bus and has no subscribers other than the **Notifier**.
+_Avoid_: DomainEvent (overstates scope), Trigger (overloads cron/db terminology), Notification (that name is taken by the persisted row).
+
+**Notifier**:
+The deepened module that consumes **NotificationEvents** and fans them out to one or more persisted **Notifications**. Owns the mapping from each transition to its audiences, copy, and `actionMetadata`. Public mutations call `Notifier.publish(events)` once; the **Notifier** schedules an internal dispatch mutation per event, which reads the referenced entities and enqueues `internal.notifications.create` calls. Single source of truth for "who hears about what" — adding a new audience for an existing transition is a one-file change.
+_Avoid_: NotificationDispatcher, NotificationOrchestrator (longer without adding clarity), Triggers (the predecessor module name; deliberately retired).
+
 ### Roles & authorization
 
 Roles split on **two axes**: where they're stored, and the kind of authority they grant.

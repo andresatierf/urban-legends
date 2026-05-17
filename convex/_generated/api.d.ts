@@ -34,7 +34,6 @@ import type * as roles from "../roles.js";
 import type * as seed from "../seed.js";
 import type * as submissionGroups from "../submissionGroups.js";
 import type * as submissions from "../submissions.js";
-import type * as teamInvitations from "../teamInvitations.js";
 import type * as teams from "../teams.js";
 import type * as tournaments from "../tournaments.js";
 import type * as users from "../users.js";
@@ -72,7 +71,6 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   submissionGroups: typeof submissionGroups;
   submissions: typeof submissions;
-  teamInvitations: typeof teamInvitations;
   teams: typeof teams;
   tournaments: typeof tournaments;
   users: typeof users;
