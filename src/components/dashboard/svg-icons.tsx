@@ -50,7 +50,7 @@ export function TrophySvg() {
       />
       <path
         d="M32 18 L33.5 23 L38.5 23 L34.5 26 L36 31 L32 28 L28 31 L29.5 26 L25.5 23 L30.5 23 Z"
-        fill="#ffc847"
+        fill="var(--gold)"
         stroke="var(--ink)"
         strokeWidth="1"
       />
@@ -272,7 +272,7 @@ export function CheckboxSvg({ checked }: { checked?: boolean }) {
       {checked && (
         <path
           d="M5 11 L9 15 L17 7"
-          stroke="#5dc77a"
+          stroke="var(--grass)"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -351,12 +351,7 @@ export function MedallionSvg({ number }: { number: number }) {
 }
 
 export function MedalSvg({ type }: { type: "gold" | "silver" | "bronze" }) {
-  const colors: Record<string, string> = {
-    gold: "#ffc847",
-    silver: "#c5cdd6",
-    bronze: "#cd9352",
-  };
-  const c = colors[type];
+  const c = `var(--${type})`;
   return (
     <svg
       aria-hidden
