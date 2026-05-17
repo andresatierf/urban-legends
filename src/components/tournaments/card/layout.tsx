@@ -3,6 +3,7 @@ import { Clock, Trophy, Users } from "lucide-react";
 import { ComposedCard } from "@/components/common/card/composed-card";
 import { EdgeOverlay } from "@/components/common/card/edge-overlay";
 import { StatsGrid } from "@/components/common/card/stats-grid";
+import { EmptyValue } from "@/components/ui/empty-value";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 
 import {
@@ -36,7 +37,7 @@ export function TournamentOverviewCard({ data }: { data: TournamentCardData }) {
   const status = getTournamentStatus(data);
   const { authority, teamCount } = data;
 
-  let daysValue: string | number = "—";
+  let daysValue: React.ReactNode = <EmptyValue />;
   if (status === "active") daysValue = `${daysUntil(data.endDate)}d`;
   else if (status === "upcoming") daysValue = `${daysUntil(data.startDate)}d`;
 
@@ -71,7 +72,7 @@ export function TournamentOverviewCard({ data }: { data: TournamentCardData }) {
             { icon: Clock, value: daysValue, label: DAYS_LABEL[status] },
             {
               icon: Trophy,
-              value: authority.team ? authority.team.points : "—",
+              value: authority.team ? authority.team.points : <EmptyValue />,
               label: "Points",
             },
           ]}

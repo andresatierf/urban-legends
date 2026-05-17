@@ -5,7 +5,7 @@ export function StatChip({
   suffix,
 }: {
   label: string;
-  value: number | string;
+  value: React.ReactNode;
   accent?: boolean;
   suffix?: string;
 }) {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Confetti } from "@/components/ui/confetti";
+import { EmptyValue } from "@/components/ui/empty-value";
 import { FooterRibbon } from "@/components/ui/footer-ribbon";
 import { RibbonBanner } from "@/components/ui/ribbon-banner";
 
@@ -155,7 +156,9 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
           />
           <StatChip
             label="NEXT WHISTLE"
-            value={nextDeadlineDays ?? "—"}
+            value={
+              nextDeadlineDays ?? <EmptyValue label="No upcoming deadline" />
+            }
             suffix={
               nextDeadlineDays != null
                 ? nextDeadlineDays === 1
