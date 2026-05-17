@@ -43,18 +43,16 @@ export function NotificationActions({
     setIsLoading(true);
 
     try {
-      // Mark notification as read
       await markAsRead({ notificationId });
 
-      // Handle different action types
       if (action.action === "accept" || action.action === "reject") {
         const isAccept = action.action === "accept";
-
-        const isInvitation = !!action.args?.invitationId;
         const rawId = action.args?.invitationId ?? action.args?.requestId;
 
         if (rawId) {
           const requestId = rawId as Id<"joinRequests">;
+          const isInvitation = !!action.args?.invitationId;
+
           if (isAccept) {
             await acceptJoinRequest({ requestId });
           } else {
@@ -78,12 +76,9 @@ export function NotificationActions({
           );
         }
       } else if (action.action === "view") {
-        // Navigate to the related page
         if (action.args?.url) {
           navigate({ to: action.args.url as string });
         }
-      } else if (action.action === "dismiss") {
-        // Just mark as read (already done above)
       }
 
       onActionComplete?.();
@@ -130,7 +125,6 @@ function getActionVariant(
 ): "default" | "outline" | "ghost" | "link" {
   switch (action) {
     case "accept":
-      return "default";
     case "reject":
       return "default";
     case "view":
