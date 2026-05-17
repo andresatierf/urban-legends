@@ -78,8 +78,9 @@ function ServiceStatusSpecimen() {
   );
 }
 
+const noop = () => {};
+
 function ActionsSpecimen() {
-  const noop = () => {};
   return (
     <section className="space-y-6">
       <SectionHeader

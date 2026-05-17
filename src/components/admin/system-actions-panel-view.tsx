@@ -1,8 +1,5 @@
 import { Trash2, Wrench } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,7 +7,9 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "../ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface SystemActionsPanelViewProps {
   isCheckingIntegrity: boolean;
