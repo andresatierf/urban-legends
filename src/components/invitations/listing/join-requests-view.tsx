@@ -30,8 +30,8 @@ export function JoinRequestsListView({
         viewer: "team",
         processing: processingId === request._id,
         canRespond,
-        onAccept: canRespond ? () => onAccept(request._id) : undefined,
-        onReject: canRespond ? () => onReject(request._id) : undefined,
+        onAccept: () => onAccept(request._id),
+        onReject: () => onReject(request._id),
       }))}
     />
   );
