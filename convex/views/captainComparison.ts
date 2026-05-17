@@ -45,11 +45,11 @@ export const get = query({
       teams: { table: "teams", foreignKeyField: "tournamentId" },
     });
 
-    const tournamentTeamsByTournamentIdMap = new Map(
+    const teamsByTournamentId = new Map(
       enrichedTournaments.map((t) => [t._id, t.teams]),
     );
 
-    const teamsComparison = enrichedTeams.map((enrichedTeam) => {
+    return enrichedTeams.map((enrichedTeam) => {
       const approvedSubmissions = enrichedTeam.submissions.filter(
         (s) => s.state === "approved",
       );
@@ -66,7 +66,7 @@ export const get = query({
           : 0;
 
       const allTeamsInTournament =
-        tournamentTeamsByTournamentIdMap.get(enrichedTeam.tournamentId) || [];
+        teamsByTournamentId.get(enrichedTeam.tournamentId) || [];
 
       const rank =
         allTeamsInTournament.filter((t) => t.points > enrichedTeam.points)
@@ -87,7 +87,5 @@ export const get = query({
         totalTeamsInTournament: allTeamsInTournament.length,
       };
     });
-
-    return teamsComparison;
   },
 });

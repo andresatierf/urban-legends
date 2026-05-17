@@ -79,9 +79,7 @@ export const get = query({
 
     const teams = await ctx.db
       .query("teams")
-      .filter((q) =>
-        q.or(...teamIds.map((id) => q.eq(q.field("_id"), id as string))),
-      )
+      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))))
       .collect();
 
     const enrichedTeams = await enrichWithRelations(ctx, teams, {
