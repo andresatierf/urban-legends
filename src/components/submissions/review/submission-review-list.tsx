@@ -158,10 +158,17 @@ export function SubmissionReviewList({
             >
               <div className="flex flex-col gap-4">
                 <div>
-                  <label className="text-muted-foreground mb-2 block text-xs font-medium uppercase">
+                  <div
+                    id="review-filter-status-label"
+                    className="text-muted-foreground mb-2 block text-xs font-medium uppercase"
+                  >
                     Status
-                  </label>
-                  <div className="flex flex-wrap gap-1">
+                  </div>
+                  <div
+                    role="group"
+                    aria-labelledby="review-filter-status-label"
+                    className="flex flex-wrap gap-1"
+                  >
                     {STATE_OPTIONS.map((opt) => (
                       <Button
                         key={opt.value}
@@ -180,10 +187,11 @@ export function SubmissionReviewList({
                 </div>
 
                 <div>
-                  <label className="text-muted-foreground mb-2 block text-xs font-medium uppercase">
+                  <div className="text-muted-foreground mb-2 block text-xs font-medium uppercase">
                     Tournament
-                  </label>
+                  </div>
                   <ComposedSelect
+                    ariaLabel="Tournament"
                     value={filters.tournamentId ?? "all"}
                     onValueChange={(value) =>
                       onFiltersChange({

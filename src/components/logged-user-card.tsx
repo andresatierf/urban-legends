@@ -51,7 +51,7 @@ export function LoggedUserCard() {
           className={cn("ml-auto", { hidden: !open })}
           asChild
         >
-          <Link to="/settings">
+          <Link to="/settings" aria-label="Settings">
             <Settings className="h-4 w-4" />
           </Link>
         </Button>

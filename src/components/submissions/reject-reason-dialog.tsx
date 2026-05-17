@@ -54,6 +54,7 @@ export function RejectReasonDialog({
           placeholder="Reason for rejection..."
           value={reason}
           onChange={(e) => setReason(e.target.value)}
+          // oxlint-disable-next-line jsx-a11y/no-autofocus -- focusing the first field on dialog open is the expected pattern
           autoFocus
         />
         <DialogFooter>
