@@ -72,9 +72,7 @@ export function TournamentOverviewCard({ data }: { data: TournamentCardData }) {
             { icon: Clock, value: daysValue, label: DAYS_LABEL[status] },
             {
               icon: Trophy,
-              value: authority.team ? (
-                authority.team.points
-              ) : (
+              value: authority.team?.points ?? (
                 <EmptyValue label="No points yet" />
               ),
               label: "Points",
