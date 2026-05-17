@@ -111,12 +111,12 @@ export const get = query({
     });
 
     const teamIdsSet = new Set(teamIds);
-    const allJoinRequests = await ctx.db
+    const allPendingJoinRequests = await ctx.db
       .query("joinRequests")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
       .collect();
 
-    const relevantJoinRequests = allJoinRequests.filter((jr) =>
+    const relevantJoinRequests = allPendingJoinRequests.filter((jr) =>
       teamIdsSet.has(jr.teamId),
     );
 
@@ -135,12 +135,7 @@ export const get = query({
       },
     );
 
-    const allPendingJR = await ctx.db
-      .query("joinRequests")
-      .withIndex("by_status", (q) => q.eq("status", "pending"))
-      .collect();
-
-    const relevantInvitations = allPendingJR.filter(
+    const relevantInvitations = allPendingJoinRequests.filter(
       (jr) => jr.initiator === "team" && jr.createdBy === user._id,
     );
 
