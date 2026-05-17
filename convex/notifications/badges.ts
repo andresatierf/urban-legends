@@ -1,6 +1,22 @@
+import type { QueryCtx } from "../_generated/server";
 import { query } from "../_generated/server";
 import { hasSomeReviewAccess, requireAdmin } from "../authority/core";
 import { getCurrentUserOrThrow } from "../users";
+
+async function countPendingSubmissions(ctx: QueryCtx): Promise<number> {
+  const pendingIndividual = await ctx.db
+    .query("submissions")
+    .withIndex("by_state", (q) => q.eq("state", "pending"))
+    .filter((q) => q.eq(q.field("submissionType"), "individual"))
+    .collect();
+
+  const pendingGroups = await ctx.db
+    .query("submissionGroups")
+    .withIndex("by_state", (q) => q.eq("state", "pending"))
+    .collect();
+
+  return pendingIndividual.length + pendingGroups.length;
+}
 
 export const getPendingCount = query({
   args: {},
@@ -11,18 +27,7 @@ export const getPendingCount = query({
       return 0;
     }
 
-    const pendingIndividual = await ctx.db
-      .query("submissions")
-      .withIndex("by_state", (q) => q.eq("state", "pending"))
-      .filter((q) => q.eq(q.field("submissionType"), "individual"))
-      .collect();
-
-    const pendingGroups = await ctx.db
-      .query("submissionGroups")
-      .withIndex("by_state", (q) => q.eq("state", "pending"))
-      .collect();
-
-    return pendingIndividual.length + pendingGroups.length;
+    return countPendingSubmissions(ctx);
   },
 });
 
@@ -32,17 +37,6 @@ export const getAllPendingCount = query({
     const user = await getCurrentUserOrThrow(ctx);
     await requireAdmin(ctx, user._id);
 
-    const pendingIndividual = await ctx.db
-      .query("submissions")
-      .withIndex("by_state", (q) => q.eq("state", "pending"))
-      .filter((q) => q.eq(q.field("submissionType"), "individual"))
-      .collect();
-
-    const pendingGroups = await ctx.db
-      .query("submissionGroups")
-      .withIndex("by_state", (q) => q.eq("state", "pending"))
-      .collect();
-
-    return pendingIndividual.length + pendingGroups.length;
+    return countPendingSubmissions(ctx);
   },
 });
