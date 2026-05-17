@@ -23,12 +23,12 @@ export function InvitedUsersList({ teamId, canCancel }: Props) {
     teamId,
     initiator: "team",
   });
-  const cancelInvitation = useMutation(api.teamInvitations.cancelInvitation);
+  const cancelInvitation = useMutation(api.joinRequests.cancel);
 
   const handleCancelInvitation = async (invitationId: Id<"joinRequests">) => {
     setProcessingId(invitationId);
     await tryMutate({
-      fn: () => cancelInvitation({ invitationId }),
+      fn: () => cancelInvitation({ requestId: invitationId }),
       onFinally: () => setProcessingId(null),
       successToast: "Invitation cancelled",
       defaultFailureToast: "Failed to cancel invitation",

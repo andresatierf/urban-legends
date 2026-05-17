@@ -32,12 +32,8 @@ export function NotificationActions({
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const markAsRead = useMutation(api.notifications.markAsRead);
-  const respondToInvitation = useMutation(
-    api.teamInvitations.respondToInvitation,
-  );
-  const respondToJoinRequest = useMutation(
-    api.joinRequests.respondToJoinRequest,
-  );
+  const acceptJoinRequest = useMutation(api.joinRequests.accept);
+  const rejectJoinRequest = useMutation(api.joinRequests.reject);
 
   if (!actions || actions.length === 0) {
     return null;
@@ -47,48 +43,42 @@ export function NotificationActions({
     setIsLoading(true);
 
     try {
-      // Mark notification as read
       await markAsRead({ notificationId });
 
-      // Handle different action types
       if (action.action === "accept" || action.action === "reject") {
         const isAccept = action.action === "accept";
+        const rawId = action.args?.invitationId ?? action.args?.requestId;
 
-        // Check if this is a team invitation
-        if (action.args?.invitationId) {
-          await respondToInvitation({
-            invitationId: action.args.invitationId as Id<"joinRequests">,
-            accept: isAccept,
-          });
+        if (rawId) {
+          const requestId = rawId as Id<"joinRequests">;
+          const isInvitation = !!action.args?.invitationId;
 
-          toast.success(
-            isAccept
+          if (isAccept) {
+            await acceptJoinRequest({ requestId });
+          } else {
+            await rejectJoinRequest({ requestId });
+          }
+
+          let successMessage: string;
+          if (isInvitation) {
+            successMessage = isAccept
               ? "Invitation accepted! Welcome to the team."
-              : "Invitation declined.",
-          );
-        }
-        // Check if this is a join request
-        else if (action.args?.requestId) {
-          await respondToJoinRequest({
-            requestId: action.args.requestId as Id<"joinRequests">,
-            approve: isAccept,
-          });
-
-          toast.success(
-            isAccept ? "Join request approved." : "Join request declined.",
-          );
+              : "Invitation declined.";
+          } else {
+            successMessage = isAccept
+              ? "Join request approved."
+              : "Join request declined.";
+          }
+          toast.success(successMessage);
         } else {
           toast.error(
             "Unable to process action. Missing required information.",
           );
         }
       } else if (action.action === "view") {
-        // Navigate to the related page
         if (action.args?.url) {
           navigate({ to: action.args.url as string });
         }
-      } else if (action.action === "dismiss") {
-        // Just mark as read (already done above)
       }
 
       onActionComplete?.();
@@ -135,7 +125,6 @@ function getActionVariant(
 ): "default" | "outline" | "ghost" | "link" {
   switch (action) {
     case "accept":
-      return "default";
     case "reject":
       return "default";
     case "view":

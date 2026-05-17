@@ -35,10 +35,9 @@ function CaptainDashboard() {
 
   const dashboardData = useQuery(api.captain.getDashboardData);
 
-  const respondToJoinRequest = useMutation(
-    api.joinRequests.respondToJoinRequest,
-  );
-  const cancelInvitation = useMutation(api.teamInvitations.cancelInvitation);
+  const acceptJoinRequest = useMutation(api.joinRequests.accept);
+  const rejectJoinRequest = useMutation(api.joinRequests.reject);
+  const cancelInvitation = useMutation(api.joinRequests.cancel);
 
   if (!dashboardData || captainedCount === undefined) {
     return (
@@ -59,7 +58,7 @@ function CaptainDashboard() {
   const handleApproveRequest = async (requestId: Id<"joinRequests">) => {
     setProcessingId(requestId);
     await tryMutate({
-      fn: () => respondToJoinRequest({ requestId, approve: true }),
+      fn: () => acceptJoinRequest({ requestId }),
       successToast: "Join request approved",
       defaultFailureToast: "Failed to approve request",
     });
@@ -69,7 +68,7 @@ function CaptainDashboard() {
   const handleRejectRequest = async (requestId: Id<"joinRequests">) => {
     setProcessingId(requestId);
     await tryMutate({
-      fn: () => respondToJoinRequest({ requestId, approve: false }),
+      fn: () => rejectJoinRequest({ requestId }),
       successToast: "Join request rejected",
       defaultFailureToast: "Failed to reject request",
     });
@@ -79,7 +78,7 @@ function CaptainDashboard() {
   const handleCancelInvitation = async (invitationId: Id<"joinRequests">) => {
     setProcessingId(invitationId);
     await tryMutate({
-      fn: () => cancelInvitation({ invitationId }),
+      fn: () => cancelInvitation({ requestId: invitationId }),
       successToast: "Invitation cancelled",
       defaultFailureToast: "Failed to cancel invitation",
     });

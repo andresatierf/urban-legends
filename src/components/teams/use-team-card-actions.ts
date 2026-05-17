@@ -24,8 +24,8 @@ export function useTeamCardActions(): (teamId: Id<"teams">) => TeamCardActions {
     api.joinRequests.list,
     user ? { userId: user._id, status: "pending" } : "skip",
   );
-  const cancelMutation = useMutation(api.joinRequests.cancelJoinRequest);
-  const requestToJoinMutation = useMutation(api.joinRequests.requestToJoin);
+  const cancelMutation = useMutation(api.joinRequests.cancel);
+  const requestToJoinMutation = useMutation(api.joinRequests.request);
   const leaveTeamMutation = useMutation(api.teams.leaveTeam);
 
   return useCallback(
