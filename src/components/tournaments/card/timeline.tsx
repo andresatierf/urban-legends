@@ -18,15 +18,18 @@ export function Timeline({ data }: { data: TournamentCardData }) {
 
   let pinLabel: string;
   let pinColor: string;
-  if (status === "active") {
-    pinLabel = `${daysUntil(data.endDate)}d left`;
-    pinColor = "text-primary";
-  } else if (status === "upcoming") {
-    pinLabel = `Starts in ${daysUntil(data.startDate)}d`;
-    pinColor = "text-info";
-  } else {
-    pinLabel = "Final";
-    pinColor = "text-muted-foreground";
+  switch (status) {
+    case "active":
+      pinLabel = `${daysUntil(data.endDate)}d left`;
+      pinColor = "text-primary";
+      break;
+    case "upcoming":
+      pinLabel = `Starts in ${daysUntil(data.startDate)}d`;
+      pinColor = "text-info";
+      break;
+    default:
+      pinLabel = "Final";
+      pinColor = "text-muted-foreground";
   }
 
   const fillClass = FILL_CLASS[status];
