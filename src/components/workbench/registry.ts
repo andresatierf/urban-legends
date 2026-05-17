@@ -53,6 +53,16 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "primitives",
   },
   {
+    path: "/workbench/primitives/section-header",
+    label: "Section Header",
+    group: "primitives",
+  },
+  {
+    path: "/workbench/primitives/chart",
+    label: "Chart",
+    group: "primitives",
+  },
+  {
     path: "/workbench/components/eyebrow",
     label: "Eyebrow",
     group: "components",
@@ -100,6 +110,26 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
   {
     path: "/workbench/components/notification-indicator",
     label: "Notification Indicator",
+    group: "components",
+  },
+  {
+    path: "/workbench/components/user-cards",
+    label: "User Cards",
+    group: "components",
+  },
+  {
+    path: "/workbench/components/page-shell",
+    label: "Page Shell",
+    group: "components",
+  },
+  {
+    path: "/workbench/components/race-chart",
+    label: "Race Chart",
+    group: "components",
+  },
+  {
+    path: "/workbench/components/standings-race-card",
+    label: "Standings Race Card",
     group: "components",
   },
   {

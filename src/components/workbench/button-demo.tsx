@@ -1,6 +1,19 @@
-import { Loader2, Star, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  Copy,
+  Italic,
+  Loader2,
+  Star,
+  Trash2,
+  Underline,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+  ButtonGroupText,
+} from "@/components/ui/button-group";
 import { BUTTON_VARIANTS } from "@/components/ui/button.types";
 
 import { VariantMatrix } from "./shells/variant-matrix";
@@ -107,6 +120,73 @@ export function ButtonDemo() {
           <Button variant="icon" size="icon-lg">
             <Star className="size-5" />
           </Button>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="text-h2 text-foreground">Button Group</h2>
+        <p className="text-body-sm text-muted-foreground">
+          Adjacent buttons collapsed into a segmented control. Horizontal and
+          vertical orientations, with optional text/separator slots.
+        </p>
+        <div className="flex flex-wrap items-start gap-6">
+          <div className="space-y-2">
+            <h3 className="text-muted-foreground text-label-caps">
+              Horizontal
+            </h3>
+            <ButtonGroup>
+              <Button variant="outline" size="sm">
+                <Italic className="size-4" />
+              </Button>
+              <Button variant="outline" size="sm">
+                <Underline className="size-4" />
+              </Button>
+              <Button variant="outline" size="sm">
+                <Star className="size-4" />
+              </Button>
+            </ButtonGroup>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-muted-foreground text-label-caps">
+              Split button
+            </h3>
+            <ButtonGroup>
+              <Button size="sm">Save</Button>
+              <Button variant="outline" size="sm" aria-label="More options">
+                <ChevronDown className="size-4" />
+              </Button>
+            </ButtonGroup>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-muted-foreground text-label-caps">
+              With text + separator
+            </h3>
+            <ButtonGroup>
+              <ButtonGroupText>v1.4.2</ButtonGroupText>
+              <ButtonGroupSeparator />
+              <Button variant="outline" size="sm">
+                <Copy className="size-4" />
+                Copy
+              </Button>
+            </ButtonGroup>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-muted-foreground text-label-caps">Vertical</h3>
+            <ButtonGroup orientation="vertical">
+              <Button variant="outline" size="sm">
+                One
+              </Button>
+              <Button variant="outline" size="sm">
+                Two
+              </Button>
+              <Button variant="outline" size="sm">
+                Three
+              </Button>
+            </ButtonGroup>
+          </div>
         </div>
       </div>
 
