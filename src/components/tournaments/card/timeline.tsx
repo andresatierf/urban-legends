@@ -1,15 +1,8 @@
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { cn } from "@/lib/utils";
 
-import type { TournamentStatus } from "../utils";
 import { daysUntil, getTournamentStatus, tournamentProgress } from "../utils";
 import type { TournamentCardData } from "./types";
-
-const FILL_CLASS: Record<TournamentStatus, string> = {
-  active: "bg-primary",
-  ended: "bg-muted-foreground/50",
-  upcoming: "bg-info/30",
-};
 
 export function Timeline({ data }: { data: TournamentCardData }) {
   const { format } = useFormattedDate();
@@ -18,18 +11,24 @@ export function Timeline({ data }: { data: TournamentCardData }) {
 
   let pinLabel: string;
   let pinColor: string;
-  if (status === "active") {
-    pinLabel = `${daysUntil(data.endDate)}d left`;
-    pinColor = "text-primary";
-  } else if (status === "upcoming") {
-    pinLabel = `Starts in ${daysUntil(data.startDate)}d`;
-    pinColor = "text-info";
-  } else {
-    pinLabel = "Final";
-    pinColor = "text-muted-foreground";
-  }
+  let fillClass: string;
 
-  const fillClass = FILL_CLASS[status];
+  switch (status) {
+    case "active":
+      pinLabel = `${daysUntil(data.endDate)}d left`;
+      pinColor = "text-primary";
+      fillClass = "bg-primary";
+      break;
+    case "upcoming":
+      pinLabel = `Starts in ${daysUntil(data.startDate)}d`;
+      pinColor = "text-info";
+      fillClass = "bg-info/30";
+      break;
+    default:
+      pinLabel = "Final";
+      pinColor = "text-muted-foreground";
+      fillClass = "bg-muted-foreground/50";
+  }
 
   return (
     <div className="border-ink/15 bg-paper-deep flex flex-col gap-2 rounded-md border border-dashed p-3">
