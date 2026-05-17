@@ -35,8 +35,12 @@ _Avoid_: photo, attachment, proof.
 **SubmissionGroup**:
 The aggregation of all **Submissions** by one **Team** on one date — used to compute team-exercise rollups.
 
+**View**:
+The composed read-model for one screen — bundles every entity, derived flag, enriched relation, and permission the screen needs so UI components consume the **View** whole instead of assembling it from many queries. A **View** is named after the screen it serves (`SubmissionView`, `AdminDashboardView`, `ReviewerQueueView`, …) and lives in `convex/views/`. Authority gating happens inside the **View** query; the **View** is the single seam between Convex and the screen.
+_Avoid_: ViewModel, screen DTO, page data (the term **View** is the convention; instances are concrete).
+
 **SubmissionView**:
-The composed read-model of a **Submission** as it appears on the detail screen — bundles the **Submission** with its **Team**, **Tournament**, **Submitter**, **Teammates** (for team-typed Submissions in non-terminal state), the **User** who managed the review (`managedBy`), the derived `isTeamExercise` flag, **Evidence** with resolved storage URLs, and the viewer's per-action permission flags. A single read returns the **SubmissionView**; UI components do not assemble it piecewise.
+A **View** — the composed read-model of a **Submission** as it appears on the detail screen — bundles the **Submission** with its **Team**, **Tournament**, **Submitter**, **Teammates** (for team-typed Submissions in non-terminal state), the **User** who managed the review (`managedBy`), the derived `isTeamExercise` flag, **Evidence** with resolved storage URLs, and the viewer's per-action permission flags.
 _Avoid_: SubmissionDetails, submission-with-context.
 
 **JoinRequest**:
