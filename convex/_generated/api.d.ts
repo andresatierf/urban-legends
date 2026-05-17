@@ -23,6 +23,7 @@ import type * as lifecycle_joinRequests from "../lifecycle/joinRequests.js";
 import type * as lifecycle_submissions from "../lifecycle/submissions.js";
 import type * as migrations from "../migrations.js";
 import type * as notifications from "../notifications.js";
+import type * as notifications_badges from "../notifications/badges.js";
 import type * as notifications_triggers from "../notifications/triggers.js";
 import type * as notifications_types from "../notifications/types.js";
 import type * as public_ from "../public.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   "lifecycle/submissions": typeof lifecycle_submissions;
   migrations: typeof migrations;
   notifications: typeof notifications;
+  "notifications/badges": typeof notifications_badges;
   "notifications/triggers": typeof notifications_triggers;
   "notifications/types": typeof notifications_types;
   public: typeof public_;

@@ -136,7 +136,7 @@ function useSidebarItems(
             href: "/submissions/review",
             icon: ClipboardCheck,
             badge: {
-              query: api.role.reviewer.getPendingCount,
+              query: api.notifications.badges.getPendingCount,
               color: "warning",
               tooltip: "Pending Submissions",
             },

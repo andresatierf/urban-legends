@@ -203,32 +203,6 @@ export const listRoles = query({
 });
 
 /**
- * Get the count of all pending submissions system-wide.
- * This includes both individual submissions and submission groups.
- * Only accessible to admins.
- */
-export const getAllPendingCount = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await getCurrentUserOrThrow(ctx);
-    await requireAdmin(ctx, user._id);
-
-    const pendingIndividual = await ctx.db
-      .query("submissions")
-      .withIndex("by_state", (q) => q.eq("state", "pending"))
-      .filter((q) => q.eq(q.field("submissionType"), "individual"))
-      .collect();
-
-    const pendingGroups = await ctx.db
-      .query("submissionGroups")
-      .withIndex("by_state", (q) => q.eq("state", "pending"))
-      .collect();
-
-    return pendingIndividual.length + pendingGroups.length;
-  },
-});
-
-/**
  * Get comprehensive dashboard data for admin.
  * Returns system-wide statistics, pending actions, and recent activity.
  */
