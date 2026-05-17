@@ -1,46 +1,61 @@
-import { Progress } from "@/components/ui/progress";
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { cn } from "@/lib/utils";
 
-import {
-  type TournamentStatus,
-  daysUntil,
-  getTournamentStatus,
-  tournamentProgress,
-} from "../utils";
+import { daysUntil, getTournamentStatus, tournamentProgress } from "../utils";
 import type { TournamentCardData } from "./types";
-
-const PROGRESS_CLASS: Record<TournamentStatus, string> = {
-  active: "",
-  upcoming: "[&>[data-slot=progress-indicator]]:bg-muted-foreground/30",
-  ended: "[&>[data-slot=progress-indicator]]:bg-muted-foreground/40",
-};
 
 export function Timeline({ data }: { data: TournamentCardData }) {
   const { format } = useFormattedDate();
   const status = getTournamentStatus(data);
   const progress = tournamentProgress(data);
 
-  let timeLabel: string;
-  if (status === "active")
-    timeLabel = `${daysUntil(data.endDate)} days remaining`;
-  else if (status === "upcoming")
-    timeLabel = `Starts ${format(data.startDate, "long")}`;
-  else timeLabel = `Ended ${format(data.endDate, "long")}`;
+  let pinLabel: string;
+  let pinColor: string;
+  if (status === "active") {
+    pinLabel = `${daysUntil(data.endDate)}d left`;
+    pinColor = "text-primary";
+  } else if (status === "upcoming") {
+    pinLabel = `Starts in ${daysUntil(data.startDate)}d`;
+    pinColor = "text-info";
+  } else {
+    pinLabel = "Final";
+    pinColor = "text-muted-foreground";
+  }
+
+  const fillClass =
+    status === "active"
+      ? "bg-primary"
+      : status === "ended"
+        ? "bg-muted-foreground/50"
+        : "bg-info/30";
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <Progress
-        value={progress}
-        className={cn("h-2", PROGRESS_CLASS[status])}
-      />
-      <div
-        className={cn(
-          "text-center text-[0.625rem] font-medium",
-          status === "active" ? "text-primary" : "text-muted-foreground",
+    <div className="border-ink/15 bg-paper-deep flex flex-col gap-2 rounded-md border border-dashed p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-label-caps text-muted-foreground">
+          {format(data.startDate, "short")}
+        </span>
+        <span className={cn("text-label-caps font-bold", pinColor)}>
+          {pinLabel}
+        </span>
+        <span className="text-label-caps text-muted-foreground">
+          {format(data.endDate, "short")}
+        </span>
+      </div>
+      <div className="border-ink/20 bg-paper relative h-2 overflow-visible rounded-full border">
+        <div
+          className={cn("h-full rounded-full", fillClass)}
+          style={{
+            width: `${Math.max(progress, status === "upcoming" ? 0 : 3)}%`,
+          }}
+        />
+        {status === "active" && (
+          <div
+            aria-hidden
+            className="border-ink bg-gold shadow-fd-sm absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
+            style={{ left: `${progress}%` }}
+          />
         )}
-      >
-        {timeLabel}
       </div>
     </div>
   );
