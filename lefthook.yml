@@ -16,6 +16,11 @@ pre-commit:
         - "convex/_generated/**"
         - ".sandcastle/**"
       run: bun run typecheck
+pre-push:
+  parallel: true
+  commands:
+    test:
+      run: bun run test
 post-checkout:
   commands:
     install:
