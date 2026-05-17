@@ -45,16 +45,11 @@ export const getDashboardData = query({
       })
       .filter((t): t is NonNullable<typeof t> => t !== null);
 
-    const userTournamentsMap = new Map(
-      validTeams.map((t) => [t.tournament._id, t.tournament]),
-    );
-    const activeTournaments = [...userTournamentsMap.values()].filter(
-      (t) => t.startDate <= todayStr && t.endDate >= todayStr,
-    );
-    const activeTournamentsCount = activeTournaments.length;
-
     const tournamentsById = new Map(
       validTeams.map((t) => [t.tournament._id, t.tournament]),
+    );
+    const activeTournaments = [...tournamentsById.values()].filter(
+      (t) => t.startDate <= todayStr && t.endDate >= todayStr,
     );
     const userTeamIds = new Set(validTeams.map((t) => t.team._id));
 
@@ -330,7 +325,6 @@ export const getDashboardData = query({
       teams: validTeams,
       competingTeams,
       activeTournaments,
-      activeTournamentsCount,
       pendingSubmissionsCount: pendingSubmissionsList.length,
       invitationsCount: invitations.length,
       activities: trimmedActivities,
