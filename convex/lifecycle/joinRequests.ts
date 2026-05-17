@@ -227,7 +227,6 @@ export async function reject(
 }
 
 // Cancels a pending join request (pending → cancelled).
-// Only the creator (createdBy) may cancel.
 export async function cancel(
   ctx: MutationCtx,
   requestId: Id<"joinRequests">,
@@ -238,14 +237,10 @@ export async function cancel(
   if (req.status !== "pending")
     throw new IllegalTransition(req.status, "cancelled");
 
-  const owner = req.createdBy;
-  if (owner !== by) {
-    throw new Error("Only the creator can cancel this join request");
-  }
-
   await ctx.db.patch(requestId, {
     status: "cancelled",
     respondedAt: nowUTC(),
+    respondedBy: by,
   });
 }
 

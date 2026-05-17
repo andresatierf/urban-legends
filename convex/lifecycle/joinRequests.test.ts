@@ -284,17 +284,13 @@ describe("reject then re-request", () => {
 // ── cancel permission ─────────────────────────────────────────────────────────
 
 describe("cancel", () => {
-  test("permitted only by createdBy", async () => {
+  test("transitions pending row to cancelled and records respondedBy", async () => {
     const t = convexTest(schemaForTest);
     await t.run(async (ctx) => {
-      const { captainId, teamId } = await seedWorld(ctx);
+      const { teamId } = await seedWorld(ctx);
       const requesterId = await makeUser(ctx, "requester");
-      const otherId = await makeUser(ctx, "other");
 
       const requestId = await request(ctx, { teamId, userId: requesterId });
-
-      await expect(cancel(ctx, requestId, otherId)).rejects.toThrow();
-      await expect(cancel(ctx, requestId, captainId)).rejects.toThrow();
 
       await expect(
         cancel(ctx, requestId, requesterId),
@@ -302,6 +298,20 @@ describe("cancel", () => {
 
       const req = await ctx.db.get(requestId);
       expect(req?.status).toBe("cancelled");
+      expect(req?.respondedBy).toBe(requesterId);
+    });
+  });
+
+  test("throws IllegalTransition when request is not pending", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const { captainId, teamId } = await seedWorld(ctx);
+      const requesterId = await makeUser(ctx, "requester");
+
+      const requestId = await request(ctx, { teamId, userId: requesterId });
+      await reject(ctx, requestId, captainId);
+
+      await expect(cancel(ctx, requestId, requesterId)).rejects.toThrow();
     });
   });
 });
