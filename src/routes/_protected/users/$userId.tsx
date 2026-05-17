@@ -28,7 +28,7 @@ function UserDetailsPage() {
 
   return (
     <>
-      <SectionHeader as="h1" title="User Details">
+      <SectionHeader as="h1" eyebrow="Player" title={data.user.name}>
         <Button variant="outline" asChild>
           <Link to="/users">
             <ArrowLeft />
