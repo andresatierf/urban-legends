@@ -7,6 +7,7 @@ import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
+import { useUser } from "../../../hooks/useUser";
 import { InvitationsList } from "./layout";
 
 export function TeamInvitationsList({
@@ -18,7 +19,11 @@ export function TeamInvitationsList({
     null,
   );
 
-  const invitations = useQuery(api.teamInvitations.listUserInvitations, {});
+  const { user } = useUser({ shouldThrow: false });
+  const invitations = useQuery(
+    api.joinRequests.list,
+    user ? { userId: user._id, initiator: "team" } : "skip",
+  );
   const respondToInvitation = useMutation(
     api.teamInvitations.respondToInvitation,
   );

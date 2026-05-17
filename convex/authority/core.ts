@@ -648,12 +648,19 @@ function joinRequestRule(
   };
 }
 
-// canCancelJoinRequest: only the original creator may cancel.
-// For user-direction, createdBy === userId (the requester).
-// For team-direction, createdBy === the inviting captain.
+// canCancelJoinRequest: mirrors accept/reject branching.
+// User-direction → only the requester (who is also the creator) may cancel.
+// Team-direction → captain/admin/tournament_manager may cancel the invitation.
 export const canCancelJoinRequest: JoinRequestRule = joinRequestRule(
   "canCancelJoinRequest",
-  (facts) => facts.isCreator,
+  (facts) => {
+    if (facts.initiator === "user") return facts.isCreator;
+    return (
+      isAdminOrDev(facts.systemRoles) ||
+      facts.tournamentRoles.includes("tournament_manager") ||
+      facts.isCaptain
+    );
+  },
 );
 
 // canAcceptJoinRequest: branches on initiator.

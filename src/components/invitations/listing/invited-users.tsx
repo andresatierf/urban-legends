@@ -19,8 +19,9 @@ export function InvitedUsersList({ teamId, canCancel }: Props) {
     null,
   );
 
-  const invitations = useQuery(api.teamInvitations.listTeamInvitations, {
+  const invitations = useQuery(api.joinRequests.list, {
     teamId,
+    initiator: "team",
   });
   const cancelInvitation = useMutation(api.teamInvitations.cancelInvitation);
 
@@ -43,7 +44,7 @@ export function InvitedUsersList({ teamId, canCancel }: Props) {
       loading={invitations === undefined}
       invitations={(invitations ?? []).map((invitation) => ({
         key: invitation._id,
-        invitation: { ...invitation, counterparty: invitation.invitedUser },
+        invitation: { ...invitation, counterparty: invitation.user },
         viewer: "team",
         processing: processingId === invitation._id,
         onReject: () => handleCancelInvitation(invitation._id),

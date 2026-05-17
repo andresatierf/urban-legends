@@ -17,9 +17,11 @@ import {
 } from "./notifications/triggers";
 import { getCurrentUserOrThrow } from "./users";
 
-export const listJoinRequests = query({
+export const list = query({
   args: {
-    teamId: v.id("teams"),
+    teamId: v.optional(v.id("teams")),
+    userId: v.optional(v.id("users")),
+    initiator: v.optional(v.union(v.literal("user"), v.literal("team"))),
     status: v.optional(
       v.union(
         v.literal("pending"),
@@ -33,32 +35,52 @@ export const listJoinRequests = query({
   handler: async (ctx, args) => {
     await getCurrentUserOrThrow(ctx);
 
-    let requests = await ctx.db
-      .query("joinRequests")
-      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
-      .collect();
+    const hasTeam = args.teamId !== undefined;
+    const hasUser = args.userId !== undefined;
+    if (hasTeam === hasUser) {
+      throw new Error(
+        "list requires exactly one of teamId or userId, not both and not neither",
+      );
+    }
 
+    let requests = hasTeam
+      ? await ctx.db
+          .query("joinRequests")
+          .withIndex("by_team", (q) => q.eq("teamId", args.teamId!))
+          .collect()
+      : await ctx.db
+          .query("joinRequests")
+          .withIndex("by_user", (q) => q.eq("userId", args.userId!))
+          .collect();
+
+    if (args.initiator) {
+      requests = requests.filter((r) => r.initiator === args.initiator);
+    }
     if (args.status) {
       requests = requests.filter((r) => r.status === args.status);
     }
 
-    return await enrichWithRelations(ctx, requests, {
-      user: { table: "users", foreignKey: (request) => request.userId },
+    const enriched = await enrichWithRelations(ctx, requests, {
+      user: { table: "users", foreignKey: (r) => r.userId },
+      team: {
+        table: "teams",
+        foreignKey: (r) => r.teamId,
+        enrich: {
+          tournament: {
+            table: "tournaments",
+            foreignKey: (t) => t.tournamentId,
+          },
+        },
+      },
+      invitedByUser: { table: "users", foreignKey: (r) => r.createdBy },
     });
-  },
-});
 
-export const listUserJoinRequests = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    return await ctx.db
-      .query("joinRequests")
-      .withIndex("by_user_and_status", (q) =>
-        q.eq("userId", user._id).eq("status", "pending"),
-      )
-      .collect();
+    return enriched.map((r) => ({
+      ...r,
+      tournament: r.team?.tournament ?? null,
+      // Spec: invitedByUser is null when the user initiated the request.
+      invitedByUser: r.initiator === "team" ? r.invitedByUser : null,
+    }));
   },
 });
 
