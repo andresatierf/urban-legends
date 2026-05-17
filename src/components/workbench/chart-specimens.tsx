@@ -22,6 +22,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
+import { Specimen } from "./shells/specimen";
+
 const DAILY_DATA = [
   { day: "Mon", approved: 6, rejected: 1 },
   { day: "Tue", approved: 4, rejected: 2 },
@@ -153,28 +155,6 @@ export function ChartSpecimens() {
           </LineChart>
         </ChartContainer>
       </Specimen>
-    </div>
-  );
-}
-
-function Specimen({
-  label,
-  description,
-  children,
-}: {
-  label: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-3">
-      <div>
-        <h3 className="text-muted-foreground text-label-caps">{label}</h3>
-        {description && (
-          <p className="text-body-sm text-muted-foreground">{description}</p>
-        )}
-      </div>
-      <div className="bg-paper rounded-lg p-6">{children}</div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { StandingsRaceCard } from "@/components/dashboard/standings-race-card";
 import { SectionHeader } from "@/components/section-header";
 
+import { Specimen } from "./shells/specimen";
 import {
   DEFAULT_STANDINGS_FIXTURE,
   FLAT_STANDINGS_FIXTURE,
@@ -51,21 +52,6 @@ export function StandingsRaceCardSpecimens() {
           userTeamId={DEFAULT_STANDINGS_FIXTURE.userTeamId}
         />
       </Specimen>
-    </div>
-  );
-}
-
-function Specimen({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-3">
-      <h3 className="text-muted-foreground text-label-caps">{label}</h3>
-      <div className="bg-paper rounded-lg p-6">{children}</div>
     </div>
   );
 }

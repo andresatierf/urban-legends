@@ -4,6 +4,7 @@ import { ProfileCard } from "@/components/users/details/profile-card";
 import type { UserDetails } from "@/components/users/details/types";
 
 import type { Id } from "../../../convex/_generated/dataModel";
+import { Specimen } from "./shells/specimen";
 
 type ProfileVariant = {
   label: string;
@@ -139,20 +140,5 @@ function LoggedUserCardSection() {
         <LoggedUserCard />
       </div>
     </section>
-  );
-}
-
-function Specimen({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-3">
-      <h3 className="text-muted-foreground text-label-caps">{label}</h3>
-      <div className="bg-paper rounded-lg p-6">{children}</div>
-    </div>
   );
 }
