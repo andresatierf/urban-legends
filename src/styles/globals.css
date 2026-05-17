@@ -243,7 +243,7 @@
   --podium-silver-bg: #c5cdd61a;
   --podium-bronze-bg: #cd93521a;
 
-  /* ── Badge (solid Field Day pills — ink border + ink text on accent fill) ── */
+  /* ── Badge (solid Field Day pills: ink border + ink text on accent fill) ── */
   --badge-success-bg: var(--grass);
   --badge-success-text: var(--ink);
   --badge-success-border: var(--ink);
@@ -334,7 +334,7 @@
   --podium-silver-bg: #c5cdd61a;
   --podium-bronze-bg: #cd935226;
 
-  /* ── Badge (dark — translucent semantic per ACTIVE-pill pattern) ──── */
+  /* ── Badge (dark; translucent semantic per ACTIVE-pill pattern) ──── */
   --badge-success-bg: #5dc77a40;
   --badge-success-text: #b6ecc4;
   --badge-success-border: #5dc77a99;
@@ -380,7 +380,7 @@
   --calendar-disabled-text: #a89a8b80;
   --calendar-today-ring: var(--sunset);
 
-  /* ── FAB / RaceChart (dark — only override differing opacities) ── */
+  /* ── FAB / RaceChart (dark; only override differing opacities) ── */
   --fab-shadow: rgba(var(--ink-rgb), 0.22);
   --fab-shadow-soft: rgba(var(--ink-rgb), 0.1);
 }
