@@ -22,12 +22,12 @@ export function Timeline({ data }: { data: TournamentCardData }) {
     pinColor = "text-muted-foreground";
   }
 
-  const fillClass =
-    status === "active"
-      ? "bg-primary"
-      : status === "ended"
-        ? "bg-muted-foreground/50"
-        : "bg-info/30";
+  const FILL_CLASS: Record<typeof status, string> = {
+    active: "bg-primary",
+    ended: "bg-muted-foreground/50",
+    upcoming: "bg-info/30",
+  };
+  const fillClass = FILL_CLASS[status];
 
   return (
     <div className="border-ink/15 bg-paper-deep flex flex-col gap-2 rounded-md border border-dashed p-3">

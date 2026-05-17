@@ -86,14 +86,9 @@ const VIEWS: readonly View[] = [
   "invited-users",
   "join-requests",
   "team-invitations",
-] as const;
+];
 
-const SCENARIOS: readonly Scenario[] = [
-  "empty",
-  "loading",
-  "one",
-  "several",
-] as const;
+const SCENARIOS: readonly Scenario[] = ["empty", "loading", "one", "several"];
 
 const VIEW_LABEL: Record<View, string> = {
   "invited-users": "Captain · invited users",
