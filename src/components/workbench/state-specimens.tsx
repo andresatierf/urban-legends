@@ -69,8 +69,8 @@ function EmptySection() {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <a href="#">Browse teams</a>
-            <a href="#">Create a team</a>
+            <button type="button">Browse teams</button>
+            <button type="button">Create a team</button>
           </EmptyContent>
         </Empty>
       </Specimen>

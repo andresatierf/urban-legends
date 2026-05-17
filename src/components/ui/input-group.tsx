@@ -49,6 +49,9 @@ function InputGroupAddon({
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
   return (
+    // Pointer-only convenience: clicking the addon focuses the sibling input.
+    // Keyboard users reach the input directly via Tab, so no key handler needed.
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events
     <div
       role="group"
       data-slot="input-group-addon"

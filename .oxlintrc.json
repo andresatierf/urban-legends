@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "unicorn", "oxc", "import"],
+  "plugins": ["typescript", "unicorn", "oxc", "import", "jsx-a11y"],
   "categories": {
     "correctness": "error",
     "suspicious": "error"
@@ -16,7 +16,8 @@
     "unicorn/no-array-reverse": "off",
     "unicorn/prefer-add-event-listener": "off",
     "unicorn/require-module-specifiers": "off",
-    "import/no-named-as-default": "off"
+    "import/no-named-as-default": "off",
+    "jsx-a11y/prefer-tag-over-role": "off"
   },
   "ignorePatterns": [
     "convex/_generated/**",
