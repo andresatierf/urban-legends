@@ -92,7 +92,7 @@ export function StandingsRaceCard({
                     className="bg-ink/10 relative col-span-full mt-[0.3rem] block h-1 overflow-hidden rounded-xs"
                   >
                     <span
-                      className="from-grass to-sky absolute inset-y-0 left-0 bg-gradient-to-r transition-[width] duration-500 ease-out"
+                      className="bg-grass absolute inset-y-0 left-0 transition-[width] duration-500 ease-out"
                       style={{ width: `${pct}%` }}
                     />
                   </span>
