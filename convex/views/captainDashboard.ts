@@ -1,13 +1,7 @@
-import { query } from "./_generated/server";
-import { enrichWithRelations } from "./lib/helpers";
-import { getCurrentUserOrThrow } from "./users";
+import { query } from "../_generated/server";
+import { enrichWithRelations } from "../lib/helpers";
+import { getCurrentUserOrThrow } from "../users";
 
-/**
- * Get the count of pending actions for the captain's teams.
- * This includes:
- * - Pending join requests across all teams the user captains
- * - Pending invitations sent by the user
- */
 export const getPendingActionsCount = query({
   args: {},
   handler: async (ctx) => {
@@ -26,7 +20,6 @@ export const getPendingActionsCount = query({
       return 0;
     }
 
-    // Filter A: incoming user-direction requests for my captained teams
     const allPending = await ctx.db
       .query("joinRequests")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
@@ -35,7 +28,6 @@ export const getPendingActionsCount = query({
       (jr) => teamIdsSet.has(jr.teamId) && jr.initiator === "user",
     ).length;
 
-    // Filter B: outgoing team-direction invitations I created (tighter index)
     const outgoingPending = await ctx.db
       .query("joinRequests")
       .withIndex("by_createdBy_and_status", (q) =>
@@ -48,10 +40,6 @@ export const getPendingActionsCount = query({
   },
 });
 
-/**
- * Get the count of teams the current user captains.
- * Used for sidebar conditional rendering.
- */
 export const getCaptainedTeamsCount = query({
   args: {},
   handler: async (ctx) => {
@@ -68,11 +56,7 @@ export const getCaptainedTeamsCount = query({
   },
 });
 
-/**
- * Get comprehensive dashboard data for the captain.
- * Returns all teams user captains with pending actions and statistics.
- */
-export const getDashboardData = query({
+export const get = query({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -180,98 +164,5 @@ export const getDashboardData = query({
       joinRequests: enrichedJoinRequests,
       invitations: enrichedInvitations,
     };
-  },
-});
-
-/**
- * Get comparison metrics for all teams the user captains.
- */
-export const getTeamsComparison = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    const captainedTeamMembers = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("role"), "captain"))
-      .collect();
-
-    const teamIds = captainedTeamMembers.map((tm) => tm.teamId);
-
-    if (teamIds.length === 0) {
-      return [];
-    }
-
-    const teams = await ctx.db
-      .query("teams")
-      .filter((q) => q.or(...teamIds.map((id) => q.eq(q.field("_id"), id))))
-      .collect();
-
-    const enrichedTeams = await enrichWithRelations(ctx, teams, {
-      tournament: {
-        table: "tournaments",
-        foreignKey: (team) => team.tournamentId,
-      },
-      members: { table: "teamMembers", foreignKeyField: "teamId" },
-      submissions: { table: "submissions", foreignKeyField: "teamId" },
-    });
-
-    const tournamentIds = Array.from(new Set(teams.map((t) => t.tournamentId)));
-    const tournaments = await ctx.db
-      .query("tournaments")
-      .filter((q) =>
-        q.or(...tournamentIds.map((id) => q.eq(q.field("_id"), id))),
-      )
-      .collect();
-
-    const enrichedTournaments = await enrichWithRelations(ctx, tournaments, {
-      teams: { table: "teams", foreignKeyField: "tournamentId" },
-    });
-
-    const tournamentTeamsByTournamentIdMap = new Map(
-      enrichedTournaments.map((t) => [t._id, t.teams]),
-    );
-
-    const teamsComparison = enrichedTeams.map((enrichedTeam) => {
-      const approvedSubmissions = enrichedTeam.submissions.filter(
-        (s) => s.state === "approved",
-      );
-      const pendingSubmissions = enrichedTeam.submissions.filter(
-        (s) => s.state === "pending",
-      );
-
-      const totalReviewed =
-        approvedSubmissions.length +
-        enrichedTeam.submissions.filter((s) => s.state === "rejected").length;
-      const approvalRate =
-        totalReviewed > 0
-          ? Math.round((approvedSubmissions.length / totalReviewed) * 100)
-          : 0;
-
-      const allTeamsInTournament =
-        tournamentTeamsByTournamentIdMap.get(enrichedTeam.tournamentId) || [];
-
-      const rank =
-        allTeamsInTournament.filter((t) => t.points > enrichedTeam.points)
-          .length + 1;
-
-      const { tournament, members, submissions, ...team } = enrichedTeam;
-
-      return {
-        team,
-        tournament,
-        membersCount: members.length,
-        totalSubmissions: submissions.length,
-        approvedSubmissions: approvedSubmissions.length,
-        pendingSubmissions: pendingSubmissions.length,
-        approvalRate,
-        points: team.points,
-        rank,
-        totalTeamsInTournament: allTeamsInTournament.length,
-      };
-    });
-
-    return teamsComparison;
   },
 });

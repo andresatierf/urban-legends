@@ -158,7 +158,7 @@ function useSidebarItems(
             href: "/captain",
             icon: Shield,
             badge: {
-              query: api.captain.getPendingActionsCount,
+              query: api.views.captainDashboard.getPendingActionsCount,
               color: "info",
               tooltip: "Pending Requests & Invitations",
             },
@@ -215,7 +215,8 @@ export function AppSidebar() {
 
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
 
-  const captainedTeamsCount = useQuery(api.captain.getCaptainedTeamsCount) ?? 0;
+  const captainedTeamsCount =
+    useQuery(api.views.captainDashboard.getCaptainedTeamsCount) ?? 0;
 
   const { items: sidebarItems } = useSidebarItems(
     openSubmissionDialog,

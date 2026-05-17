@@ -10,7 +10,6 @@
 
 import type * as authority_core from "../authority/core.js";
 import type * as authority_index from "../authority/index.js";
-import type * as captain from "../captain.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as data from "../data.js";
@@ -38,6 +37,8 @@ import type * as teamInvitations from "../teamInvitations.js";
 import type * as teams from "../teams.js";
 import type * as tournaments from "../tournaments.js";
 import type * as users from "../users.js";
+import type * as views_captainComparison from "../views/captainComparison.js";
+import type * as views_captainDashboard from "../views/captainDashboard.js";
 
 import type {
   ApiFromModules,
@@ -48,7 +49,6 @@ import type {
 declare const fullApi: ApiFromModules<{
   "authority/core": typeof authority_core;
   "authority/index": typeof authority_index;
-  captain: typeof captain;
   crons: typeof crons;
   dashboard: typeof dashboard;
   data: typeof data;
@@ -76,6 +76,8 @@ declare const fullApi: ApiFromModules<{
   teams: typeof teams;
   tournaments: typeof tournaments;
   users: typeof users;
+  "views/captainComparison": typeof views_captainComparison;
+  "views/captainDashboard": typeof views_captainDashboard;
 }>;
 
 /**

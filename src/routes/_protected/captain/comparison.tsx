@@ -22,7 +22,9 @@ function TeamComparison() {
   const navigate = useNavigate();
 
   // Permission check - redirect if not a captain
-  const captainedCount = useQuery(api.captain.getCaptainedTeamsCount);
+  const captainedCount = useQuery(
+    api.views.captainDashboard.getCaptainedTeamsCount,
+  );
 
   useEffect(() => {
     if (captainedCount === 0) {
@@ -30,7 +32,7 @@ function TeamComparison() {
     }
   }, [captainedCount, navigate]);
 
-  const teamsComparison = useQuery(api.captain.getTeamsComparison);
+  const teamsComparison = useQuery(api.views.captainComparison.get);
 
   if (!teamsComparison || captainedCount === undefined) {
     return (
