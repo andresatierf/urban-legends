@@ -130,13 +130,9 @@ export function makeStandingsFixture(
   const series = sorted.map((t, teamIdx) => {
     const total = t.team.points;
     const dailyAvg = total / clampedElapsed;
-    const points: number[] = [];
+    const points: number[] = [0];
     let running = 0;
-    for (let d = 0; d < days.length; d++) {
-      if (d === 0) {
-        points.push(0);
-        continue;
-      }
+    for (let d = 1; d < days.length; d++) {
       const jitter = ((teamIdx + d) % 3) - 1;
       const inc = Math.max(0, Math.round(dailyAvg + jitter));
       running = Math.min(total, running + inc);
