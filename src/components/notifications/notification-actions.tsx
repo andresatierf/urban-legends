@@ -50,33 +50,28 @@ export function NotificationActions({
       if (action.action === "accept" || action.action === "reject") {
         const isAccept = action.action === "accept";
 
-        // Check if this is a team invitation
-        if (action.args?.invitationId) {
-          const requestId = action.args.invitationId as Id<"joinRequests">;
+        const isInvitation = !!action.args?.invitationId;
+        const rawId = action.args?.invitationId ?? action.args?.requestId;
+
+        if (rawId) {
+          const requestId = rawId as Id<"joinRequests">;
           if (isAccept) {
             await acceptJoinRequest({ requestId });
           } else {
             await rejectJoinRequest({ requestId });
           }
 
-          toast.success(
-            isAccept
+          let successMessage: string;
+          if (isInvitation) {
+            successMessage = isAccept
               ? "Invitation accepted! Welcome to the team."
-              : "Invitation declined.",
-          );
-        }
-        // Check if this is a join request
-        else if (action.args?.requestId) {
-          const requestId = action.args.requestId as Id<"joinRequests">;
-          if (isAccept) {
-            await acceptJoinRequest({ requestId });
+              : "Invitation declined.";
           } else {
-            await rejectJoinRequest({ requestId });
+            successMessage = isAccept
+              ? "Join request approved."
+              : "Join request declined.";
           }
-
-          toast.success(
-            isAccept ? "Join request approved." : "Join request declined.",
-          );
+          toast.success(successMessage);
         } else {
           toast.error(
             "Unable to process action. Missing required information.",
