@@ -11,9 +11,10 @@ import { InvitationsList } from "./layout";
 
 type Props = {
   teamId: Id<"teams">;
+  canRespond?: boolean;
 };
 
-export function JoinRequestsList({ teamId }: Props) {
+export function JoinRequestsList({ teamId, canRespond = true }: Props) {
   const [processingId, setProcessingId] = useState<Id<"joinRequests"> | null>(
     null,
   );
@@ -51,8 +52,13 @@ export function JoinRequestsList({ teamId }: Props) {
         invitation: { ...request, counterparty: request.user },
         viewer: "team",
         processing: processingId === request._id,
-        onAccept: () => handleRespond(request._id, true),
-        onReject: () => handleRespond(request._id, false),
+        canRespond,
+        onAccept: canRespond
+          ? () => handleRespond(request._id, true)
+          : undefined,
+        onReject: canRespond
+          ? () => handleRespond(request._id, false)
+          : undefined,
       }))}
     />
   );

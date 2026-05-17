@@ -1,10 +1,14 @@
+import { useMutation } from "convex/react";
 import { useState } from "react";
 
 import { Confetti } from "@/components/ui/confetti";
 import { EmptyValue } from "@/components/ui/empty-value";
 import { FooterRibbon } from "@/components/ui/footer-ribbon";
 import { RibbonBanner } from "@/components/ui/ribbon-banner";
+import { tryMutate } from "@/lib/utils";
 
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 import { CoachStat } from "./coach-stat";
 import { DashboardTeamCard } from "./dashboard-team-card";
 import { LogActivityFab } from "./log-activity-fab";
@@ -119,6 +123,48 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
     data.joinRequests.length > 0 ||
     data.pendingSubmissions.length > 0 ||
     urgentDeadlines.length > 0;
+
+  const respondToInvitation = useMutation(
+    api.teamInvitations.respondToInvitation,
+  );
+  const respondToJoinRequest = useMutation(
+    api.joinRequests.respondToJoinRequest,
+  );
+  const [processingId, setProcessingId] = useState<Id<"joinRequests"> | null>(
+    null,
+  );
+
+  const handleRespondInvitation = (
+    invitationId: Id<"joinRequests">,
+    accept: boolean,
+  ) => {
+    setProcessingId(invitationId);
+    return tryMutate({
+      fn: () => respondToInvitation({ invitationId, accept }),
+      onFinally: () => setProcessingId(null),
+      successToast: accept ? "Invitation accepted!" : "Invitation declined",
+      defaultFailureToast: accept
+        ? "Failed to accept invitation"
+        : "Failed to decline invitation",
+    });
+  };
+
+  const handleRespondJoinRequest = (
+    requestId: Id<"joinRequests">,
+    approve: boolean,
+  ) => {
+    setProcessingId(requestId);
+    return tryMutate({
+      fn: () => respondToJoinRequest({ requestId, approve }),
+      onFinally: () => setProcessingId(null),
+      successToast: approve
+        ? "Join request approved!"
+        : "Join request rejected",
+      defaultFailureToast: approve
+        ? "Failed to approve join request"
+        : "Failed to reject join request",
+    });
+  };
 
   return (
     <div className="relative p-6 pb-10">
@@ -381,10 +427,18 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
                     {formatRelative(inv.timestamp)}
                   </div>
                   <div className="flex gap-2">
-                    <button className="border-ink bg-sunset text-body-sm hover:shadow-fd-sm cursor-pointer rounded-full border-2 px-4 py-1.5 font-semibold text-white transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px">
+                    <button
+                      onClick={() => handleRespondInvitation(inv.id, true)}
+                      disabled={processingId === inv.id}
+                      className="border-ink bg-sunset text-body-sm hover:shadow-fd-sm cursor-pointer rounded-full border-2 px-4 py-1.5 font-semibold text-white transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+                    >
                       COUNT ME IN
                     </button>
-                    <button className="border-ink bg-paper-deep text-ink text-body-sm hover:shadow-fd-sm cursor-pointer rounded-full border-2 px-4 py-1.5 font-semibold transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px">
+                    <button
+                      onClick={() => handleRespondInvitation(inv.id, false)}
+                      disabled={processingId === inv.id}
+                      className="border-ink bg-paper-deep text-ink text-body-sm hover:shadow-fd-sm cursor-pointer rounded-full border-2 px-4 py-1.5 font-semibold transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+                    >
                       MAYBE NEXT TIME
                     </button>
                   </div>
@@ -408,10 +462,18 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
                     {formatRelative(jr.timestamp)}
                   </div>
                   <div className="flex gap-2">
-                    <button className="border-ink bg-sunset text-body-sm hover:shadow-fd-sm cursor-pointer rounded-full border-2 px-4 py-1.5 font-semibold text-white transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px">
+                    <button
+                      onClick={() => handleRespondJoinRequest(jr.id, true)}
+                      disabled={processingId === jr.id}
+                      className="border-ink bg-sunset text-body-sm hover:shadow-fd-sm cursor-pointer rounded-full border-2 px-4 py-1.5 font-semibold text-white transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+                    >
                       WELCOME ABOARD
                     </button>
-                    <button className="border-ink bg-paper-deep text-ink text-body-sm hover:shadow-fd-sm cursor-pointer rounded-full border-2 px-4 py-1.5 font-semibold transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px">
+                    <button
+                      onClick={() => handleRespondJoinRequest(jr.id, false)}
+                      disabled={processingId === jr.id}
+                      className="border-ink bg-paper-deep text-ink text-body-sm hover:shadow-fd-sm cursor-pointer rounded-full border-2 px-4 py-1.5 font-semibold transition-[box-shadow,transform] duration-75 ease-linear hover:-translate-x-px hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+                    >
                       NOT TODAY
                     </button>
                   </div>

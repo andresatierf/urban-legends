@@ -18,6 +18,8 @@ type Props = {
 
 export function TeamDetailsLayout({ data }: Props) {
   const isCaptain = data.userMembership?.role === "captain";
+  const isMember = data.userMembership !== null;
+  const canSeeJoinRequests = isMember || data.canManageMembers;
 
   return (
     <DetailsPageLayout
@@ -34,8 +36,11 @@ export function TeamDetailsLayout({ data }: Props) {
     >
       <MemberRoster data={data} />
       <InvitedUsersList teamId={data.team._id} canCancel={isCaptain} />
-      {data.team.joinPolicy !== "closed" && (
-        <JoinRequestsList teamId={data.team._id} />
+      {canSeeJoinRequests && (
+        <JoinRequestsList
+          teamId={data.team._id}
+          canRespond={data.canManageMembers}
+        />
       )}
     </DetailsPageLayout>
   );
