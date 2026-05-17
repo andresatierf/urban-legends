@@ -156,7 +156,7 @@ export const updateRoles = mutation({
       const role = roleMap.get(roleName);
       if (!role) continue;
 
-      const { events: grantEvents } = await grantRole(ctx, {
+      const grantEvents = await grantRole(ctx, {
         userId: args.userId,
         roleId: role._id,
         assignedBy: currentUser._id,
