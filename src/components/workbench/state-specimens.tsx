@@ -32,7 +32,7 @@ function EmptySection() {
       <SectionHeader
         as="h1"
         title="Empty"
-        description="The Empty primitive composed across the common slots — bare header, with media, and with action content."
+        description="The Empty primitive composed across the common slots: bare header, with media, and with action content."
       />
 
       <Specimen label="Header + description only">

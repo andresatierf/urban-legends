@@ -74,7 +74,7 @@ function ComposedCardSection() {
 
         <ComposedCard>
           <p className="text-body-sm text-muted-foreground">
-            Headerless body — wrapped Card with the standard padding.
+            Headerless body. Wrapped Card with the standard padding.
           </p>
         </ComposedCard>
       </div>

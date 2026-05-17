@@ -57,7 +57,7 @@ export function OverlaySpecimens() {
         <SectionHeader
           as="h1"
           title="Overlays"
-          description="Dialog, AlertDialog, Sheet, Popover, Tooltip, and HoverCard — all wearing the Field Day card treatment (2px ink border, 4px hard offset shadow, 14px radius)."
+          description="Dialog, AlertDialog, Sheet, Popover, Tooltip, and HoverCard, all wearing the Field Day card treatment (2px ink border, 4px hard offset shadow, 14px radius)."
         />
 
         <div className="bg-paper flex flex-wrap items-start gap-4 rounded-lg p-6">
@@ -148,7 +148,7 @@ export function OverlaySpecimens() {
             </HoverCardTrigger>
             <HoverCardContent>
               <p className="text-body-sm">
-                HoverCard with the full Field Day card treatment — 2px ink
+                HoverCard with the full Field Day card treatment: 2px ink
                 border, 4px hard offset shadow, 14px radius.
               </p>
             </HoverCardContent>

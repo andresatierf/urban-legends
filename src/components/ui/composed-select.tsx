@@ -37,7 +37,7 @@ export type ComposedSelectProps<T extends string = string> = {
   defaultValue?: T;
   onValueChange?: (value: T | "") => void;
   size?: "sm" | "default";
-  /** Forwarded to `SelectContent` — pick the side the popup opens toward. */
+  /** Forwarded to `SelectContent`: pick the side the popup opens toward. */
   side?: "top" | "bottom" | "left" | "right";
   ariaLabel?: string;
   className?: string;

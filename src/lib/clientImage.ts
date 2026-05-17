@@ -1,5 +1,5 @@
 // Client-side image processing: canvas downscale + JPEG re-encode.
-// Drops EXIF metadata as a side effect of the canvas round-trip — no
+// Drops EXIF metadata as a side effect of the canvas round-trip; no
 // separate EXIF-strip pass is needed.
 // HEIC/HEIF: decoded via heic2any (dynamically imported to keep the default
 // bundle lean), then handed to the same canvas pipeline as every other format.

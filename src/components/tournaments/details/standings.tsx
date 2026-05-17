@@ -48,7 +48,7 @@ export function Standings({
             <div>
               <div className="font-bold">Tournament Champion</div>
               <div className="text-muted-foreground text-sm">
-                {winnerTeam.name} — {winnerTeam.points} pts
+                {winnerTeam.name}: {winnerTeam.points} pts
               </div>
             </div>
           </CardContent>

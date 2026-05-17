@@ -32,7 +32,7 @@ export function EyebrowSpecimens() {
         <Eyebrow className="block">WEEKLY STANDINGS</Eyebrow>
         <div className="text-h1">Tournament Title</div>
         <p className="text-body-md text-muted-foreground">
-          Eyebrow above a heading — the editorial pattern used by SectionHeader.
+          Eyebrow above a heading: the editorial pattern used by SectionHeader.
         </p>
       </div>
     </div>
