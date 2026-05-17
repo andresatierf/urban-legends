@@ -26,7 +26,7 @@ const SLOT_LABELS: Record<Slot, string> = {
 const DESCRIPTION =
   "Short subtitle that explains what this section covers and what readers should expect to find.";
 
-function renderHeader(heading: Heading, slot: Slot) {
+function renderHeader(slot: Slot, heading: Heading) {
   const description =
     slot === "with-description" || slot === "description-and-action"
       ? DESCRIPTION
@@ -63,10 +63,10 @@ export function SectionHeaderSpecimens() {
       </div>
 
       <VariantMatrix
-        variants={HEADINGS}
-        columns={SLOTS}
-        columnLabel={(s) => SLOT_LABELS[s]}
-        variantLabel={(h) => `as="${h}"`}
+        variants={SLOTS}
+        columns={HEADINGS}
+        variantLabel={(s) => SLOT_LABELS[s]}
+        columnLabel={(h) => `as="${h}"`}
         renderCell={renderHeader}
       />
     </div>
