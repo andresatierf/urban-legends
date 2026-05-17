@@ -3,10 +3,8 @@ import type { MutationCtx } from "../_generated/server";
 import { nowUTC } from "../lib/dates";
 import type { NotificationEvent } from "../notifications/events";
 
-// Grants a role to a User by inserting a userRoles row. Returns the
-// notification events the transition produced, keeping the lifecycle pure:
-// no scheduler, no notification imports — events are values that the public
-// mutation forwards to `Notifier.publish`.
+// Returns notification events as values rather than scheduling them directly,
+// so the originating mutation controls when notifications are published.
 export async function grant(
   ctx: MutationCtx,
   args: {

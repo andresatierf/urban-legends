@@ -138,9 +138,7 @@ export const get = query({
  */
 export const dispatch = internalMutation({
   args: { event: notificationEventValidator },
-  handler: async (ctx, args) => {
-    await handleEvent(ctx, args.event);
-  },
+  handler: (ctx, args) => handleEvent(ctx, args.event),
 });
 
 /**

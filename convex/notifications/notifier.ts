@@ -3,9 +3,8 @@ import type { MutationCtx } from "../_generated/server";
 import type { NotificationEvent } from "./events";
 import { NOTIFICATION_TYPES } from "./types";
 
-// Public entry point: schedule one `dispatch` per event. Each event runs in
-// its own scheduled mutation so payload reads and notification fan-out happen
-// outside the originating user action's hot path and failure domain.
+// Each event runs in its own scheduled mutation so failures don't propagate
+// back to the originating user action.
 export async function publish(
   ctx: MutationCtx,
   events: NotificationEvent[],
@@ -17,9 +16,7 @@ export async function publish(
   }
 }
 
-// Internal: routes an event to its handler. Handlers read referenced entities,
-// compute audiences, and schedule `internal.notifications.create` calls.
-// Unmigrated variants throw — they still flow through `triggers.ts` for now.
+// Unmigrated event types throw — they still flow through triggers.ts for now.
 export async function handleEvent(
   ctx: MutationCtx,
   event: NotificationEvent,
