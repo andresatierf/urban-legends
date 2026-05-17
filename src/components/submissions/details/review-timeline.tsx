@@ -26,15 +26,14 @@ type Props = {
 };
 
 export function ReviewTimeline({ submission, managedByUser }: Props) {
-  const reviewedValue: React.ReactNode = managedByUser ? (
-    submission.reviewedAt ? (
-      `${formatDate(submission.reviewedAt)} by ${managedByUser.name}`
-    ) : (
-      `by ${managedByUser.name}`
-    )
-  ) : (
-    <EmptyValue label="Not yet reviewed" />
-  );
+  let reviewedValue: React.ReactNode;
+  if (!managedByUser) {
+    reviewedValue = <EmptyValue label="Not yet reviewed" />;
+  } else if (submission.reviewedAt) {
+    reviewedValue = `${formatDate(submission.reviewedAt)} by ${managedByUser.name}`;
+  } else {
+    reviewedValue = `by ${managedByUser.name}`;
+  }
 
   return (
     <div className="space-y-3">
