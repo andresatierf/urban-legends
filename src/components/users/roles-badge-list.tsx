@@ -71,7 +71,7 @@ export function RolesBadgeListView({
           )}
         </Badge>
       ))}
-      {resolvedRoles.length === 0 && (
+      {sortedRoles.length === 0 && (
         <span className="text-muted-foreground text-sm">No roles assigned</span>
       )}
     </div>
