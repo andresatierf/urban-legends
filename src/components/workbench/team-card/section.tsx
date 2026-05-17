@@ -42,6 +42,8 @@ export function TeamSection() {
                 joinRequest={null}
                 onRequestJoin={async () => {}}
                 onCancelRequest={() => {}}
+                onAcceptInvitation={() => {}}
+                onRejectInvitation={() => {}}
                 onLeave={() => {}}
               />
             );

@@ -8,6 +8,7 @@ import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 export type JoinButtonState =
   | "open-idle"
   | "open-pending"
+  | "team-invitation"
   | "closed"
   | "full"
   | "member"
@@ -16,6 +17,7 @@ export type JoinButtonState =
 export const JOIN_BUTTON_STATES: readonly JoinButtonState[] = [
   "open-idle",
   "open-pending",
+  "team-invitation",
   "closed",
   "full",
   "member",
@@ -25,6 +27,7 @@ export const JOIN_BUTTON_STATES: readonly JoinButtonState[] = [
 export const JOIN_BUTTON_STATE_LABELS: Record<JoinButtonState, string> = {
   "open-idle": "Open · idle",
   "open-pending": "Open · pending request",
+  "team-invitation": "Team-initiated invitation",
   closed: "Closed to invitations",
   full: "Full",
   member: "Already a member",
@@ -35,6 +38,8 @@ export const JOIN_BUTTON_STATE_DESCRIPTIONS: Record<JoinButtonState, string> = {
   "open-idle": "Open team an outsider can request to join.",
   "open-pending":
     "Outsider has a pending request; the card shows a Cancel control.",
+  "team-invitation":
+    "Captain invited the viewer; the card shows Accept and Reject controls.",
   closed: "Captain-only invitations; outsiders see a disabled badge.",
   full: "Roster cap reached; outsiders see a disabled badge.",
   member: "Viewer is already on the team, so no action renders.",
@@ -77,7 +82,11 @@ export const JOIN_BUTTON_FIXTURES: Record<JoinButtonState, FixtureEntry> = {
   },
   "open-pending": {
     data: BASE_DATA,
-    joinRequest: { _id: "demo-request" },
+    joinRequest: { _id: "demo-request", initiator: "user" },
+  },
+  "team-invitation": {
+    data: BASE_DATA,
+    joinRequest: { _id: "demo-invitation", initiator: "team" },
   },
   closed: {
     data: {

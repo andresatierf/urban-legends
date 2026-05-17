@@ -1,19 +1,24 @@
 "use client";
 
-import { LogOut, UserPlus } from "lucide-react";
+import { Check, LogOut, UserPlus, X } from "lucide-react";
 
 import { JoinTeamFormDialog } from "@/components/teams/form";
 import { Button } from "@/components/ui/button";
 
 import type { TeamCardData } from "./types";
 
-export type JoinTeamRequestState = { _id: string } | null;
+export type JoinTeamRequestState = {
+  _id: string;
+  initiator: "user" | "team";
+} | null;
 
 type Props = {
   data: TeamCardData;
   joinRequest: JoinTeamRequestState;
   onRequestJoin: (message: string | undefined) => Promise<void> | void;
   onCancelRequest: () => void;
+  onAcceptInvitation: () => void;
+  onRejectInvitation: () => void;
   onLeave: () => void;
 };
 
@@ -22,6 +27,8 @@ export function MembershipButton({
   joinRequest,
   onRequestJoin,
   onCancelRequest,
+  onAcceptInvitation,
+  onRejectInvitation,
   onLeave,
 }: Props) {
   if (data.isUserMember) {
@@ -46,6 +53,31 @@ export function MembershipButton({
   if (data.isUserInTeam) return null;
 
   if (joinRequest) {
+    if (joinRequest.initiator === "team") {
+      return (
+        <div className="flex gap-2">
+          <Button
+            variant="grass"
+            size="sm"
+            className="shadow-sm"
+            onClick={onAcceptInvitation}
+          >
+            <Check className="size-3.5" />
+            Accept
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="shadow-sm"
+            onClick={onRejectInvitation}
+          >
+            <X className="size-3.5" />
+            Reject
+          </Button>
+        </div>
+      );
+    }
+
     return (
       <Button
         variant="secondary"

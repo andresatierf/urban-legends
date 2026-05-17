@@ -61,6 +61,8 @@ export function JoinTeamCardSection() {
                     joinRequest={fixture.joinRequest}
                     onRequestJoin={noop}
                     onCancelRequest={() => {}}
+                    onAcceptInvitation={() => {}}
+                    onRejectInvitation={() => {}}
                     onLeave={() => {}}
                   />
                   {state === "member" && (
