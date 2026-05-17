@@ -67,7 +67,7 @@ export function SectionHeaderSpecimens() {
         columns={SLOTS}
         columnLabel={(s) => SLOT_LABELS[s]}
         variantLabel={(h) => `as="${h}"`}
-        renderCell={(h, s) => renderHeader(h, s)}
+        renderCell={renderHeader}
       />
     </div>
   );
