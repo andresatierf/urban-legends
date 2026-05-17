@@ -80,7 +80,9 @@ When an **Organizer** creates a **Tournament**, the **Authority** module grants 
 
 1. **Symmetric lockout**: a `rejected` **JoinRequest** blocks any future **JoinRequest** for the same (User, Team) pair, regardless of `initiator`. Captains who reject and change their mind, or Users who reject and change their mind, do not get a second attempt — the rule is intentionally strict to keep the relationship terminal.
 2. **Expiry**: every **JoinRequest** carries a required `expiresAt` of 7 days from creation, in either direction. A `pending` row past its `expiresAt` is `expired` on next observation.
-3. **Cascade on accept**: when a **JoinRequest** is `accepted` and produces a **TeamMember** in **Tournament** T, all _other_ pending **JoinRequests** for the same **User** in any **Team** of T are `cancelled` — a User cannot be a **TeamMember** of two **Teams** in the same **Tournament**.
+3. **Pre-accept capacity**: `accept` rejects if accepting would exceed the **Team**'s **Tournament**-defined size cap. Enforced inside the lifecycle module so every accept path (public mutation, future admin tooling, tests) sees the same rule.
+4. **Pre-accept uniqueness**: `accept` rejects if the **User** is already a **TeamMember** of any other **Team** in the same **Tournament**. The companion to rule 5 (cascade) — this rule handles the already-accepted case, cascade handles the pending case.
+5. **Cascade on accept**: when a **JoinRequest** is `accepted` and produces a **TeamMember** in **Tournament** T, all _other_ pending **JoinRequests** for the same **User** in any **Team** of T are `cancelled` — together with rule 4, a User cannot be a **TeamMember** of two **Teams** in the same **Tournament**.
 
 ## Relationships
 

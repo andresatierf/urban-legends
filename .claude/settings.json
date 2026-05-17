@@ -3,5 +3,11 @@
     "fallow": {
       "command": "fallow-mcp"
     }
+  },
+  "autoMode": {
+    "environment": ["$defaults"],
+    "allow": ["$defaults", "Creating github issues"],
+    "soft_deny": ["$defaults"],
+    "hard_deny": ["$defaults"]
   }
 }
