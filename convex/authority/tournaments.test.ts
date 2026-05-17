@@ -335,7 +335,7 @@ describe("canGrantTournamentRole / canRevokeTournamentRole", () => {
   });
 });
 
-describe("onTournamentCreated — auto-promotes creator", () => {
+describe("onTournamentCreated: auto-promotes creator", () => {
   test("organizer who creates becomes tournament_manager of that tournament", async () => {
     const t = convexTest(schemaForTest);
     await t.run(async (ctx) => {
@@ -350,7 +350,7 @@ describe("onTournamentCreated — auto-promotes creator", () => {
 
       await onTournamentCreated(ctx, { tournamentId, creatorId: organizer });
 
-      // After: organizer is now tournament_manager — can edit
+      // After: organizer is now tournament_manager; can edit
       expect(
         await canEditTournament.check(ctx, organizer, { tournamentId }),
       ).toBe(true);
@@ -382,7 +382,7 @@ describe("onTournamentCreated — auto-promotes creator", () => {
 });
 
 describe("grantTournamentRole / revokeTournamentRole (internal helpers)", () => {
-  test("grant is idempotent — no duplicate rows", async () => {
+  test("grant is idempotent: no duplicate rows", async () => {
     const t = convexTest(schemaForTest);
     await t.run(async (ctx) => {
       const user = await makeUser(ctx, "user");

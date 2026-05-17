@@ -120,7 +120,7 @@ describe("submissions.list", () => {
 // getMonthSubmissions uses a compound q.and() filter that convex-test@0.0.1-alpha.38
 // does not implement. We verify the thumbnail resolution logic it uses via t.run()
 // and rely on TypeScript types to confirm the query return type includes the fields.
-describe("submissions.getMonthSubmissions — thumbnail resolution logic", () => {
+describe("submissions.getMonthSubmissions: thumbnail resolution logic", () => {
   test("ctx.storage.getUrl returns non-null for a stored blob (used by getMonthSubmissions)", async () => {
     const t = convexTest(schemaForTest);
 

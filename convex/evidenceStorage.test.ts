@@ -27,7 +27,7 @@ describe("claimUploads", () => {
 
     const { userId, storageId } = await t.run(async (ctx) => {
       const userId = await seedUser(ctx, "1");
-      // schemaValidation is disabled — use a fake storage ID string
+      // schemaValidation is disabled; use a fake storage ID string
       const storageId = "fake_storage_claim_1" as unknown as Id<"_storage">;
       await ctx.db.insert("pendingUploads", {
         storageId,
@@ -76,7 +76,7 @@ describe("claimUploads", () => {
       return { userId1, storageId };
     });
 
-    // Claim as userId1 — must reject because the row is owned by userId2
+    // Claim as userId1; must reject because the row is owned by userId2
     await expect(
       t.run(async (ctx) => {
         await claimUploads(ctx, userId1, [storageId]);
@@ -137,7 +137,7 @@ describe("releaseUploads", () => {
     });
 
     // With a fake storage ID, ctx.storage.delete throws. The function must not
-    // silently swallow the error — it should propagate it.
+    // silently swallow the error; it should propagate it.
     await expect(
       t.run(async (ctx) => {
         await releaseUploads(ctx, [storageId]);
@@ -174,7 +174,7 @@ describe("sweepOrphans", () => {
       });
     });
 
-    // Row is older than the cutoff — sweep tries to delete the blob.
+    // Row is older than the cutoff; sweep tries to delete the blob.
     // ctx.storage.delete throws for fake IDs; error must propagate.
     await expect(
       t.run(async (ctx) => {
@@ -199,7 +199,7 @@ describe("sweepOrphans", () => {
       });
     });
 
-    // Cutoff is 2 days ago; row was just created — must be preserved.
+    // Cutoff is 2 days ago; row was just created; must be preserved.
     await t.run(async (ctx) => {
       await sweepOrphans(ctx, twoDaysAgo);
     });

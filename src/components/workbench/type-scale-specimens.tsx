@@ -55,7 +55,7 @@ export function TypeScaleSpecimens() {
     <div className="space-y-6">
       <h2 className="text-h2">Type Scale</h2>
       <p className="text-body-sm text-muted-foreground">
-        Six-role type system — Funnel Display (display/headings), Lexend (body),
+        Six-role type system: Funnel Display (display/headings), Lexend (body),
         DM Mono (labels/metrics).
       </p>
       <div className="space-y-4">

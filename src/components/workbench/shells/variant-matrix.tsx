@@ -13,8 +13,8 @@ export type VariantMatrixProps<
   columnLabel?: (column: TColumn) => string;
   /**
    * How cells should size their rendered children.
-   * - `stretch` (default): children fill the cell — appropriate for cards.
-   * - `content`: children render at intrinsic width and are centered — use
+   * - `stretch` (default): children fill the cell, appropriate for cards.
+   * - `content`: children render at intrinsic width and are centered; use
    *   for primitives like buttons or ribbons whose real-world width is
    *   driven by their content.
    */

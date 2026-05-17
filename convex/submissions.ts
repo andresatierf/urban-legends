@@ -184,7 +184,7 @@ export const upsert = mutation({
     let submissionId: Id<"submissions">;
 
     if (args._id) {
-      // EDIT BRANCH — routed through lifecycle.edit (#38)
+      // EDIT BRANCH: routed through lifecycle.edit (#38)
       const submission = await ctx.db.get(args._id);
 
       if (!submission) throw new Error("Submission not found");
@@ -206,7 +206,7 @@ export const upsert = mutation({
       );
       submissionId = args._id;
     } else {
-      // CREATE BRANCH — routed through lifecycle.submit (#34)
+      // CREATE BRANCH: routed through lifecycle.submit (#34)
       submissionId = await lifecycleSubmit(ctx, {
         userId: user._id,
         teamId: args.teamId,

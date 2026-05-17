@@ -417,7 +417,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               {data.invitations.length === 0 &&
                 data.joinRequests.length === 0 && (
                   <div className="border-mute text-mute text-body-sm rounded-xl border-2 border-dashed p-5 text-center opacity-70">
-                    No pending RSVPs — you&apos;re all caught up.
+                    No pending RSVPs. You&apos;re all caught up.
                   </div>
                 )}
             </div>
@@ -469,7 +469,7 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
               {data.pendingSubmissions.length === 0 &&
                 urgentDeadlines.length === 0 && (
                   <div className="border-mute text-mute text-body-sm rounded-xl border-2 border-dashed p-5 text-center opacity-70">
-                    Queue is clear — nothing pending.
+                    Queue is clear. Nothing pending.
                   </div>
                 )}
             </div>

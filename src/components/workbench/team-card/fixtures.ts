@@ -229,7 +229,7 @@ const PROFILES = {
     { approved: 1, pending: 3, rejected: 0, points: 20 },
     { approved: 2, pending: 5, rejected: 1, points: 40 },
   ],
-  // Strong week, dominant — fits the leaders.
+  // Strong week, dominant; fits the leaders.
   dominant: [
     { approved: 5, pending: 0, rejected: 0, points: 100 },
     { approved: 4, pending: 0, rejected: 0, points: 80 },

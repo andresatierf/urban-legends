@@ -44,7 +44,7 @@ crons.hourly(
 );
 
 // Daily sweep of unclaimed pendingUploads rows older than 24 hours.
-// Runs at 03:00 UTC — low-traffic window, after the 02:00 notification cleanup.
+// Runs at 03:00 UTC; low-traffic window, after the 02:00 notification cleanup.
 crons.daily(
   "sweep pending uploads",
   { hourUTC: 3, minuteUTC: 0 },

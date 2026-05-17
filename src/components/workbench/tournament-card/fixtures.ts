@@ -104,7 +104,7 @@ function makeItem(
 
 const DESCRIPTIONS = [
   "Push your limits with daily urban challenges. Walk, run, or explore your city.",
-  "The ultimate team competition — earn points through individual and group exercises across the city.",
+  "The ultimate team competition. Earn points through individual and group exercises across the city.",
   "A friendly tournament to kickstart healthy habits. All fitness levels welcome!",
 ];
 

@@ -603,7 +603,7 @@ function InputsWorkbenchPage() {
     <div className="space-y-8">
       <h2 className="text-h2">Form Inputs</h2>
       <p className="text-body-sm text-muted-foreground">
-        Every form input primitive in every state — default, focus, invalid,
+        Every form input primitive in every state: default, focus, invalid,
         disabled, with helper text.
       </p>
       <FieldsMatrix />

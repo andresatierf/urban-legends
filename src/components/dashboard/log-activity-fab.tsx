@@ -13,7 +13,7 @@ type LogActivityFabProps = {
 } & Omit<ComponentProps<typeof Button>, "variant" | "size">;
 
 /**
- * Tilted CTA — sits absolutely positioned over the bottom-right corner
+ * Tilted CTA. Sits absolutely positioned over the bottom-right corner
  * of its (relatively positioned) parent on sm+ viewports, and falls back
  * to a full-width button on mobile.
  */

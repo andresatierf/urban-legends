@@ -43,13 +43,13 @@ const VARIANTS = [
   {
     id: "mosaic",
     label: "Mosaic",
-    title: "Mosaic — Landscape lead, mosaic groups, footer actions",
+    title: "Mosaic: landscape lead, mosaic groups, footer actions",
     Component: MosaicReviewCard,
   },
   {
     id: "carousel",
     label: "Carousel",
-    title: "Carousel — Portrait lead, submitter strip groups, split footer",
+    title: "Carousel: portrait lead, submitter strip groups, split footer",
     Component: CarouselReviewCard,
   },
 ] as const;

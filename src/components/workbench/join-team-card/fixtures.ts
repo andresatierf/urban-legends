@@ -34,12 +34,12 @@ export const JOIN_BUTTON_STATE_LABELS: Record<JoinButtonState, string> = {
 export const JOIN_BUTTON_STATE_DESCRIPTIONS: Record<JoinButtonState, string> = {
   "open-idle": "Open team an outsider can request to join.",
   "open-pending":
-    "Outsider has a pending request — the card shows a Cancel control.",
+    "Outsider has a pending request; the card shows a Cancel control.",
   closed: "Captain-only invitations; outsiders see a disabled badge.",
   full: "Roster cap reached; outsiders see a disabled badge.",
   member: "Viewer is already on the team, so no action renders.",
   "signed-out":
-    "Anonymous viewer (no Convex query) — behaves like idle since the container skips the request lookup.",
+    "Anonymous viewer (no Convex query); behaves like idle since the container skips the request lookup.",
 };
 
 type FixtureEntry = {

@@ -70,7 +70,7 @@ export async function sweepOrphans(
   }
 }
 
-// Daily cron entry point — computes the 24-hour cutoff and calls sweepOrphans.
+// Daily cron entry point; computes the 24-hour cutoff and calls sweepOrphans.
 export const sweepOrphansCron = internalMutation({
   args: {},
   handler: async (ctx) => {
@@ -80,7 +80,7 @@ export const sweepOrphansCron = internalMutation({
 });
 
 // Generates a Convex storage upload URL.
-// The storageId is only available in the upload response body — call
+// The storageId is only available in the upload response body; call
 // registerUpload(storageId) immediately after the upload completes.
 export const issueUploadUrl = action({
   handler: async (ctx): Promise<string> => {
