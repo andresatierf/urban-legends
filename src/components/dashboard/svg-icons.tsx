@@ -12,7 +12,7 @@ export function TrophySvg() {
         d="M16 8 H48 V36 C48 48 16 48 16 36 Z"
         stroke="var(--ink)"
         strokeWidth="2.5"
-        fill="rgba(255,200,71,0.25)"
+        fill="color-mix(in srgb, var(--gold) 25%, transparent)"
         strokeLinejoin="round"
       />
       <path
@@ -46,11 +46,11 @@ export function TrophySvg() {
         rx="2"
         stroke="var(--ink)"
         strokeWidth="2"
-        fill="rgba(255,200,71,0.3)"
+        fill="color-mix(in srgb, var(--gold) 30%, transparent)"
       />
       <path
         d="M32 18 L33.5 23 L38.5 23 L34.5 26 L36 31 L32 28 L28 31 L29.5 26 L25.5 23 L30.5 23 Z"
-        fill="#ffc847"
+        fill="var(--gold)"
         stroke="var(--ink)"
         strokeWidth="1"
       />
@@ -75,7 +75,7 @@ export function WhistleSvg() {
         r="5"
         stroke="var(--ink)"
         strokeWidth="2"
-        fill="rgba(255,122,69,0.15)"
+        fill="color-mix(in srgb, var(--sunset) 15%, transparent)"
       />
       <path
         d="M14 14 L20 8"
@@ -155,7 +155,7 @@ export function StopwatchSvg({ urgent }: { urgent: boolean }) {
         r="8"
         stroke={stroke}
         strokeWidth="2"
-        fill="rgba(93,185,245,0.1)"
+        fill="color-mix(in srgb, var(--sky) 10%, transparent)"
       />
       <line
         x1="12"
@@ -212,7 +212,7 @@ export function RunnerSvg({ progress }: { progress: number }) {
         r="3"
         stroke="var(--ink)"
         strokeWidth="1.5"
-        fill="rgba(93,199,122,0.4)"
+        fill="color-mix(in srgb, var(--grass) 40%, transparent)"
       />
       <path
         d="M9 7 L9 16"
@@ -267,12 +267,16 @@ export function CheckboxSvg({ checked }: { checked?: boolean }) {
         rx="4"
         stroke="var(--ink)"
         strokeWidth="2"
-        fill={checked ? "rgba(93,199,122,0.3)" : "rgba(122,106,92,0.1)"}
+        fill={
+          checked
+            ? "color-mix(in srgb, var(--grass) 30%, transparent)"
+            : "color-mix(in srgb, var(--mute) 10%, transparent)"
+        }
       />
       {checked && (
         <path
           d="M5 11 L9 15 L17 7"
-          stroke="#5dc77a"
+          stroke="var(--grass)"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -351,12 +355,7 @@ export function MedallionSvg({ number }: { number: number }) {
 }
 
 export function MedalSvg({ type }: { type: "gold" | "silver" | "bronze" }) {
-  const colors: Record<string, string> = {
-    gold: "#ffc847",
-    silver: "#c5cdd6",
-    bronze: "#cd9352",
-  };
-  const c = colors[type];
+  const c = `var(--${type})`;
   return (
     <svg
       aria-hidden
