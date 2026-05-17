@@ -19,7 +19,7 @@ export function SubmitterCard({ submitter }: Props) {
           <Shield className="h-3.5 w-3.5" />
           Submitter
         </Eyebrow>
-        <CardTitle className="text-h3">Submitted by</CardTitle>
+        <CardTitle>Submitted by</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-3">

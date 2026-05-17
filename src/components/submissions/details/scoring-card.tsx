@@ -21,7 +21,7 @@ export function ScoringCard({ submission, tournament }: Props) {
     <Card>
       <CardHeader>
         <Eyebrow as="div">Points</Eyebrow>
-        <CardTitle className="text-h3">Scoring</CardTitle>
+        <CardTitle>Scoring</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-xs">
         <div className="flex justify-between">

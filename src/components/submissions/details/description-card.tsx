@@ -20,9 +20,7 @@ export function DescriptionCard({ submission }: Props) {
     <Card>
       <CardHeader>
         <Eyebrow as="div">Activity Date</Eyebrow>
-        <CardTitle className="text-h3">
-          {formatLongDate(submission.date)}
-        </CardTitle>
+        <CardTitle>{formatLongDate(submission.date)}</CardTitle>
       </CardHeader>
       {submission.description && (
         <CardContent>
