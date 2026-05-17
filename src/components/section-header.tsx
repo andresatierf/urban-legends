@@ -26,7 +26,7 @@ export function SectionHeader({
       <div className="flex items-center gap-3">
         {Icon && (
           <Icon
-            className={cn({
+            className={cn("shrink-0", {
               "h-8 w-8": Comp === "h1",
               "h-4 w-4": Comp === "h2",
             })}
