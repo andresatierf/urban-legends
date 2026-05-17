@@ -23,7 +23,8 @@ export function JoinRequestsList({ teamId, canRespond = true }: Props) {
     teamId,
     initiator: "user",
   });
-  const respondToRequest = useMutation(api.joinRequests.respondToJoinRequest);
+  const acceptRequest = useMutation(api.joinRequests.accept);
+  const rejectRequest = useMutation(api.joinRequests.reject);
 
   const handleRespond = async (
     requestId: Id<"joinRequests">,
@@ -32,7 +33,8 @@ export function JoinRequestsList({ teamId, canRespond = true }: Props) {
     setProcessingId(requestId);
 
     await tryMutate({
-      fn: () => respondToRequest({ requestId, approve }),
+      fn: () =>
+        approve ? acceptRequest({ requestId }) : rejectRequest({ requestId }),
       onFinally: () => setProcessingId(null),
       successToast: approve
         ? "Join request approved!"

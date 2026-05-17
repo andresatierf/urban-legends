@@ -24,9 +24,8 @@ export function TeamInvitationsList({
     api.joinRequests.list,
     user ? { userId: user._id, initiator: "team" } : "skip",
   );
-  const respondToInvitation = useMutation(
-    api.teamInvitations.respondToInvitation,
-  );
+  const acceptInvitation = useMutation(api.joinRequests.accept);
+  const rejectInvitation = useMutation(api.joinRequests.reject);
 
   const handleRespond = async (
     invitationId: Id<"joinRequests">,
@@ -35,7 +34,10 @@ export function TeamInvitationsList({
     setProcessingId(invitationId);
 
     await tryMutate({
-      fn: () => respondToInvitation({ invitationId, accept }),
+      fn: () =>
+        accept
+          ? acceptInvitation({ requestId: invitationId })
+          : rejectInvitation({ requestId: invitationId }),
       onFinally: () => setProcessingId(null),
       successToast: accept
         ? "Invitation accepted! You've joined the team."

@@ -32,12 +32,8 @@ export function NotificationActions({
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const markAsRead = useMutation(api.notifications.markAsRead);
-  const respondToInvitation = useMutation(
-    api.teamInvitations.respondToInvitation,
-  );
-  const respondToJoinRequest = useMutation(
-    api.joinRequests.respondToJoinRequest,
-  );
+  const acceptJoinRequest = useMutation(api.joinRequests.accept);
+  const rejectJoinRequest = useMutation(api.joinRequests.reject);
 
   if (!actions || actions.length === 0) {
     return null;
@@ -56,10 +52,12 @@ export function NotificationActions({
 
         // Check if this is a team invitation
         if (action.args?.invitationId) {
-          await respondToInvitation({
-            invitationId: action.args.invitationId as Id<"joinRequests">,
-            accept: isAccept,
-          });
+          const requestId = action.args.invitationId as Id<"joinRequests">;
+          if (isAccept) {
+            await acceptJoinRequest({ requestId });
+          } else {
+            await rejectJoinRequest({ requestId });
+          }
 
           toast.success(
             isAccept
@@ -69,10 +67,12 @@ export function NotificationActions({
         }
         // Check if this is a join request
         else if (action.args?.requestId) {
-          await respondToJoinRequest({
-            requestId: action.args.requestId as Id<"joinRequests">,
-            approve: isAccept,
-          });
+          const requestId = action.args.requestId as Id<"joinRequests">;
+          if (isAccept) {
+            await acceptJoinRequest({ requestId });
+          } else {
+            await rejectJoinRequest({ requestId });
+          }
 
           toast.success(
             isAccept ? "Join request approved." : "Join request declined.",

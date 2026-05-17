@@ -53,7 +53,7 @@ export function InviteMemberFormDialog({
   const open = controlledOpen ?? internalOpen;
   const setOpen = onOpenChange ?? setInternalOpen;
 
-  const inviteMember = useMutation(api.teamInvitations.inviteMember);
+  const inviteMember = useMutation(api.joinRequests.invite);
 
   const form = useAppForm({
     defaultValues: {

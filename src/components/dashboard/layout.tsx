@@ -124,12 +124,8 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
     data.pendingSubmissions.length > 0 ||
     urgentDeadlines.length > 0;
 
-  const respondToInvitation = useMutation(
-    api.teamInvitations.respondToInvitation,
-  );
-  const respondToJoinRequest = useMutation(
-    api.joinRequests.respondToJoinRequest,
-  );
+  const acceptJoinRequest = useMutation(api.joinRequests.accept);
+  const rejectJoinRequest = useMutation(api.joinRequests.reject);
   const [processingId, setProcessingId] = useState<Id<"joinRequests"> | null>(
     null,
   );
@@ -140,7 +136,10 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
   ) => {
     setProcessingId(invitationId);
     return tryMutate({
-      fn: () => respondToInvitation({ invitationId, accept }),
+      fn: () =>
+        accept
+          ? acceptJoinRequest({ requestId: invitationId })
+          : rejectJoinRequest({ requestId: invitationId }),
       onFinally: () => setProcessingId(null),
       successToast: accept ? "Invitation accepted!" : "Invitation declined",
       defaultFailureToast: accept
@@ -155,7 +154,10 @@ export function DashboardLayout({ data }: { data: DashboardData }) {
   ) => {
     setProcessingId(requestId);
     return tryMutate({
-      fn: () => respondToJoinRequest({ requestId, approve }),
+      fn: () =>
+        approve
+          ? acceptJoinRequest({ requestId })
+          : rejectJoinRequest({ requestId }),
       onFinally: () => setProcessingId(null),
       successToast: approve
         ? "Join request approved!"
