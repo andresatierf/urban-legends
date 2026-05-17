@@ -21,11 +21,11 @@ const roleVariants: Record<
   string,
   "error" | "info" | "social" | "warning" | "success" | "neutral"
 > = {
-  admin: "error",
-  player: "info",
+  admin: "warning",
   tournament_manager: "social",
-  reviewer: "warning",
-  viewer: "success",
+  reviewer: "success",
+  player: "info",
+  viewer: "neutral",
 };
 
 export function RolesBadgeList({

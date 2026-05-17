@@ -168,7 +168,7 @@ export function ManageRolesFormDialog({
                 {!hasAdminSelected &&
                   currentRoles.includes("admin") &&
                   userId === user?._id && (
-                    <div className="flex gap-2 rounded-md border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900">
+                    <div className="border-badge-warning-border bg-badge-warning-bg text-badge-warning-text flex gap-2 rounded-md border-2 p-3 text-sm">
                       <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                       <p>
                         This will revoke YOUR administrator privileges. You
