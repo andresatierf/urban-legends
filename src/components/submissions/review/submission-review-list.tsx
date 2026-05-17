@@ -129,7 +129,7 @@ export function SubmissionReviewList({
                 orderBy: value as ReviewFilters["orderBy"],
               })
             }
-            className="w-[180px]"
+            className="w-full sm:w-[180px]"
             ariaLabel="Sort submissions"
             placeholder="Sort by..."
             options={[
@@ -152,7 +152,10 @@ export function SubmissionReviewList({
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[320px]" align="end">
+            <PopoverContent
+              className="w-[min(320px,calc(100vw-2rem))]"
+              align="end"
+            >
               <div className="flex flex-col gap-4">
                 <div>
                   <label className="text-muted-foreground mb-2 block text-xs font-medium uppercase">

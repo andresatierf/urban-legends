@@ -30,7 +30,7 @@ export function DataTablePagination<TData>({
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => table.setPageSize(Number(value))}
             side="top"
-            className="h-8 w-[70px]"
+            className="h-8 min-w-[70px]"
             options={[10, 20, 25, 30, 40, 50].map((n) => ({
               value: `${n}`,
               label: `${n}`,
@@ -39,7 +39,7 @@ export function DataTablePagination<TData>({
         </div>
         {!isSinglePage && (
           <>
-            <div className="text-label-caps text-muted-foreground flex w-[100px] items-center justify-center">
+            <div className="text-label-caps text-muted-foreground flex min-w-[100px] items-center justify-center">
               Page {table.getState().pagination.pageIndex + 1} of{" "}
               {table.getPageCount()}
             </div>
