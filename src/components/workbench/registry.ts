@@ -118,19 +118,24 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "components",
   },
   {
-    path: "/workbench/states/empty-loading",
-    label: "Empty & Loading",
-    group: "states",
-  },
-  {
     path: "/workbench/pages/dashboard",
     label: "Dashboard",
+    group: "pages",
+  },
+  {
+    path: "/workbench/pages/tournaments",
+    label: "Tournaments listing",
     group: "pages",
   },
   {
     path: "/workbench/pages/teams",
     label: "Teams listing",
     group: "pages",
+  },
+  {
+    path: "/workbench/states/empty-loading",
+    label: "Empty & Loading",
+    group: "states",
   },
 ];
 
