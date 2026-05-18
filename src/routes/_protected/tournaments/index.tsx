@@ -34,8 +34,7 @@ function TournamentsPage() {
     );
   }
 
-  const tournaments = [...data.yours, ...data.discover];
-  const isEmpty = tournaments.length === 0;
+  const isEmpty = data.yours.length === 0 && data.discover.length === 0;
 
   return (
     <>
@@ -62,7 +61,7 @@ function TournamentsPage() {
           )}
         </div>
       ) : (
-        <TournamentListing tournaments={tournaments} />
+        <TournamentListing yours={data.yours} discover={data.discover} />
       )}
     </>
   );
