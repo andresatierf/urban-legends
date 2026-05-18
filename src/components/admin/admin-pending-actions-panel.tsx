@@ -28,7 +28,7 @@ export function AdminPendingActionsPanel({
     pendingActions.pendingSubmissions + pendingActions.joinRequests;
 
   return (
-    <Card className="shadow-fd-md">
+    <Card className="shadow-md">
       <CardHeader>
         <CardTitle>Pending Actions</CardTitle>
         <CardDescription>

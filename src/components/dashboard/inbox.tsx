@@ -61,7 +61,7 @@ function InvitationCard({
   isPending: boolean;
 }) {
   return (
-    <li className="border-ink bg-card shadow-fd flex flex-col gap-3 rounded-xl border-2 p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
+    <li className="border-ink bg-card flex flex-col gap-3 rounded-xl border-2 p-4 shadow sm:flex-row sm:items-center sm:gap-5 sm:p-5">
       <div className="flex items-center gap-3 sm:flex-1">
         <span
           aria-hidden
@@ -112,7 +112,7 @@ function JoinRequestCard({
   isPending: boolean;
 }) {
   return (
-    <li className="border-ink bg-card shadow-fd flex flex-col gap-3 rounded-xl border-2 p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
+    <li className="border-ink bg-card flex flex-col gap-3 rounded-xl border-2 p-4 shadow sm:flex-row sm:items-center sm:gap-5 sm:p-5">
       <div className="flex items-center gap-3 sm:flex-1">
         <span
           aria-hidden

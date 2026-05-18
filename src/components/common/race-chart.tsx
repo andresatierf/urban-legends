@@ -81,7 +81,7 @@ export function RaceChart({
     <ChartContext.Provider value={{ config }}>
       <div
         className={cn(
-          "border-fab-ink bg-fab-surface shadow-fd-md flex min-h-0 flex-col rounded-2xl border-2 px-5 pt-4 pb-[1.1rem] min-[960px]:h-full",
+          "border-fab-ink bg-fab-surface flex min-h-0 flex-col rounded-2xl border-2 px-5 pt-4 pb-[1.1rem] shadow-md min-[960px]:h-full",
           className,
         )}
       >
@@ -115,7 +115,7 @@ export function RaceChart({
             />
             <ChartTooltip
               content={
-                <ChartTooltipContent className="border-fab-ink text-fab-ink bg-fab-surface [&_.shrink-0]:!border-fab-ink !shadow-fd min-w-44 !rounded-xl border-2 [&_.justify-between]:!gap-4 [&_.shrink-0]:!h-3 [&_.shrink-0]:!w-3 [&_.shrink-0]:!rounded-sm [&_.shrink-0]:!border-2" />
+                <ChartTooltipContent className="border-fab-ink text-fab-ink bg-fab-surface [&_.shrink-0]:!border-fab-ink min-w-44 !rounded-xl border-2 !shadow [&_.justify-between]:!gap-4 [&_.shrink-0]:!h-3 [&_.shrink-0]:!w-3 [&_.shrink-0]:!rounded-sm [&_.shrink-0]:!border-2" />
               }
             />
             {userSeries && (

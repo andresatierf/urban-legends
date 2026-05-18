@@ -51,7 +51,7 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
       {statCards.map((card) => (
         <div
           key={card.statKey}
-          className="border-ink bg-card shadow-fd-md hover:shadow-fd-xl flex flex-col gap-[0.2rem] overflow-hidden rounded-xl border-2 p-4 transition-[transform,box-shadow] duration-[120ms] ease-linear hover:-translate-x-0.5 hover:-translate-y-0.5"
+          className="border-ink bg-card flex flex-col gap-[0.2rem] overflow-hidden rounded-xl border-2 p-4 shadow-md transition-[transform,box-shadow] duration-[120ms] ease-linear hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-xl"
           style={{ "--metric-accent": card.accent } as React.CSSProperties}
         >
           <div

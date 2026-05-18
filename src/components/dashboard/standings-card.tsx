@@ -24,7 +24,7 @@ export function StandingsCard({
   return (
     <section
       aria-label="Standings"
-      className="border-ink bg-card shadow-fd-lg overflow-hidden rounded-2xl border-2"
+      className="border-ink bg-card overflow-hidden rounded-2xl border-2 shadow-lg"
     >
       <header className="border-ink/15 flex flex-wrap items-baseline justify-between gap-2 border-b-[1.5px] px-5 py-3 sm:px-6">
         <div className="flex flex-col">

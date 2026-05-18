@@ -14,7 +14,7 @@ export function Confetti() {
       opacity: 0.55,
       color: "bg-grass",
       animClass:
-        "[animation:va-confetti-drift_4s_ease-in-out_infinite] motion-reduce:animate-none",
+        "[animation:confetti-drift_4s_ease-in-out_infinite] motion-reduce:animate-none",
     },
     {
       top: "7%",
@@ -23,7 +23,7 @@ export function Confetti() {
       opacity: 0.4,
       color: "bg-sunset",
       animClass:
-        "[animation:va-confetti-drift_5s_ease-in-out_0.5s_infinite] motion-reduce:animate-none",
+        "[animation:confetti-drift_5s_ease-in-out_0.5s_infinite] motion-reduce:animate-none",
     },
     {
       top: "3%",
@@ -32,7 +32,7 @@ export function Confetti() {
       opacity: 0.5,
       color: "bg-sky",
       animClass:
-        "[animation:va-confetti-drift_3.5s_ease-in-out_1s_infinite] motion-reduce:animate-none",
+        "[animation:confetti-drift_3.5s_ease-in-out_1s_infinite] motion-reduce:animate-none",
     },
     {
       top: "9%",

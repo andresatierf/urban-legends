@@ -18,7 +18,7 @@ export function TeamMembership({ data }: { data: TournamentCardData }) {
     <Link
       to="/teams/$teamId"
       params={{ teamId: team._id }}
-      className="border-ink bg-paper-deep hover:bg-paper-deep/70 shadow-fd-sm flex items-stretch gap-0 overflow-hidden rounded-xl border-2 transition-colors"
+      className="border-ink bg-paper-deep hover:bg-paper-deep/70 flex items-stretch gap-0 overflow-hidden rounded-xl border-2 shadow-sm transition-colors"
     >
       <div
         aria-hidden

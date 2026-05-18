@@ -31,7 +31,7 @@ export function WinnerAnnouncement({ tournamentId }: Props) {
   }
 
   return (
-    <Card className="border-podium-gold bg-podium-gold-bg shadow-fd-md">
+    <Card className="border-podium-gold bg-podium-gold-bg shadow-md">
       <CardContent className="space-y-4 pt-5">
         <RibbonBanner label="Tournament Champion" color="gold" />
         <div className="text-center">

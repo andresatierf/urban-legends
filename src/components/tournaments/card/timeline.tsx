@@ -52,7 +52,7 @@ export function Timeline({ data }: { data: TournamentCardData }) {
         {status === "active" && (
           <div
             aria-hidden
-            className="border-ink bg-gold shadow-fd-sm absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
+            className="border-ink bg-gold absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 shadow-sm"
             style={{ left: `${progress}%` }}
           />
         )}

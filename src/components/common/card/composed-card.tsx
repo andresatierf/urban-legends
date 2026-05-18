@@ -39,7 +39,7 @@ export function ComposedCard({
   return (
     <Card
       className={cn(
-        "border-ink shadow-fd-lg gap-0 overflow-visible rounded-2xl border-2 p-0",
+        "border-ink gap-0 overflow-visible rounded-2xl border-2 p-0 shadow-lg",
         className,
       )}
       {...props}

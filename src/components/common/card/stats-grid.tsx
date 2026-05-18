@@ -20,7 +20,7 @@ const cellVariants = cva("flex flex-col items-center text-center", {
     variant: {
       divided: "py-2",
       tiles:
-        "border-ink bg-card shadow-fd-sm hover:shadow-fd-md rounded-xl border-2 px-2 py-2 transition-shadow duration-[120ms] ease-linear",
+        "border-ink bg-card rounded-xl border-2 px-2 py-2 shadow-sm transition-shadow duration-[120ms] ease-linear hover:shadow-md",
       strip: "gap-0.5",
     },
   },

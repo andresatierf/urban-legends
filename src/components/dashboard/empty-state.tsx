@@ -14,7 +14,7 @@ export function EmptyState({ viewerFirstName }: { viewerFirstName: string }) {
         </h1>
       </header>
 
-      <section className="border-ink bg-card shadow-fd-lg flex flex-col items-start gap-5 rounded-2xl border-2 p-8 sm:flex-row sm:items-center sm:gap-8 sm:p-10">
+      <section className="border-ink bg-card flex flex-col items-start gap-5 rounded-2xl border-2 p-8 shadow-lg sm:flex-row sm:items-center sm:gap-8 sm:p-10">
         <span
           aria-hidden
           className="border-ink bg-paper-deep flex size-16 shrink-0 items-center justify-center rounded-2xl border-2"
