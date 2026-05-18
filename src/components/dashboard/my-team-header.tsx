@@ -31,7 +31,7 @@ export function MyTeamHeader({
   return (
     <section
       aria-label="Your team standing"
-      className="border-ink bg-card shadow-fd-lg flex flex-col gap-5 rounded-2xl border-2 p-6 sm:flex-row sm:items-stretch sm:gap-8 sm:p-7"
+      className="border-ink bg-card flex flex-col gap-5 rounded-2xl border-2 p-6 shadow-lg sm:flex-row sm:items-stretch sm:gap-8 sm:p-7"
     >
       <div className="flex flex-1 flex-col gap-1.5">
         <Eyebrow>Your team</Eyebrow>

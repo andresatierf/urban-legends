@@ -551,27 +551,27 @@
 
 /* ── Field Day hard-offset shadow utilities ─────────────────────── */
 
-@utility shadow-fd-xs {
+@utility shadow-xs {
   box-shadow: 2px 2px 0 var(--shadow);
 }
-@utility shadow-fd-sm {
+@utility shadow-sm {
   box-shadow: 3px 3px 0 var(--shadow);
 }
-@utility shadow-fd {
+@utility shadow {
   box-shadow: 4px 4px 0 var(--shadow);
 }
-@utility shadow-fd-md {
+@utility shadow-md {
   box-shadow: 5px 5px 0 var(--shadow);
 }
-@utility shadow-fd-lg {
+@utility shadow-lg {
   box-shadow: 6px 6px 0 var(--shadow);
 }
-@utility shadow-fd-xl {
+@utility shadow-xl {
   box-shadow: 8px 8px 0 var(--shadow);
 }
 
 /* ── Field Day keyframes ─────────────────────────────────────────── */
-@keyframes va-fadein-up {
+@keyframes fadein-up {
   from {
     opacity: 0;
     transform: translateY(10px);
@@ -582,7 +582,7 @@
   }
 }
 
-@keyframes va-confetti-drift {
+@keyframes confetti-drift {
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
@@ -592,7 +592,7 @@
   }
 }
 
-@keyframes va-ribbon-flutter {
+@keyframes ribbon-flutter {
   0%,
   100% {
     letter-spacing: 0.14em;

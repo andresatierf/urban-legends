@@ -38,7 +38,7 @@ export function PrefixedSelect({
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger
-        className={`border-ink bg-chip dark:bg-chip text-ink hover:bg-chip dark:hover:bg-chip shadow-fd-xs h-auto! w-fit gap-2 rounded-full border-2 px-3 py-1 focus-visible:ring-0 data-[state=open]:rounded-t-[1rem] data-[state=open]:rounded-b-sm ${className ?? ""}`}
+        className={`border-ink bg-chip dark:bg-chip text-ink hover:bg-chip dark:hover:bg-chip h-auto! w-fit gap-2 rounded-full border-2 px-3 py-1 shadow-xs focus-visible:ring-0 data-[state=open]:rounded-t-[1rem] data-[state=open]:rounded-b-sm ${className ?? ""}`}
       >
         <span
           className={`text-mute text-label-caps font-heading font-extrabold ${
@@ -55,7 +55,7 @@ export function PrefixedSelect({
       </SelectTrigger>
       <SelectContent
         position="popper"
-        className="border-ink bg-chip text-ink shadow-fd-sm w-[var(--radix-select-trigger-width)] min-w-[var(--radix-select-trigger-width)] rounded-lg rounded-t-sm border-2"
+        className="border-ink bg-chip text-ink w-[var(--radix-select-trigger-width)] min-w-[var(--radix-select-trigger-width)] rounded-lg rounded-t-sm border-2 shadow-sm"
       >
         {options.map((option) => (
           <SelectItem

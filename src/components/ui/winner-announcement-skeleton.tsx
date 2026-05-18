@@ -11,7 +11,7 @@ export function WinnerAnnouncementSkeleton({ className }: Props) {
   return (
     <Card
       className={cn(
-        "border-podium-gold bg-podium-gold-bg shadow-fd-md",
+        "border-podium-gold bg-podium-gold-bg shadow-md",
         className,
       )}
       role="status"

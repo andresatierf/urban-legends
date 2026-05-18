@@ -65,7 +65,7 @@ function Swatch({
         style={{ backgroundColor: `var(${cssVar})` }}
       />
       <div className="min-w-0">
-        <div className="font-fd-display text-sm font-bold">{name}</div>
+        <div className="font-heading text-sm font-bold">{name}</div>
         <div className="text-mute font-mono text-xs">{cssVar}</div>
         <div className="text-mute text-xs">{desc}</div>
       </div>
@@ -75,7 +75,7 @@ function Swatch({
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="font-fd-display mt-8 mb-4 text-xl font-bold first:mt-0">
+    <h2 className="font-heading mt-8 mb-4 text-xl font-bold first:mt-0">
       {children}
     </h2>
   );

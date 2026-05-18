@@ -102,7 +102,7 @@ export function TournamentContextHeader({
       </div>
 
       {state === "urgent" && (
-        <div className="border-crimson bg-crimson/10 shadow-fd flex items-center gap-3 rounded-xl border-2 px-4 py-3">
+        <div className="border-crimson bg-crimson/10 flex items-center gap-3 rounded-xl border-2 px-4 py-3 shadow">
           <Clock aria-hidden className="text-crimson size-5 shrink-0" />
           <div className="flex flex-1 flex-wrap items-baseline gap-x-3 gap-y-1">
             <span className="font-heading text-h3 text-crimson">

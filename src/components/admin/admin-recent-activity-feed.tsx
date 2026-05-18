@@ -49,7 +49,7 @@ export function AdminRecentActivityFeed({
   activities,
 }: AdminRecentActivityFeedProps) {
   return (
-    <Card className="shadow-fd-md">
+    <Card className="shadow-md">
       <CardHeader>
         <CardTitle>Recent Activity</CardTitle>
       </CardHeader>

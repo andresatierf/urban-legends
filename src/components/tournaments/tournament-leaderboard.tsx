@@ -76,14 +76,14 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
         columns={4}
         headers={["Rank", "Team Name", "Points", "Members"]}
         rows={5}
-        className="border-ink shadow-fd-lg overflow-hidden rounded-2xl border-2"
+        className="border-ink overflow-hidden rounded-2xl border-2 shadow-lg"
       />
     );
   }
 
   if (leaderboard.length === 0) {
     return (
-      <div className="border-ink bg-card shadow-fd-lg flex flex-col items-center justify-center rounded-2xl border-2 p-12 text-center">
+      <div className="border-ink bg-card flex flex-col items-center justify-center rounded-2xl border-2 p-12 text-center shadow-lg">
         <Trophy className="text-muted-foreground mb-4 h-12 w-12" />
         <h3 className="mb-2 text-lg font-semibold">No teams yet</h3>
         <p className="text-muted-foreground text-sm">
@@ -94,7 +94,7 @@ export function TournamentLeaderboard({ tournamentId, limit }: Props) {
   }
 
   return (
-    <div className="border-ink bg-card shadow-fd-lg overflow-hidden rounded-2xl border-2">
+    <div className="border-ink bg-card overflow-hidden rounded-2xl border-2 shadow-lg">
       <Table>
         <TableHeader className="border-ink bg-paper-deep [&_tr]:border-ink [&_tr]:hover:bg-paper-deep">
           <TableRow>

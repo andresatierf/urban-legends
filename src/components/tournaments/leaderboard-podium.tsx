@@ -26,7 +26,7 @@ const PODIUM_CONFIG: Record<
     icon: <Trophy className="text-podium-gold h-12 w-12" />,
     border: "border-podium-gold",
     bg: "bg-podium-gold-bg",
-    shadow: "shadow-fd-lg",
+    shadow: "shadow-lg",
     height: "md:mt-0",
     label: "1st",
     eyebrowColor: "gold",
@@ -35,7 +35,7 @@ const PODIUM_CONFIG: Record<
     icon: <Medal className="text-podium-silver h-10 w-10" />,
     border: "border-podium-silver",
     bg: "bg-podium-silver-bg",
-    shadow: "shadow-fd-md",
+    shadow: "shadow-md",
     height: "md:mt-8",
     label: "2nd",
     eyebrowColor: "mute",
@@ -44,7 +44,7 @@ const PODIUM_CONFIG: Record<
     icon: <Medal className="text-podium-bronze h-10 w-10" />,
     border: "border-podium-bronze",
     bg: "bg-podium-bronze-bg",
-    shadow: "shadow-fd-md",
+    shadow: "shadow-md",
     height: "md:mt-12",
     label: "3rd",
     eyebrowColor: "mute",
@@ -85,7 +85,7 @@ export function LeaderboardPodium({ tournamentId }: Props) {
         return (
           <Card
             key={team.teamId}
-            className={`hover:shadow-fd-xl border-2 transition-[transform,box-shadow] duration-[120ms] ease-linear hover:-translate-x-0.5 hover:-translate-y-0.5 ${config.border} ${config.bg} ${config.shadow} ${config.height}`}
+            className={`border-2 transition-[transform,box-shadow] duration-[120ms] ease-linear hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-xl ${config.border} ${config.bg} ${config.shadow} ${config.height}`}
           >
             <CardContent className="flex flex-col items-center p-6">
               <div className="mb-2">{config.icon}</div>

@@ -1,11 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Users } from "lucide-react";
+import { ArrowRight, Crown, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { TournamentSwitcher } from "@/components/common/tournament-switcher";
 import { SectionHeader } from "@/components/section-header";
 import { getTournamentStatus } from "@/components/tournaments/utils";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { useUser } from "@/hooks/useUser";
 
 import type { Doc } from "../../../../convex/_generated/dataModel";
@@ -37,6 +39,7 @@ export function TeamListing({
   const { user } = useUser({ shouldThrow: false });
   const currentUserId = user?._id;
   const getCardActions = useTeamCardActions();
+
   const [filter, setFilter] = useState<string>(() => {
     const tournamentIds = Array.from(
       new Set(allTeams.map((t) => t.tournamentId)),
@@ -56,6 +59,13 @@ export function TeamListing({
     () => new Set(userTeams.map((t) => t.tournamentId)),
     [userTeams],
   );
+
+  const isEndedTeam = useMemo(() => {
+    return (team: TeamWithMembers) => {
+      const t = tournamentMap[team.tournamentId];
+      return t ? getTournamentStatus(t) === "ended" : false;
+    };
+  }, [tournamentMap]);
 
   const tournamentsWithTeams = useMemo(
     () =>
@@ -85,135 +95,155 @@ export function TeamListing({
     return hidden ? "all" : filter;
   }, [filter, visibleTournaments]);
 
-  const visibleTeams = useMemo(() => {
-    const isEndedTeam = (team: TeamWithMembers) => {
-      const t = tournamentMap[team.tournamentId];
-      return t ? getTournamentStatus(t) === "ended" : false;
-    };
-
-    const matchesFilter = (team: TeamWithMembers) =>
+  const matchesPageFilter = useMemo(() => {
+    return (team: TeamWithMembers) =>
       effectiveFilter === "all"
         ? includeEnded || !isEndedTeam(team)
         : team.tournamentId === effectiveFilter;
+  }, [effectiveFilter, includeEnded, isEndedTeam]);
 
-    return allTeams.filter(matchesFilter).sort((a, b) => {
-      const aMine = userTeamIds.has(a._id) ? 0 : 1;
-      const bMine = userTeamIds.has(b._id) ? 0 : 1;
-      return aMine - bMine;
-    });
-  }, [allTeams, tournamentMap, userTeamIds, effectiveFilter, includeEnded]);
+  const visibleUserTeams = useMemo(
+    () => userTeams.filter(matchesPageFilter),
+    [userTeams, matchesPageFilter],
+  );
+
+  const browseTeams = useMemo(
+    () =>
+      allTeams.filter((t) => !userTeamIds.has(t._id)).filter(matchesPageFilter),
+    [allTeams, userTeamIds, matchesPageFilter],
+  );
 
   const hasAnyTeams = allTeams.length > 0;
   const hasEndedTournaments = tournamentsWithTeams.some(
     (t) => getTournamentStatus(t) === "ended",
   );
 
+  const renderCard = (
+    team: TeamWithMembers,
+    showTournamentEyebrow: boolean,
+  ) => {
+    const isUserMember = userTeamIds.has(team._id);
+    const role =
+      isUserMember && currentUserId
+        ? (team.members.find((m) => m._id === currentUserId)?.memberRole ??
+          null)
+        : null;
+    const actions = getCardActions(team._id);
+    return (
+      <TeamCard
+        key={team._id}
+        data={{
+          team,
+          tournament: showTournamentEyebrow
+            ? tournamentMap[team.tournamentId]
+            : undefined,
+          members: team.members,
+          memberCount: team.members.length,
+          isUserMember,
+          isUserInTeam: userTournamentIds.has(team.tournamentId),
+          userRole: role,
+          rank: team.rank,
+          totalTeams: team.totalTeams,
+        }}
+        joinRequest={actions.joinRequest}
+        onRequestJoin={actions.onRequestJoin}
+        onCancelRequest={actions.onCancelRequest}
+        onLeave={actions.onLeave}
+      />
+    );
+  };
+
+  const showFilterBar =
+    hasAnyTeams && (visibleTournaments.length > 1 || hasEndedTournaments);
+
   return (
     <div className="space-y-6">
       <SectionHeader as="h1" title="Teams" Icon={Users}>
-        <div className="flex items-center gap-2">
-          {(visibleTournaments.length > 0 || hasEndedTournaments) && (
+        {headerActions}
+      </SectionHeader>
+
+      {showFilterBar && (
+        <div className="flex flex-wrap items-center gap-2">
+          {visibleTournaments.length > 1 && (
+            <TournamentSwitcher
+              tournaments={visibleTournaments}
+              selectedTournamentId={effectiveFilter}
+              onSelect={setFilter}
+              label="Tournament"
+              allOption={{ value: "all", label: "All tournaments" }}
+            />
+          )}
+          {effectiveFilter !== "all" && (
+            <Button size="sm" asChild>
+              <Link
+                to="/tournaments/$tournamentId"
+                params={{ tournamentId: effectiveFilter }}
+              >
+                View tournament
+                <ArrowRight className="size-3.5" />
+              </Link>
+            </Button>
+          )}
+          {hasEndedTournaments && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIncludeEnded((v) => !v)}
             >
-              {includeEnded ? "Hide past tournaments" : "Show past tournaments"}
+              {includeEnded ? "Hide past" : "Show past"}
             </Button>
           )}
-          {headerActions}
         </div>
-      </SectionHeader>
+      )}
 
       {!hasAnyTeams ? (
         <JoinTeamCard first />
-      ) : visibleTeams.length === 0 ? (
-        <>
-          {visibleTournaments.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <TournamentSwitcher
-                tournaments={visibleTournaments}
-                selectedTournamentId={effectiveFilter}
-                onSelect={setFilter}
-                label="Tournament"
-                allOption={{ value: "all", label: "All tournaments" }}
-              />
-              {effectiveFilter !== "all" && (
-                <Button size="sm" asChild>
-                  <Link
-                    to="/tournaments/$tournamentId"
-                    params={{ tournamentId: effectiveFilter }}
-                  >
-                    View tournament
-                    <ArrowRight className="size-3.5" />
-                  </Link>
-                </Button>
-              )}
-            </div>
-          )}
-          <p className="text-muted-foreground rounded-lg border border-dashed py-6 text-center text-xs">
-            No teams to show.
-          </p>
-        </>
       ) : (
-        <>
-          {visibleTournaments.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <TournamentSwitcher
-                tournaments={visibleTournaments}
-                selectedTournamentId={effectiveFilter}
-                onSelect={setFilter}
-                label="Tournament"
-                allOption={{ value: "all", label: "All tournaments" }}
-              />
-              {effectiveFilter !== "all" && (
-                <Button size="sm" asChild>
-                  <Link
-                    to="/tournaments/$tournamentId"
-                    params={{ tournamentId: effectiveFilter }}
-                  >
-                    View tournament
-                    <ArrowRight className="size-3.5" />
-                  </Link>
-                </Button>
-              )}
-            </div>
+        <div className="space-y-8">
+          {visibleUserTeams.length > 0 && (
+            <section className="border-ink bg-paper-deep rounded-2xl border-2 p-5 shadow sm:p-6">
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <Eyebrow color="sunset">Your roster</Eyebrow>
+                  <h2 className="text-h2 text-foreground mt-1">
+                    {visibleUserTeams.length === 1 ? "Your team" : "Your teams"}
+                  </h2>
+                </div>
+                <Badge variant="info" className="gap-1">
+                  <Crown className="size-3" />
+                  {visibleUserTeams.length}{" "}
+                  {visibleUserTeams.length === 1 ? "team" : "teams"}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 gap-3 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
+                {visibleUserTeams.map((team) => renderCard(team, true))}
+              </div>
+            </section>
           )}
-          <div className="grid grid-cols-1 gap-3 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
-            {visibleTeams.map((team) => {
-              const isUserMember = userTeamIds.has(team._id);
-              const role =
-                isUserMember && currentUserId
-                  ? (team.members.find((m) => m._id === currentUserId)
-                      ?.memberRole ?? null)
-                  : null;
-              const actions = getCardActions(team._id);
-              return (
-                <TeamCard
-                  key={team._id}
-                  data={{
-                    team,
-                    tournament:
-                      effectiveFilter === "all"
-                        ? tournamentMap[team.tournamentId]
-                        : undefined,
-                    members: team.members,
-                    memberCount: team.members.length,
-                    isUserMember,
-                    isUserInTeam: userTournamentIds.has(team.tournamentId),
-                    userRole: role,
-                    rank: team.rank,
-                    totalTeams: team.totalTeams,
-                  }}
-                  joinRequest={actions.joinRequest}
-                  onRequestJoin={actions.onRequestJoin}
-                  onCancelRequest={actions.onCancelRequest}
-                  onLeave={actions.onLeave}
-                />
-              );
-            })}
-          </div>
-        </>
+
+          <section className="space-y-4 pb-4">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <Eyebrow>Browse</Eyebrow>
+                <h2 className="text-h2 text-foreground mt-1">
+                  {visibleUserTeams.length > 0 ? "Other teams" : "All teams"}
+                </h2>
+              </div>
+            </div>
+
+            {browseTeams.length === 0 ? (
+              <p className="border-ink-soft text-muted-foreground text-body-sm rounded-xl border-2 border-dashed py-8 text-center">
+                No other teams to show.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
+                {browseTeams.map((team) =>
+                  renderCard(team, effectiveFilter === "all"),
+                )}
+              </div>
+            )}
+          </section>
+        </div>
       )}
     </div>
   );
@@ -225,16 +255,40 @@ export function TeamListingSkeleton({
   headerActions?: React.ReactNode;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <SectionHeader as="h1" title="Teams" Icon={Users}>
         {headerActions}
       </SectionHeader>
-      <Skeleton className="h-8 w-44 rounded-full" />
-      <div className="grid grid-cols-1 gap-3 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <TeamCardSkeleton key={i} />
-        ))}
-      </div>
+
+      <section className="border-ink bg-paper-deep rounded-2xl border-2 p-5 shadow sm:p-6">
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-7 w-40" />
+          </div>
+          <Skeleton className="h-6 w-20 rounded-md" />
+        </div>
+        <div className="grid grid-cols-1 gap-3 gap-y-6 md:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <TeamCardSkeleton key={i} />
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-7 w-36" />
+          </div>
+          <Skeleton className="h-8 w-44 rounded-full" />
+        </div>
+        <div className="grid grid-cols-1 gap-3 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <TeamCardSkeleton key={i} />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

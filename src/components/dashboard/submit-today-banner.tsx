@@ -36,7 +36,7 @@ export function SubmitTodayBanner({
   return (
     <section
       aria-label="Daily submission prompt"
-      className="border-ink bg-card shadow-fd grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 rounded-xl border-2 px-4 py-4 sm:grid-cols-[auto_1fr_auto] sm:gap-x-6 sm:gap-y-0 sm:px-6"
+      className="border-ink bg-card grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 rounded-xl border-2 px-4 py-4 shadow sm:grid-cols-[auto_1fr_auto] sm:gap-x-6 sm:gap-y-0 sm:px-6"
     >
       <span
         aria-hidden

@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function TeamCardSkeleton() {
   return (
-    <div className="border-ink shadow-fd-lg bg-card flex flex-col gap-0 overflow-visible rounded-2xl border-2">
+    <div className="border-ink bg-card flex flex-col gap-0 overflow-visible rounded-2xl border-2 shadow-lg">
       <header className="border-ink bg-paper-deep flex items-center justify-between gap-3 rounded-t-[18px] border-b-2 px-4 py-3">
         <div className="flex min-w-0 flex-col gap-1.5">
           <Skeleton className="h-3 w-32" />

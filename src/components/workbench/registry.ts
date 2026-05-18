@@ -127,6 +127,11 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     label: "Dashboard",
     group: "pages",
   },
+  {
+    path: "/workbench/pages/teams",
+    label: "Teams listing",
+    group: "pages",
+  },
 ];
 
 export const GROUPED_WORKBENCH_ENTRIES: Map<string, WorkbenchEntry[]> =
