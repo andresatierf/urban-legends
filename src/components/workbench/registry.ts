@@ -93,11 +93,6 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "components",
   },
   {
-    path: "/workbench/components/dashboard-v2",
-    label: "Dashboard v2 (prototype)",
-    group: "components",
-  },
-  {
     path: "/workbench/components/invitations",
     label: "Invitations",
     group: "components",
@@ -131,6 +126,11 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     path: "/workbench/states/empty-loading",
     label: "Empty & Loading",
     group: "states",
+  },
+  {
+    path: "/workbench/pages/dashboard",
+    label: "Dashboard",
+    group: "pages",
   },
 ];
 

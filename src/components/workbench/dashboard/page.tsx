@@ -12,30 +12,31 @@ import {
   type DashboardInboxItem,
   type DashboardLifecycle,
   type DashboardTeamRow,
-} from "../sections";
+} from "@/components/dashboard/sections";
 import {
   buildStandingsChartData,
   buildStandingsGroups,
   toIsoDate,
-} from "../utils";
+} from "@/components/dashboard/utils";
+
 import {
-  PROTOTYPE_INBOX,
-  PROTOTYPE_TEAMS_BY_TOURNAMENT,
-  PROTOTYPE_TIMELINES_BY_TOURNAMENT,
-  PROTOTYPE_TOURNAMENTS,
-  PROTOTYPE_VIEWER,
-  type PrototypeViewMode,
-} from "./mock";
+  MOCK_INBOX,
+  MOCK_TEAMS_BY_TOURNAMENT,
+  MOCK_TIMELINES_BY_TOURNAMENT,
+  MOCK_TOURNAMENTS,
+  MOCK_VIEWER,
+  type MockViewMode,
+} from "./fixtures";
 
 // ─── view-mode driver ───────────────────────────────────────────────────────
 
-export type PrototypeViewModeConfig = {
-  mode: PrototypeViewMode;
+export type MockViewModeConfig = {
+  mode: MockViewMode;
   label: string;
   description: string;
 };
 
-export const VIEW_MODES: PrototypeViewModeConfig[] = [
+export const VIEW_MODES: MockViewModeConfig[] = [
   {
     mode: "active-no-submission",
     label: "Active · unsubmitted",
@@ -76,7 +77,7 @@ type ResolvedMode = {
   isEmpty: boolean;
 };
 
-function resolveMode(mode: PrototypeViewMode): ResolvedMode {
+function resolveMode(mode: MockViewMode): ResolvedMode {
   switch (mode) {
     case "active-no-submission":
       return { tournamentIdx: 0, todaySubmissions: 0, isEmpty: false };
@@ -100,33 +101,33 @@ function isWithinGrace(endDate: string): boolean {
 
 // ─── main page ──────────────────────────────────────────────────────────────
 
-export function DashboardPrototypePage({
+export function DashboardSandboxPage({
   mode = "active-no-submission",
 }: {
-  mode?: PrototypeViewMode;
+  mode?: MockViewMode;
 }) {
   const resolved = resolveMode(mode);
-  const initialTournamentId = PROTOTYPE_TOURNAMENTS[resolved.tournamentIdx]
+  const initialTournamentId = MOCK_TOURNAMENTS[resolved.tournamentIdx]
     ._id as string;
   const [selectedId, setSelectedId] = useState<string>(initialTournamentId);
 
   const tournament = useMemo(
     () =>
-      PROTOTYPE_TOURNAMENTS.find((t) => t._id === selectedId) ??
-      PROTOTYPE_TOURNAMENTS[resolved.tournamentIdx],
+      MOCK_TOURNAMENTS.find((t) => t._id === selectedId) ??
+      MOCK_TOURNAMENTS[resolved.tournamentIdx],
     [selectedId, resolved.tournamentIdx],
   );
 
   if (resolved.isEmpty) {
     return (
       <DashboardShell>
-        <EmptyState viewerFirstName={PROTOTYPE_VIEWER.firstName} />
+        <EmptyState viewerFirstName={MOCK_VIEWER.firstName} />
       </DashboardShell>
     );
   }
 
-  const teams = PROTOTYPE_TEAMS_BY_TOURNAMENT[tournament._id];
-  const timelines = PROTOTYPE_TIMELINES_BY_TOURNAMENT[tournament._id];
+  const teams = MOCK_TEAMS_BY_TOURNAMENT[tournament._id];
+  const timelines = MOCK_TIMELINES_BY_TOURNAMENT[tournament._id];
 
   const sorted = [...teams].sort((a, b) => b.team.points - a.team.points);
   const myTeam = sorted.find((t) => t.userRole !== "rival") ?? sorted[0];
@@ -179,13 +180,13 @@ export function DashboardPrototypePage({
     userRole: t.userRole,
   }));
 
-  const inboxItems: DashboardInboxItem[] = PROTOTYPE_INBOX;
+  const inboxItems: DashboardInboxItem[] = MOCK_INBOX;
 
   return (
     <DashboardShell>
       <TournamentContextHeader
-        viewerFirstName={PROTOTYPE_VIEWER.firstName}
-        tournaments={PROTOTYPE_TOURNAMENTS.filter(
+        viewerFirstName={MOCK_VIEWER.firstName}
+        tournaments={MOCK_TOURNAMENTS.filter(
           (t) => t.__state !== "ended" || isWithinGrace(t.endDate),
         ).map((t) => ({ _id: t._id, name: t.name }))}
         selectedTournamentId={tournament._id}

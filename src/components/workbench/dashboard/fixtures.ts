@@ -2,7 +2,7 @@ import type {
   DashboardStandingsTimeline,
   DashboardTeam,
   DashboardTournament,
-} from "../types";
+} from "@/components/dashboard/types";
 
 const id = <T>(s: string) => s as unknown as T;
 
@@ -10,14 +10,10 @@ const todayMs = Date.now();
 const dayMs = 86_400_000;
 const isoDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
-export type PrototypeTournamentState =
-  | "active"
-  | "urgent"
-  | "ended"
-  | "upcoming";
+export type MockTournamentState = "active" | "urgent" | "ended" | "upcoming";
 
-type PrototypeTournament = DashboardTournament & {
-  __state: PrototypeTournamentState;
+type MockTournament = DashboardTournament & {
+  __state: MockTournamentState;
 };
 
 const buildTournament = (overrides: {
@@ -25,9 +21,9 @@ const buildTournament = (overrides: {
   name: string;
   startDate: string;
   endDate: string;
-  state: PrototypeTournamentState;
+  state: MockTournamentState;
   maxSubmissionsPerDay?: number;
-}): PrototypeTournament => ({
+}): MockTournament => ({
   _id: id<DashboardTournament["_id"]>(overrides._id),
   _creationTime: todayMs - 40 * dayMs,
   name: overrides.name,
@@ -46,7 +42,7 @@ const buildTournament = (overrides: {
   __state: overrides.state,
 });
 
-export const PROTOTYPE_TOURNAMENTS: PrototypeTournament[] = [
+export const MOCK_TOURNAMENTS: MockTournament[] = [
   buildTournament({
     _id: "t_spring",
     name: "Spring Sprint 2026",
@@ -74,7 +70,7 @@ export const PROTOTYPE_TOURNAMENTS: PrototypeTournament[] = [
 ];
 
 const teamRow = (
-  tournament: PrototypeTournament,
+  tournament: MockTournament,
   team: {
     id: string;
     name: string;
@@ -205,21 +201,21 @@ const WINTER_TEAMS = [
   },
 ];
 
-const PROTOTYPE_TEAM_ROWS: DashboardTeam[] = [
-  ...SPRING_TEAMS.map((t) => teamRow(PROTOTYPE_TOURNAMENTS[0], t)),
-  ...QUARTER_TEAMS.map((t) => teamRow(PROTOTYPE_TOURNAMENTS[1], t)),
-  ...WINTER_TEAMS.map((t) => teamRow(PROTOTYPE_TOURNAMENTS[2], t)),
+const MOCK_TEAM_ROWS: DashboardTeam[] = [
+  ...SPRING_TEAMS.map((t) => teamRow(MOCK_TOURNAMENTS[0], t)),
+  ...QUARTER_TEAMS.map((t) => teamRow(MOCK_TOURNAMENTS[1], t)),
+  ...WINTER_TEAMS.map((t) => teamRow(MOCK_TOURNAMENTS[2], t)),
 ];
 
-export const PROTOTYPE_TEAMS_BY_TOURNAMENT: Record<string, DashboardTeam[]> = {
-  [PROTOTYPE_TOURNAMENTS[0]._id]: PROTOTYPE_TEAM_ROWS.slice(0, 6),
-  [PROTOTYPE_TOURNAMENTS[1]._id]: PROTOTYPE_TEAM_ROWS.slice(6, 10),
-  [PROTOTYPE_TOURNAMENTS[2]._id]: PROTOTYPE_TEAM_ROWS.slice(10, 14),
+export const MOCK_TEAMS_BY_TOURNAMENT: Record<string, DashboardTeam[]> = {
+  [MOCK_TOURNAMENTS[0]._id]: MOCK_TEAM_ROWS.slice(0, 6),
+  [MOCK_TOURNAMENTS[1]._id]: MOCK_TEAM_ROWS.slice(6, 10),
+  [MOCK_TOURNAMENTS[2]._id]: MOCK_TEAM_ROWS.slice(10, 14),
 };
 
 function buildTimelines(
   teams: DashboardTeam[],
-  tournament: PrototypeTournament,
+  tournament: MockTournament,
 ): DashboardStandingsTimeline[] {
   const startMs = new Date(tournament.startDate).getTime();
   const endMs = Math.min(new Date(tournament.endDate).getTime(), todayMs);
@@ -244,17 +240,17 @@ function buildTimelines(
   });
 }
 
-export const PROTOTYPE_TIMELINES_BY_TOURNAMENT: Record<
+export const MOCK_TIMELINES_BY_TOURNAMENT: Record<
   string,
   DashboardStandingsTimeline[]
 > = Object.fromEntries(
-  PROTOTYPE_TOURNAMENTS.map((t) => [
+  MOCK_TOURNAMENTS.map((t) => [
     t._id,
-    buildTimelines(PROTOTYPE_TEAMS_BY_TOURNAMENT[t._id], t),
+    buildTimelines(MOCK_TEAMS_BY_TOURNAMENT[t._id], t),
   ]),
 );
 
-export type PrototypeInboxItem =
+export type MockInboxItem =
   | {
       kind: "invitation";
       id: string;
@@ -271,7 +267,7 @@ export type PrototypeInboxItem =
       timestamp: number;
     };
 
-export const PROTOTYPE_INBOX: PrototypeInboxItem[] = [
+export const MOCK_INBOX: MockInboxItem[] = [
   {
     kind: "invitation",
     id: "inv_1",
@@ -296,13 +292,13 @@ export const PROTOTYPE_INBOX: PrototypeInboxItem[] = [
   },
 ];
 
-export type PrototypeSubmissionStatus =
+export type MockSubmissionStatus =
   | "none"
   | "one"
   | "at-limit"
   | "unlimited-pending";
 
-export type PrototypeViewMode =
+export type MockViewMode =
   | "active-default"
   | "active-no-submission"
   | "active-at-limit"
@@ -310,6 +306,6 @@ export type PrototypeViewMode =
   | "ended-recent"
   | "empty";
 
-export const PROTOTYPE_VIEWER = {
+export const MOCK_VIEWER = {
   firstName: "Andre",
 };
