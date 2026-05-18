@@ -1,5 +1,4 @@
 import { useMutation, useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import { useRef, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -7,26 +6,17 @@ import { cn, tryMutate } from "@/lib/utils";
 
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import {
-  DashboardShell,
-  EmptyState,
-  formatEndDate,
-  Inbox,
-  MyTeamHeader,
-  StandingsCard,
-  SubmitTodayBanner,
-  TournamentContextHeader,
-  type DashboardInboxItem,
-  type DashboardTeamRow,
-} from "./sections";
+import { buildChartData, formatEndDate } from "./chart-data";
+import { EmptyState } from "./empty-state";
+import { Inbox } from "./inbox";
+import { MyTeamHeader } from "./my-team-header";
+import { DashboardShell } from "./shell";
+import { StandingsCard } from "./standings-card";
+import { SubmitTodayBanner } from "./submit-today-banner";
+import { TournamentContextHeader } from "./tournament-context-header";
+import type { DashboardTeamRow, DashboardView } from "./types";
 
-type DashboardViewData = FunctionReturnType<
-  typeof api.views.dashboard.getDashboardView
->;
-
-const DAY_MS = 86_400_000;
-
-export function DashboardPage() {
+export function DashboardLayout() {
   const [selectedId, setSelectedId] = useState<Id<"tournaments"> | undefined>(
     undefined,
   );
@@ -37,7 +27,7 @@ export function DashboardPage() {
 
   // Keep the previous data visible while a refetch (e.g. tournament switch)
   // is in flight so the screen doesn't flash to skeleton.
-  const lastDataRef = useRef<DashboardViewData | undefined>(undefined);
+  const lastDataRef = useRef<DashboardView | undefined>(undefined);
   if (fresh !== undefined) lastDataRef.current = fresh;
   const data = fresh ?? lastDataRef.current;
   const isRefetching = fresh === undefined && lastDataRef.current !== undefined;
@@ -57,7 +47,7 @@ export function DashboardPage() {
     return (
       <DashboardShell>
         <EmptyState viewerFirstName={data.viewer.firstName} />
-        {data.inbox.length > 0 && <Inbox items={data.inbox.map(toInboxItem)} />}
+        {data.inbox.length > 0 && <Inbox items={data.inbox} />}
       </DashboardShell>
     );
   }
@@ -76,9 +66,7 @@ function DashboardLoaded({
   onSelect,
   isRefetching,
 }: {
-  data: DashboardViewData & {
-    selected: NonNullable<DashboardViewData["selected"]>;
-  };
+  data: DashboardView & { selected: NonNullable<DashboardView["selected"]> };
   onSelect: (id: Id<"tournaments">) => void;
   isRefetching: boolean;
 }) {
@@ -97,9 +85,7 @@ function DashboardLoaded({
   }));
 
   const chartData = buildChartData(selected, Date.now());
-  const inboxItems = data.inbox.map(toInboxItem);
 
-  // ── inbox mutations ──────────────────────────────────────────────────
   const acceptJoinRequest = useMutation(api.joinRequests.accept);
   const rejectJoinRequest = useMutation(api.joinRequests.reject);
   const [pendingId, setPendingId] = useState<Id<"joinRequests"> | null>(null);
@@ -192,7 +178,7 @@ function DashboardLoaded({
         )}
 
         <Inbox
-          items={inboxItems}
+          items={data.inbox}
           onRespondInvitation={respondInvitation}
           onRespondJoinRequest={respondJoinRequest}
           pendingId={pendingId}
@@ -200,52 +186,4 @@ function DashboardLoaded({
       </div>
     </DashboardShell>
   );
-}
-
-// ── helpers ──────────────────────────────────────────────────────────────
-
-function toInboxItem(
-  raw: DashboardViewData["inbox"][number],
-): DashboardInboxItem {
-  return raw;
-}
-
-function buildChartData(
-  selected: NonNullable<DashboardViewData["selected"]>,
-  nowMs: number,
-) {
-  const startMs = new Date(selected.tournament.startDate).getTime();
-  const endMs = Math.min(
-    new Date(selected.tournament.endDate).getTime(),
-    nowMs,
-  );
-  const totalDays = Math.max(Math.ceil((endMs - startMs) / DAY_MS), 1);
-  const days = Array.from(
-    { length: totalDays + 1 },
-    (_, i) => startMs + i * DAY_MS,
-  );
-
-  const timelinesByTeam = new Map(
-    selected.timeline.map((tl) => [tl.teamId, tl.events]),
-  );
-
-  const series = selected.teams.map((t) => {
-    const events = (timelinesByTeam.get(t.team._id) ?? []).filter(
-      (e) => e.timestamp >= startMs && e.timestamp <= endMs,
-    );
-    const points = days.map((d) =>
-      events.reduce((sum, e) => (e.timestamp <= d ? sum + e.points : sum), 0),
-    );
-    if (points.length > 0 && events.length > 0) {
-      points[points.length - 1] = t.team.points;
-    }
-    return {
-      teamId: t.team._id,
-      teamName: t.team.name,
-      points,
-      total: t.team.points,
-    };
-  });
-
-  return { days, series };
 }

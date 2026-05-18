@@ -1,4 +1,4 @@
-import { RaceChart } from "@/components/dashboard/race-chart";
+import { RaceChart } from "@/components/common/race-chart";
 import { SectionHeader } from "@/components/section-header";
 
 import { Specimen } from "./shells/specimen";

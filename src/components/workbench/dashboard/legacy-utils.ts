@@ -2,7 +2,7 @@ import type {
   DashboardStandingsTimeline,
   DashboardTeam,
   DashboardTournament,
-} from "./types";
+} from "./legacy-types";
 
 export function toIsoDate(date: Date): string {
   return date.toISOString().slice(0, 10);

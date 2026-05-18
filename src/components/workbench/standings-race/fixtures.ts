@@ -1,11 +1,11 @@
 import type {
   DashboardTeam,
   DashboardTournament,
-} from "@/components/dashboard/types";
+} from "@/components/workbench/dashboard/legacy-types";
 import type {
   StandingsChartData,
   StandingsGroup,
-} from "@/components/dashboard/utils";
+} from "@/components/workbench/dashboard/legacy-utils";
 
 import type { Id } from "../../../../convex/_generated/dataModel";
 

@@ -2,7 +2,7 @@ import type {
   DashboardStandingsTimeline,
   DashboardTeam,
   DashboardTournament,
-} from "@/components/dashboard/types";
+} from "./legacy-types";
 
 const id = <T>(s: string) => s as unknown as T;
 

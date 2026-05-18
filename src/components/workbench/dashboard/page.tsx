@@ -1,23 +1,18 @@
 import { useMemo, useState } from "react";
 
-import {
-  DashboardShell,
-  EmptyState,
-  formatEndDate,
-  Inbox,
-  MyTeamHeader,
-  StandingsCard,
-  SubmitTodayBanner,
-  TournamentContextHeader,
-  type DashboardInboxItem,
-  type DashboardLifecycle,
-  type DashboardTeamRow,
-} from "@/components/dashboard/sections";
-import {
-  buildStandingsChartData,
-  buildStandingsGroups,
-  toIsoDate,
-} from "@/components/dashboard/utils";
+import { formatEndDate } from "@/components/dashboard/chart-data";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { Inbox } from "@/components/dashboard/inbox";
+import { MyTeamHeader } from "@/components/dashboard/my-team-header";
+import { DashboardShell } from "@/components/dashboard/shell";
+import { StandingsCard } from "@/components/dashboard/standings-card";
+import { SubmitTodayBanner } from "@/components/dashboard/submit-today-banner";
+import { TournamentContextHeader } from "@/components/dashboard/tournament-context-header";
+import type {
+  DashboardInboxItem,
+  DashboardLifecycle,
+  DashboardTeamRow,
+} from "@/components/dashboard/types";
 
 import {
   MOCK_INBOX,
@@ -27,6 +22,11 @@ import {
   MOCK_VIEWER,
   type MockViewMode,
 } from "./fixtures";
+import {
+  buildStandingsChartData,
+  buildStandingsGroups,
+  toIsoDate,
+} from "./legacy-utils";
 
 // ─── view-mode driver ───────────────────────────────────────────────────────
 

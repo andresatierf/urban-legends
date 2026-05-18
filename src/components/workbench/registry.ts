@@ -118,11 +118,6 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "components",
   },
   {
-    path: "/workbench/components/standings-race-card",
-    label: "Standings Race Card",
-    group: "components",
-  },
-  {
     path: "/workbench/states/empty-loading",
     label: "Empty & Loading",
     group: "states",
