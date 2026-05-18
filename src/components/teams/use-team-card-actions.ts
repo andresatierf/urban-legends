@@ -15,6 +15,8 @@ type TeamCardActions = {
   joinRequest: JoinTeamRequestState;
   onRequestJoin: (message: string | undefined) => Promise<void>;
   onCancelRequest: () => void;
+  onAcceptInvitation: () => void;
+  onRejectInvitation: () => void;
   onLeave: () => void;
 };
 
@@ -25,13 +27,17 @@ export function useTeamCardActions(): (teamId: Id<"teams">) => TeamCardActions {
     user ? { userId: user._id, status: "pending" } : "skip",
   );
   const cancelMutation = useMutation(api.joinRequests.cancel);
+  const acceptMutation = useMutation(api.joinRequests.accept);
+  const rejectMutation = useMutation(api.joinRequests.reject);
   const requestToJoinMutation = useMutation(api.joinRequests.request);
   const leaveTeamMutation = useMutation(api.teams.leaveTeam);
 
   return useCallback(
     (teamId: Id<"teams">) => {
-      const joinRequest =
-        joinRequests?.find((r) => r.teamId === teamId) ?? null;
+      const row = joinRequests?.find((r) => r.teamId === teamId) ?? null;
+      const joinRequest = row
+        ? { _id: row._id, initiator: row.initiator }
+        : null;
 
       return {
         joinRequest,
@@ -49,14 +55,27 @@ export function useTeamCardActions(): (teamId: Id<"teams">) => TeamCardActions {
           }
         },
         onCancelRequest: () => {
-          if (!joinRequest) return;
+          if (!row) return;
           void tryMutate({
-            fn: () =>
-              cancelMutation({
-                requestId: joinRequest._id as Id<"joinRequests">,
-              }),
+            fn: () => cancelMutation({ requestId: row._id }),
             successToast: "Join request cancelled",
             defaultFailureToast: "Failed to cancel join request",
+          });
+        },
+        onAcceptInvitation: () => {
+          if (!row) return;
+          void tryMutate({
+            fn: () => acceptMutation({ requestId: row._id }),
+            successToast: "Invitation accepted! You've joined the team.",
+            defaultFailureToast: "Failed to accept invitation",
+          });
+        },
+        onRejectInvitation: () => {
+          if (!row) return;
+          void tryMutate({
+            fn: () => rejectMutation({ requestId: row._id }),
+            successToast: "Invitation declined",
+            defaultFailureToast: "Failed to decline invitation",
           });
         },
         onLeave: () => {
@@ -68,6 +87,13 @@ export function useTeamCardActions(): (teamId: Id<"teams">) => TeamCardActions {
         },
       };
     },
-    [joinRequests, cancelMutation, requestToJoinMutation, leaveTeamMutation],
+    [
+      joinRequests,
+      cancelMutation,
+      acceptMutation,
+      rejectMutation,
+      requestToJoinMutation,
+      leaveTeamMutation,
+    ],
   );
 }

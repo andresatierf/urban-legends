@@ -25,6 +25,8 @@ type Props = {
   joinRequest: JoinTeamRequestState;
   onRequestJoin: (message: string | undefined) => Promise<void> | void;
   onCancelRequest: () => void;
+  onAcceptInvitation: () => void;
+  onRejectInvitation: () => void;
   onLeave: () => void;
 };
 
@@ -33,6 +35,8 @@ export function TeamCard({
   joinRequest,
   onRequestJoin,
   onCancelRequest,
+  onAcceptInvitation,
+  onRejectInvitation,
   onLeave,
 }: Props) {
   const { team, tournament, isUserMember, userRole } = data;
@@ -47,6 +51,8 @@ export function TeamCard({
           joinRequest={joinRequest}
           onRequestJoin={onRequestJoin}
           onCancelRequest={onCancelRequest}
+          onAcceptInvitation={onAcceptInvitation}
+          onRejectInvitation={onRejectInvitation}
           onLeave={onLeave}
         />
       }

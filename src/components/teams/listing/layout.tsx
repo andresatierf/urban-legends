@@ -208,6 +208,8 @@ export function TeamListing({
                   joinRequest={actions.joinRequest}
                   onRequestJoin={actions.onRequestJoin}
                   onCancelRequest={actions.onCancelRequest}
+                  onAcceptInvitation={actions.onAcceptInvitation}
+                  onRejectInvitation={actions.onRejectInvitation}
                   onLeave={actions.onLeave}
                 />
               );
