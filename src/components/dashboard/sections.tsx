@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { cn } from "@/lib/utils";
 
-import { RaceChart } from "./race-chart";
+import { chartColorFor, RaceChart } from "./race-chart";
 import { TournamentSwitcher } from "./tournament-switcher";
 
 // ─── shared types ───────────────────────────────────────────────────────────
@@ -425,7 +425,7 @@ export function StandingsCard({
         <p className="text-mute text-body-sm font-mono">{teams.length} teams</p>
       </header>
 
-      <div className="grid grid-cols-1 min-[960px]:grid-cols-[1.55fr_1fr] min-[960px]:[grid-template-rows:auto]">
+      <div className="grid grid-cols-1 min-[960px]:grid-cols-[1.55fr_1fr] min-[960px]:[grid-template-rows:480px]">
         <div className="border-ink/15 flex min-h-0 min-w-0 flex-col px-4 pt-4 pb-3 min-[960px]:border-r-[1.5px] min-[960px]:border-dashed sm:px-6 sm:pt-5">
           {chartSeries.length > 0 && (
             <RaceChart
@@ -437,10 +437,11 @@ export function StandingsCard({
           )}
         </div>
 
-        <ol className="flex min-h-0 flex-col gap-1 px-3 py-3 sm:px-4 sm:py-4">
+        <ol className="flex min-h-0 flex-col gap-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
           {teams.map((t, i) => {
             const rank = i + 1;
             const isYou = t.team._id === userTeamId;
+            const rankLabel = String(rank).padStart(2, "0");
             return (
               <li key={t.team._id}>
                 <Link
@@ -448,7 +449,7 @@ export function StandingsCard({
                   params={{ teamId: t.team._id }}
                   aria-label={`View team ${t.team.name}`}
                   className={cn(
-                    "focus-visible:ring-ring/60 grid grid-cols-[2.25rem_1fr_auto] items-center gap-3 rounded-md px-2.5 py-2 transition-colors outline-none focus-visible:ring-[3px]",
+                    "focus-visible:ring-ring/60 grid grid-cols-[2.5rem_auto_1fr_auto] items-center gap-3 rounded-md px-2.5 py-2 transition-colors outline-none focus-visible:ring-[3px]",
                     isYou && "bg-sky/10 ring-sky ring-[1.5px] ring-inset",
                     !isYou && "hover:bg-paper-deep",
                   )}
@@ -461,8 +462,13 @@ export function StandingsCard({
                         : "text-mute text-body-md",
                     )}
                   >
-                    {rank}
+                    {rankLabel}
                   </span>
+                  <span
+                    aria-hidden
+                    className="border-ink block size-3 rounded-sm border-[1.5px]"
+                    style={{ backgroundColor: chartColorFor(i) }}
+                  />
                   <span className="flex min-w-0 flex-col">
                     <span className="font-heading text-ink truncate text-base leading-tight font-bold">
                       {t.team.name}
@@ -697,7 +703,7 @@ export function EmptyState({ viewerFirstName }: { viewerFirstName: string }) {
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-7 px-5 py-8 sm:gap-8 sm:px-8 sm:py-10">
+    <div className="flex flex-col gap-7 px-3 py-6 sm:gap-8 sm:px-8 sm:py-10">
       {children}
     </div>
   );

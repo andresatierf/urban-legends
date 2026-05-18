@@ -1,9 +1,9 @@
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { tryMutate } from "@/lib/utils";
+import { cn, tryMutate } from "@/lib/utils";
 
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -31,9 +31,16 @@ export function DashboardPage() {
     undefined,
   );
 
-  const data = useQuery(api.views.dashboard.getDashboardView, {
+  const fresh = useQuery(api.views.dashboard.getDashboardView, {
     tournamentId: selectedId,
   });
+
+  // Keep the previous data visible while a refetch (e.g. tournament switch)
+  // is in flight so the screen doesn't flash to skeleton.
+  const lastDataRef = useRef<DashboardViewData | undefined>(undefined);
+  if (fresh !== undefined) lastDataRef.current = fresh;
+  const data = fresh ?? lastDataRef.current;
+  const isRefetching = fresh === undefined && lastDataRef.current !== undefined;
 
   if (data === undefined) {
     return (
@@ -55,17 +62,25 @@ export function DashboardPage() {
     );
   }
 
-  return <DashboardLoaded data={data} onSelect={setSelectedId} />;
+  return (
+    <DashboardLoaded
+      data={data}
+      onSelect={setSelectedId}
+      isRefetching={isRefetching}
+    />
+  );
 }
 
 function DashboardLoaded({
   data,
   onSelect,
+  isRefetching,
 }: {
   data: DashboardViewData & {
     selected: NonNullable<DashboardViewData["selected"]>;
   };
   onSelect: (id: Id<"tournaments">) => void;
+  isRefetching: boolean;
 }) {
   const { selected } = data;
   const tournament = selected.tournament;
@@ -138,43 +153,51 @@ function DashboardLoaded({
         endDateLabel={formatEndDate(tournament.endDate)}
       />
 
-      {selected.lifecycleState !== "ended" && (
-        <SubmitTodayBanner
-          todaySubmissions={selected.todaySubmissionCount}
-          limit={tournament.maxSubmissionsPerDay}
+      <div
+        aria-busy={isRefetching}
+        className={cn(
+          "flex flex-col gap-7 transition-opacity duration-200 sm:gap-8",
+          isRefetching && "opacity-60",
+        )}
+      >
+        {selected.lifecycleState !== "ended" && (
+          <SubmitTodayBanner
+            todaySubmissions={selected.todaySubmissionCount}
+            limit={tournament.maxSubmissionsPerDay}
+            teamName={myTeamRow.team.name}
+          />
+        )}
+
+        <MyTeamHeader
+          teamId={myTeamRow.team._id}
           teamName={myTeamRow.team.name}
+          isCaptain={myTeamRow.userRole === "captain"}
+          memberCount={myTeamRow.memberCount}
+          rank={myTeamRow.rank}
+          totalTeams={selected.teams.length}
+          points={myTeamRow.team.points}
+          gap={myTeamRow.gap}
+          comparison={myTeamRow.comparison}
+          comparedToTeamName={myTeamRow.comparedToName}
         />
-      )}
 
-      <MyTeamHeader
-        teamId={myTeamRow.team._id}
-        teamName={myTeamRow.team.name}
-        isCaptain={myTeamRow.userRole === "captain"}
-        memberCount={myTeamRow.memberCount}
-        rank={myTeamRow.rank}
-        totalTeams={selected.teams.length}
-        points={myTeamRow.team.points}
-        gap={myTeamRow.gap}
-        comparison={myTeamRow.comparison}
-        comparedToTeamName={myTeamRow.comparedToName}
-      />
+        {chartData.series.length > 0 && (
+          <StandingsCard
+            teams={teamRows}
+            userTeamId={myTeamRow.team._id}
+            chartDays={chartData.days}
+            chartSeries={chartData.series}
+            isEnded={selected.lifecycleState === "ended"}
+          />
+        )}
 
-      {chartData.series.length > 0 && (
-        <StandingsCard
-          teams={teamRows}
-          userTeamId={myTeamRow.team._id}
-          chartDays={chartData.days}
-          chartSeries={chartData.series}
-          isEnded={selected.lifecycleState === "ended"}
+        <Inbox
+          items={inboxItems}
+          onRespondInvitation={respondInvitation}
+          onRespondJoinRequest={respondJoinRequest}
+          pendingId={pendingId}
         />
-      )}
-
-      <Inbox
-        items={inboxItems}
-        onRespondInvitation={respondInvitation}
-        onRespondJoinRequest={respondJoinRequest}
-        pendingId={pendingId}
-      />
+      </div>
     </DashboardShell>
   );
 }

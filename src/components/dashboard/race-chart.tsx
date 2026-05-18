@@ -13,13 +13,12 @@ import {
   type ChartConfig,
   ChartContainer,
   ChartContext,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
 
-const CHART_TOKENS = [
+export const CHART_TOKENS = [
   "var(--color-chart-1)",
   "var(--color-chart-2)",
   "var(--color-chart-3)",
@@ -27,6 +26,10 @@ const CHART_TOKENS = [
   "var(--color-chart-5)",
   "var(--color-bronze)",
 ];
+
+export function chartColorFor(index: number): string {
+  return CHART_TOKENS[index % CHART_TOKENS.length];
+}
 
 export type RaceChartSeries = {
   teamId: string;
@@ -73,13 +76,6 @@ export function RaceChart({
   const userSeries = userTeamId
     ? series.find((s) => s.teamId === userTeamId)
     : undefined;
-
-  const legendPayload = series.map((s, idx) => ({
-    value: s.teamId,
-    dataKey: s.teamId,
-    color: CHART_TOKENS[idx % CHART_TOKENS.length],
-    type: "square" as const,
-  }));
 
   return (
     <ChartContext.Provider value={{ config }}>
@@ -203,10 +199,6 @@ export function RaceChart({
             })}
           </LineChart>
         </ChartContainer>
-        <ChartLegendContent
-          payload={legendPayload}
-          className="text-fab-ink [&>div>div]:border-fab-ink text-body-sm mt-2 flex-wrap !justify-start gap-x-4 gap-y-2 !pt-0 [&>div]:!gap-1.5 [&>div>div]:!h-3 [&>div>div]:!w-3 [&>div>div]:!rounded-sm [&>div>div]:border-2"
-        />
       </div>
     </ChartContext.Provider>
   );
