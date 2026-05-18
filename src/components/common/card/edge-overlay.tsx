@@ -18,7 +18,12 @@ type Props = {
 
 export function EdgeOverlay({ children, className, ...slots }: Props) {
   return (
-    <div className={cn("relative grid", className)}>
+    <div
+      className={cn(
+        "relative grid min-w-0 grid-cols-[minmax(0,1fr)]",
+        className,
+      )}
+    >
       {children}
       {(Object.keys(SLOT_CLASSES) as SlotKey[]).map((key) => {
         const node = slots[key];
