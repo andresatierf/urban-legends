@@ -1,4 +1,4 @@
-import type { Doc, Id } from "../../../../convex/_generated/dataModel";
+import type { Id } from "../../../../convex/_generated/dataModel";
 import type { TournamentWithAuthority } from "../../../../convex/tournaments";
 
 const now = new Date();
@@ -137,13 +137,6 @@ export const SCENARIO_DISCOVER: TournamentWithAuthority[] = [
   ),
 ];
 
-export const SCENARIO_ALL: TournamentWithAuthority[] = [
-  ...SCENARIO_YOURS,
-  ...SCENARIO_DISCOVER,
-];
-
-export const SCENARIO_YOUR_IDS = new Set(SCENARIO_YOURS.map((t) => t._id));
-
 export type Scenario = {
   yours: TournamentWithAuthority[];
   discover: TournamentWithAuthority[];
@@ -178,16 +171,3 @@ export const SCENARIOS: Record<ScenarioKey, { label: string; data: Scenario }> =
     newcomer: { label: "Newcomer", data: NEWCOMER_SCENARIO },
     empty: { label: "Empty", data: EMPTY_SCENARIO },
   };
-
-// Helper for variants that need a flat sorted list with isMine flag.
-export function withMineFlag(
-  tournaments: TournamentWithAuthority[],
-  yourIds: Set<Id<"tournaments"> | string>,
-) {
-  return tournaments.map((t) => ({
-    tournament: t,
-    isMine: yourIds.has(t._id),
-  }));
-}
-
-export type TournamentDoc = Doc<"tournaments">;
