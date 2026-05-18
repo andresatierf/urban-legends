@@ -93,13 +93,8 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "components",
   },
   {
-    path: "/workbench/components/podium",
-    label: "Podium",
-    group: "components",
-  },
-  {
-    path: "/workbench/components/dashboard-surfaces",
-    label: "Dashboard Surfaces",
+    path: "/workbench/components/dashboard-v2",
+    label: "Dashboard v2 (prototype)",
     group: "components",
   },
   {
