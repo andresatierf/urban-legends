@@ -21,6 +21,7 @@ type PrefixedSelectProps = {
   options: PrefixedSelectOption[];
   placeholder?: string;
   className?: string;
+  hidePrefixOnMobile?: boolean;
 };
 
 export function PrefixedSelect({
@@ -30,6 +31,7 @@ export function PrefixedSelect({
   options,
   placeholder,
   className,
+  hidePrefixOnMobile,
 }: PrefixedSelectProps) {
   const selected = options.find((o) => o.value === value);
 
@@ -38,7 +40,11 @@ export function PrefixedSelect({
       <SelectTrigger
         className={`border-ink bg-chip dark:bg-chip text-ink hover:bg-chip dark:hover:bg-chip shadow-fd-xs h-auto! w-fit gap-2 rounded-full border-2 px-3 py-1 focus-visible:ring-0 data-[state=open]:rounded-t-[1rem] data-[state=open]:rounded-b-sm ${className ?? ""}`}
       >
-        <span className="text-mute text-label-caps font-heading font-extrabold">
+        <span
+          className={`text-mute text-label-caps font-heading font-extrabold ${
+            hidePrefixOnMobile ? "hidden sm:inline" : ""
+          }`}
+        >
           {prefix}
         </span>
         <span className="text-ink text-body-sm font-semibold">

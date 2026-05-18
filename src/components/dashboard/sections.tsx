@@ -227,12 +227,12 @@ export function SubmitTodayBanner({
   return (
     <section
       aria-label="Daily submission prompt"
-      className="border-ink bg-card shadow-fd grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-xl border-2 px-5 py-4 sm:gap-6 sm:px-6"
+      className="border-ink bg-card shadow-fd grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 rounded-xl border-2 px-4 py-4 sm:grid-cols-[auto_1fr_auto] sm:gap-x-6 sm:gap-y-0 sm:px-6"
     >
       <span
         aria-hidden
         className={cn(
-          "border-ink flex size-12 shrink-0 items-center justify-center rounded-full border-2",
+          "border-ink flex size-11 shrink-0 items-center justify-center rounded-full border-2 sm:size-12",
           hasLogged ? "bg-grass/30 text-ink" : "bg-sunset text-white",
         )}
       >
@@ -252,7 +252,7 @@ export function SubmitTodayBanner({
       <Button
         asChild
         variant={hasLogged ? "secondary" : "default"}
-        className="self-center"
+        className="col-span-2 w-full justify-center sm:col-span-1 sm:w-auto sm:self-center"
       >
         <Link to="/submissions">
           {cta}
