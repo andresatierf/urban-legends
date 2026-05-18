@@ -21,8 +21,9 @@ export const Route = createFileRoute("/_protected/captain/comparison")({
 function TeamComparison() {
   const navigate = useNavigate();
 
-  // Permission check - redirect if not a captain
-  const captainedCount = useQuery(api.captain.getCaptainedTeamsCount);
+  const captainedCount = useQuery(
+    api.views.captainDashboard.getCaptainedTeamsCount,
+  );
 
   useEffect(() => {
     if (captainedCount === 0) {
@@ -30,7 +31,7 @@ function TeamComparison() {
     }
   }, [captainedCount, navigate]);
 
-  const teamsComparison = useQuery(api.captain.getTeamsComparison);
+  const teamsComparison = useQuery(api.views.captainComparison.get);
 
   if (!teamsComparison || captainedCount === undefined) {
     return (
@@ -82,7 +83,6 @@ function TeamComparison() {
         </Card>
       )}
 
-      {/* Comparison Grid */}
       {teamsComparison.length > 0 && (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {teamsComparison.map((teamData) => (
@@ -99,7 +99,6 @@ function TeamComparison() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Rank & Points */}
                 <div className="bg-muted rounded-lg p-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -115,7 +114,6 @@ function TeamComparison() {
                   </div>
                 </div>
 
-                {/* Team Metrics */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
@@ -149,7 +147,6 @@ function TeamComparison() {
                   </div>
                 </div>
 
-                {/* Approval Rate */}
                 <div className="rounded-lg border p-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -172,7 +169,6 @@ function TeamComparison() {
                   </div>
                 </div>
 
-                {/* Manage Button */}
                 <Link
                   to="/teams/$teamId"
                   params={{ teamId: teamData.team._id }}

@@ -25,7 +25,9 @@ function CaptainDashboard() {
   const navigate = useNavigate();
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const captainedCount = useQuery(api.captain.getCaptainedTeamsCount);
+  const captainedCount = useQuery(
+    api.views.captainDashboard.getCaptainedTeamsCount,
+  );
 
   useEffect(() => {
     if (captainedCount === 0) {
@@ -33,7 +35,7 @@ function CaptainDashboard() {
     }
   }, [captainedCount, navigate]);
 
-  const dashboardData = useQuery(api.captain.getDashboardData);
+  const dashboardData = useQuery(api.views.captainDashboard.get);
 
   const acceptJoinRequest = useMutation(api.joinRequests.accept);
   const rejectJoinRequest = useMutation(api.joinRequests.reject);
