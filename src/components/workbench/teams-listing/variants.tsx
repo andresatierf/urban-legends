@@ -136,7 +136,7 @@ export function VariantAnchorLane({
       </SectionHeader>
 
       {userTeams.length > 0 && (
-        <section className="border-ink bg-paper-deep relative rounded-2xl border-2 p-5 sm:p-6">
+        <section className="border-ink shadow-fd bg-paper-deep relative rounded-2xl border-2 p-5 sm:p-6">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
               <Eyebrow color="sunset">Your roster</Eyebrow>

@@ -201,7 +201,7 @@ export function TeamListing({
       ) : (
         <div className="space-y-8">
           {visibleUserTeams.length > 0 && (
-            <section className="border-ink bg-paper-deep rounded-2xl border-2 p-5 sm:p-6">
+            <section className="border-ink shadow-fd bg-paper-deep rounded-2xl border-2 p-5 sm:p-6">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <Eyebrow color="sunset">Your roster</Eyebrow>
@@ -260,7 +260,7 @@ export function TeamListingSkeleton({
         {headerActions}
       </SectionHeader>
 
-      <section className="border-ink bg-paper-deep rounded-2xl border-2 p-5 sm:p-6">
+      <section className="border-ink shadow-fd bg-paper-deep rounded-2xl border-2 p-5 sm:p-6">
         <div className="mb-4 flex items-end justify-between gap-3">
           <div className="space-y-2">
             <Skeleton className="h-3 w-20" />
