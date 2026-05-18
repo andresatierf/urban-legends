@@ -3,9 +3,11 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
+  type ActionCtx,
   type MutationCtx,
   internalAction,
   internalMutation,
+  internalQuery,
 } from "./_generated/server";
 import { rolesToCreate, teamsData } from "./data";
 import { nowUTC } from "./lib/dates";
@@ -46,7 +48,11 @@ const TOURNAMENT = {
   ENDED: "Urban Legends Legacy Cup 2025",
   ACTIVE: "Urban Legends Live Cup 2026",
   MIXED: "Urban Legends Mixed Mayhem 2026",
+  MANY_TEAMS: "Urban Legends Mass Open 2026",
 } as const;
+
+/** Target team count for the "many teams" seed shape (≥ 20). */
+const MANY_TEAMS_COUNT = 24;
 
 // ───────────────────────────────────────────────────────────────────────────
 // Public entry points
@@ -65,83 +71,107 @@ interface SeedResult {
 }
 
 /**
- * Single-shot demo seed. Populates the database with seven tournaments
- * across every lifecycle state, teams in every membership mode, submissions
- * in every state / tier / type, real submission groups, evidence images
- * attached to each eligible submission, join requests in every status, and
- * a notification inbox for the seed admin.
+ * Single-shot demo seed. Composes every per-tournament seeder plus the
+ * shared roles/join-requests/notifications mutations into one entry point.
+ * Each piece below is also independently callable (see `seedFull2024`,
+ * `seedUpcoming`, `seedManyTeams`, etc.) for targeted seeding.
  *
- * Idempotent: re-running skips any section whose anchor tournament already
- * exists. Pair with `clearAllSeeded` to reset.
+ * Idempotent: per-tournament seeders skip when their anchor tournament
+ * already exists. Pair with `clearAllSeeded` to reset.
  */
 export const seed = internalAction({
   args: {},
   handler: async (ctx): Promise<SeedResult> => {
-    const db = await ctx.runMutation(internal.seed.seedDatabase, {});
+    const roles = await ctx.runMutation(internal.seed.seedRoles, {});
 
-    const storageIds: Id<"_storage">[] = [];
-    for (const url of DEMO_EVIDENCE_URLS) {
-      const res = await fetch(url);
-      if (!res.ok) continue;
-      const blob = await res.blob();
-      storageIds.push(await ctx.storage.store(blob));
-    }
+    const tournaments: Record<string, unknown> = {
+      tournament2024: await ctx.runMutation(internal.seed.seedFull2024Db, {}),
+      tournament2026: await ctx.runMutation(internal.seed.seedFull2026Db, {}),
+      captainsCup: await ctx.runMutation(internal.seed.seedCaptainsDb, {}),
+      upcoming: await ctx.runMutation(internal.seed.seedUpcomingDb, {}),
+      ended: await ctx.runMutation(internal.seed.seedEndedDb, {}),
+      active: await ctx.runMutation(internal.seed.seedActiveDb, {}),
+      mixed: await ctx.runMutation(internal.seed.seedMixedDb, {}),
+      manyTeams: await ctx.runMutation(internal.seed.seedManyTeamsDb, {}),
+    };
 
+    const joinRequests = await ctx.runMutation(
+      internal.seed.seedJoinRequestsDb,
+      {},
+    );
+    const notifications = await ctx.runMutation(
+      internal.seed.seedNotificationsDb,
+      {},
+    );
+
+    const storageIds = await fetchDemoEvidence(ctx);
     const evidence =
       storageIds.length > 0
         ? await ctx.runMutation(internal.seed.attachEvidence, { storageIds })
         : { evidenceAttached: 0, eligible: 0 };
 
     return {
-      ...db,
+      roles,
+      tournaments,
+      joinRequests,
+      notifications,
       evidence: { storageIdsCreated: storageIds.length, ...evidence },
     };
   },
 });
 
-/** Every DB write the demo seed performs. */
-export const seedDatabase = internalMutation({
+/**
+ * Returns existing demo evidence storage IDs (those already attached to
+ * seeded submissions). Used to avoid re-uploading the same images on every
+ * seed run — Convex storage doesn't dedupe blobs, so naive re-fetching
+ * leaves orphan duplicates behind on each rerun.
+ */
+export const listExistingDemoEvidence = internalQuery({
   args: {},
-  handler: async (
-    ctx,
-  ): Promise<{
-    roles: unknown;
-    tournaments: Record<string, unknown>;
-    joinRequests: unknown;
-    notifications: unknown;
-  }> => {
-    const roles = await upsertRoles(ctx);
+  handler: async (ctx): Promise<Id<"_storage">[]> => {
+    const seedUsers = (await ctx.db.query("users").collect()).filter((u) =>
+      u.externalId.startsWith("seed_"),
+    );
+    const seedUserIds = new Set(seedUsers.map((u) => u._id));
+    const seedTeamIds = new Set(
+      (await ctx.db.query("teams").collect())
+        .filter((t) => seedUserIds.has(t.createdBy))
+        .map((t) => t._id),
+    );
 
-    const tournaments: Record<string, unknown> = {
-      tournament2024: await skipIfTournamentExists(ctx, TOURNAMENT.T2024, () =>
-        seedTournament2024(ctx),
-      ),
-      tournament2026: await skipIfTournamentExists(ctx, TOURNAMENT.T2026, () =>
-        seedTournament2026(ctx),
-      ),
-      captainsCup: await skipIfTournamentExists(ctx, TOURNAMENT.CAPTAINS, () =>
-        seedCaptainsCup(ctx),
-      ),
-      upcoming: await skipIfTournamentExists(ctx, TOURNAMENT.UPCOMING, () =>
-        seedUpcoming(ctx),
-      ),
-      ended: await skipIfTournamentExists(ctx, TOURNAMENT.ENDED, () =>
-        seedEnded(ctx),
-      ),
-      active: await skipIfTournamentExists(ctx, TOURNAMENT.ACTIVE, () =>
-        seedActive(ctx),
-      ),
-      mixed: await skipIfTournamentExists(ctx, TOURNAMENT.MIXED, () =>
-        seedMixed(ctx),
-      ),
-    };
-
-    const joinRequests = await seedJoinRequestsForCaptains(ctx);
-    const notifications = await seedNotificationsForAdmin(ctx);
-
-    return { roles, tournaments, joinRequests, notifications };
+    const ids = new Set<Id<"_storage">>();
+    for (const sub of await ctx.db.query("submissions").collect()) {
+      if (!seedTeamIds.has(sub.teamId)) continue;
+      for (const sid of sub.evidenceStorageIds ?? []) {
+        ids.add(sid);
+      }
+    }
+    return Array.from(ids);
   },
 });
+
+/**
+ * Fetch the demo evidence images and stash them in Convex storage — but
+ * only on first use. Subsequent seed runs reuse the storage IDs that are
+ * already attached to seeded submissions so we don't pile up duplicate
+ * blobs in storage.
+ */
+async function fetchDemoEvidence(ctx: ActionCtx): Promise<Id<"_storage">[]> {
+  const existing = await ctx.runQuery(
+    internal.seed.listExistingDemoEvidence,
+    {},
+  );
+  if (existing.length > 0) return existing;
+
+  const storageIds: Id<"_storage">[] = [];
+  for (const url of DEMO_EVIDENCE_URLS) {
+    const res = await fetch(url);
+    if (!res.ok) continue;
+    const blob = await res.blob();
+    storageIds.push(await ctx.storage.store(blob));
+  }
+  return storageIds;
+}
 
 /**
  * Attaches a pool of evidence storage IDs to seeded submissions that have
@@ -440,6 +470,12 @@ interface AddTeamsOptions {
   joinPolicy?: "open" | "closed" | "mixed";
   /** Assigns descending starter points so the leaderboard isn't flat. */
   pointSpread?: boolean;
+  /**
+   * Number of teams to create. When greater than `teamsData.length`, extra
+   * teams are synthesized by suffixing the base entries (e.g. "Urban Divas
+   * #2"). Defaults to `teamsData.length`.
+   */
+  teamCount?: number;
 }
 
 async function addTeams(
@@ -448,9 +484,32 @@ async function addTeams(
 ): Promise<AddedTeam[]> {
   const created: AddedTeam[] = [];
   const modeCycle: TeamSeedMode[] = ["full", "partial", "captainsOnly"];
+  const teamCount = options.teamCount ?? teamsData.length;
+  const namespace = (i: number) =>
+    Math.floor(i / teamsData.length) === 0
+      ? ""
+      : ` #${Math.floor(i / teamsData.length) + 1}`;
+  const tagEmail = (email: string, i: number) => {
+    const suffix = namespace(i);
+    if (!suffix) return email;
+    const tag = `s${Math.floor(i / teamsData.length) + 1}`;
+    return email.replace(/@/, `+${tag}@`);
+  };
 
-  for (let i = 0; i < teamsData.length; i++) {
-    const teamData = teamsData[i];
+  for (let i = 0; i < teamCount; i++) {
+    const base = teamsData[i % teamsData.length];
+    const suffix = namespace(i);
+    const teamData = {
+      name: `${base.name}${suffix}`,
+      captain: {
+        name: `${base.captain.name}${suffix}`,
+        email: tagEmail(base.captain.email, i),
+      },
+      members: base.members.map((m) => ({
+        name: `${m.name}${suffix}`,
+        email: tagEmail(m.email, i),
+      })),
+    };
     const captainUser = await getOrCreateUser(ctx, teamData.captain);
 
     const joinPolicy =
@@ -463,7 +522,7 @@ async function addTeams(
     const mode: TeamSeedMode =
       options.mode === "mixed" ? modeCycle[i % modeCycle.length] : options.mode;
 
-    const points = options.pointSpread ? (teamsData.length - i) * 50 : 0;
+    const points = options.pointSpread ? (teamCount - i) * 50 : 0;
 
     const teamId = await ctx.db.insert("teams", {
       name: teamData.name,
@@ -696,7 +755,7 @@ async function seedCaptainsCup(ctx: MutationCtx) {
   return { tournamentId, teamsCreated: teams.length };
 }
 
-async function seedUpcoming(ctx: MutationCtx) {
+async function buildUpcoming(ctx: MutationCtx) {
   const { tournamentId } = await createTournament(ctx, {
     name: TOURNAMENT.UPCOMING,
     description: "Upcoming tournament with full teams and no submissions",
@@ -711,7 +770,7 @@ async function seedUpcoming(ctx: MutationCtx) {
   return { tournamentId, teamsCreated: teams.length };
 }
 
-async function seedEnded(ctx: MutationCtx) {
+async function buildEnded(ctx: MutationCtx) {
   const startDate = new Date("2025-03-01").toISOString();
   const endDate = new Date("2025-06-30").toISOString();
   const { tournamentId } = await createTournament(ctx, {
@@ -764,7 +823,7 @@ async function seedEnded(ctx: MutationCtx) {
   };
 }
 
-async function seedActive(ctx: MutationCtx) {
+async function buildActive(ctx: MutationCtx) {
   const { tournamentId, admin } = await createTournament(ctx, {
     name: TOURNAMENT.ACTIVE,
     description: "Active tournament with submissions in every state",
@@ -909,7 +968,7 @@ async function seedActive(ctx: MutationCtx) {
   };
 }
 
-async function seedMixed(ctx: MutationCtx) {
+async function buildMixed(ctx: MutationCtx) {
   const { tournamentId } = await createTournament(ctx, {
     name: TOURNAMENT.MIXED,
     description: "Active tournament with mixed team join policies and sizes",
@@ -920,6 +979,23 @@ async function seedMixed(ctx: MutationCtx) {
     tournamentId,
     mode: "mixed",
     joinPolicy: "mixed",
+  });
+  return { tournamentId, teamsCreated: teams.length };
+}
+
+async function buildManyTeams(ctx: MutationCtx) {
+  const { tournamentId } = await createTournament(ctx, {
+    name: TOURNAMENT.MANY_TEAMS,
+    description: `Stress-test tournament with ${MANY_TEAMS_COUNT} teams for leaderboard density`,
+    startDate: new Date("2026-05-01").toISOString(),
+    endDate: new Date("2026-10-31").toISOString(),
+  });
+  const teams = await addTeams(ctx, {
+    tournamentId,
+    mode: "mixed",
+    joinPolicy: "mixed",
+    pointSpread: true,
+    teamCount: MANY_TEAMS_COUNT,
   });
   return { tournamentId, teamsCreated: teams.length };
 }
@@ -1160,13 +1236,7 @@ export const seedRandomSubmissions = internalAction({
     seed: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<SeedRandomSubmissionsResult> => {
-    const storageIds: Id<"_storage">[] = [];
-    for (const url of DEMO_EVIDENCE_URLS) {
-      const res = await fetch(url);
-      if (!res.ok) continue;
-      const blob = await res.blob();
-      storageIds.push(await ctx.storage.store(blob));
-    }
+    const storageIds = await fetchDemoEvidence(ctx);
     const result = await ctx.runMutation(
       internal.seed.seedRandomSubmissionsDb,
       { ...args, storageIds },
@@ -1334,3 +1404,159 @@ function makeRng(seed: number): () => number {
     return state / 0x100000000;
   };
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// Per-tournament mutations (idempotent: skip when anchor already exists)
+// ───────────────────────────────────────────────────────────────────────────
+
+export const seedFull2024Db = internalMutation({
+  args: {},
+  handler: (ctx) =>
+    skipIfTournamentExists(ctx, TOURNAMENT.T2024, () =>
+      seedTournament2024(ctx),
+    ),
+});
+
+export const seedFull2026Db = internalMutation({
+  args: {},
+  handler: (ctx) =>
+    skipIfTournamentExists(ctx, TOURNAMENT.T2026, () =>
+      seedTournament2026(ctx),
+    ),
+});
+
+export const seedCaptainsDb = internalMutation({
+  args: {},
+  handler: (ctx) =>
+    skipIfTournamentExists(ctx, TOURNAMENT.CAPTAINS, () =>
+      seedCaptainsCup(ctx),
+    ),
+});
+
+export const seedUpcomingDb = internalMutation({
+  args: {},
+  handler: (ctx) =>
+    skipIfTournamentExists(ctx, TOURNAMENT.UPCOMING, () => buildUpcoming(ctx)),
+});
+
+export const seedEndedDb = internalMutation({
+  args: {},
+  handler: (ctx) =>
+    skipIfTournamentExists(ctx, TOURNAMENT.ENDED, () => buildEnded(ctx)),
+});
+
+export const seedActiveDb = internalMutation({
+  args: {},
+  handler: (ctx) =>
+    skipIfTournamentExists(ctx, TOURNAMENT.ACTIVE, () => buildActive(ctx)),
+});
+
+export const seedMixedDb = internalMutation({
+  args: {},
+  handler: (ctx) =>
+    skipIfTournamentExists(ctx, TOURNAMENT.MIXED, () => buildMixed(ctx)),
+});
+
+export const seedManyTeamsDb = internalMutation({
+  args: {},
+  handler: (ctx) =>
+    skipIfTournamentExists(ctx, TOURNAMENT.MANY_TEAMS, () =>
+      buildManyTeams(ctx),
+    ),
+});
+
+export const seedJoinRequestsDb = internalMutation({
+  args: {},
+  handler: (ctx) => seedJoinRequestsForCaptains(ctx),
+});
+
+export const seedNotificationsDb = internalMutation({
+  args: {},
+  handler: (ctx) => seedNotificationsForAdmin(ctx),
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// Per-tournament actions (standalone entry points)
+//
+// Tournaments that create submissions also fetch demo evidence and attach
+// it after the inserts. `attachEvidence` is idempotent — it only touches
+// submissions that have no evidence yet — so it's safe to run repeatedly.
+// ───────────────────────────────────────────────────────────────────────────
+
+type SeedTournamentActionResult = unknown;
+type SeedTournamentWithEvidenceResult = {
+  result: unknown;
+  evidence: {
+    storageIdsCreated: number;
+    evidenceAttached: number;
+    eligible: number;
+  };
+};
+
+export const seedFull2024 = internalAction({
+  args: {},
+  handler: async (ctx): Promise<SeedTournamentActionResult> =>
+    ctx.runMutation(internal.seed.seedFull2024Db, {}),
+});
+
+export const seedFull2026 = internalAction({
+  args: {},
+  handler: async (ctx): Promise<SeedTournamentActionResult> =>
+    ctx.runMutation(internal.seed.seedFull2026Db, {}),
+});
+
+export const seedCaptains = internalAction({
+  args: {},
+  handler: async (ctx): Promise<SeedTournamentActionResult> =>
+    ctx.runMutation(internal.seed.seedCaptainsDb, {}),
+});
+
+export const seedUpcoming = internalAction({
+  args: {},
+  handler: async (ctx): Promise<SeedTournamentActionResult> =>
+    ctx.runMutation(internal.seed.seedUpcomingDb, {}),
+});
+
+export const seedMixed = internalAction({
+  args: {},
+  handler: async (ctx): Promise<SeedTournamentActionResult> =>
+    ctx.runMutation(internal.seed.seedMixedDb, {}),
+});
+
+export const seedManyTeams = internalAction({
+  args: {},
+  handler: async (ctx): Promise<SeedTournamentActionResult> =>
+    ctx.runMutation(internal.seed.seedManyTeamsDb, {}),
+});
+
+export const seedEnded = internalAction({
+  args: {},
+  handler: async (ctx): Promise<SeedTournamentWithEvidenceResult> => {
+    const result = await ctx.runMutation(internal.seed.seedEndedDb, {});
+    const storageIds = await fetchDemoEvidence(ctx);
+    const evidence =
+      storageIds.length > 0
+        ? await ctx.runMutation(internal.seed.attachEvidence, { storageIds })
+        : { evidenceAttached: 0, eligible: 0 };
+    return {
+      result,
+      evidence: { storageIdsCreated: storageIds.length, ...evidence },
+    };
+  },
+});
+
+export const seedActive = internalAction({
+  args: {},
+  handler: async (ctx): Promise<SeedTournamentWithEvidenceResult> => {
+    const result = await ctx.runMutation(internal.seed.seedActiveDb, {});
+    const storageIds = await fetchDemoEvidence(ctx);
+    const evidence =
+      storageIds.length > 0
+        ? await ctx.runMutation(internal.seed.attachEvidence, { storageIds })
+        : { evidenceAttached: 0, eligible: 0 };
+    return {
+      result,
+      evidence: { storageIdsCreated: storageIds.length, ...evidence },
+    };
+  },
+});
