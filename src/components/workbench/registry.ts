@@ -93,16 +93,6 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "components",
   },
   {
-    path: "/workbench/components/podium",
-    label: "Podium",
-    group: "components",
-  },
-  {
-    path: "/workbench/components/dashboard-surfaces",
-    label: "Dashboard Surfaces",
-    group: "components",
-  },
-  {
     path: "/workbench/components/invitations",
     label: "Invitations",
     group: "components",
@@ -128,14 +118,14 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "components",
   },
   {
-    path: "/workbench/components/standings-race-card",
-    label: "Standings Race Card",
-    group: "components",
-  },
-  {
     path: "/workbench/states/empty-loading",
     label: "Empty & Loading",
     group: "states",
+  },
+  {
+    path: "/workbench/pages/dashboard",
+    label: "Dashboard",
+    group: "pages",
   },
 ];
 

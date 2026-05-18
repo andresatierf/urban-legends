@@ -37,6 +37,7 @@ import type * as submissions from "../submissions.js";
 import type * as teams from "../teams.js";
 import type * as tournaments from "../tournaments.js";
 import type * as users from "../users.js";
+import type * as views_dashboard from "../views/dashboard.js";
 
 import type {
   ApiFromModules,
@@ -74,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   teams: typeof teams;
   tournaments: typeof tournaments;
   users: typeof users;
+  "views/dashboard": typeof views_dashboard;
 }>;
 
 /**

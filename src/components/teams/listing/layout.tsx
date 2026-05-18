@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { TournamentSwitcher } from "@/components/dashboard/tournament-switcher";
+import { TournamentSwitcher } from "@/components/common/tournament-switcher";
 import { SectionHeader } from "@/components/section-header";
 import { getTournamentStatus } from "@/components/tournaments/utils";
 import { Button } from "@/components/ui/button";

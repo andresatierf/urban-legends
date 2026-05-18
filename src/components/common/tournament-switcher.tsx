@@ -38,6 +38,7 @@ export function TournamentSwitcher({
       onValueChange={onSelect}
       options={options}
       className={className}
+      hidePrefixOnMobile
     />
   );
 }
