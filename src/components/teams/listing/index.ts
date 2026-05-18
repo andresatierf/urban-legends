@@ -1,1 +1,2 @@
-export { TeamListing, TeamListingSkeleton } from "./layout";
+export { TeamListing } from "./layout";
+export { TeamListingSkeleton } from "./skeleton";
