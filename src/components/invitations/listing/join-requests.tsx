@@ -58,12 +58,8 @@ export function JoinRequestsList({ teamId, canRespond = true }: Props) {
         viewer: "team",
         processing: processingId === request._id,
         canRespond,
-        onAccept: canRespond
-          ? () => handleRespond(request._id, true)
-          : undefined,
-        onReject: canRespond
-          ? () => handleRespond(request._id, false)
-          : undefined,
+        onAccept: () => handleRespond(request._id, true),
+        onReject: () => handleRespond(request._id, false),
       }))}
     />
   );

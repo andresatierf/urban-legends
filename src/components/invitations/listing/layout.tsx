@@ -126,7 +126,7 @@ function Section({
   cardClassName?: string;
 }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-8">
       {heading && <h3 className="text-sm font-medium">{heading}</h3>}
       {items.map(({ key, className, ...props }) => (
         <InvitationCard

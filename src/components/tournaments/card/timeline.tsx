@@ -1,8 +1,15 @@
 import { useFormattedDate } from "@/hooks/useFormattedDate";
 import { cn } from "@/lib/utils";
 
+import type { TournamentStatus } from "../utils";
 import { daysUntil, getTournamentStatus, tournamentProgress } from "../utils";
 import type { TournamentCardData } from "./types";
+
+const FILL_CLASS: Record<TournamentStatus, string> = {
+  active: "bg-primary",
+  ended: "bg-muted-foreground/50",
+  upcoming: "bg-info/30",
+};
 
 export function Timeline({ data }: { data: TournamentCardData }) {
   const { format } = useFormattedDate();
@@ -22,12 +29,7 @@ export function Timeline({ data }: { data: TournamentCardData }) {
     pinColor = "text-muted-foreground";
   }
 
-  const fillClass =
-    status === "active"
-      ? "bg-primary"
-      : status === "ended"
-        ? "bg-muted-foreground/50"
-        : "bg-info/30";
+  const fillClass = FILL_CLASS[status];
 
   return (
     <div className="border-ink/15 bg-paper-deep flex flex-col gap-2 rounded-md border border-dashed p-3">
