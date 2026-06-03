@@ -1,8 +1,6 @@
 import {
-  InvitedUsersListView,
-  JoinRequestsListView,
+  InvitationsList,
   type JoinRequestRow,
-  TeamInvitationsListView,
 } from "@/components/invitations/listing";
 import { SectionHeader } from "@/components/section-header";
 
@@ -174,31 +172,61 @@ function rowsFor(view: View, scenario: Scenario): JoinRequestRow[] | undefined {
 function renderView(view: View, rows: JoinRequestRow[] | undefined) {
   if (view === "invited-users") {
     return (
-      <InvitedUsersListView
-        invitations={rows}
-        processingId={null}
-        onCancel={noop}
-        canCancel
+      <InvitationsList
+        title="Invited Users"
+        itemLabel={{ singular: "invitation", plural: "invitations" }}
+        emptyTitle="No invitations sent"
+        emptyDescription={`Use the "Invite Member" button to invite users to join your team.`}
+        loading={rows === undefined}
+        invitations={(rows ?? []).map((invitation) => ({
+          key: invitation._id,
+          invitation: { ...invitation, counterparty: invitation.user },
+          viewer: "team",
+          processing: null === invitation._id,
+          onReject: noop,
+          canRespond: true,
+        }))}
       />
     );
   }
   if (view === "join-requests") {
     return (
-      <JoinRequestsListView
-        requests={rows}
-        processingId={null}
-        onAccept={noop}
-        onReject={noop}
-        canRespond
+      <InvitationsList
+        title="Join Requests"
+        itemLabel={{ singular: "request", plural: "requests" }}
+        emptyTitle="No pending requests"
+        emptyDescription="When users request to join your team, they'll appear here."
+        loading={rows === undefined}
+        invitations={(rows ?? []).map((request) => ({
+          key: request._id,
+          invitation: { ...request, counterparty: request.user },
+          viewer: "team",
+          processing: null === request._id,
+          canRespond: true,
+          onAccept: noop,
+          onReject: noop,
+        }))}
       />
     );
   }
   return (
-    <TeamInvitationsListView
-      invitations={rows}
-      processingId={null}
-      onAccept={noop}
-      onReject={noop}
+    <InvitationsList
+      title="Team Invitations"
+      itemLabel={{ singular: "invitation", plural: "invitations" }}
+      emptyTitle="No pending invitations"
+      emptyDescription="When team captains invite you to join their team, invitations will appear here."
+      emptyClassName="gap-3 p-2!"
+      loading={rows === undefined}
+      pendingOnly={false}
+      hidePendingHeader={false}
+      invitations={(rows ?? []).map((invitation) => ({
+        key: invitation._id,
+        invitation: { ...invitation, counterparty: null },
+        viewer: "user",
+        processing: null === invitation._id,
+        onAccept: noop,
+        onReject: noop,
+      }))}
     />
   );
 }

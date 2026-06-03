@@ -8,7 +8,7 @@ import { tryMutate } from "@/lib/utils";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { useUser } from "../../../hooks/useUser";
-import { TeamInvitationsListView } from "./team-invitations-view";
+import { InvitationsList } from "./layout";
 
 export function TeamInvitationsList({
   pendingOnly,
@@ -49,12 +49,23 @@ export function TeamInvitationsList({
   };
 
   return (
-    <TeamInvitationsListView
-      invitations={invitations}
-      processingId={processingId}
-      onAccept={(id) => handleRespond(id, true)}
-      onReject={(id) => handleRespond(id, false)}
+    <InvitationsList
+      title="Team Invitations"
+      itemLabel={{ singular: "invitation", plural: "invitations" }}
+      emptyTitle="No pending invitations"
+      emptyDescription="When team captains invite you to join their team, invitations will appear here."
+      emptyClassName="gap-3 p-2!"
+      loading={invitations === undefined}
       pendingOnly={pendingOnly}
+      hidePendingHeader={pendingOnly}
+      invitations={(invitations ?? []).map((invitation) => ({
+        key: invitation._id,
+        invitation: { ...invitation, counterparty: null },
+        viewer: "user",
+        processing: processingId === invitation._id,
+        onAccept: () => handleRespond(invitation._id, true),
+        onReject: () => handleRespond(invitation._id, false),
+      }))}
     />
   );
 }

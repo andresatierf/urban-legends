@@ -7,7 +7,7 @@ import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
-import { JoinRequestsListView } from "./join-requests-view";
+import { InvitationsList } from "./layout";
 
 type Props = {
   teamId: Id<"teams">;
@@ -46,12 +46,21 @@ export function JoinRequestsList({ teamId, canRespond = true }: Props) {
   };
 
   return (
-    <JoinRequestsListView
-      requests={requests}
-      processingId={processingId}
-      onAccept={(id) => handleRespond(id, true)}
-      onReject={(id) => handleRespond(id, false)}
-      canRespond={canRespond}
+    <InvitationsList
+      title="Join Requests"
+      itemLabel={{ singular: "request", plural: "requests" }}
+      emptyTitle="No pending requests"
+      emptyDescription="When users request to join your team, they'll appear here."
+      loading={requests === undefined}
+      invitations={(requests ?? []).map((request) => ({
+        key: request._id,
+        invitation: { ...request, counterparty: request.user },
+        viewer: "team",
+        processing: processingId === request._id,
+        canRespond,
+        onAccept: () => handleRespond(request._id, true),
+        onReject: () => handleRespond(request._id, false),
+      }))}
     />
   );
 }
