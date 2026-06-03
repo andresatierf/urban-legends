@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import { api } from "../../../convex/_generated/api";
+import type { ResolvedRole } from "./types";
+
+interface RolesBadgeListViewProps {
+  resolvedRoles: ResolvedRole[];
+  editable?: boolean;
+  onRemove?: (roleName: string) => void;
+  className?: string;
+}
 
 interface RolesBadgeListProps {
   roles: string[];
@@ -28,6 +36,48 @@ const roleVariants: Record<
   viewer: "neutral",
 };
 
+export function RolesBadgeListView({
+  resolvedRoles,
+  editable = false,
+  onRemove,
+  className,
+}: RolesBadgeListViewProps) {
+  const sortedRoles = useMemo(() => {
+    return [...resolvedRoles].sort((a, b) => a.hierarchy - b.hierarchy);
+  }, [resolvedRoles]);
+
+  return (
+    <div className={cn("flex flex-wrap gap-2", className)}>
+      {sortedRoles.map((role) => (
+        <Badge
+          key={role.name}
+          variant={roleVariants[role.name] || "neutral"}
+          className="flex items-center gap-1"
+        >
+          <span>{role.displayName}</span>
+          {editable && onRemove && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-3 w-3 rounded-sm p-0 hover:bg-transparent"
+              onClick={(e) => {
+                e.preventDefault();
+                onRemove(role.name);
+              }}
+              aria-label={`Remove ${role.displayName} role`}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </Badge>
+      ))}
+      {sortedRoles.length === 0 && (
+        <span className="text-muted-foreground text-sm">No roles assigned</span>
+      )}
+    </div>
+  );
+}
+
 export function RolesBadgeList({
   roles,
   editable = false,
@@ -36,8 +86,7 @@ export function RolesBadgeList({
 }: RolesBadgeListProps) {
   const rolesData = useQuery(api.role.admin.listRoles);
 
-  // Create a map of role name to role data
-  const roleMap = useMemo(() => {
+  const resolvedRoles = useMemo<ResolvedRole[]>(() => {
     const map = new Map<string, { displayName: string; hierarchy: number }>();
     rolesData?.forEach((role) => {
       map.set(role.name, {
@@ -45,51 +94,22 @@ export function RolesBadgeList({
         hierarchy: role.hierarchy ?? 999,
       });
     });
-    return map;
-  }, [rolesData]);
-
-  // Sort roles by hierarchy
-  const sortedRoles = useMemo(() => {
-    return [...roles].sort((a, b) => {
-      const hierarchyA = roleMap.get(a)?.hierarchy ?? 999;
-      const hierarchyB = roleMap.get(b)?.hierarchy ?? 999;
-      return hierarchyA - hierarchyB;
+    return roles.map((name) => {
+      const data = map.get(name);
+      return {
+        name,
+        displayName: data?.displayName || name,
+        hierarchy: data?.hierarchy ?? 999,
+      };
     });
-  }, [roles, roleMap]);
+  }, [roles, rolesData]);
 
   return (
-    <div className={cn("flex flex-wrap gap-2", className)}>
-      {sortedRoles.map((role) => {
-        const roleData = roleMap.get(role);
-        const displayName = roleData?.displayName || role;
-
-        return (
-          <Badge
-            key={role}
-            variant={roleVariants[role] || "neutral"}
-            className="flex items-center gap-1"
-          >
-            <span>{displayName}</span>
-            {editable && onRemove && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-3 w-3 rounded-sm p-0 hover:bg-transparent"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onRemove(role);
-                }}
-                aria-label={`Remove ${displayName} role`}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </Badge>
-        );
-      })}
-      {roles.length === 0 && (
-        <span className="text-muted-foreground text-sm">No roles assigned</span>
-      )}
-    </div>
+    <RolesBadgeListView
+      resolvedRoles={resolvedRoles}
+      editable={editable}
+      onRemove={onRemove}
+      className={className}
+    />
   );
 }
