@@ -16,7 +16,9 @@
     "pretypecheck": "bun --bun run routes:generate",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "sandcastle": "bun --bun .sandcastle/main.ts",
+    "sandcastle": "bun --bun .sandcastle/auto.ts",
+    "sandcastle:issues": "bun --bun .sandcastle/issues.ts",
+    "sandcastle:prune": "bun --bun .sandcastle/prune.ts",
     "fallow": "npx fallow",
     "fallow:ci": "npx fallow --ci"
   },

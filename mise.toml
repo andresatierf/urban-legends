@@ -1,0 +1,21 @@
+# Sandcastle orchestration tasks.
+#
+# Run with `mise run sc:<name>` (or the shorthand `mise sc:<name>`). Extra
+# arguments are forwarded to the underlying script; put flags after `--` so mise
+# doesn't try to parse them itself.
+#
+#   mise run sc:auto
+#   mise run sc:issues 42 57 61
+#   mise run sc:prune -- --orphans --dry-run
+
+[tasks."sc:auto"]
+description = "Autonomously plan a batch of ready-for-agent issues, then implement + review each as a PR"
+run = "bun --bun .sandcastle/auto.ts"
+
+[tasks."sc:issues"]
+description = "Work specific issues by number; a resolver agent generates branches and checks dependencies"
+run = "bun --bun .sandcastle/issues.ts"
+
+[tasks."sc:prune"]
+description = "Prune worktrees/branches whose PR has merged (flags: --orphans --dry-run --force --keep-branches)"
+run = "bun --bun .sandcastle/prune.ts"
