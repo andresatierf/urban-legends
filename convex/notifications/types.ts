@@ -18,6 +18,10 @@ export const NOTIFICATION_TYPES = {
   SUBMISSION_GROUP_AUTO_CREATED: "submission_group_auto_created",
   TEAMMATE_SUBMITTED: "teammate_submitted",
 
+  // Activity Events
+  ACTIVITY_APPROVED: "activity_approved",
+  ACTIVITY_REJECTED: "activity_rejected",
+
   // Tournament Events (5 types)
   TOURNAMENT_STARTING_24H: "tournament_starting_24h",
   TOURNAMENT_STARTED: "tournament_started",
@@ -40,7 +44,8 @@ export type RelatedEntityType =
   | "tournament"
   | "role"
   | "user"
-  | "submissionGroup";
+  | "submissionGroup"
+  | "activity";
 
 export const VALID_NOTIFICATION_TYPES = Object.values(NOTIFICATION_TYPES);
 

@@ -226,6 +226,167 @@ export async function computeSubmissionPermissions(
   };
 }
 
+// ── Activity rules ──────────────────────────────────────────────────────────
+
+type ActivityFacts = {
+  isCreator: boolean;
+  isTeamMember: boolean;
+  isCaptain: boolean;
+  systemRoles: SystemRoleName[];
+  tournamentRoles: TournamentRoleName[];
+  activityState: "incomplete" | "pending" | "approved" | "rejected" | "deleted";
+};
+
+export type ActivitySubject = { activityId: Id<"activities"> };
+
+export type ActivityRule = {
+  check(
+    ctx: QueryCtx,
+    userId: Id<"users">,
+    subject: ActivitySubject,
+  ): Promise<boolean>;
+  require(
+    ctx: QueryCtx,
+    userId: Id<"users">,
+    subject: ActivitySubject,
+  ): Promise<void>;
+};
+
+async function loadActivityFacts(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  activityId: Id<"activities">,
+): Promise<ActivityFacts> {
+  const activity = await ctx.db.get(activityId);
+  if (!activity) throw new Error("Activity not found");
+
+  const [systemRoles, tournamentRoles, membership] = await Promise.all([
+    loadSystemRoles(ctx, userId),
+    loadTournamentRoles(ctx, userId, activity.tournamentId),
+    ctx.db
+      .query("teamMembers")
+      .withIndex("by_team_and_user", (q) =>
+        q.eq("teamId", activity.teamId).eq("userId", userId),
+      )
+      .first(),
+  ]);
+
+  return {
+    isCreator: activity.createdBy === userId,
+    isTeamMember: !!membership,
+    isCaptain: membership?.role === "captain",
+    systemRoles,
+    tournamentRoles,
+    activityState: activity.state,
+  };
+}
+
+function activityRule(
+  name: string,
+  decide: (facts: ActivityFacts) => boolean,
+): ActivityRule {
+  return {
+    async check(ctx, userId, subject) {
+      const facts = await loadActivityFacts(ctx, userId, subject.activityId);
+      return decide(facts);
+    },
+    async require(ctx, userId, subject) {
+      const allowed = await this.check(ctx, userId, subject);
+      if (!allowed) throw new IllegalAccess(name);
+    },
+  };
+}
+
+export const canViewActivity: ActivityRule = activityRule(
+  "canViewActivity",
+  (facts) => {
+    if (isAdminOrDev(facts.systemRoles)) return true;
+    if (facts.tournamentRoles.length > 0) return true;
+    return facts.isCreator || facts.isTeamMember;
+  },
+);
+
+// canCreateActivity uses TeamSubject: user must be a member of the team.
+export const canCreateActivity: TeamRule = teamRule(
+  "canCreateActivity",
+  (facts) => facts.isMember,
+);
+
+export const canEditActivity: ActivityRule = activityRule(
+  "canEditActivity",
+  (facts) =>
+    facts.isCreator &&
+    (facts.activityState === "pending" || facts.activityState === "incomplete"),
+);
+
+export const canApproveActivity: ActivityRule = activityRule(
+  "canApproveActivity",
+  (facts) => {
+    if (facts.activityState !== "pending") return false;
+    if (isAdminOrDev(facts.systemRoles)) return true;
+    return hasReviewerOrAbove(facts.tournamentRoles);
+  },
+);
+
+export const canRejectActivity: ActivityRule = activityRule(
+  "canRejectActivity",
+  (facts) => {
+    if (facts.activityState !== "pending") return false;
+    if (isAdminOrDev(facts.systemRoles)) return true;
+    return hasReviewerOrAbove(facts.tournamentRoles);
+  },
+);
+
+export const canDeleteActivity: ActivityRule = activityRule(
+  "canDeleteActivity",
+  (facts) => {
+    const nonTerminal =
+      facts.activityState !== "deleted" &&
+      facts.activityState !== "rejected" &&
+      facts.activityState !== "approved";
+    if (isAdminOrDev(facts.systemRoles)) return nonTerminal;
+    if (facts.tournamentRoles.includes("tournament_manager"))
+      return nonTerminal;
+    return facts.isCreator && nonTerminal;
+  },
+);
+
+export async function computeActivityPermissions(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  activityId: Id<"activities">,
+): Promise<{
+  canView: boolean;
+  canEdit: boolean;
+  canApprove: boolean;
+  canReject: boolean;
+  canDelete: boolean;
+}> {
+  const facts = await loadActivityFacts(ctx, userId, activityId);
+  const isAdmin = isAdminOrDev(facts.systemRoles);
+  const isReviewer = hasReviewerOrAbove(facts.tournamentRoles);
+  const isManager = facts.tournamentRoles.includes("tournament_manager");
+  const nonTerminalDeletable =
+    facts.activityState !== "deleted" &&
+    facts.activityState !== "rejected" &&
+    facts.activityState !== "approved";
+  return {
+    canView:
+      isAdmin ||
+      facts.tournamentRoles.length > 0 ||
+      facts.isCreator ||
+      facts.isTeamMember,
+    canEdit:
+      facts.isCreator &&
+      (facts.activityState === "pending" ||
+        facts.activityState === "incomplete"),
+    canApprove: facts.activityState === "pending" && (isAdmin || isReviewer),
+    canReject: facts.activityState === "pending" && (isAdmin || isReviewer),
+    canDelete:
+      nonTerminalDeletable && (isAdmin || isManager || facts.isCreator),
+  };
+}
+
 // ── Grant surface ────────────────────────────────────────────────────────────
 
 export async function grantTournamentRole(
