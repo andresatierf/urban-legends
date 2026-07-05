@@ -330,10 +330,13 @@ export function UpsertActivityFormDialog({
             ]}
           >
             {([isPristine, canSubmit, isSubmitting]) => {
-              // Evidence is optional at create (Activity lands in `incomplete`),
-              // but edits from a state that already has Evidence must keep 1–5.
+              // Block submission only when editing an activity that already had
+              // Evidence but the user has cleared it all — not for incomplete
+              // activities that were created without Evidence.
               const missingEvidence =
-                !!activity && evidenceStorageIds.length === 0;
+                !!activity &&
+                (evidenceSeed?.length ?? 0) > 0 &&
+                evidenceStorageIds.length === 0;
               const initialIds = new Set(evidenceSeed?.map((e) => e._id) ?? []);
               const evidenceChanged =
                 evidenceStorageIds.length !== initialIds.size ||
