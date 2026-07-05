@@ -156,9 +156,43 @@ export async function runPipeline(
   }
 }
 
+// Log the moment a single issue settles so concurrent runs give incremental
+// feedback instead of going quiet until every pipeline finishes.
+function logSettled(issue: Issue, r: PromiseSettledResult<RunResult>): void {
+  if (r.status === "rejected") {
+    console.error(`✗ #${issue.id} finished (crashed): ${r.reason}`);
+  } else if (r.value.commits.length === 0) {
+    console.warn(`- #${issue.id} finished (no commits)`);
+  } else {
+    console.log(
+      `✓ #${issue.id} finished → ${r.value.commits.length} commit(s) on ${issue.branch}`,
+    );
+  }
+}
+
 // Fan out concurrently. Never rejects — each outcome is a settled result.
+// Each issue logs as soon as it settles (see `logSettled`).
 export function runPipelines(issues: Issue[], phases: Phase[]) {
-  return Promise.allSettled(issues.map((issue) => runPipeline(issue, phases)));
+  return Promise.allSettled(
+    issues.map(async (issue) => {
+      const settled = await runPipeline(issue, phases)
+        .then(
+          (value): PromiseSettledResult<RunResult> => ({
+            status: "fulfilled",
+            value,
+          }),
+        )
+        .catch(
+          (reason): PromiseSettledResult<RunResult> => ({
+            status: "rejected",
+            reason,
+          }),
+        );
+      logSettled(issue, settled);
+      if (settled.status === "rejected") throw settled.reason;
+      return settled.value;
+    }),
+  );
 }
 
 export const implementPhase: Phase = (sb, issue) => implement(sb, issue);
