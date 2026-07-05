@@ -3,21 +3,18 @@ import type { MutationCtx } from "../_generated/server";
 import { claimUploads, releaseUploads } from "../evidenceStorage";
 import { nowUTC, toUTCDateString } from "../lib/dates";
 
-// Returns the last 7 calendar dates (UTC) ending today, oldest → newest.
 export function last7Dates(today: Date = new Date()): string[] {
   const base = new Date(today);
   base.setUTCHours(0, 0, 0, 0);
-  const out: string[] = [];
+  const dates: string[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(base);
     d.setUTCDate(d.getUTCDate() - i);
-    out.push(d.toISOString().split("T")[0]);
+    dates.push(d.toISOString().split("T")[0]);
   }
-  return out;
+  return dates;
 }
 
-// Recomputes the precomputed 7-day activity rollup on the team from
-// Activity rows. Buckets by activity.date (calendar-day prefix).
 export async function recomputeRecentActivity(
   ctx: MutationCtx,
   teamId: Id<"teams">,
