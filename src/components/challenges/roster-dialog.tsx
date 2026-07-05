@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "convex/react";
 import { Loader2, Minus, Plus, Search, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -125,6 +125,10 @@ export function ChallengeRosterDialog({
               {filtered.map((player) => {
                 const isOnRoster = rosterIds.has(player.userId);
                 const isPending = pendingUser === player.userId;
+                let icon: ReactNode;
+                if (isPending) icon = <Loader2 className="animate-spin" />;
+                else if (isOnRoster) icon = <Minus />;
+                else icon = <Plus />;
                 return (
                   <li
                     key={player.userId}
@@ -155,13 +159,7 @@ export function ChallengeRosterDialog({
                       disabled={disabled || isPending}
                       onClick={() => handleToggle(player.userId, isOnRoster)}
                     >
-                      {isPending ? (
-                        <Loader2 className="animate-spin" />
-                      ) : isOnRoster ? (
-                        <Minus />
-                      ) : (
-                        <Plus />
-                      )}
+                      {icon}
                       {isOnRoster ? "Remove" : "Add"}
                     </Button>
                   </li>
