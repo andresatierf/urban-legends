@@ -148,15 +148,7 @@ export const edit = mutation({
     threshold: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-    const challenge = await ctx.db.get(args.challengeId);
-    if (!challenge) throw new Error("Challenge not found");
-    await canManageChallenge.require(ctx, user._id, {
-      tournamentId: challenge.tournamentId,
-    });
-    if (challenge.state !== "pending") {
-      throw new Error("Only pending Challenges can be edited");
-    }
+    const { challenge } = await requirePendingChallenge(ctx, args.challengeId);
 
     const patch: Partial<typeof challenge> = {};
     if (args.description !== undefined) {

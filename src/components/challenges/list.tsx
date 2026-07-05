@@ -157,16 +157,16 @@ function ChallengeCard({
             Roster
           </Button>
           {canEdit && (
-            <Button size="sm" variant="outline" onClick={onEdit}>
-              <Pencil />
-              Edit
-            </Button>
-          )}
-          {canEdit && (
-            <Button size="sm" onClick={handleApprove} disabled={approving}>
-              <Check />
-              Approve
-            </Button>
+            <>
+              <Button size="sm" variant="outline" onClick={onEdit}>
+                <Pencil />
+                Edit
+              </Button>
+              <Button size="sm" onClick={handleApprove} disabled={approving}>
+                <Check />
+                Approve
+              </Button>
+            </>
           )}
         </div>
       </CardContent>
