@@ -148,8 +148,8 @@ function DashboardLoaded({
       >
         {selected.lifecycleState !== "ended" && (
           <SubmitTodayBanner
-            todaySubmissions={selected.todaySubmissionCount}
-            limit={tournament.maxSubmissionsPerDay}
+            todayActivities={selected.todayActivityCount}
+            limit={tournament.maxActivitiesPerDay}
             teamName={myTeamRow.team.name}
           />
         )}

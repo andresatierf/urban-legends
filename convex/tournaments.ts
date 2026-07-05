@@ -220,7 +220,7 @@ export const upsert = mutation({
     endDate: v.string(),
     teamMinSize: v.number(),
     teamMaxSize: v.number(),
-    maxSubmissionsPerDay: v.optional(v.number()),
+    maxActivitiesPerDay: v.optional(v.number()),
 
     scoringConfig: v.optional(
       v.object({
@@ -260,7 +260,7 @@ export const upsert = mutation({
       endDate: toUTCEndOfDayString(args.endDate),
       teamMinSize: args.teamMinSize,
       teamMaxSize: args.teamMaxSize,
-      maxSubmissionsPerDay: args.maxSubmissionsPerDay,
+      maxActivitiesPerDay: args.maxActivitiesPerDay,
       scoringConfig: args.scoringConfig || defaultScoringConfig,
     };
 

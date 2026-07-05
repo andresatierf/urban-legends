@@ -314,7 +314,7 @@ export async function submit(
 
   const date = toUTCDateString(args.date);
 
-  if (tournament.maxSubmissionsPerDay) {
+  if (tournament.maxActivitiesPerDay) {
     // JS-side filter avoids convex-test@0.0.1 q.and() incompatibility
     const allOnDate = await ctx.db
       .query("submissions")
@@ -327,9 +327,9 @@ export async function submit(
       (s) => s.tournamentId === team.tournamentId && s.state !== "deleted",
     ).length;
 
-    if (count >= tournament.maxSubmissionsPerDay) {
+    if (count >= tournament.maxActivitiesPerDay) {
       throw new Error(
-        `Daily submission limit reached (${tournament.maxSubmissionsPerDay} per day). You have already submitted ${count} time(s) today.`,
+        `Daily submission limit reached (${tournament.maxActivitiesPerDay} per day). You have already submitted ${count} time(s) today.`,
       );
     }
   }

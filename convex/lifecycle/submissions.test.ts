@@ -299,7 +299,7 @@ describe("submit", () => {
         endDate: "2024-12-31",
         createdBy: userId,
         scoringConfig,
-        maxSubmissionsPerDay: 1,
+        maxActivitiesPerDay: 1,
       });
       const teamId = await ctx.db.insert("teams", {
         name: "Limited Team",

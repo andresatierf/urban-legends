@@ -32,7 +32,7 @@ const formSchema = z.object({
   endDate: z.string().min(1, "Please select an end date"),
   teamMinSize: z.number().min(1, "Team minimum size must be at least 1"),
   teamMaxSize: z.number().min(1, "Team maximum size must be at least 1"),
-  maxSubmissionsPerDay: z.number().int().min(1).optional(),
+  maxActivitiesPerDay: z.number().int().min(1).optional(),
   // Scoring configuration
   scoringConfig: z
     .object({
@@ -83,7 +83,7 @@ export function UpsertTournamentFormDialog({
       endDate: tournament?.endDate ?? "",
       teamMinSize: tournament?.teamMinSize ?? 1,
       teamMaxSize: tournament?.teamMaxSize ?? 5,
-      maxSubmissionsPerDay: tournament?.maxSubmissionsPerDay ?? undefined,
+      maxActivitiesPerDay: tournament?.maxActivitiesPerDay ?? undefined,
       scoringConfig: tournament?.scoringConfig ?? {
         individualPoints: { base: 2, advanced: 3 },
         teamExercisePoints: { base: 20, advanced: 30 },
@@ -196,10 +196,10 @@ export function UpsertTournamentFormDialog({
                 {(field) => <field.NumberField label="Maximum Team Size" />}
               </form.AppField>
             </FieldGroup>
-            <form.AppField name="maxSubmissionsPerDay">
+            <form.AppField name="maxActivitiesPerDay">
               {(field) => (
                 <field.NumberField
-                  label="Max Submissions Per Day (leave empty for unlimited)"
+                  label="Max Activities Per Day (leave empty for unlimited)"
                   placeholder="Unlimited"
                 />
               )}

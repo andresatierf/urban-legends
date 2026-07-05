@@ -73,24 +73,24 @@ export const VIEW_MODES: MockViewModeConfig[] = [
 
 type ResolvedMode = {
   tournamentIdx: number;
-  todaySubmissions: number;
+  todayActivities: number;
   isEmpty: boolean;
 };
 
 function resolveMode(mode: MockViewMode): ResolvedMode {
   switch (mode) {
     case "active-no-submission":
-      return { tournamentIdx: 0, todaySubmissions: 0, isEmpty: false };
+      return { tournamentIdx: 0, todayActivities: 0, isEmpty: false };
     case "active-default":
-      return { tournamentIdx: 0, todaySubmissions: 1, isEmpty: false };
+      return { tournamentIdx: 0, todayActivities: 1, isEmpty: false };
     case "active-at-limit":
-      return { tournamentIdx: 0, todaySubmissions: 2, isEmpty: false };
+      return { tournamentIdx: 0, todayActivities: 2, isEmpty: false };
     case "urgent-ending":
-      return { tournamentIdx: 1, todaySubmissions: 0, isEmpty: false };
+      return { tournamentIdx: 1, todayActivities: 0, isEmpty: false };
     case "ended-recent":
-      return { tournamentIdx: 2, todaySubmissions: 0, isEmpty: false };
+      return { tournamentIdx: 2, todayActivities: 0, isEmpty: false };
     case "empty":
-      return { tournamentIdx: 0, todaySubmissions: 0, isEmpty: true };
+      return { tournamentIdx: 0, todayActivities: 0, isEmpty: true };
   }
 }
 
@@ -200,8 +200,8 @@ export function DashboardSandboxPage({
 
       {lifecycle !== "ended" && (
         <SubmitTodayBanner
-          todaySubmissions={resolved.todaySubmissions}
-          limit={tournament.maxSubmissionsPerDay}
+          todayActivities={resolved.todayActivities}
+          limit={tournament.maxActivitiesPerDay}
           teamName={myTeam.team.name}
         />
       )}
