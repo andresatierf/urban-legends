@@ -12,6 +12,7 @@ import type * as activities from "../activities.js";
 import type * as authority_core from "../authority/core.js";
 import type * as authority_index from "../authority/index.js";
 import type * as captain from "../captain.js";
+import type * as challenges from "../challenges.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as data from "../data.js";
@@ -36,6 +37,7 @@ import type * as seed from "../seed.js";
 import type * as teams from "../teams.js";
 import type * as tournaments from "../tournaments.js";
 import type * as users from "../users.js";
+import type * as views_challenges from "../views/challenges.js";
 import type * as views_dashboard from "../views/dashboard.js";
 
 import type {
@@ -49,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   "authority/core": typeof authority_core;
   "authority/index": typeof authority_index;
   captain: typeof captain;
+  challenges: typeof challenges;
   crons: typeof crons;
   dashboard: typeof dashboard;
   data: typeof data;
@@ -73,6 +76,7 @@ declare const fullApi: ApiFromModules<{
   teams: typeof teams;
   tournaments: typeof tournaments;
   users: typeof users;
+  "views/challenges": typeof views_challenges;
   "views/dashboard": typeof views_dashboard;
 }>;
 

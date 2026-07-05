@@ -621,6 +621,15 @@ export async function computeTournamentPermissions(
   };
 }
 
+// ── Challenge rules ─────────────────────────────────────────────────────────
+
+export const canManageChallenge: TournamentRule = tournamentRule(
+  "canManageChallenge",
+  (facts) =>
+    isAdminOrDev(facts.systemRoles) ||
+    facts.tournamentRoles.includes("tournament_manager"),
+);
+
 // ── Join request rules ────────────────────────────────────────────────────────
 
 type JoinRequestFacts = {
