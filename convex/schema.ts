@@ -23,7 +23,7 @@ export default defineSchema({
       }),
       teamExerciseThreshold: v.number(),
     }),
-    maxSubmissionsPerDay: v.optional(v.number()),
+    maxActivitiesPerDay: v.optional(v.number()),
   }).index("by_name", ["name"]),
 
   teams: defineTable({

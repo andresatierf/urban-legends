@@ -192,7 +192,7 @@ describe("create", () => {
     ).rejects.toThrow("not a member");
   });
 
-  test("respects maxSubmissionsPerDay cap on the team", async () => {
+  test("respects maxActivitiesPerDay cap on the team", async () => {
     const t = convexTest(schemaForTest);
     const { userId, teamId } = await t.run(async (ctx) => {
       const uid = await ctx.db.insert("users", {
@@ -207,7 +207,7 @@ describe("create", () => {
         endDate: "2024-12-31",
         createdBy: uid,
         scoringConfig,
-        maxSubmissionsPerDay: 1,
+        maxActivitiesPerDay: 1,
       });
       const teamId = await ctx.db.insert("teams", {
         name: "T",
@@ -247,6 +247,67 @@ describe("create", () => {
         }),
       ),
     ).rejects.toThrow("Daily activity limit reached");
+  });
+
+  test("rejected activities do not count toward maxActivitiesPerDay cap", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId } = await t.run(async (ctx) => {
+      const uid = await ctx.db.insert("users", {
+        email: "r@e.com",
+        name: "R",
+        externalId: "ext_r",
+      });
+      const tid = await ctx.db.insert("tournaments", {
+        name: "Cap-reject",
+        description: "",
+        startDate: "2024-01-01",
+        endDate: "2024-12-31",
+        createdBy: uid,
+        scoringConfig,
+        maxActivitiesPerDay: 1,
+      });
+      const teamId = await ctx.db.insert("teams", {
+        name: "T",
+        tournamentId: tid,
+        createdBy: uid,
+        joinPolicy: "open" as const,
+        points: 0,
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId,
+        userId: uid,
+        role: "captain" as const,
+      });
+      return { userId: uid, teamId };
+    });
+    const s1 = fakeStorageId(11);
+    const s2 = fakeStorageId(12);
+    await t.run(async (ctx) => {
+      await insertPendingUpload(ctx, userId, s1);
+      await insertPendingUpload(ctx, userId, s2);
+    });
+    const firstId = await t.run((ctx) =>
+      create(ctx, {
+        userId,
+        teamId,
+        date: "2024-03-01",
+        evidenceStorageIds: [s1],
+      }),
+    );
+    // Reject the first activity — it should no longer count toward the cap.
+    await t.run((ctx) =>
+      reject(ctx, firstId, userId, { rejectionReason: "not qualifying" }),
+    );
+    // A second create on the same date should now succeed.
+    const secondId = await t.run((ctx) =>
+      create(ctx, {
+        userId,
+        teamId,
+        date: "2024-03-01",
+        evidenceStorageIds: [s2],
+      }),
+    );
+    expect(secondId).toBeDefined();
   });
 });
 

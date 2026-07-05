@@ -173,17 +173,15 @@ export const getDashboardView = query({
       }),
     );
 
-    // ── viewer's submissions today (pending + approved only) ─────────────
-    const allTodaySubs = await ctx.db
-      .query("submissions")
-      .withIndex("by_user_and_date", (q) =>
-        q.eq("userId", user._id).eq("date", todayStr),
+    // ── team's activities today (pending + approved only) ───────────────
+    const teamActivitiesToday = await ctx.db
+      .query("activities")
+      .withIndex("by_team_and_date", (q) =>
+        q.eq("teamId", myTeamRow.team._id).eq("date", todayStr),
       )
       .collect();
-    const todaySubmissionCount = allTodaySubs.filter(
-      (s) =>
-        s.tournamentId === selectedTournament._id &&
-        (s.state === "pending" || s.state === "approved"),
+    const todayActivityCount = teamActivitiesToday.filter(
+      (a) => a.state === "pending" || a.state === "approved",
     ).length;
 
     // ── timeline framing ─────────────────────────────────────────────────
@@ -219,7 +217,7 @@ export const getDashboardView = query({
           comparison,
           comparedToName: comparedTo?.team.name ?? null,
         },
-        todaySubmissionCount,
+        todayActivityCount,
       },
       inbox: await loadInbox(ctx, user._id, teamMemberships),
     } as const;

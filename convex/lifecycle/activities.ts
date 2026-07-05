@@ -71,7 +71,9 @@ async function enforceDailyActivityCap(
       q.eq("teamId", teamId).eq("date", date),
     )
     .collect();
-  const active = existing.filter((a) => a.state !== "deleted");
+  const active = existing.filter(
+    (a) => a.state === "pending" || a.state === "approved",
+  );
   if (active.length >= cap) {
     throw new Error(
       `Daily activity limit reached (${cap} per day). The team has already recorded ${active.length} activity(ies) today.`,
@@ -111,7 +113,7 @@ export async function create(
   const date = toUTCDateString(args.date);
 
   // Cap distinct Activities per (team, date) per ADR-0009.
-  const cap = tournament.maxSubmissionsPerDay;
+  const cap = tournament.maxActivitiesPerDay;
   if (cap) await enforceDailyActivityCap(ctx, args.teamId, date, cap);
 
   const teamMembers = await ctx.db
@@ -212,7 +214,7 @@ export async function createGroup(
 
   const date = toUTCDateString(args.date);
 
-  const cap = tournament.maxSubmissionsPerDay;
+  const cap = tournament.maxActivitiesPerDay;
   if (cap) await enforceDailyActivityCap(ctx, args.teamId, date, cap);
 
   const totalTeamMembers = teamMembers.length;

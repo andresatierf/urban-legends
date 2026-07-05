@@ -22,7 +22,7 @@ const buildTournament = (overrides: {
   startDate: string;
   endDate: string;
   state: MockTournamentState;
-  maxSubmissionsPerDay?: number;
+  maxActivitiesPerDay?: number;
 }): MockTournament => ({
   _id: id<DashboardTournament["_id"]>(overrides._id),
   _creationTime: todayMs - 40 * dayMs,
@@ -38,7 +38,7 @@ const buildTournament = (overrides: {
     teamExercisePoints: { base: 8, advanced: 14 },
     teamExerciseThreshold: 3,
   },
-  maxSubmissionsPerDay: overrides.maxSubmissionsPerDay,
+  maxActivitiesPerDay: overrides.maxActivitiesPerDay,
   __state: overrides.state,
 });
 
@@ -49,7 +49,7 @@ export const MOCK_TOURNAMENTS: MockTournament[] = [
     startDate: isoDate(todayMs - 11 * dayMs),
     endDate: isoDate(todayMs + 18 * dayMs),
     state: "active",
-    maxSubmissionsPerDay: 2,
+    maxActivitiesPerDay: 2,
   }),
   buildTournament({
     _id: "t_quarter",
@@ -57,7 +57,7 @@ export const MOCK_TOURNAMENTS: MockTournament[] = [
     startDate: isoDate(todayMs - 26 * dayMs),
     endDate: isoDate(todayMs + 2 * dayMs),
     state: "urgent",
-    maxSubmissionsPerDay: 1,
+    maxActivitiesPerDay: 1,
   }),
   buildTournament({
     _id: "t_winter",
@@ -65,7 +65,7 @@ export const MOCK_TOURNAMENTS: MockTournament[] = [
     startDate: isoDate(todayMs - 40 * dayMs),
     endDate: isoDate(todayMs - 3 * dayMs),
     state: "ended",
-    maxSubmissionsPerDay: 1,
+    maxActivitiesPerDay: 1,
   }),
 ];
 

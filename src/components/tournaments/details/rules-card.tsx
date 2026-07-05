@@ -24,7 +24,7 @@ export function RulesCard({ tournament }: Props) {
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Daily limit</span>
-          <span>{tournament.maxSubmissionsPerDay ?? "∞"}</span>
+          <span>{tournament.maxActivitiesPerDay ?? "∞"}</span>
         </div>
         <Separator />
         <div className="grid grid-cols-[auto_1fr_1fr] gap-x-3 gap-y-1">

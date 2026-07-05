@@ -6,28 +6,27 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 import { cn } from "@/lib/utils";
 
 export type SubmitTodayBannerProps = {
-  todaySubmissions: number;
+  todayActivities: number;
   limit: number | undefined;
   teamName: string;
 };
 
 export function SubmitTodayBanner({
-  todaySubmissions,
+  todayActivities,
   limit,
   teamName,
 }: SubmitTodayBannerProps) {
-  const atLimit = limit !== undefined && todaySubmissions >= limit;
+  const atLimit = limit !== undefined && todayActivities >= limit;
   if (atLimit) return null;
 
-  const hasLogged = todaySubmissions > 0;
+  const hasLogged = todayActivities > 0;
   if (hasLogged && limit === undefined) return null;
 
   const eyebrowText = hasLogged ? "Going strong" : "Today";
+  // limit is defined here when hasLogged (early return above handles the other case)
   const title = hasLogged
-    ? limit === undefined
-      ? `${todaySubmissions} logged today`
-      : `${todaySubmissions} of ${limit} logged today`
-    : "You haven't logged today";
+    ? `${todayActivities} of ${limit} logged today`
+    : `${teamName} hasn't logged today`;
   const subtitle = hasLogged
     ? `One more counts toward ${teamName}.`
     : `Snap your evidence, give ${teamName} the points.`;
@@ -35,7 +34,7 @@ export function SubmitTodayBanner({
 
   return (
     <section
-      aria-label="Daily submission prompt"
+      aria-label="Daily activity prompt"
       className="border-ink bg-card grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 rounded-xl border-2 px-4 py-4 shadow sm:grid-cols-[auto_1fr_auto] sm:gap-x-6 sm:gap-y-0 sm:px-6"
     >
       <span
@@ -63,7 +62,7 @@ export function SubmitTodayBanner({
         variant={hasLogged ? "secondary" : "default"}
         className="col-span-2 w-full justify-center sm:col-span-1 sm:w-auto sm:self-center"
       >
-        <Link to="/submissions">
+        <Link to="/activities">
           {cta}
           <ArrowRight />
         </Link>
