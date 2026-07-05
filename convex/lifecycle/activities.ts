@@ -290,7 +290,7 @@ export async function submitEvidence(
     activity.state === "rejected" ||
     activity.state === "deleted"
   ) {
-    throw new IllegalTransition(activity.state, "pending");
+    throw new IllegalTransition(activity.state, "evidence-submit");
   }
 
   const part = await ctx.db

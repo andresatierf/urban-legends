@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { EvidenceUploader } from "@/components/submissions/evidence-uploader";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -73,10 +74,9 @@ function RosterPicker({
               key={m._id}
               className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1 text-sm"
             >
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={checked}
-                onChange={() => toggle(m._id)}
+                onCheckedChange={() => toggle(m._id)}
               />
               <span className="truncate">{m.name || m.email}</span>
             </label>
