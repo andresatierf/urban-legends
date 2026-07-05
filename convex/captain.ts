@@ -117,8 +117,12 @@ export const getDashboardData = query({
         (a) => a.state === "approved",
       );
 
-      const { tournament, members, activities, ...team } = enrichedTeam;
-      void activities;
+      const {
+        tournament,
+        members,
+        activities: _activities,
+        ...team
+      } = enrichedTeam;
 
       return {
         team,
@@ -263,8 +267,12 @@ export const getTeamsComparison = query({
         allTeamsInTournament.filter((t) => t.points > enrichedTeam.points)
           .length + 1;
 
-      const { tournament, members, activities, ...team } = enrichedTeam;
-      void activities;
+      const {
+        tournament,
+        members,
+        activities: _activities,
+        ...team
+      } = enrichedTeam;
 
       return {
         team,

@@ -733,7 +733,7 @@ export const sendDailyDigest = internalMutation({
           userId,
           type: "pending_items_digest",
           title: "You have pending items requiring attention",
-          body: `${pendingActivities.length} activity${pendingActivities.length === 1 ? "" : "ies"} pending approval`,
+          body: `${pendingActivities.length} ${pendingActivities.length === 1 ? "activity" : "activities"} pending approval`,
           relatedEntityId: today,
           relatedEntityType: "digest",
           actionUrl: "/activities/review",
