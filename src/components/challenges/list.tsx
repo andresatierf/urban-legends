@@ -37,7 +37,7 @@ export function ChallengesSection({ tournamentId }: Props) {
       />
       {editing && (
         <UpsertChallengeFormDialog
-          open={!!editing}
+          open
           onOpenChange={(o) => !o && setEditing(null)}
           tournamentId={tournamentId}
           challenge={editing}
@@ -79,9 +79,7 @@ function ChallengeCard({
         <CardTitle className="text-body-md leading-tight">
           {challenge.description}
         </CardTitle>
-        <Badge variant={challenge.state === "pending" ? "info" : "success"}>
-          {challenge.state}
-        </Badge>
+        <Badge variant={canEdit ? "info" : "success"}>{challenge.state}</Badge>
       </CardHeader>
       <CardContent className="space-y-2 text-xs">
         <div className="flex justify-between">
