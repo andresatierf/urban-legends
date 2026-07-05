@@ -327,23 +327,30 @@ export const canEditActivity: ActivityRule = activityRule(
   "canEditActivity",
   (facts) =>
     facts.isCreator &&
-    (facts.activityState === "pending" || facts.activityState === "incomplete"),
+    (facts.activityState === "pending" ||
+      facts.activityState === "incomplete" ||
+      facts.activityState === "rejected"),
 );
-
-function isPendingAndReviewable(facts: ActivityFacts): boolean {
-  if (facts.activityState !== "pending") return false;
-  if (isAdminOrDev(facts.systemRoles)) return true;
-  return hasReviewerOrAbove(facts.tournamentRoles);
-}
 
 export const canApproveActivity: ActivityRule = activityRule(
   "canApproveActivity",
-  isPendingAndReviewable,
+  (facts) => {
+    if (facts.activityState !== "pending") return false;
+    if (isAdminOrDev(facts.systemRoles)) return true;
+    return hasReviewerOrAbove(facts.tournamentRoles);
+  },
 );
 
+// canRejectActivity also allows reject from `approved` (reject-to-reopen, ADR-0009):
+// an approved Activity is immutable except via reject, which clears the score.
 export const canRejectActivity: ActivityRule = activityRule(
   "canRejectActivity",
-  isPendingAndReviewable,
+  (facts) => {
+    if (facts.activityState !== "pending" && facts.activityState !== "approved")
+      return false;
+    if (isAdminOrDev(facts.systemRoles)) return true;
+    return hasReviewerOrAbove(facts.tournamentRoles);
+  },
 );
 
 export const canSubmitEvidence: ActivityRule = activityRule(
@@ -415,9 +422,13 @@ export async function computeActivityPermissions(
     canEdit:
       facts.isCreator &&
       (facts.activityState === "pending" ||
-        facts.activityState === "incomplete"),
+        facts.activityState === "incomplete" ||
+        facts.activityState === "rejected"),
     canApprove: facts.activityState === "pending" && (isAdmin || isReviewer),
-    canReject: facts.activityState === "pending" && (isAdmin || isReviewer),
+    canReject:
+      (facts.activityState === "pending" ||
+        facts.activityState === "approved") &&
+      (isAdmin || isReviewer),
     canDelete:
       nonTerminalDeletable && (isAdmin || isManager || facts.isCreator),
     canSubmitEvidence:

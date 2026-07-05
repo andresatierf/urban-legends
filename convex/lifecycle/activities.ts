@@ -59,6 +59,26 @@ function validateEvidenceCount(ids: Id<"_storage">[]): void {
   }
 }
 
+async function enforceDailyActivityCap(
+  ctx: MutationCtx,
+  teamId: Id<"teams">,
+  date: string,
+  cap: number,
+): Promise<void> {
+  const existing = await ctx.db
+    .query("activities")
+    .withIndex("by_team_and_date", (q) =>
+      q.eq("teamId", teamId).eq("date", date),
+    )
+    .collect();
+  const active = existing.filter((a) => a.state !== "deleted");
+  if (active.length >= cap) {
+    throw new Error(
+      `Daily activity limit reached (${cap} per day). The team has already recorded ${active.length} activity(ies) today.`,
+    );
+  }
+}
+
 // Creates an individual Activity. The creator provides Evidence (1–5 images);
 // the Activity lands directly in `pending` (individual completeness = 1/1).
 export async function create(
@@ -92,20 +112,7 @@ export async function create(
 
   // Cap distinct Activities per (team, date) per ADR-0009.
   const cap = tournament.maxSubmissionsPerDay;
-  if (cap) {
-    const existing = await ctx.db
-      .query("activities")
-      .withIndex("by_team_and_date", (q) =>
-        q.eq("teamId", args.teamId).eq("date", date),
-      )
-      .collect();
-    const active = existing.filter((a) => a.state !== "deleted");
-    if (active.length >= cap) {
-      throw new Error(
-        `Daily activity limit reached (${cap} per day). The team has already recorded ${active.length} activity(ies) today.`,
-      );
-    }
-  }
+  if (cap) await enforceDailyActivityCap(ctx, args.teamId, date, cap);
 
   const teamMembers = await ctx.db
     .query("teamMembers")
@@ -190,7 +197,7 @@ export async function createGroup(
     .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
     .collect();
 
-  // Every declared member must be on the team. Creator is always auto-included.
+  // Creator is always auto-included.
   const teamMemberIds = new Set(teamMembers.map((m) => m.userId as string));
   const rosterSet = new Set<string>(
     args.participantUserIds.map((u) => u as string),
@@ -206,20 +213,7 @@ export async function createGroup(
   const date = toUTCDateString(args.date);
 
   const cap = tournament.maxSubmissionsPerDay;
-  if (cap) {
-    const existing = await ctx.db
-      .query("activities")
-      .withIndex("by_team_and_date", (q) =>
-        q.eq("teamId", args.teamId).eq("date", date),
-      )
-      .collect();
-    const active = existing.filter((a) => a.state !== "deleted");
-    if (active.length >= cap) {
-      throw new Error(
-        `Daily activity limit reached (${cap} per day). The team has already recorded ${active.length} activity(ies) today.`,
-      );
-    }
-  }
+  if (cap) await enforceDailyActivityCap(ctx, args.teamId, date, cap);
 
   const totalTeamMembers = teamMembers.length;
   const declaredCount = roster.length;
@@ -290,7 +284,7 @@ export async function submitEvidence(
     activity.state === "rejected" ||
     activity.state === "deleted"
   ) {
-    throw new IllegalTransition(activity.state, "pending");
+    throw new IllegalTransition(activity.state, "evidence-submit");
   }
 
   const part = await ctx.db
@@ -316,7 +310,6 @@ export async function submitEvidence(
     fulfilledAt: now,
   });
 
-  // Auto-promote if every declared participant is now fulfilled.
   const parts = await ctx.db
     .query("participations")
     .withIndex("by_activity", (q) => q.eq("activityId", args.activityId))
@@ -542,11 +535,7 @@ export async function edit(
   const activity = await ctx.db.get(activityId);
   if (!activity) throw new Error("Activity not found");
 
-  if (
-    activity.state === "approved" ||
-    activity.state === "rejected" ||
-    activity.state === "deleted"
-  ) {
+  if (activity.state === "approved" || activity.state === "deleted") {
     throw new IllegalTransition(activity.state, "pending");
   }
 
@@ -573,10 +562,23 @@ export async function edit(
 
   const newDate = patch.date ? toUTCDateString(patch.date) : activity.date;
 
+  // Editing after a reject reopens the Activity: transitions back to pending
+  // (or incomplete for a group with any awaiting Participations).
+  let nextState: ActivityState | undefined;
+  if (activity.state === "rejected") {
+    const parts = await ctx.db
+      .query("participations")
+      .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+      .collect();
+    const allFulfilled = parts.every((p) => p.fulfilledAt !== undefined);
+    nextState = allFulfilled ? "pending" : "incomplete";
+  }
+
   await ctx.db.patch(activityId, {
     ...(patch.date !== undefined && { date: newDate }),
     ...(patch.tier !== undefined && { tier: patch.tier }),
     ...(patch.description !== undefined && { description: patch.description }),
+    ...(nextState !== undefined && { state: nextState }),
     updatedAt: nowUTC(),
   });
 
@@ -595,8 +597,8 @@ export async function softDelete(
   if (activity.state === "deleted") {
     return { pointsDelta: 0 };
   }
-  if (activity.state === "rejected") {
-    throw new IllegalTransition("rejected", "deleted");
+  if (activity.state === "rejected" || activity.state === "approved") {
+    throw new IllegalTransition(activity.state, "deleted");
   }
 
   const oldTeamPoints = (await ctx.db.get(activity.teamId))?.points ?? 0;
