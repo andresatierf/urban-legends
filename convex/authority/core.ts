@@ -232,9 +232,11 @@ type ActivityFacts = {
   isCreator: boolean;
   isTeamMember: boolean;
   isCaptain: boolean;
+  isDeclaredParticipant: boolean;
   systemRoles: SystemRoleName[];
   tournamentRoles: TournamentRoleName[];
   activityState: "incomplete" | "pending" | "approved" | "rejected" | "deleted";
+  activityType: "individual" | "group";
 };
 
 export type ActivitySubject = { activityId: Id<"activities"> };
@@ -260,24 +262,33 @@ async function loadActivityFacts(
   const activity = await ctx.db.get(activityId);
   if (!activity) throw new Error("Activity not found");
 
-  const [systemRoles, tournamentRoles, membership] = await Promise.all([
-    loadSystemRoles(ctx, userId),
-    loadTournamentRoles(ctx, userId, activity.tournamentId),
-    ctx.db
-      .query("teamMembers")
-      .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", activity.teamId).eq("userId", userId),
-      )
-      .first(),
-  ]);
+  const [systemRoles, tournamentRoles, membership, participation] =
+    await Promise.all([
+      loadSystemRoles(ctx, userId),
+      loadTournamentRoles(ctx, userId, activity.tournamentId),
+      ctx.db
+        .query("teamMembers")
+        .withIndex("by_team_and_user", (q) =>
+          q.eq("teamId", activity.teamId).eq("userId", userId),
+        )
+        .first(),
+      ctx.db
+        .query("participations")
+        .withIndex("by_activity_and_user", (q) =>
+          q.eq("activityId", activityId).eq("userId", userId),
+        )
+        .first(),
+    ]);
 
   return {
     isCreator: activity.createdBy === userId,
     isTeamMember: !!membership,
     isCaptain: membership?.role === "captain",
+    isDeclaredParticipant: !!participation,
     systemRoles,
     tournamentRoles,
     activityState: activity.state,
+    activityType: activity.type,
   };
 }
 
@@ -335,6 +346,28 @@ export const canRejectActivity: ActivityRule = activityRule(
   isPendingAndReviewable,
 );
 
+export const canSubmitEvidence: ActivityRule = activityRule(
+  "canSubmitEvidence",
+  (facts) =>
+    facts.isDeclaredParticipant &&
+    (facts.activityState === "incomplete" || facts.activityState === "pending"),
+);
+
+export const canRemoveParticipant: ActivityRule = activityRule(
+  "canRemoveParticipant",
+  (facts) => {
+    if (facts.activityType !== "group") return false;
+    if (
+      facts.activityState !== "incomplete" &&
+      facts.activityState !== "pending"
+    )
+      return false;
+    if (isAdminOrDev(facts.systemRoles)) return true;
+    if (facts.tournamentRoles.includes("tournament_manager")) return true;
+    return facts.isCreator || facts.isCaptain;
+  },
+);
+
 export const canDeleteActivity: ActivityRule = activityRule(
   "canDeleteActivity",
   (facts) => {
@@ -359,6 +392,8 @@ export async function computeActivityPermissions(
   canApprove: boolean;
   canReject: boolean;
   canDelete: boolean;
+  canSubmitEvidence: boolean;
+  canRemoveParticipant: boolean;
 }> {
   const facts = await loadActivityFacts(ctx, userId, activityId);
   const isAdmin = isAdminOrDev(facts.systemRoles);
@@ -368,6 +403,9 @@ export async function computeActivityPermissions(
     facts.activityState !== "deleted" &&
     facts.activityState !== "rejected" &&
     facts.activityState !== "approved";
+  const rosterEditable =
+    facts.activityType === "group" &&
+    (facts.activityState === "incomplete" || facts.activityState === "pending");
   return {
     canView:
       isAdmin ||
@@ -382,6 +420,13 @@ export async function computeActivityPermissions(
     canReject: facts.activityState === "pending" && (isAdmin || isReviewer),
     canDelete:
       nonTerminalDeletable && (isAdmin || isManager || facts.isCreator),
+    canSubmitEvidence:
+      facts.isDeclaredParticipant &&
+      (facts.activityState === "incomplete" ||
+        facts.activityState === "pending"),
+    canRemoveParticipant:
+      rosterEditable &&
+      (isAdmin || isManager || facts.isCreator || facts.isCaptain),
   };
 }
 

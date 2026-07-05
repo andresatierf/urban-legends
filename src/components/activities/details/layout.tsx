@@ -6,6 +6,7 @@ import { DetailsPageLayout } from "@/components/details-page-layout";
 import { Button } from "../../ui/button";
 import { DescriptionCard } from "./description-card";
 import { EvidenceGrid } from "./evidence-grid";
+import { ParticipationRoster } from "./roster";
 import { Sidebar } from "./sidebar";
 import type { ActivityDetailsData } from "./types";
 
@@ -30,7 +31,11 @@ export function ActivityDetailsLayout({ data, backTo = "/activities" }: Props) {
       sidebar={<Sidebar data={data} />}
     >
       <DescriptionCard activity={data.activity} />
-      <EvidenceGrid evidence={data.evidence} />
+      {data.activity.type === "group" ? (
+        <ParticipationRoster data={data} />
+      ) : (
+        <EvidenceGrid evidence={data.evidence} />
+      )}
     </DetailsPageLayout>
   );
 }

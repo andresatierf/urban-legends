@@ -157,6 +157,262 @@ export async function create(
   return activityId;
 }
 
+export async function createGroup(
+  ctx: MutationCtx,
+  args: {
+    userId: Id<"users">;
+    teamId: Id<"teams">;
+    date: string;
+    tier?: "base" | "advanced";
+    description?: string;
+    participantUserIds: Id<"users">[];
+    evidenceStorageIds: Id<"_storage">[];
+  },
+): Promise<Id<"activities">> {
+  validateEvidenceCount(args.evidenceStorageIds);
+
+  const team = await ctx.db.get(args.teamId);
+  if (!team) throw new Error("Team not found");
+
+  const tournament = await ctx.db.get(team.tournamentId);
+  if (!tournament) throw new Error("Tournament not found");
+
+  const membership = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_team_and_user", (q) =>
+      q.eq("teamId", args.teamId).eq("userId", args.userId),
+    )
+    .first();
+  if (!membership) throw new Error("You are not a member of this team");
+
+  const teamMembers = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+    .collect();
+
+  // Every declared member must be on the team. Creator is always auto-included.
+  const teamMemberIds = new Set(teamMembers.map((m) => m.userId as string));
+  const rosterSet = new Set<string>(
+    args.participantUserIds.map((u) => u as string),
+  );
+  rosterSet.add(args.userId as string);
+  for (const uid of rosterSet) {
+    if (!teamMemberIds.has(uid)) {
+      throw new Error("All declared participants must be team members");
+    }
+  }
+  const roster = Array.from(rosterSet) as Id<"users">[];
+
+  const date = toUTCDateString(args.date);
+
+  const cap = tournament.maxSubmissionsPerDay;
+  if (cap) {
+    const existing = await ctx.db
+      .query("activities")
+      .withIndex("by_team_and_date", (q) =>
+        q.eq("teamId", args.teamId).eq("date", date),
+      )
+      .collect();
+    const active = existing.filter((a) => a.state !== "deleted");
+    if (active.length >= cap) {
+      throw new Error(
+        `Daily activity limit reached (${cap} per day). The team has already recorded ${active.length} activity(ies) today.`,
+      );
+    }
+  }
+
+  const totalTeamMembers = teamMembers.length;
+  const declaredCount = roster.length;
+  const participationRate =
+    totalTeamMembers > 0 ? declaredCount / totalTeamMembers : 0;
+  const isTeamExercise =
+    participationRate >= tournament.scoringConfig.teamExerciseThreshold;
+  const tier = args.tier ?? "base";
+  const now = nowUTC();
+
+  const soloRoster = declaredCount === 1;
+  const initialState: ActivityState = soloRoster ? "pending" : "incomplete";
+
+  const activityId = await ctx.db.insert("activities", {
+    teamId: args.teamId,
+    tournamentId: team.tournamentId,
+    createdBy: args.userId,
+    date,
+    type: "group",
+    description: args.description,
+    tier,
+    state: initialState,
+    pointsEarned: 0,
+    participantCount: 1,
+    totalTeamMembers,
+    participationRate,
+    isTeamExercise,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  for (const uid of roster) {
+    const isCreator = uid === args.userId;
+    await ctx.db.insert("participations", {
+      activityId,
+      userId: uid,
+      teamId: args.teamId,
+      tournamentId: team.tournamentId,
+      evidenceStorageIds: isCreator ? args.evidenceStorageIds : [],
+      fulfilledAt: isCreator ? now : undefined,
+      pointsEarned: 0,
+      createdAt: now,
+    });
+  }
+
+  await claimUploads(ctx, args.userId, args.evidenceStorageIds);
+
+  await recomputeRecentActivity(ctx, args.teamId);
+
+  return activityId;
+}
+
+export async function submitEvidence(
+  ctx: MutationCtx,
+  args: {
+    activityId: Id<"activities">;
+    userId: Id<"users">;
+    evidenceStorageIds: Id<"_storage">[];
+  },
+): Promise<{ state: ActivityState }> {
+  validateEvidenceCount(args.evidenceStorageIds);
+
+  const activity = await ctx.db.get(args.activityId);
+  if (!activity) throw new Error("Activity not found");
+
+  if (
+    activity.state === "approved" ||
+    activity.state === "rejected" ||
+    activity.state === "deleted"
+  ) {
+    throw new IllegalTransition(activity.state, "pending");
+  }
+
+  const part = await ctx.db
+    .query("participations")
+    .withIndex("by_activity_and_user", (q) =>
+      q.eq("activityId", args.activityId).eq("userId", args.userId),
+    )
+    .first();
+  if (!part) {
+    throw new Error("You are not a declared participant on this Activity");
+  }
+
+  const currentIds = part.evidenceStorageIds ?? [];
+  const newIds = args.evidenceStorageIds;
+  const added = newIds.filter((id) => !currentIds.includes(id));
+  const removed = currentIds.filter((id) => !newIds.includes(id));
+  if (added.length > 0) await claimUploads(ctx, args.userId, added);
+  if (removed.length > 0) await releaseUploads(ctx, removed);
+
+  const now = nowUTC();
+  await ctx.db.patch(part._id, {
+    evidenceStorageIds: newIds,
+    fulfilledAt: now,
+  });
+
+  // Auto-promote if every declared participant is now fulfilled.
+  const parts = await ctx.db
+    .query("participations")
+    .withIndex("by_activity", (q) => q.eq("activityId", args.activityId))
+    .collect();
+  const allFulfilled = parts.every((p) => p.fulfilledAt !== undefined);
+  let nextState: ActivityState = activity.state;
+  if (allFulfilled && activity.state === "incomplete") {
+    nextState = "pending";
+  }
+  await ctx.db.patch(args.activityId, {
+    ...(nextState !== activity.state && { state: nextState }),
+    participantCount: parts.filter((p) => p.fulfilledAt !== undefined).length,
+    updatedAt: now,
+  });
+
+  await recomputeRecentActivity(ctx, activity.teamId);
+  return { state: nextState };
+}
+
+export async function removeParticipant(
+  ctx: MutationCtx,
+  args: {
+    activityId: Id<"activities">;
+    userId: Id<"users">;
+  },
+): Promise<{ state: ActivityState }> {
+  const activity = await ctx.db.get(args.activityId);
+  if (!activity) throw new Error("Activity not found");
+  if (activity.type !== "group") {
+    throw new Error("Only group Activities have a roster");
+  }
+  if (
+    activity.state === "approved" ||
+    activity.state === "rejected" ||
+    activity.state === "deleted"
+  ) {
+    throw new IllegalTransition(activity.state, "roster-edit");
+  }
+  if (args.userId === activity.createdBy) {
+    throw new Error("The creator cannot be removed from the roster");
+  }
+
+  const part = await ctx.db
+    .query("participations")
+    .withIndex("by_activity_and_user", (q) =>
+      q.eq("activityId", args.activityId).eq("userId", args.userId),
+    )
+    .first();
+  if (!part) throw new Error("Participant not on the roster");
+
+  await releaseUploads(ctx, part.evidenceStorageIds ?? []);
+  await ctx.db.delete(part._id);
+
+  const allParts = await ctx.db
+    .query("participations")
+    .withIndex("by_activity", (q) => q.eq("activityId", args.activityId))
+    .collect();
+  // Convex reads are snapshot-isolated: the just-deleted record is still visible here.
+  const parts = allParts.filter((p) => p._id !== part._id);
+
+  const team = await ctx.db.get(activity.teamId);
+  const [tournament, teamMembers] = team
+    ? await Promise.all([
+        ctx.db.get(team.tournamentId),
+        ctx.db
+          .query("teamMembers")
+          .withIndex("by_team", (q) => q.eq("teamId", activity.teamId))
+          .collect(),
+      ])
+    : [null, []];
+  const totalTeamMembers = teamMembers.length;
+  const declaredCount = parts.length;
+  const fulfilledCount = parts.filter((p) => p.fulfilledAt).length;
+  const participationRate =
+    totalTeamMembers > 0 ? declaredCount / totalTeamMembers : 0;
+  const isTeamExercise = tournament
+    ? participationRate >= tournament.scoringConfig.teamExerciseThreshold
+    : false;
+
+  const allFulfilled = declaredCount > 0 && fulfilledCount === declaredCount;
+  let nextState: ActivityState = activity.state;
+  if (allFulfilled && activity.state === "incomplete") {
+    nextState = "pending";
+  }
+  await ctx.db.patch(args.activityId, {
+    ...(nextState !== activity.state && { state: nextState }),
+    participantCount: fulfilledCount,
+    participationRate,
+    isTeamExercise,
+    updatedAt: nowUTC(),
+  });
+
+  await recomputeRecentActivity(ctx, activity.teamId);
+  return { state: nextState };
+}
+
 // Approves a pending Activity. Idempotent; throws IllegalTransition for
 // terminal source states. Scores per ADR-0001.
 export async function approve(
@@ -182,26 +438,36 @@ export async function approve(
   const tournament = await ctx.db.get(activity.tournamentId);
   if (!tournament) throw new Error("Tournament not found");
 
-  const pts = score(
-    tournament.scoringConfig,
-    activity.tier,
-    activity.isTeamExercise,
-  );
+  // Completeness gate: at approve-time all declared == fulfilled, so fulfilled IS the roster.
+  const parts = await ctx.db
+    .query("participations")
+    .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+    .collect();
+  const fulfilled = parts.filter((p) => p.fulfilledAt);
+  const teamMembers = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_team", (q) => q.eq("teamId", activity.teamId))
+    .collect();
+  const totalTeamMembers = teamMembers.length;
+  const participationRate =
+    totalTeamMembers > 0 ? fulfilled.length / totalTeamMembers : 0;
+  const isTeamExercise =
+    participationRate >= tournament.scoringConfig.teamExerciseThreshold;
+
+  const pts = score(tournament.scoringConfig, activity.tier, isTeamExercise);
 
   await ctx.db.patch(activityId, {
     state: "approved",
     pointsEarned: pts,
     managedBy: by,
     reviewedAt: Date.now(),
+    participantCount: fulfilled.length,
+    totalTeamMembers,
+    participationRate,
+    isTeamExercise,
     updatedAt: nowUTC(),
   });
 
-  // Distribute points across fulfilled participations.
-  const parts = await ctx.db
-    .query("participations")
-    .withIndex("by_activity", (q) => q.eq("activityId", activityId))
-    .collect();
-  const fulfilled = parts.filter((p) => p.fulfilledAt);
   const perPart = fulfilled.length > 0 ? pts / fulfilled.length : 0;
   for (const p of fulfilled) {
     await ctx.db.patch(p._id, { pointsEarned: perPart });

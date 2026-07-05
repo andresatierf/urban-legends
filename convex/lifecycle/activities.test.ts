@@ -7,11 +7,14 @@ import {
   IllegalTransition,
   approve,
   create,
+  createGroup,
   edit,
   recompute,
   reject,
+  removeParticipant,
   score,
   softDelete,
+  submitEvidence,
 } from "./activities";
 
 // convex-test@0.0.1 workaround: disable schema validation (see lifecycle/submissions.test.ts).
@@ -611,5 +614,352 @@ describe("recompute", () => {
       // 3 = teamExercise base (solo team → 1.0 rate → team exercise)
       expect(team?.points).toBe(3);
     });
+  });
+});
+
+// ─── Group Activity tests (ADR-0009) ──────────────────────────────────────
+async function seedGroupWorld(
+  ctx: Parameters<Parameters<ReturnType<typeof convexTest>["run"]>[0]>[0],
+) {
+  const captainId = await ctx.db.insert("users", {
+    email: "cap@example.com",
+    name: "Captain",
+    externalId: "ext_cap",
+  });
+  const alice = await ctx.db.insert("users", {
+    email: "a@example.com",
+    name: "Alice",
+    externalId: "ext_a",
+  });
+  const bob = await ctx.db.insert("users", {
+    email: "b@example.com",
+    name: "Bob",
+    externalId: "ext_b",
+  });
+
+  const tournamentId = await ctx.db.insert("tournaments", {
+    name: "Group Tournament",
+    description: "",
+    startDate: "2024-01-01",
+    endDate: "2024-12-31",
+    createdBy: captainId,
+    scoringConfig,
+  });
+
+  const teamId = await ctx.db.insert("teams", {
+    name: "Trio",
+    tournamentId,
+    createdBy: captainId,
+    joinPolicy: "open" as const,
+    points: 0,
+  });
+  for (const [uid, role] of [
+    [captainId, "captain"],
+    [alice, "member"],
+    [bob, "member"],
+  ] as const) {
+    await ctx.db.insert("teamMembers", { teamId, userId: uid, role });
+  }
+  return { captainId, alice, bob, teamId, tournamentId };
+}
+
+describe("createGroup", () => {
+  test("lands in incomplete with awaiting Participations for non-creator members", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, alice, bob, teamId } = await t.run(seedGroupWorld);
+    const s1 = fakeStorageId(11);
+    await t.run((ctx) => insertPendingUpload(ctx, captainId, s1));
+
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        description: "Team hike",
+        participantUserIds: [alice, bob],
+        evidenceStorageIds: [s1],
+      }),
+    );
+
+    await t.run(async (ctx) => {
+      const a = await ctx.db.get(activityId);
+      expect(a?.state).toBe("incomplete");
+      expect(a?.type).toBe("group");
+      const parts = await ctx.db
+        .query("participations")
+        .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+        .collect();
+      expect(parts).toHaveLength(3);
+      const creator = parts.find((p) => p.userId === captainId);
+      expect(creator?.fulfilledAt).toBeDefined();
+      expect(creator?.evidenceStorageIds).toEqual([s1]);
+      const outstanding = parts.filter((p) => !p.fulfilledAt);
+      expect(outstanding).toHaveLength(2);
+    });
+  });
+
+  test("creator is auto-included in the roster", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, alice, teamId } = await t.run(seedGroupWorld);
+    const s1 = fakeStorageId(12);
+    await t.run((ctx) => insertPendingUpload(ctx, captainId, s1));
+
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        participantUserIds: [alice], // no creator
+        evidenceStorageIds: [s1],
+      }),
+    );
+    await t.run(async (ctx) => {
+      const parts = await ctx.db
+        .query("participations")
+        .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+        .collect();
+      const userIds = parts.map((p) => p.userId as string);
+      expect(userIds).toContain(captainId as string);
+      expect(userIds).toContain(alice as string);
+    });
+  });
+
+  test("rejects non-team-members in the roster", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, teamId } = await t.run(seedGroupWorld);
+    const stranger = await t.run((ctx) =>
+      ctx.db.insert("users", {
+        email: "s@e.com",
+        name: "S",
+        externalId: "ext_s",
+      }),
+    );
+    const s1 = fakeStorageId(13);
+    await t.run((ctx) => insertPendingUpload(ctx, captainId, s1));
+    await expect(
+      t.run((ctx) =>
+        createGroup(ctx, {
+          userId: captainId,
+          teamId,
+          date: "2024-03-01",
+          participantUserIds: [stranger],
+          evidenceStorageIds: [s1],
+        }),
+      ),
+    ).rejects.toThrow("team members");
+  });
+});
+
+describe("submitEvidence & auto-promote", () => {
+  test("promotes incomplete → pending when the last participant uploads", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, alice, bob, teamId } = await t.run(seedGroupWorld);
+    const s1 = fakeStorageId(21);
+    const s2 = fakeStorageId(22);
+    const s3 = fakeStorageId(23);
+    await t.run(async (ctx) => {
+      await insertPendingUpload(ctx, captainId, s1);
+      await insertPendingUpload(ctx, alice, s2);
+      await insertPendingUpload(ctx, bob, s3);
+    });
+
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        participantUserIds: [alice, bob],
+        evidenceStorageIds: [s1],
+      }),
+    );
+
+    // Alice uploads — still incomplete.
+    await t.run((ctx) =>
+      submitEvidence(ctx, {
+        activityId,
+        userId: alice,
+        evidenceStorageIds: [s2],
+      }),
+    );
+    await t.run(async (ctx) => {
+      const a = await ctx.db.get(activityId);
+      expect(a?.state).toBe("incomplete");
+    });
+
+    // Bob uploads — auto-promotes to pending.
+    const result = await t.run((ctx) =>
+      submitEvidence(ctx, {
+        activityId,
+        userId: bob,
+        evidenceStorageIds: [s3],
+      }),
+    );
+    expect(result.state).toBe("pending");
+    await t.run(async (ctx) => {
+      const a = await ctx.db.get(activityId);
+      expect(a?.state).toBe("pending");
+      expect(a?.participantCount).toBe(3);
+    });
+  });
+
+  test("non-participant is rejected", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, alice, bob, teamId } = await t.run(seedGroupWorld);
+    const s1 = fakeStorageId(31);
+    const s2 = fakeStorageId(32);
+    await t.run(async (ctx) => {
+      await insertPendingUpload(ctx, captainId, s1);
+      await insertPendingUpload(ctx, alice, s2);
+    });
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        participantUserIds: [alice], // bob is NOT declared
+        evidenceStorageIds: [s1],
+      }),
+    );
+    await expect(
+      t.run((ctx) =>
+        submitEvidence(ctx, {
+          activityId,
+          userId: bob,
+          evidenceStorageIds: [s2],
+        }),
+      ),
+    ).rejects.toThrow("not a declared participant");
+  });
+});
+
+describe("approve group activity", () => {
+  test("blocks approve while incomplete", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, alice, bob, teamId } = await t.run(seedGroupWorld);
+    const s1 = fakeStorageId(41);
+    await t.run((ctx) => insertPendingUpload(ctx, captainId, s1));
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        participantUserIds: [alice, bob],
+        evidenceStorageIds: [s1],
+      }),
+    );
+    await expect(
+      t.run((ctx) => approve(ctx, activityId, captainId)),
+    ).rejects.toThrow(IllegalTransition);
+  });
+
+  test("full roster → team exercise; per-member points", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, alice, bob, teamId } = await t.run(seedGroupWorld);
+    const s1 = fakeStorageId(51);
+    const s2 = fakeStorageId(52);
+    const s3 = fakeStorageId(53);
+    await t.run(async (ctx) => {
+      await insertPendingUpload(ctx, captainId, s1);
+      await insertPendingUpload(ctx, alice, s2);
+      await insertPendingUpload(ctx, bob, s3);
+    });
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        tier: "advanced",
+        participantUserIds: [alice, bob],
+        evidenceStorageIds: [s1],
+      }),
+    );
+    await t.run((ctx) =>
+      submitEvidence(ctx, {
+        activityId,
+        userId: alice,
+        evidenceStorageIds: [s2],
+      }),
+    );
+    await t.run((ctx) =>
+      submitEvidence(ctx, {
+        activityId,
+        userId: bob,
+        evidenceStorageIds: [s3],
+      }),
+    );
+    const result = await t.run((ctx) => approve(ctx, activityId, captainId));
+    expect(result.state).toBe("approved");
+    // 3/3 = 1.0 ≥ 0.5 → team exercise advanced = 4
+    expect(result.pointsDelta).toBe(4);
+    await t.run(async (ctx) => {
+      const a = await ctx.db.get(activityId);
+      expect(a?.pointsEarned).toBe(4);
+      expect(a?.isTeamExercise).toBe(true);
+      const parts = await ctx.db
+        .query("participations")
+        .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+        .collect();
+      for (const p of parts) {
+        expect(p.pointsEarned).toBeCloseTo(4 / 3, 5);
+      }
+    });
+  });
+});
+
+describe("removeParticipant deadlock valve", () => {
+  test("shrinking roster so everyone remaining is fulfilled auto-promotes to pending", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, alice, bob, teamId } = await t.run(seedGroupWorld);
+    const s1 = fakeStorageId(61);
+    const s2 = fakeStorageId(62);
+    await t.run(async (ctx) => {
+      await insertPendingUpload(ctx, captainId, s1);
+      await insertPendingUpload(ctx, alice, s2);
+    });
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        participantUserIds: [alice, bob],
+        evidenceStorageIds: [s1],
+      }),
+    );
+    // Alice fulfils; Bob does not.
+    await t.run((ctx) =>
+      submitEvidence(ctx, {
+        activityId,
+        userId: alice,
+        evidenceStorageIds: [s2],
+      }),
+    );
+    await t.run(async (ctx) => {
+      const a = await ctx.db.get(activityId);
+      expect(a?.state).toBe("incomplete");
+    });
+    // Remove Bob → everyone remaining is fulfilled → pending.
+    const result = await t.run((ctx) =>
+      removeParticipant(ctx, { activityId, userId: bob }),
+    );
+    expect(result.state).toBe("pending");
+  });
+
+  test("cannot remove the creator", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, alice, teamId } = await t.run(seedGroupWorld);
+    const s1 = fakeStorageId(71);
+    await t.run((ctx) => insertPendingUpload(ctx, captainId, s1));
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        participantUserIds: [alice],
+        evidenceStorageIds: [s1],
+      }),
+    );
+    await expect(
+      t.run((ctx) => removeParticipant(ctx, { activityId, userId: captainId })),
+    ).rejects.toThrow("creator cannot be removed");
   });
 });

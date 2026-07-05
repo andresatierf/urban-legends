@@ -27,6 +27,66 @@ import { api } from "../../../../convex/_generated/api";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 import type { ActivityDetailsData } from "../details/types";
 
+type RosterMember = {
+  _id: Id<"users">;
+  name: string;
+  email: string;
+  imageUrl?: string;
+};
+
+function RosterPicker({
+  members,
+  selected,
+  onChange,
+}: {
+  members: RosterMember[];
+  selected: Id<"users">[];
+  onChange: (next: Id<"users">[]) => void;
+}) {
+  const toggle = (uid: Id<"users">) => {
+    onChange(
+      selected.includes(uid)
+        ? selected.filter((x) => x !== uid)
+        : [...selected, uid],
+    );
+  };
+
+  if (members.length === 0) {
+    return (
+      <div className="text-muted-foreground rounded-md border border-dashed p-3 text-xs">
+        No other team members to declare.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="text-sm font-medium">Participants</div>
+      <div className="text-muted-foreground text-xs">
+        Select every teammate who took part. You are always included.
+      </div>
+      <div className="rounded-md border p-2">
+        {members.map((m) => {
+          const checked = selected.includes(m._id);
+          return (
+            <label
+              key={m._id}
+              className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1 text-sm"
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => toggle(m._id)}
+              />
+              <span className="truncate">{m.name || m.email}</span>
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const formSchema = z.object({
   teamId: z.custom<Id<"teams">>(
     (val) => typeof val === "string" && val.length >= 1,
@@ -35,6 +95,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   date: z.string().min(1, "You must select a date."),
   tier: z.union([z.literal("base"), z.literal("advanced")]),
+  type: z.union([z.literal("individual"), z.literal("group")]),
 });
 
 type Props = {
@@ -78,6 +139,9 @@ export function UpsertActivityFormDialog({
   const [evidenceStorageIds, setEvidenceStorageIds] = useState<
     Id<"_storage">[]
   >(() => evidenceSeed?.map((e) => e._id) ?? []);
+  const [participantUserIds, setParticipantUserIds] = useState<Id<"users">[]>(
+    [],
+  );
 
   const initialEvidenceItems = useMemo<
     { storageId: Id<"_storage">; previewUrl: string }[]
@@ -96,12 +160,22 @@ export function UpsertActivityFormDialog({
     [teams],
   );
 
+  const initialTeamId = (activity?.teamId ?? teamId) as Id<"teams"> | undefined;
+  const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams"> | undefined>(
+    initialTeamId,
+  );
+  const teamMembers = useQuery(
+    api.teams.listTeamMembers,
+    selectedTeamId ? { teamId: selectedTeamId, excludeSelf: true } : "skip",
+  );
+
   const form = useAppForm({
     defaultValues: {
       date: activity?.date ?? date ?? "",
       description: activity?.description ?? "",
       teamId: activity?.teamId ?? teamId ?? "",
       tier: activity?.tier ?? "base",
+      type: activity?.type ?? "individual",
     } as z.input<typeof formSchema>,
     validators: {
       onChange: formSchema,
@@ -122,6 +196,9 @@ export function UpsertActivityFormDialog({
                 date: value.date,
                 description: value.description,
                 tier: value.tier,
+                type: value.type,
+                participantUserIds:
+                  value.type === "group" ? participantUserIds : undefined,
                 evidenceStorageIds,
               }),
         onSuccess: () => {
@@ -178,10 +255,41 @@ export function UpsertActivityFormDialog({
             {!teamId && !activity && (
               <form.AppField name="teamId">
                 {(field) => (
-                  <field.ComboboxField label="Team" options={teamOptions} />
+                  <field.ComboboxField
+                    label="Team"
+                    options={teamOptions}
+                    // Track selection outside the form for the roster picker.
+                    onChange={(v: string) =>
+                      setSelectedTeamId(v as Id<"teams">)
+                    }
+                  />
                 )}
               </form.AppField>
             )}
+            {!activity && (
+              <form.AppField name="type">
+                {(field) => (
+                  <field.SelectField
+                    label="Type"
+                    options={[
+                      { value: "individual", label: "Individual" },
+                      { value: "group", label: "Group" },
+                    ]}
+                  />
+                )}
+              </form.AppField>
+            )}
+            <form.Subscribe selector={(s) => s.values.type}>
+              {(type) =>
+                type === "group" && !activity ? (
+                  <RosterPicker
+                    members={teamMembers ?? []}
+                    selected={participantUserIds}
+                    onChange={setParticipantUserIds}
+                  />
+                ) : null
+              }
+            </form.Subscribe>
             <form.AppField name="description">
               {(field) => (
                 <field.TextField
