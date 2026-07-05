@@ -287,6 +287,283 @@ describe("challenges.edit", () => {
   });
 });
 
+describe("challenges roster", () => {
+  async function setupPendingWithTeams(t: ReturnType<typeof convexTest>) {
+    return t.run(async (ctx) => {
+      const creator = await makeUser(ctx, "creator");
+      const tournamentId = await makeTournament(ctx, creator);
+      const otherTournamentId = await makeTournament(ctx, creator, "Other");
+      const manager = await makeUser(ctx, "manager");
+      await giveTournamentRole(
+        ctx,
+        manager,
+        tournamentId,
+        "tournament_manager",
+      );
+      const alice = await makeUser(ctx, "alice");
+      const bob = await makeUser(ctx, "bob");
+      const outsider = await makeUser(ctx, "outsider");
+      const teamRed = await ctx.db.insert("teams", {
+        name: "Red",
+        tournamentId,
+        createdBy: manager,
+        joinPolicy: "open",
+        points: 0,
+      });
+      const teamBlue = await ctx.db.insert("teams", {
+        name: "Blue",
+        tournamentId,
+        createdBy: manager,
+        joinPolicy: "open",
+        points: 0,
+      });
+      const teamOther = await ctx.db.insert("teams", {
+        name: "Other",
+        tournamentId: otherTournamentId,
+        createdBy: manager,
+        joinPolicy: "open",
+        points: 0,
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId: teamRed,
+        userId: alice,
+        role: "member",
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId: teamBlue,
+        userId: bob,
+        role: "member",
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId: teamOther,
+        userId: outsider,
+        role: "member",
+      });
+      const challengeId = await ctx.db.insert("challenges", {
+        tournamentId,
+        createdBy: manager,
+        description: "c",
+        individualAmount: 1,
+        teamAmount: 2,
+        threshold: 1,
+        state: "pending",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      return {
+        tournamentId,
+        challengeId,
+        manager,
+        alice,
+        bob,
+        outsider,
+      };
+    });
+  }
+
+  test("manager can add users from different teams (roster spans teams)", async () => {
+    const t = convexTest(schemaForTest);
+    const { challengeId, alice, bob, tournamentId } =
+      await setupPendingWithTeams(t);
+
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.addToRoster, { challengeId, userId: alice });
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.addToRoster, { challengeId, userId: bob });
+
+    const rows = await t
+      .withIdentity({ subject: "manager" })
+      .query(api.views.challenges.listByTournament, { tournamentId });
+    const challenge = rows.find((r) => r._id === challengeId)!;
+    const teamNames = new Set(challenge.roster.map((r) => r.teamName));
+    expect(challenge.roster).toHaveLength(2);
+    expect(teamNames).toEqual(new Set(["Red", "Blue"]));
+  });
+
+  test("manager can remove a user from the roster", async () => {
+    const t = convexTest(schemaForTest);
+    const { challengeId, alice, tournamentId } = await setupPendingWithTeams(t);
+
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.addToRoster, { challengeId, userId: alice });
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.removeFromRoster, {
+        challengeId,
+        userId: alice,
+      });
+
+    const rows = await t
+      .withIdentity({ subject: "manager" })
+      .query(api.views.challenges.listByTournament, { tournamentId });
+    const challenge = rows.find((r) => r._id === challengeId)!;
+    expect(challenge.roster).toHaveLength(0);
+  });
+
+  test("add is idempotent (no duplicate roster entries)", async () => {
+    const t = convexTest(schemaForTest);
+    const { challengeId, alice, tournamentId } = await setupPendingWithTeams(t);
+
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.addToRoster, { challengeId, userId: alice });
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.addToRoster, { challengeId, userId: alice });
+
+    const rows = await t
+      .withIdentity({ subject: "manager" })
+      .query(api.views.challenges.listByTournament, { tournamentId });
+    const challenge = rows.find((r) => r._id === challengeId)!;
+    expect(challenge.roster).toHaveLength(1);
+  });
+
+  test("cannot add a user who is not a Player of this Tournament", async () => {
+    const t = convexTest(schemaForTest);
+    const { challengeId, outsider } = await setupPendingWithTeams(t);
+
+    await expect(
+      t
+        .withIdentity({ subject: "manager" })
+        .mutation(api.challenges.addToRoster, {
+          challengeId,
+          userId: outsider,
+        }),
+    ).rejects.toThrow();
+  });
+
+  test("non-manager cannot add or remove", async () => {
+    const t = convexTest(schemaForTest);
+    const { challengeId, alice } = await setupPendingWithTeams(t);
+
+    await expect(
+      t
+        .withIdentity({ subject: "alice" })
+        .mutation(api.challenges.addToRoster, {
+          challengeId,
+          userId: alice,
+        }),
+    ).rejects.toThrow();
+
+    await expect(
+      t
+        .withIdentity({ subject: "alice" })
+        .mutation(api.challenges.removeFromRoster, {
+          challengeId,
+          userId: alice,
+        }),
+    ).rejects.toThrow();
+  });
+
+  test("cannot add or remove on a non-pending Challenge", async () => {
+    const t = convexTest(schemaForTest);
+    const { challengeId, alice } = await setupPendingWithTeams(t);
+    await t.run(async (ctx) => {
+      await ctx.db.patch(challengeId, { state: "approved" });
+    });
+
+    await expect(
+      t
+        .withIdentity({ subject: "manager" })
+        .mutation(api.challenges.addToRoster, { challengeId, userId: alice }),
+    ).rejects.toThrow();
+
+    await expect(
+      t
+        .withIdentity({ subject: "manager" })
+        .mutation(api.challenges.removeFromRoster, {
+          challengeId,
+          userId: alice,
+        }),
+    ).rejects.toThrow();
+  });
+
+  test("admin can add and remove on any tournament", async () => {
+    const t = convexTest(schemaForTest);
+    const { challengeId, alice, tournamentId } = await setupPendingWithTeams(t);
+    await t.run(async (ctx) => {
+      const admin = await makeUser(ctx, "admin");
+      await giveSystemRole(ctx, admin, "admin");
+    });
+
+    await t
+      .withIdentity({ subject: "admin" })
+      .mutation(api.challenges.addToRoster, { challengeId, userId: alice });
+    const rows = await t
+      .withIdentity({ subject: "admin" })
+      .query(api.views.challenges.listByTournament, { tournamentId });
+    expect(rows.find((r) => r._id === challengeId)!.roster).toHaveLength(1);
+  });
+});
+
+describe("views/challenges.tournamentPlayers", () => {
+  test("returns all Players across all Teams in the tournament, sorted by name", async () => {
+    const t = convexTest(schemaForTest);
+    const { tournamentId } = await t.run(async (ctx) => {
+      const creator = await makeUser(ctx, "creator");
+      const tournamentId = await makeTournament(ctx, creator);
+      const manager = await makeUser(ctx, "manager");
+      await giveTournamentRole(
+        ctx,
+        manager,
+        tournamentId,
+        "tournament_manager",
+      );
+      const alice = await makeUser(ctx, "alice");
+      const bob = await makeUser(ctx, "bob");
+      const teamRed = await ctx.db.insert("teams", {
+        name: "Red",
+        tournamentId,
+        createdBy: manager,
+        joinPolicy: "open",
+        points: 0,
+      });
+      const teamBlue = await ctx.db.insert("teams", {
+        name: "Blue",
+        tournamentId,
+        createdBy: manager,
+        joinPolicy: "open",
+        points: 0,
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId: teamRed,
+        userId: alice,
+        role: "member",
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId: teamBlue,
+        userId: bob,
+        role: "member",
+      });
+      return { tournamentId };
+    });
+
+    const players = await t
+      .withIdentity({ subject: "manager" })
+      .query(api.views.challenges.tournamentPlayers, { tournamentId });
+    expect(players.map((p) => p.name)).toEqual(["alice", "bob"]);
+  });
+
+  test("plain member is denied", async () => {
+    const t = convexTest(schemaForTest);
+    const { tournamentId } = await t.run(async (ctx) => {
+      const creator = await makeUser(ctx, "creator");
+      const tournamentId = await makeTournament(ctx, creator);
+      await makeUser(ctx, "player");
+      return { tournamentId };
+    });
+
+    await expect(
+      t
+        .withIdentity({ subject: "player" })
+        .query(api.views.challenges.tournamentPlayers, { tournamentId }),
+    ).rejects.toThrow();
+  });
+});
+
 describe("views/challenges.listByTournament", () => {
   test("tournament_manager sees their tournament's Challenges (newest first)", async () => {
     const t = convexTest(schemaForTest);

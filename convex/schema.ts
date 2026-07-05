@@ -218,6 +218,18 @@ export default defineSchema({
     .index("by_tournament", ["tournamentId"])
     .index("by_tournament_and_state", ["tournamentId", "state"]),
 
+  challengeRosterEntries: defineTable({
+    challengeId: v.id("challenges"),
+    userId: v.id("users"),
+    tournamentId: v.id("tournaments"),
+    addedBy: v.id("users"),
+    createdAt: v.string(),
+  })
+    .index("by_challenge", ["challengeId"])
+    .index("by_challenge_and_user", ["challengeId", "userId"])
+    .index("by_user", ["userId"])
+    .index("by_tournament_and_user", ["tournamentId", "userId"]),
+
   notificationPreferences: defineTable({
     userId: v.id("users"),
     enabledTypes: v.optional(v.array(v.string())),

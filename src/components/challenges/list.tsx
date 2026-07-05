@@ -1,5 +1,5 @@
 import { useQuery } from "convex/react";
-import { Pencil, Target } from "lucide-react";
+import { Pencil, Target, Users } from "lucide-react";
 import { useState } from "react";
 
 import { SectionHeader } from "@/components/section-header";
@@ -10,6 +10,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { UpsertChallengeFormDialog } from "./form";
+import { ChallengeRosterDialog } from "./roster-dialog";
+
+type ChallengeWithRoster = Doc<"challenges"> & {
+  roster: {
+    userId: Id<"users">;
+    name: string;
+    email: string;
+    imageUrl?: string;
+    teamId?: Id<"teams">;
+    teamName?: string;
+    addedAt: string;
+  }[];
+};
 
 type Props = {
   tournamentId: Id<"tournaments">;
@@ -21,6 +34,7 @@ export function ChallengesSection({ tournamentId }: Props) {
   });
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Doc<"challenges"> | null>(null);
+  const [rosterFor, setRosterFor] = useState<ChallengeWithRoster | null>(null);
 
   return (
     <>
@@ -44,7 +58,19 @@ export function ChallengesSection({ tournamentId }: Props) {
         />
       )}
 
-      <ChallengeListBody challenges={challenges} onEdit={setEditing} />
+      {rosterFor && (
+        <ChallengeRosterDialog
+          open
+          onOpenChange={(o) => !o && setRosterFor(null)}
+          challenge={rosterFor}
+        />
+      )}
+
+      <ChallengeListBody
+        challenges={challenges}
+        onEdit={setEditing}
+        onManageRoster={setRosterFor}
+      />
     </>
   );
 }
@@ -52,9 +78,11 @@ export function ChallengesSection({ tournamentId }: Props) {
 function ChallengeListBody({
   challenges,
   onEdit,
+  onManageRoster,
 }: {
-  challenges: Doc<"challenges">[] | undefined;
+  challenges: ChallengeWithRoster[] | undefined;
   onEdit: (challenge: Doc<"challenges">) => void;
+  onManageRoster: (challenge: ChallengeWithRoster) => void;
 }) {
   if (challenges === undefined) {
     return <p className="text-body-md text-muted-foreground">Loading…</p>;
@@ -73,6 +101,7 @@ function ChallengeListBody({
           key={challenge._id}
           challenge={challenge}
           onEdit={() => onEdit(challenge)}
+          onManageRoster={() => onManageRoster(challenge)}
         />
       ))}
     </div>
@@ -82,9 +111,11 @@ function ChallengeListBody({
 function ChallengeCard({
   challenge,
   onEdit,
+  onManageRoster,
 }: {
-  challenge: Doc<"challenges">;
+  challenge: ChallengeWithRoster;
   onEdit: () => void;
+  onManageRoster: () => void;
 }) {
   const canEdit = challenge.state === "pending";
   return (
@@ -108,12 +139,25 @@ function ChallengeCard({
           <span className="text-muted-foreground">Threshold</span>
           <span>{Math.round(challenge.threshold * 100)}%</span>
         </div>
-        {canEdit && (
-          <Button size="sm" variant="outline" onClick={onEdit}>
-            <Pencil />
-            Edit
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Roster</span>
+          <span>
+            {challenge.roster.length}{" "}
+            {challenge.roster.length === 1 ? "participant" : "participants"}
+          </span>
+        </div>
+        <div className="flex gap-2 pt-1">
+          <Button size="sm" variant="outline" onClick={onManageRoster}>
+            <Users />
+            Roster
           </Button>
-        )}
+          {canEdit && (
+            <Button size="sm" variant="outline" onClick={onEdit}>
+              <Pencil />
+              Edit
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
