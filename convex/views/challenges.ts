@@ -36,23 +36,24 @@ async function loadRoster(
     }),
   );
   const users = await Promise.all(entries.map((e) => ctx.db.get(e.userId)));
-  const members = entries.flatMap((entry, i) => {
-    const user = users[i];
-    if (!user) return [];
-    const team = entryTeams[i];
-    return [
-      {
-        userId: entry.userId,
-        name: user.name,
-        email: user.email,
-        imageUrl: user.imageUrl,
-        teamId: team?._id,
-        teamName: team?.name,
-        addedAt: entry.createdAt,
-      },
-    ];
-  });
-  return members.sort((a, b) => a.addedAt.localeCompare(b.addedAt));
+  return entries
+    .flatMap((entry, i) => {
+      const user = users[i];
+      if (!user) return [];
+      const team = entryTeams[i];
+      return [
+        {
+          userId: entry.userId,
+          name: user.name,
+          email: user.email,
+          imageUrl: user.imageUrl,
+          teamId: team?._id,
+          teamName: team?.name,
+          addedAt: entry.createdAt,
+        },
+      ];
+    })
+    .sort((a, b) => a.addedAt.localeCompare(b.addedAt));
 }
 
 export const listByTournament = query({
