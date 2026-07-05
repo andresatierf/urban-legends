@@ -187,15 +187,7 @@ export const edit = mutation({
 export const approve = mutation({
   args: { challengeId: v.id("challenges") },
   handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-    const challenge = await ctx.db.get(args.challengeId);
-    if (!challenge) throw new Error("Challenge not found");
-    await canManageChallenge.require(ctx, user._id, {
-      tournamentId: challenge.tournamentId,
-    });
-    if (challenge.state !== "pending") {
-      throw new Error("Only pending Challenges can be approved");
-    }
+    const { challenge } = await requirePendingChallenge(ctx, args.challengeId);
 
     await ctx.db.patch(args.challengeId, {
       state: "approved",

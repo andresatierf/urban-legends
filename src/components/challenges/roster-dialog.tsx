@@ -91,12 +91,10 @@ export function ChallengeRosterDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center gap-2">
-          <Badge variant="neutral">
-            {challenge.roster.length}{" "}
-            {challenge.roster.length === 1 ? "participant" : "participants"}
-          </Badge>
-        </div>
+        <Badge variant="neutral">
+          {challenge.roster.length}{" "}
+          {challenge.roster.length === 1 ? "participant" : "participants"}
+        </Badge>
 
         <div className="relative">
           <Search className="text-muted-foreground absolute top-2.5 left-2 size-4" />
