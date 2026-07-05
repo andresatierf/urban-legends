@@ -9,6 +9,7 @@ import {
   canRejectActivity,
   computeActivityPermissions,
   hasSomeReviewAccess,
+  hasSomeTournamentManagerAccess,
 } from "./authority/core";
 import {
   approve as lifecycleApprove,
@@ -351,6 +352,36 @@ export const reviewerQueue = query({
     );
 
     return enriched.toSorted((a, b) => a._creationTime - b._creationTime);
+  },
+});
+
+// ── Authority: routing/entry-point permissions for /activities pages ─────────
+export const getAuthority = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    const [canReview, canManage, teamMembership] = await Promise.all([
+      hasSomeReviewAccess(ctx, user._id),
+      hasSomeTournamentManagerAccess(ctx, user._id),
+      ctx.db
+        .query("teamMembers")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .first(),
+    ]);
+
+    const isPlayer = teamMembership !== null;
+
+    let pendingReviewCount = 0;
+    if (canReview) {
+      const pending = await ctx.db
+        .query("activities")
+        .withIndex("by_state", (q) => q.eq("state", "pending"))
+        .collect();
+      pendingReviewCount = pending.length;
+    }
+
+    return { canReview, canManage, isPlayer, pendingReviewCount };
   },
 });
 
