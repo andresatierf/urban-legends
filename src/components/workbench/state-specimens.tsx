@@ -52,7 +52,7 @@ function EmptySection() {
             <Inbox />
           </EmptyMedia>
           <EmptyHeader>
-            <EmptyTitle>No submissions to review</EmptyTitle>
+            <EmptyTitle>No activity to review</EmptyTitle>
             <EmptyDescription>
               You're all caught up. Check back after teammates log activity.
             </EmptyDescription>

@@ -164,9 +164,9 @@ type EnrichmentResultType<TSpec> = TSpec extends {
  * // One-to-many relationships
  * const enriched = await enrichWithRelations(ctx, teams, {
  *   members: { table: "teamMembers", foreignKeyField: "teamId" },
- *   submissions: { table: "submissions", foreignKeyField: "teamId" }
+ *   activities: { table: "activities", foreignKeyField: "teamId" }
  * });
- * // Result: Array<Team & { members: Doc<"teamMembers">[], submissions: Doc<"submissions">[] }>
+ * // Result: Array<Team & { members: Doc<"teamMembers">[], activities: Doc<"activities">[] }>
  *
  * @example
  * // Mixed relationships
@@ -267,51 +267,39 @@ export async function enrichWithRelations<
  */
 export type OrphanedRecordsResult = {
   orphanedTeams: Doc<"teams">[];
-  orphanedSubmissions: Doc<"submissions">[];
+  orphanedActivities: Doc<"activities">[];
   orphanedTeamMembers: Doc<"teamMembers">[];
 };
 
-/**
- * Detects orphaned records across the database.
- * Consolidated from admin.ts duplicate implementations.
- *
- * @param ctx - Query or Mutation context
- * @returns Object containing arrays of orphaned records
- */
 export async function detectOrphanedRecords(
   ctx: QueryCtx | MutationCtx,
 ): Promise<OrphanedRecordsResult> {
-  // Get all entities for validation
-  const [tournaments, teams, submissions, users, teamMembers] =
+  const [tournaments, teams, activities, users, teamMembers] =
     await Promise.all([
       ctx.db.query("tournaments").collect(),
       ctx.db.query("teams").collect(),
-      ctx.db.query("submissions").collect(),
+      ctx.db.query("activities").collect(),
       ctx.db.query("users").collect(),
       ctx.db.query("teamMembers").collect(),
     ]);
 
-  // Build ID sets for fast lookup
   const tournamentIds = new Set(tournaments.map((t) => t._id));
   const teamIds = new Set(teams.map((t) => t._id));
   const userIds = new Set(users.map((u) => u._id));
 
-  // Find orphaned teams (teams with non-existent tournaments)
   const orphanedTeams = teams.filter((t) => !tournamentIds.has(t.tournamentId));
 
-  // Find orphaned submissions (submissions with non-existent teams or tournaments)
-  const orphanedSubmissions = submissions.filter(
-    (s) => !teamIds.has(s.teamId) || !tournamentIds.has(s.tournamentId),
+  const orphanedActivities = activities.filter(
+    (a) => !teamIds.has(a.teamId) || !tournamentIds.has(a.tournamentId),
   );
 
-  // Find orphaned team members (members with non-existent teams or users)
   const orphanedTeamMembers = teamMembers.filter(
     (tm) => !teamIds.has(tm.teamId) || !userIds.has(tm.userId),
   );
 
   return {
     orphanedTeams,
-    orphanedSubmissions,
+    orphanedActivities,
     orphanedTeamMembers,
   };
 }

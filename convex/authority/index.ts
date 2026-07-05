@@ -7,20 +7,11 @@ import {
   canGrantTournamentRole,
   canRevokeTournamentRole,
   computeActivityPermissions,
-  computeSubmissionPermissions,
   computeTeamPermissions,
   computeTournamentPermissions,
   grantTournamentRole as grantTournamentRoleInternal,
   revokeTournamentRole as revokeTournamentRoleInternal,
 } from "./core";
-
-export const permissionsFor = query({
-  args: { submissionId: v.id("submissions") },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-    return computeSubmissionPermissions(ctx, user._id, args.submissionId);
-  },
-});
 
 export const activityPermissionsFor = query({
   args: { activityId: v.id("activities") },

@@ -292,7 +292,7 @@ export const MOCK_INBOX: MockInboxItem[] = [
   },
 ];
 
-export type MockSubmissionStatus =
+export type MockActivityStatus =
   | "none"
   | "one"
   | "at-limit"
@@ -300,7 +300,7 @@ export type MockSubmissionStatus =
 
 export type MockViewMode =
   | "active-default"
-  | "active-no-submission"
+  | "active-no-activity"
   | "active-at-limit"
   | "urgent-ending"
   | "ended-recent"

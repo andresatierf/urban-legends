@@ -102,7 +102,7 @@ export function ChartSpecimens() {
 
       <Specimen
         label="Bar · single series"
-        description="Approved submissions per day, dashed-indicator tooltip."
+        description="Approved activities per day, dashed-indicator tooltip."
       >
         <ChartContainer config={BAR_CONFIG} className="h-[220px] w-full">
           <BarChart data={DAILY_DATA} margin={{ left: 0, right: 12 }}>

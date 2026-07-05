@@ -699,15 +699,13 @@ export const sendDailyDigest = internalMutation({
       userRoleMap.get(userId)?.add(role.name);
     }
 
-    // Query pending submissions once for this digest run
-    const pendingSubmissions = await ctx.db
-      .query("submissions")
+    const pendingActivities = await ctx.db
+      .query("activities")
       .withIndex("by_state", (q) => q.eq("state", "pending"))
       .collect();
 
-    // If there are no pending submissions, skip sending notifications
-    if (pendingSubmissions.length === 0) {
-      console.log("Sent 0 daily digest notifications (no pending submissions)");
+    if (pendingActivities.length === 0) {
+      console.log("Sent 0 daily digest notifications (no pending activities)");
       return { digestsSent: 0 };
     }
 
@@ -735,10 +733,10 @@ export const sendDailyDigest = internalMutation({
           userId,
           type: "pending_items_digest",
           title: "You have pending items requiring attention",
-          body: `${pendingSubmissions.length} submission${pendingSubmissions.length === 1 ? "" : "s"} pending approval`,
+          body: `${pendingActivities.length} ${pendingActivities.length === 1 ? "activity" : "activities"} pending approval`,
           relatedEntityId: today,
           relatedEntityType: "digest",
-          actionUrl: "/admin/submissions",
+          actionUrl: "/activities/review",
           isRead: false,
           isDeleted: false,
           createdAt: new Date().toISOString(),

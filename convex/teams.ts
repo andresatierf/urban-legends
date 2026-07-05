@@ -19,7 +19,7 @@ import { enrichWithRelations } from "./lib/helpers";
 import {
   recompute as lifecycleRecompute,
   recomputeRecentActivity,
-} from "./lifecycle/submissions";
+} from "./lifecycle/activities";
 import { notifyRemovedFromTeam } from "./notifications/triggers";
 import { validateUserNotInTournamentTeam } from "./tournaments";
 import { getCurrentUserOrThrow, getUser } from "./users";
@@ -232,11 +232,6 @@ export const get = query({
   },
 });
 
-/**
- * Get comprehensive team details with all related entities and permissions.
- * This query follows the pattern established by submissions.getDetails to provide
- * a single, efficient query for detail pages.
- */
 export const getDetails = query({
   args: {
     teamId: v.id("teams"),
@@ -249,14 +244,14 @@ export const getDetails = query({
       throw new Error("Team not found");
     }
 
-    const [tournament, teamMembers, submissions] = await Promise.all([
+    const [tournament, teamMembers, activities] = await Promise.all([
       ctx.db.get(team.tournamentId),
       ctx.db
         .query("teamMembers")
         .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
         .collect(),
       ctx.db
-        .query("submissions")
+        .query("activities")
         .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
         .collect(),
     ]);
@@ -281,12 +276,11 @@ export const getDetails = query({
 
     const userMembership = teamMembers.find((m) => m.userId === user._id);
 
-    const approvedSubmissions = submissions.filter(
-      (s) => s.state === "approved",
-    );
-    const totalSubmissions = submissions.length;
+    const nonDeleted = activities.filter((a) => a.state !== "deleted");
+    const approvedActivities = nonDeleted.filter((a) => a.state === "approved");
+    const totalActivities = nonDeleted.length;
     const approvalRate =
-      totalSubmissions > 0 ? approvedSubmissions.length / totalSubmissions : 0;
+      totalActivities > 0 ? approvedActivities.length / totalActivities : 0;
 
     const permissions = await computeTeamPermissions(
       ctx,
@@ -308,7 +302,7 @@ export const getDetails = query({
       statistics: {
         points: team.points ?? 0,
         memberCount: members.length,
-        submissionCount: totalSubmissions,
+        activityCount: totalActivities,
         approvalRate,
       },
       canEdit: permissions.canEdit,
@@ -328,24 +322,36 @@ export const removeUserTeam = mutation({
 
     await canDeleteTeam.require(ctx, user._id, { teamId: args.teamId });
 
-    const submissions = await ctx.db
-      .query("submissions")
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .collect();
+    const [activities, joinRequests, teamMembers] = await Promise.all([
+      ctx.db
+        .query("activities")
+        .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+        .collect(),
+      ctx.db
+        .query("joinRequests")
+        .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+        .collect(),
+      ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+        .collect(),
+    ]);
 
-    const joinRequests = await ctx.db
-      .query("joinRequests")
-      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
-      .collect();
-
-    const teamMembers = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
-      .collect();
+    const participations = (
+      await Promise.all(
+        activities.map((a) =>
+          ctx.db
+            .query("participations")
+            .withIndex("by_activity", (q) => q.eq("activityId", a._id))
+            .collect(),
+        ),
+      )
+    ).flat();
 
     await Promise.all(
       [
-        submissions.map(({ _id }) => ctx.db.delete(_id)),
+        participations.map(({ _id }) => ctx.db.delete(_id)),
+        activities.map(({ _id }) => ctx.db.delete(_id)),
         joinRequests.map(({ _id }) => ctx.db.delete(_id)),
         teamMembers.map(({ _id }) => ctx.db.delete(_id)),
       ].flat(),
@@ -783,7 +789,7 @@ export const recalculatePoints = mutation({
       teamId: args.teamId,
       points: updatedTeam?.points ?? 0,
       lastActivityAt: updatedTeam?.lastActivityAt,
-      submissionsUpdated: result.submissionsTouched,
+      activitiesUpdated: result.activitiesTouched,
     };
   },
 });
@@ -801,28 +807,23 @@ export const getStatistics = query({
     const tournament = await ctx.db.get(team.tournamentId);
     if (!tournament) return null;
 
-    const allSubmissions = await ctx.db
-      .query("submissions")
+    const allActivities = await ctx.db
+      .query("activities")
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
       .collect();
 
-    const approvedSubmissions = allSubmissions.filter(
-      (s) => s.state === "approved",
+    const nonDeleted = allActivities.filter((a) => a.state !== "deleted");
+    const approvedActivities = nonDeleted.filter((a) => a.state === "approved");
+    const pendingActivities = nonDeleted.filter(
+      (a) => a.state === "pending" || a.state === "incomplete",
     );
-    const pendingSubmissions = allSubmissions.filter(
-      (s) => s.state === "pending",
-    );
-    const rejectedSubmissions = allSubmissions.filter(
-      (s) => s.state === "rejected",
-    );
+    const rejectedActivities = nonDeleted.filter((a) => a.state === "rejected");
 
     const startDate = new Date(tournament.startDate);
     const endDate = new Date(tournament.endDate);
     const today = new Date();
     const currentDate = today > endDate ? endDate : today;
 
-    // Inclusive day count: matches `getUserStatistics` in convex/submissions.ts,
-    // where both startDate and endDate count as full days.
     const tournamentDays =
       Math.floor(
         (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
@@ -836,17 +837,12 @@ export const getStatistics = query({
           ) + 1;
 
     const approvalRate =
-      allSubmissions.length > 0
-        ? approvedSubmissions.length / allSubmissions.length
-        : 0;
+      nonDeleted.length > 0 ? approvedActivities.length / nonDeleted.length : 0;
 
     const averagePointsPerDay = daysSoFar > 0 ? team.points / daysSoFar : 0;
 
     const approvedDates = new Set(
-      approvedSubmissions
-        .map((s) => s.date)
-        .sort()
-        .reverse(),
+      approvedActivities.map((a) => a.date.slice(0, 10)),
     );
     let currentStreak = 0;
     const streakDate = new Date(today);
@@ -864,11 +860,25 @@ export const getStatistics = query({
       }
     }
 
+    // Member contributions counted per fulfilled Participation on approved Activities.
+    const approvedActivityIds = approvedActivities.map((a) => a._id);
+    const approvedParticipations = (
+      await Promise.all(
+        approvedActivityIds.map((id) =>
+          ctx.db
+            .query("participations")
+            .withIndex("by_activity", (q) => q.eq("activityId", id))
+            .collect(),
+        ),
+      )
+    ).flat();
+
     const memberContributions = new Map<Id<"users">, number>();
-    for (const submission of approvedSubmissions) {
+    for (const p of approvedParticipations) {
+      if (!p.fulfilledAt) continue;
       memberContributions.set(
-        submission.userId,
-        (memberContributions.get(submission.userId) || 0) + 1,
+        p.userId,
+        (memberContributions.get(p.userId) || 0) + 1,
       );
     }
 
@@ -876,9 +886,7 @@ export const getStatistics = query({
       memberContributions.entries(),
     ).map(([userId, count]) => ({ userId, count }));
 
-    const uniqueSubmissionDays = new Set(approvedSubmissions.map((s) => s.date))
-      .size;
-    const completionRate = daysSoFar > 0 ? uniqueSubmissionDays / daysSoFar : 0;
+    const completionRate = daysSoFar > 0 ? approvedDates.size / daysSoFar : 0;
 
     const tournamentTeams = await ctx.db
       .query("teams")
@@ -891,10 +899,10 @@ export const getStatistics = query({
     const rank = tournamentTeams.findIndex((t) => t._id === args.teamId) + 1;
 
     return {
-      totalSubmissions: allSubmissions.length,
-      approvedSubmissions: approvedSubmissions.length,
-      pendingSubmissions: pendingSubmissions.length,
-      rejectedSubmissions: rejectedSubmissions.length,
+      totalActivities: nonDeleted.length,
+      approvedActivities: approvedActivities.length,
+      pendingActivities: pendingActivities.length,
+      rejectedActivities: rejectedActivities.length,
       approvalRate,
       averagePointsPerDay,
       currentStreak,

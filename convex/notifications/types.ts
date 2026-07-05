@@ -12,12 +12,6 @@ export const NOTIFICATION_TYPES = {
   CAPTAIN_ROLE_TRANSFERRED_FROM: "captain_role_transferred_from",
   TEAM_DELETED: "team_deleted",
 
-  // Submission Events (4 types)
-  SUBMISSION_APPROVED: "submission_approved",
-  SUBMISSION_REJECTED: "submission_rejected",
-  SUBMISSION_GROUP_AUTO_CREATED: "submission_group_auto_created",
-  TEAMMATE_SUBMITTED: "teammate_submitted",
-
   // Activity Events
   ACTIVITY_APPROVED: "activity_approved",
   ACTIVITY_REJECTED: "activity_rejected",
@@ -41,12 +35,11 @@ export type NotificationType =
 
 export type RelatedEntityType =
   | "team"
-  | "submission"
   | "tournament"
   | "role"
   | "user"
-  | "submissionGroup"
-  | "activity";
+  | "activity"
+  | "participation";
 
 export const VALID_NOTIFICATION_TYPES = Object.values(NOTIFICATION_TYPES);
 

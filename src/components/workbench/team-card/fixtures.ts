@@ -219,7 +219,7 @@ const PROFILES = {
     { approved: 0, pending: 0, rejected: 0 },
     { approved: 0, pending: 0, rejected: 0 },
   ],
-  // Heavy submission day, lots pending review.
+  // Heavy activity day, lots pending review.
   pendingHeavy: [
     { approved: 1, pending: 0, rejected: 0, points: 20 },
     { approved: 2, pending: 0, rejected: 0, points: 40 },

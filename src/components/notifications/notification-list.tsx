@@ -13,7 +13,7 @@ import { NotificationItem } from "./notification-item";
 type NotificationType =
   | "all"
   | "team"
-  | "submission"
+  | "activity"
   | "tournament"
   | "role"
   | "digest";
@@ -48,12 +48,8 @@ export function NotificationList({
           notifType.startsWith("captain_") ||
           notifType.startsWith("removed_")
         );
-      case "submission":
-        return (
-          notifType.startsWith("submission_") ||
-          notifType.startsWith("activity_") ||
-          notifType.startsWith("teammate_")
-        );
+      case "activity":
+        return notifType.startsWith("activity_");
       case "tournament":
         return (
           notifType.startsWith("tournament_") ||
@@ -156,7 +152,7 @@ function FilterButtons({
   const filters: { label: string; value: NotificationType }[] = [
     { label: "All", value: "all" },
     { label: "Team", value: "team" },
-    { label: "Submission", value: "submission" },
+    { label: "Activity", value: "activity" },
     { label: "Tournament", value: "tournament" },
     { label: "Role", value: "role" },
     { label: "Digest", value: "digest" },

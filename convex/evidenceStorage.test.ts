@@ -5,7 +5,7 @@ import type { Id } from "./_generated/dataModel";
 import { claimUploads, releaseUploads, sweepOrphans } from "./evidenceStorage";
 import schema from "./schema";
 
-// convex-test@0.0.1 schema validation workaround (see submissions.test.ts)
+// convex-test@0.0.1 schema validation workaround (see lifecycle/activities.test.ts)
 const schemaForTest = Object.assign(Object.create(schema), {
   schemaValidation: false,
 }) as typeof schema;

@@ -12,7 +12,7 @@ interface ActivityItem {
   tournament: { name: string } | null;
   tier: "base" | "advanced";
   pointsEarned: number;
-  submissionType: "individual" | "team";
+  type: "individual" | "group";
   timestamp: string;
 }
 
@@ -37,7 +37,7 @@ export function LiveActivityFeed({ activities }: LiveActivityFeedProps) {
           className="hover:bg-muted/50 flex gap-3 rounded-lg border p-4 transition-colors"
         >
           <div className="bg-muted flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-            {activity.submissionType === "team" ? (
+            {activity.type === "group" ? (
               <Users className="h-5 w-5" />
             ) : (
               <User className="h-5 w-5" />
@@ -49,7 +49,7 @@ export function LiveActivityFeed({ activities }: LiveActivityFeedProps) {
                 <span className="font-medium">
                   {activity.user?.name || "Unknown user"}
                 </span>{" "}
-                submitted for{" "}
+                logged activity for{" "}
                 <span className="font-medium">
                   {activity.team?.name || "Unknown team"}
                 </span>
@@ -66,14 +66,10 @@ export function LiveActivityFeed({ activities }: LiveActivityFeedProps) {
                   {activity.tier === "advanced" ? "Advanced" : "Base"} Tier
                 </Badge>
                 <Badge
-                  variant={
-                    activity.submissionType === "team" ? "social" : "neutral"
-                  }
+                  variant={activity.type === "group" ? "social" : "neutral"}
                   className="text-xs"
                 >
-                  {activity.submissionType === "team"
-                    ? "Team Activity"
-                    : "Individual"}
+                  {activity.type === "group" ? "Team Activity" : "Individual"}
                 </Badge>
                 <span className="text-muted-foreground">
                   +{activity.pointsEarned} points

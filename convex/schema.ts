@@ -89,43 +89,6 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_role", ["roleId"]),
 
-  submissions: defineTable({
-    userId: v.id("users"),
-    teamId: v.id("teams"),
-    tournamentId: v.id("tournaments"),
-    date: v.string(),
-    description: v.optional(v.string()),
-    submissionType: v.union(v.literal("individual"), v.literal("team")),
-    state: v.union(
-      v.literal("pending"),
-      v.literal("approved"),
-      v.literal("rejected"),
-      v.literal("deleted"),
-    ),
-    createdBy: v.id("users"),
-    managedBy: v.optional(v.id("users")),
-    reviewedAt: v.optional(v.number()),
-    rejectionReason: v.optional(v.string()),
-    tier: v.union(v.literal("base"), v.literal("advanced")),
-    pointsEarned: v.number(),
-    submissionGroupId: v.optional(v.id("submissionGroups")),
-    evidenceStorageIds: v.optional(v.array(v.id("_storage"))),
-  })
-    .index("by_user", ["userId"])
-    .index("by_user_and_date", ["userId", "date"])
-    .index("by_team", ["teamId"])
-    .index("by_team_and_user", ["teamId", "userId"])
-    .index("by_team_and_date", ["teamId", "date"])
-    .index("by_team_and_type", ["teamId", "submissionType"])
-    .index("by_tournament_and_date", ["tournamentId", "date"])
-    .index("by_state", ["state"])
-    .index("by_state_and_date", ["state", "date"])
-    .index("by_tournament_state_and_date", ["tournamentId", "state", "date"])
-    .index("by_team_state_and_date", ["teamId", "state", "date"])
-    .index("by_user_state_and_date", ["userId", "state", "date"])
-    .index("by_user_and_state", ["userId", "state"])
-    .index("by_group", ["submissionGroupId"]),
-
   activities: defineTable({
     teamId: v.id("teams"),
     tournamentId: v.id("tournaments"),
@@ -174,34 +137,6 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_team", ["teamId"])
     .index("by_activity_and_user", ["activityId", "userId"]),
-
-  submissionGroups: defineTable({
-    teamId: v.id("teams"),
-    tournamentId: v.id("tournaments"),
-    date: v.string(),
-    state: v.union(
-      v.literal("pending"),
-      v.literal("approved"),
-      v.literal("rejected"),
-      v.literal("deleted"),
-    ),
-    tier: v.union(v.literal("base"), v.literal("advanced")),
-    participantCount: v.number(),
-    totalTeamMembers: v.number(),
-    participationRate: v.number(),
-    isTeamExercise: v.boolean(),
-    pointsEarned: v.number(),
-    managedBy: v.optional(v.id("users")),
-    createdAt: v.string(),
-    updatedAt: v.string(),
-  })
-    .index("by_team", ["teamId"])
-    .index("by_team_and_date", ["teamId", "date"])
-    .index("by_tournament_and_date", ["tournamentId", "date"])
-    .index("by_state", ["state"])
-    .index("by_state_and_date", ["state", "date"])
-    .index("by_tournament_state_and_date", ["tournamentId", "state", "date"])
-    .index("by_team_state_and_date", ["teamId", "state", "date"]),
 
   users: defineTable({
     email: v.string(),

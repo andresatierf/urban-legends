@@ -9,7 +9,7 @@ interface SystemDatabaseMetricsProps {
   databaseMetrics: {
     tournaments: { total: number; orphaned: number };
     teams: { total: number; orphaned: number };
-    submissions: { total: number; orphaned: number };
+    activities: { total: number; orphaned: number };
     users: { total: number; orphaned: number };
     teamMembers: { total: number; orphaned: number };
   };
@@ -52,9 +52,9 @@ export function SystemDatabaseMetrics({
           databaseMetrics.teams.orphaned,
         )}
         {renderMetric(
-          "Submissions",
-          databaseMetrics.submissions.total,
-          databaseMetrics.submissions.orphaned,
+          "Activities",
+          databaseMetrics.activities.total,
+          databaseMetrics.activities.orphaned,
         )}
         {renderMetric(
           "Users",

@@ -35,11 +35,9 @@ export function getNotificationRoute(
       return `/teams/${relatedEntityId}`;
     case "tournament":
       return `/tournaments/${relatedEntityId}`;
-    case "submission":
-      return `/submissions/${relatedEntityId}`;
-    case "submissionGroup":
-      return `/submissions?groupId=${relatedEntityId}`;
     case "activity":
+      return `/activities/${relatedEntityId}`;
+    case "participation":
       return `/activities/${relatedEntityId}`;
     default:
       return "/notifications";
@@ -67,7 +65,7 @@ export function getNotificationStyle(type: string): {
   if (type.startsWith("team_")) {
     return { color: "text-blue-600", bgColor: "bg-blue-100" };
   }
-  if (type.startsWith("submission_") || type.startsWith("activity_")) {
+  if (type.startsWith("activity_")) {
     return { color: "text-green-600", bgColor: "bg-green-100" };
   }
   if (type.startsWith("tournament_")) {

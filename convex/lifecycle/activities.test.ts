@@ -17,7 +17,7 @@ import {
   submitEvidence,
 } from "./activities";
 
-// convex-test@0.0.1 workaround: disable schema validation (see lifecycle/submissions.test.ts).
+// convex-test@0.0.1 workaround: disable schema validation (see lifecycle/activities.test.ts).
 const schemaForTest = Object.assign(Object.create(schema), {
   schemaValidation: false,
 }) as typeof schema;
@@ -567,7 +567,7 @@ describe("softDelete", () => {
       // convex-test@0.0.1 will error on storage; wrap in try to isolate.
     });
 
-    // The submissions test suite uses store.registerBlob for real storage;
+    // The evidenceStorage test suite uses store.registerBlob for real storage;
     // here we assert the state transition + participation cleanup by using
     // recompute-style verification: soft-delete after reject (terminal) is
     // covered elsewhere. Instead, drive a case where evidence is already

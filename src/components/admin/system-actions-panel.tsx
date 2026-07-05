@@ -35,7 +35,7 @@ export function SystemActionsPanel() {
         toast.success(result.message, {
           description:
             result.totalIssues > 0
-              ? `Found ${result.issuesFound.orphanedTeams} orphaned teams, ${result.issuesFound.orphanedSubmissions} orphaned submissions, ${result.issuesFound.orphanedTeamMembers} orphaned team members`
+              ? `Found ${result.issuesFound.orphanedTeams} orphaned teams, ${result.issuesFound.orphanedActivities} orphaned activities, ${result.issuesFound.orphanedTeamMembers} orphaned team members`
               : undefined,
         });
       }

@@ -34,8 +34,8 @@ function makeProfile(overrides: Partial<UserDetails>): UserDetails {
     user: makeUser({}),
     statistics: {
       teamCount: 2,
-      submissionCount: 18,
-      approvedSubmissionCount: 14,
+      activityCount: 18,
+      approvedActivityCount: 14,
       totalPointsEarned: 320,
     },
     teams: [],
@@ -57,8 +57,8 @@ const PROFILE_VARIANTS: ProfileVariant[] = [
     data: makeProfile({
       statistics: {
         teamCount: 0,
-        submissionCount: 0,
-        approvedSubmissionCount: 0,
+        activityCount: 0,
+        approvedActivityCount: 0,
         totalPointsEarned: 0,
       },
     }),
@@ -73,8 +73,8 @@ const PROFILE_VARIANTS: ProfileVariant[] = [
       }),
       statistics: {
         teamCount: 4,
-        submissionCount: 92,
-        approvedSubmissionCount: 80,
+        activityCount: 92,
+        approvedActivityCount: 80,
         totalPointsEarned: 1240,
       },
     }),
@@ -89,8 +89,8 @@ const PROFILE_VARIANTS: ProfileVariant[] = [
       }),
       statistics: {
         teamCount: 0,
-        submissionCount: 0,
-        approvedSubmissionCount: 0,
+        activityCount: 0,
+        approvedActivityCount: 0,
         totalPointsEarned: 0,
       },
     }),

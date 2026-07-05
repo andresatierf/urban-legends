@@ -38,8 +38,8 @@ import { useActiveRoute } from "@/hooks/useActiveRoute";
 import { useUser } from "@/hooks/useUser";
 
 import { api } from "../../convex/_generated/api";
+import { useActivityDialog } from "./activity-dialog-context";
 import { LoggedUserCard } from "./logged-user-card";
-import { useSubmissionDialog } from "./submission-dialog-context";
 
 type SidebarItem = {
   title: string;
@@ -58,7 +58,7 @@ type SidebarItem = {
 );
 
 function useSidebarItems(
-  openSubmissionDialog: () => void,
+  openActivityDialog: () => void,
   setInviteMemberDialogOpen: (state: boolean) => void,
 ) {
   const sidebar: SidebarItem[] = useMemo(
@@ -95,7 +95,7 @@ function useSidebarItems(
           {
             title: "Submit Activity",
             roles: ["player"],
-            onClick: openSubmissionDialog,
+            onClick: openActivityDialog,
             icon: PlusCircle,
           },
         ],
@@ -202,7 +202,7 @@ function useSidebarItems(
         ],
       },
     ],
-    [openSubmissionDialog, setInviteMemberDialogOpen],
+    [openActivityDialog, setInviteMemberDialogOpen],
   );
 
   return { items: sidebar };
@@ -211,14 +211,14 @@ function useSidebarItems(
 export function AppSidebar() {
   const { user } = useUser({ shouldThrow: false });
   const { isActive } = useActiveRoute();
-  const { openSubmissionDialog } = useSubmissionDialog();
+  const { openActivityDialog } = useActivityDialog();
 
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
 
   const captainedTeamsCount = useQuery(api.captain.getCaptainedTeamsCount) ?? 0;
 
   const { items: sidebarItems } = useSidebarItems(
-    openSubmissionDialog,
+    openActivityDialog,
     setInviteMemberDialogOpen,
   );
 

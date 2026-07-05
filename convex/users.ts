@@ -47,11 +47,6 @@ export const getById = query({
   },
 });
 
-/**
- * Get comprehensive user details with all related entities and permissions.
- * This query follows the pattern established by submissions.getDetails to provide
- * a single, efficient query for detail pages.
- */
 export const getDetails = query({
   args: {
     userId: v.id("users"),
@@ -61,13 +56,13 @@ export const getDetails = query({
 
     const user = await getUser(ctx, { userId: args.userId });
 
-    const [teamMemberships, allSubmissions] = await Promise.all([
+    const [teamMemberships, allParticipations] = await Promise.all([
       ctx.db
         .query("teamMembers")
         .withIndex("by_user", (q) => q.eq("userId", args.userId))
         .collect(),
       ctx.db
-        .query("submissions")
+        .query("participations")
         .withIndex("by_user", (q) => q.eq("userId", args.userId))
         .collect(),
     ]);
@@ -91,14 +86,18 @@ export const getDetails = query({
       (t): t is NonNullable<typeof t> => t !== null,
     );
 
-    const approvedSubmissions = allSubmissions.filter(
-      (s) => s.state === "approved",
+    const activityIds = Array.from(
+      new Set(allParticipations.map((p) => p.activityId)),
     );
+    const activities = (
+      await Promise.all(activityIds.map((id) => ctx.db.get(id)))
+    ).filter((a): a is NonNullable<typeof a> => a !== null);
+    const nonDeleted = activities.filter((a) => a.state !== "deleted");
+    const approvedActivities = nonDeleted.filter((a) => a.state === "approved");
 
-    const totalPointsEarned = approvedSubmissions.reduce(
-      (sum, s) => sum + (s.pointsEarned || 0),
-      0,
-    );
+    const totalPointsEarned = allParticipations
+      .filter((p) => !!p.fulfilledAt)
+      .reduce((sum, p) => sum + (p.pointsEarned || 0), 0);
 
     const isAdmin = currentUser.roleNames.includes("admin");
     const canManageRoles = isAdmin;
@@ -108,8 +107,8 @@ export const getDetails = query({
       user,
       statistics: {
         teamCount: teams.length,
-        submissionCount: allSubmissions.length,
-        approvedSubmissionCount: approvedSubmissions.length,
+        activityCount: nonDeleted.length,
+        approvedActivityCount: approvedActivities.length,
         totalPointsEarned,
       },
       teams,

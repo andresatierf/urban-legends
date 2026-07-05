@@ -83,11 +83,6 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "components",
   },
   {
-    path: "/workbench/components/submission-card",
-    label: "Submission Card",
-    group: "components",
-  },
-  {
     path: "/workbench/components/join-team-card",
     label: "Join Team Card",
     group: "components",

@@ -45,9 +45,9 @@ export function RejectReasonDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Reject submission</DialogTitle>
+          <DialogTitle>Reject activity</DialogTitle>
           <DialogDescription>
-            Provide a reason so the submitter knows what to fix.
+            Provide a reason so the participant knows what to fix.
           </DialogDescription>
         </DialogHeader>
         <Textarea

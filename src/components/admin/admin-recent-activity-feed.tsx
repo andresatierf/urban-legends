@@ -11,7 +11,7 @@ import type { Doc } from "../../../convex/_generated/dataModel";
 
 interface ActivityItem {
   id: string;
-  type: "submission";
+  type: "activity";
   state: string;
   submitter: Doc<"users"> | null;
   team: Doc<"teams"> | null;
@@ -68,7 +68,8 @@ export function AdminRecentActivityFeed({
                   </div>
                   <div className="flex-1 space-y-1">
                     <p className="text-sm">
-                      {activity.submitter?.name || "Unknown user"} submitted to{" "}
+                      {activity.submitter?.name || "Unknown user"} logged
+                      activity for{" "}
                       <span className="font-medium">
                         {activity.team?.name || "Unknown team"}
                       </span>

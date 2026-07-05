@@ -14,8 +14,8 @@ import {
 import { useCallback, useState } from "react";
 
 import { UpsertActivityFormDialog } from "@/components/activities/form";
+import { RejectReasonDialog } from "@/components/activities/reject-reason-dialog";
 import { activityStateBadgeVariant } from "@/components/activities/state";
-import { RejectReasonDialog } from "@/components/submissions/reject-reason-dialog";
 import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../../convex/_generated/api";

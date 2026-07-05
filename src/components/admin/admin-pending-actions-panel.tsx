@@ -16,7 +16,7 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 
 interface AdminPendingActionsPanelProps {
   pendingActions: {
-    pendingSubmissions: number;
+    pendingActivities: number;
     joinRequests: number;
   };
 }
@@ -25,7 +25,7 @@ export function AdminPendingActionsPanel({
   pendingActions,
 }: AdminPendingActionsPanelProps) {
   const totalPending =
-    pendingActions.pendingSubmissions + pendingActions.joinRequests;
+    pendingActions.pendingActivities + pendingActions.joinRequests;
 
   return (
     <Card className="shadow-md">
@@ -42,20 +42,20 @@ export function AdminPendingActionsPanel({
           <div className="flex items-center gap-3">
             <FileCheck className="text-muted-foreground h-5 w-5" />
             <div>
-              <div className="text-sm font-medium">Pending Submissions</div>
+              <div className="text-sm font-medium">Pending Activities</div>
               <Eyebrow>Awaiting approval</Eyebrow>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Badge
               variant={
-                pendingActions.pendingSubmissions > 0 ? "warning" : "neutral"
+                pendingActions.pendingActivities > 0 ? "warning" : "neutral"
               }
             >
-              {pendingActions.pendingSubmissions}
+              {pendingActions.pendingActivities}
             </Badge>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/submissions/review">View</Link>
+              <Link to="/activities/review">View</Link>
             </Button>
           </div>
         </div>
