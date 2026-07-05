@@ -72,7 +72,6 @@ export const create = mutation({
         evidenceStorageIds: args.evidenceStorageIds,
       });
 
-      // Notify declared members (other than creator) to upload their proof.
       const [team, parts] = await Promise.all([
         ctx.db.get(args.teamId),
         ctx.db
@@ -312,8 +311,6 @@ export const getDetails = query({
     if (!team) throw new Error("Team not found");
     if (!tournament) throw new Error("Tournament not found");
 
-    // Enriched roster: each declared member with their evidence URLs and
-    // fulfilled/outstanding status. Used by the group Activity detail view.
     const roster = await Promise.all(
       participations.map(async (p) => {
         const [participant, evidenceResolved] = await Promise.all([
@@ -341,8 +338,6 @@ export const getDetails = query({
       }),
     );
 
-    // The top-level `evidence` field mirrors the creator's Participation for
-    // the individual path; group callers should read from `roster`.
     const creatorRoster = roster.find(
       (r) => r.participation.userId === activity.createdBy,
     );

@@ -157,11 +157,6 @@ export async function create(
   return activityId;
 }
 
-// Creates a group Activity with a declared roster. The creator provides
-// Evidence for their own Participation; the remaining declared members are
-// created as `awaiting` (no Evidence, no fulfilledAt). Lands in `incomplete`
-// unless the creator is the only declared member — then it's already fully
-// fulfilled and auto-promotes to `pending`.
 export async function createGroup(
   ctx: MutationCtx,
   args: {
@@ -277,11 +272,6 @@ export async function createGroup(
   return activityId;
 }
 
-// A declared participant attaches Evidence to their own Participation on a
-// group Activity. When the last outstanding participant fulfills, the
-// Activity auto-promotes `incomplete → pending`. Idempotent-friendly: an
-// already-fulfilled participant may edit their evidence (replace) while the
-// Activity is non-terminal.
 export async function submitEvidence(
   ctx: MutationCtx,
   args: {
@@ -346,10 +336,6 @@ export async function submitEvidence(
   return { state: nextState };
 }
 
-// Removes a declared participant from a group Activity's roster. The creator
-// or the Team's Captain may invoke it while the Activity is `incomplete` or
-// `pending`; blocked once `approved`. If removal shrinks the roster so that
-// everyone remaining is fulfilled, the Activity auto-promotes to `pending`.
 export async function removeParticipant(
   ctx: MutationCtx,
   args: {
@@ -388,6 +374,7 @@ export async function removeParticipant(
     .query("participations")
     .withIndex("by_activity", (q) => q.eq("activityId", args.activityId))
     .collect();
+  // Convex reads are snapshot-isolated: the just-deleted record is still visible here.
   const parts = allParts.filter((p) => p._id !== part._id);
 
   const team = await ctx.db.get(activity.teamId);
@@ -451,8 +438,7 @@ export async function approve(
   const tournament = await ctx.db.get(activity.tournamentId);
   if (!tournament) throw new Error("Tournament not found");
 
-  // Recompute participationRate/isTeamExercise from fulfilled Participations.
-  // The completeness gate guarantees declared == fulfilled at approve-time.
+  // Completeness gate: at approve-time all declared == fulfilled, so fulfilled IS the roster.
   const parts = await ctx.db
     .query("participations")
     .withIndex("by_activity", (q) => q.eq("activityId", activityId))
@@ -482,7 +468,6 @@ export async function approve(
     updatedAt: nowUTC(),
   });
 
-  // Distribute points across fulfilled participations.
   const perPart = fulfilled.length > 0 ? pts / fulfilled.length : 0;
   for (const p of fulfilled) {
     await ctx.db.patch(p._id, { pointsEarned: perPart });
