@@ -8,30 +8,6 @@ import { IllegalAccess, hasSomeReviewAccess } from "../authority/core";
 import { batchGetDocuments, toIdMap } from "../lib/helpers";
 import { getCurrentUserOrThrow } from "../users";
 
-export const getPendingCount = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    if (!(await hasSomeReviewAccess(ctx, user._id))) {
-      return 0;
-    }
-
-    const pendingIndividual = await ctx.db
-      .query("submissions")
-      .withIndex("by_state", (q) => q.eq("state", "pending"))
-      .filter((q) => q.eq(q.field("submissionType"), "individual"))
-      .collect();
-
-    const pendingGroups = await ctx.db
-      .query("submissionGroups")
-      .withIndex("by_state", (q) => q.eq("state", "pending"))
-      .collect();
-
-    return pendingIndividual.length + pendingGroups.length;
-  },
-});
-
 const stateValidator = v.union(
   v.literal("pending"),
   v.literal("approved"),

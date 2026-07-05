@@ -136,7 +136,7 @@ function useSidebarItems(
             href: "/activities/review",
             icon: ClipboardCheck,
             badge: {
-              query: api.role.reviewer.getPendingCount,
+              query: api.notifications.badges.getPendingCount,
               color: "warning",
               tooltip: "Pending Activities",
             },

@@ -18,15 +18,22 @@ export function Timeline({ data }: { data: TournamentCardData }) {
 
   let pinLabel: string;
   let pinColor: string;
-  if (status === "active") {
-    pinLabel = `${daysUntil(data.endDate)}d left`;
-    pinColor = "text-primary";
-  } else if (status === "upcoming") {
-    pinLabel = `Starts in ${daysUntil(data.startDate)}d`;
-    pinColor = "text-info";
-  } else {
-    pinLabel = "Final";
-    pinColor = "text-muted-foreground";
+  let minFill: number;
+  switch (status) {
+    case "active":
+      pinLabel = `${daysUntil(data.endDate)}d left`;
+      pinColor = "text-primary";
+      minFill = 3;
+      break;
+    case "upcoming":
+      pinLabel = `Starts in ${daysUntil(data.startDate)}d`;
+      pinColor = "text-info";
+      minFill = 0;
+      break;
+    default:
+      pinLabel = "Final";
+      pinColor = "text-muted-foreground";
+      minFill = 3;
   }
 
   const fillClass = FILL_CLASS[status];
@@ -47,9 +54,7 @@ export function Timeline({ data }: { data: TournamentCardData }) {
       <div className="border-ink/20 bg-paper relative h-2 overflow-visible rounded-full border">
         <div
           className={cn("h-full rounded-full", fillClass)}
-          style={{
-            width: `${Math.max(progress, status === "upcoming" ? 0 : 3)}%`,
-          }}
+          style={{ width: `${Math.max(progress, minFill)}%` }}
         />
         {status === "active" && (
           <div
