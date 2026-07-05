@@ -86,8 +86,8 @@ function useSidebarItems(
             icon: Users,
           },
           {
-            title: "My Submissions",
-            href: "/submissions/mine",
+            title: "My Activities",
+            href: "/activities/mine",
             roles: ["player"],
             icon: ClipboardList,
             exact: true,
@@ -132,13 +132,13 @@ function useSidebarItems(
         roles: ["reviewer", "admin"],
         items: [
           {
-            title: "Review Submissions",
-            href: "/submissions/review",
+            title: "Review Activities",
+            href: "/activities/review",
             icon: ClipboardCheck,
             badge: {
               query: api.role.reviewer.getPendingCount,
               color: "warning",
-              tooltip: "Pending Submissions",
+              tooltip: "Pending Activities",
             },
           },
           {

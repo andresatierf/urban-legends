@@ -50,6 +50,15 @@ async function updateTeamPoints(
   await recomputeRecentActivity(ctx, teamId);
 }
 
+function validateEvidenceCount(ids: Id<"_storage">[]): void {
+  if (ids.length === 0) {
+    throw new Error("An Activity requires at least 1 Evidence image");
+  }
+  if (ids.length > 5) {
+    throw new Error("An Activity allows a maximum 5 Evidence images");
+  }
+}
+
 // Creates an individual Activity. The creator provides Evidence (1–5 images);
 // the Activity lands directly in `pending` (individual completeness = 1/1).
 export async function create(
@@ -63,12 +72,7 @@ export async function create(
     evidenceStorageIds: Id<"_storage">[];
   },
 ): Promise<Id<"activities">> {
-  if (args.evidenceStorageIds.length === 0) {
-    throw new Error("An Activity requires at least 1 Evidence image");
-  }
-  if (args.evidenceStorageIds.length > 5) {
-    throw new Error("An Activity allows a maximum 5 Evidence images");
-  }
+  validateEvidenceCount(args.evidenceStorageIds);
 
   const team = await ctx.db.get(args.teamId);
   if (!team) throw new Error("Team not found");
@@ -281,12 +285,7 @@ export async function edit(
 
   if (patch.evidenceStorageIds !== undefined) {
     const newIds = patch.evidenceStorageIds;
-    if (newIds.length === 0) {
-      throw new Error("An Activity requires at least 1 Evidence image");
-    }
-    if (newIds.length > 5) {
-      throw new Error("An Activity allows a maximum 5 Evidence images");
-    }
+    validateEvidenceCount(newIds);
     const part = await ctx.db
       .query("participations")
       .withIndex("by_activity_and_user", (q) =>

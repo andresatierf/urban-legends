@@ -6,6 +6,7 @@ import {
   canApproveActivity,
   canCreateActivity,
   canDeleteActivity,
+  canEditActivity,
   canRejectActivity,
   computeActivityPermissions,
   hasSomeReviewAccess,
@@ -60,11 +61,9 @@ export const edit = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    const activity = await ctx.db.get(args.activityId);
-    if (!activity) throw new Error("Activity not found");
-    if (activity.createdBy !== user._id) {
-      throw new Error("Only the creator can edit this Activity");
-    }
+    await canEditActivity.require(ctx, user._id, {
+      activityId: args.activityId,
+    });
 
     await lifecycleEdit(
       ctx,
@@ -235,7 +234,7 @@ export const getDetails = query({
         const url = await ctx.storage.getUrl(storageId);
         if (!url) return null;
         return {
-          _id: storageId as string,
+          _id: storageId,
           url,
           filename: `evidence-${idx + 1}.jpg`,
         };

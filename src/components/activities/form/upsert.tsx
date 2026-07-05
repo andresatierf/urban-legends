@@ -77,18 +77,14 @@ export function UpsertActivityFormDialog({
 
   const [evidenceStorageIds, setEvidenceStorageIds] = useState<
     Id<"_storage">[]
-  >(() =>
-    evidenceSeed
-      ? evidenceSeed.map((e) => e._id as unknown as Id<"_storage">)
-      : [],
-  );
+  >(() => evidenceSeed?.map((e) => e._id) ?? []);
 
   const initialEvidenceItems = useMemo<
     { storageId: Id<"_storage">; previewUrl: string }[]
   >(
     () =>
       evidenceSeed?.map((e) => ({
-        storageId: e._id as unknown as Id<"_storage">,
+        storageId: e._id,
         previewUrl: e.url,
       })) ?? [],
     [evidenceSeed],
@@ -146,9 +142,7 @@ export function UpsertActivityFormDialog({
       onOpenChange={(newOpen) => {
         setOpen(newOpen);
         form.reset();
-        setEvidenceStorageIds(
-          evidenceSeed?.map((e) => e._id as unknown as Id<"_storage">) ?? [],
-        );
+        setEvidenceStorageIds(evidenceSeed?.map((e) => e._id) ?? []);
         setUploaderKey((k) => k + 1);
       }}
     >
@@ -229,11 +223,10 @@ export function UpsertActivityFormDialog({
           >
             {([isPristine, canSubmit, isSubmitting]) => {
               const missingEvidence = evidenceStorageIds.length === 0;
-              const initialIds = evidenceSeed?.map((e) => e._id) ?? [];
-              const currentIds = evidenceStorageIds.map((id) => id as string);
+              const initialIds = new Set(evidenceSeed?.map((e) => e._id) ?? []);
               const evidenceChanged =
-                JSON.stringify([...currentIds].sort()) !==
-                JSON.stringify([...initialIds].sort());
+                evidenceStorageIds.length !== initialIds.size ||
+                evidenceStorageIds.some((id) => !initialIds.has(id));
               return (
                 <DialogFooter>
                   {isDev && (
