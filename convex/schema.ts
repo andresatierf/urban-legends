@@ -126,6 +126,55 @@ export default defineSchema({
     .index("by_user_and_state", ["userId", "state"])
     .index("by_group", ["submissionGroupId"]),
 
+  activities: defineTable({
+    teamId: v.id("teams"),
+    tournamentId: v.id("tournaments"),
+    createdBy: v.id("users"),
+    date: v.string(),
+    type: v.union(v.literal("individual"), v.literal("group")),
+    description: v.optional(v.string()),
+    tier: v.union(v.literal("base"), v.literal("advanced")),
+    state: v.union(
+      v.literal("incomplete"),
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+      v.literal("deleted"),
+    ),
+    pointsEarned: v.number(),
+    participantCount: v.number(),
+    totalTeamMembers: v.number(),
+    participationRate: v.number(),
+    isTeamExercise: v.boolean(),
+    managedBy: v.optional(v.id("users")),
+    reviewedAt: v.optional(v.number()),
+    rejectionReason: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_team", ["teamId"])
+    .index("by_team_and_date", ["teamId", "date"])
+    .index("by_tournament_and_date", ["tournamentId", "date"])
+    .index("by_state", ["state"])
+    .index("by_tournament_and_state", ["tournamentId", "state"])
+    .index("by_team_and_state", ["teamId", "state"])
+    .index("by_creator", ["createdBy"]),
+
+  participations: defineTable({
+    activityId: v.id("activities"),
+    userId: v.id("users"),
+    teamId: v.id("teams"),
+    tournamentId: v.id("tournaments"),
+    evidenceStorageIds: v.array(v.id("_storage")),
+    fulfilledAt: v.optional(v.string()),
+    pointsEarned: v.number(),
+    createdAt: v.string(),
+  })
+    .index("by_activity", ["activityId"])
+    .index("by_user", ["userId"])
+    .index("by_team", ["teamId"])
+    .index("by_activity_and_user", ["activityId", "userId"]),
+
   submissionGroups: defineTable({
     teamId: v.id("teams"),
     tournamentId: v.id("tournaments"),

@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as activities from "../activities.js";
 import type * as authority_core from "../authority/core.js";
 import type * as authority_index from "../authority/index.js";
 import type * as captain from "../captain.js";
@@ -19,6 +20,7 @@ import type * as http from "../http.js";
 import type * as joinRequests from "../joinRequests.js";
 import type * as lib_dates from "../lib/dates.js";
 import type * as lib_helpers from "../lib/helpers.js";
+import type * as lifecycle_activities from "../lifecycle/activities.js";
 import type * as lifecycle_joinRequests from "../lifecycle/joinRequests.js";
 import type * as lifecycle_submissions from "../lifecycle/submissions.js";
 import type * as migrations from "../migrations.js";
@@ -46,6 +48,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  activities: typeof activities;
   "authority/core": typeof authority_core;
   "authority/index": typeof authority_index;
   captain: typeof captain;
@@ -57,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   joinRequests: typeof joinRequests;
   "lib/dates": typeof lib_dates;
   "lib/helpers": typeof lib_helpers;
+  "lifecycle/activities": typeof lifecycle_activities;
   "lifecycle/joinRequests": typeof lifecycle_joinRequests;
   "lifecycle/submissions": typeof lifecycle_submissions;
   migrations: typeof migrations;

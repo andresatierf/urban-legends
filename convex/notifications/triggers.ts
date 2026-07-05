@@ -155,6 +155,66 @@ export async function notifySubmissionRejected(
   }
 }
 
+export async function notifyActivityApproved(
+  ctx: MutationCtx,
+  params: {
+    recipientIds: Id<"users">[];
+    activityId: Id<"activities">;
+    teamName: string;
+    description?: string;
+    pointsEarned: number;
+  },
+) {
+  try {
+    await Promise.all(
+      params.recipientIds.map((userId) =>
+        ctx.scheduler.runAfter(0, internal.notifications.create, {
+          userId,
+          type: NOTIFICATION_TYPES.ACTIVITY_APPROVED,
+          title: "Activity approved",
+          body: `${params.description || "Your activity"} for ${params.teamName} earned ${params.pointsEarned} points`,
+          relatedEntityId: params.activityId,
+          relatedEntityType: "activity",
+          actionUrl: `/activities/${params.activityId}`,
+        }),
+      ),
+    );
+  } catch (error) {
+    console.error("Failed to create activity approved notification:", error);
+  }
+}
+
+export async function notifyActivityRejected(
+  ctx: MutationCtx,
+  params: {
+    recipientIds: Id<"users">[];
+    activityId: Id<"activities">;
+    teamName: string;
+    description?: string;
+    reason?: string;
+  },
+) {
+  try {
+    await Promise.all(
+      params.recipientIds.map((userId) =>
+        ctx.scheduler.runAfter(0, internal.notifications.create, {
+          userId,
+          type: NOTIFICATION_TYPES.ACTIVITY_REJECTED,
+          title: "Activity rejected",
+          body:
+            `${params.description || "Your activity"} for ${params.teamName} was not approved` +
+            (params.reason ? `: ${params.reason}` : ""),
+          relatedEntityId: params.activityId,
+          relatedEntityType: "activity",
+          actionUrl: `/activities/${params.activityId}`,
+        }),
+      ),
+    );
+  } catch (error) {
+    console.error("Failed to create activity rejected notification:", error);
+  }
+}
+
 /**
  * Helper function to create teammate submitted notification
  */
