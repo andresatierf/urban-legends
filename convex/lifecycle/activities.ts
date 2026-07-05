@@ -197,7 +197,7 @@ export async function createGroup(
     .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
     .collect();
 
-  // Every declared member must be on the team. Creator is always auto-included.
+  // Creator is always auto-included.
   const teamMemberIds = new Set(teamMembers.map((m) => m.userId as string));
   const rosterSet = new Set<string>(
     args.participantUserIds.map((u) => u as string),
@@ -310,7 +310,6 @@ export async function submitEvidence(
     fulfilledAt: now,
   });
 
-  // Auto-promote if every declared participant is now fulfilled.
   const parts = await ctx.db
     .query("participations")
     .withIndex("by_activity", (q) => q.eq("activityId", args.activityId))
