@@ -44,24 +44,38 @@ export function ChallengesSection({ tournamentId }: Props) {
         />
       )}
 
-      {challenges === undefined ? (
-        <p className="text-body-md text-muted-foreground">Loading…</p>
-      ) : challenges.length === 0 ? (
-        <p className="text-body-md text-muted-foreground">
-          No challenges yet. Create one to award tournament-wide points.
-        </p>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {challenges.map((challenge) => (
-            <ChallengeCard
-              key={challenge._id}
-              challenge={challenge}
-              onEdit={() => setEditing(challenge)}
-            />
-          ))}
-        </div>
-      )}
+      <ChallengeListBody challenges={challenges} onEdit={setEditing} />
     </>
+  );
+}
+
+function ChallengeListBody({
+  challenges,
+  onEdit,
+}: {
+  challenges: Doc<"challenges">[] | undefined;
+  onEdit: (challenge: Doc<"challenges">) => void;
+}) {
+  if (challenges === undefined) {
+    return <p className="text-body-md text-muted-foreground">Loading…</p>;
+  }
+  if (challenges.length === 0) {
+    return (
+      <p className="text-body-md text-muted-foreground">
+        No challenges yet. Create one to award tournament-wide points.
+      </p>
+    );
+  }
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {challenges.map((challenge) => (
+        <ChallengeCard
+          key={challenge._id}
+          challenge={challenge}
+          onEdit={() => onEdit(challenge)}
+        />
+      ))}
+    </div>
   );
 }
 
