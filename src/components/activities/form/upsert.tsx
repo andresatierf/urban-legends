@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useId, useMemo, useState } from "react";
 import { z } from "zod";
 
-import { EvidenceUploader } from "@/components/submissions/evidence-uploader";
+import { EvidenceUploader } from "@/components/activities/evidence-uploader";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {

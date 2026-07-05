@@ -2,7 +2,64 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { claimUploads, releaseUploads } from "../evidenceStorage";
 import { nowUTC, toUTCDateString } from "../lib/dates";
-import { recomputeRecentActivity } from "./submissions";
+
+// Returns the last 7 calendar dates (UTC) ending today, oldest → newest.
+export function last7Dates(today: Date = new Date()): string[] {
+  const base = new Date(today);
+  base.setUTCHours(0, 0, 0, 0);
+  const out: string[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(base);
+    d.setUTCDate(d.getUTCDate() - i);
+    out.push(d.toISOString().split("T")[0]);
+  }
+  return out;
+}
+
+// Recomputes the precomputed 7-day activity rollup on the team from
+// Activity rows. Buckets by activity.date (calendar-day prefix).
+export async function recomputeRecentActivity(
+  ctx: MutationCtx,
+  teamId: Id<"teams">,
+): Promise<void> {
+  const dates = last7Dates();
+  const startDate = dates[0];
+
+  const activities = await ctx.db
+    .query("activities")
+    .withIndex("by_team_and_date", (q) =>
+      q.eq("teamId", teamId).gte("date", startDate),
+    )
+    .collect();
+
+  const buckets = new Map<
+    string,
+    { approved: number; pending: number; rejected: number; points: number }
+  >();
+  for (const date of dates) {
+    buckets.set(date, { approved: 0, pending: 0, rejected: 0, points: 0 });
+  }
+
+  for (const a of activities) {
+    const bucket = buckets.get(a.date.slice(0, 10));
+    if (!bucket) continue;
+    if (a.state === "approved") {
+      bucket.approved++;
+      bucket.points += a.pointsEarned ?? 0;
+    } else if (a.state === "pending" || a.state === "incomplete") {
+      bucket.pending++;
+    } else if (a.state === "rejected") {
+      bucket.rejected++;
+    }
+  }
+
+  await ctx.db.patch(teamId, {
+    recentActivity: {
+      updatedAt: nowUTC(),
+      days: dates.map((date) => ({ date, ...buckets.get(date)! })),
+    },
+  });
+}
 
 export class IllegalTransition extends Error {
   constructor(from: string, to: string) {

@@ -11,7 +11,7 @@ import { nowUTC } from "./lib/dates";
 import { getCurrentUserOrThrow } from "./users";
 
 // Deletes the pendingUploads rows for the given storage IDs.
-// Called from lifecycle/submissions within a mutation context.
+// Called from lifecycle/activities within a mutation context.
 // Throws if any storage ID is not in pendingUploads or is owned by a different user.
 export async function claimUploads(
   ctx: MutationCtx,
@@ -34,7 +34,7 @@ export async function claimUploads(
 }
 
 // Deletes storage blobs and their corresponding pendingUploads rows.
-// Called from lifecycle/submissions within a mutation context.
+// Called from lifecycle/activities within a mutation context.
 // The lifecycle module never touches ctx.storage directly.
 // The pendingUploads row is deleted before the blob so that the daily
 // cron (issue #59) does not attempt a double-delete on retry.

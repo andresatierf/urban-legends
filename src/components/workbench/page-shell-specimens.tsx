@@ -80,7 +80,7 @@ function DetailsPageLayoutSpecimen() {
       <SectionHeader
         as="h2"
         title="DetailsPageLayout"
-        description="Two-column shell used by tournament / team / user / submission details pages: header row + sidebar + main column."
+        description="Two-column shell used by tournament / team / user details pages: header row + sidebar + main column."
       />
       <div className="bg-paper rounded-lg p-6">
         <DetailsPageLayout

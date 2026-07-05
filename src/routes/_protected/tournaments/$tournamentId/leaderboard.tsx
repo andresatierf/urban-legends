@@ -86,16 +86,16 @@ function TournamentLeaderboardPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Total Submissions
+                  Total Activities
                 </CardTitle>
                 <BarChart3 className="text-muted-foreground h-4 w-4" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {stats.totalSubmissions}
+                  {stats.totalActivities}
                 </div>
                 <p className="text-muted-foreground text-xs">
-                  Approved submissions
+                  Approved activities
                 </p>
               </CardContent>
             </Card>
@@ -153,7 +153,7 @@ function TournamentLeaderboardPage() {
                     {format(stats.highestScoringDay.date, "long")}
                   </div>
                   <p className="text-muted-foreground text-xs">
-                    {stats.highestScoringDay.submissions} submissions
+                    {stats.highestScoringDay.activities} activities
                   </p>
                 </CardContent>
               </Card>
@@ -171,7 +171,7 @@ function TournamentLeaderboardPage() {
                   {(stats.participationRate * 100).toFixed(1)}%
                 </div>
                 <p className="text-muted-foreground text-xs">
-                  Teams with submissions
+                  Teams with activities
                 </p>
               </CardContent>
             </Card>

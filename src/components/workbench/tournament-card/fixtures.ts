@@ -79,8 +79,8 @@ function makeItem(
           name: TEAM_NAMES[idx % TEAM_NAMES.length],
           points: POINTS[idx % POINTS.length],
           isCaptain: playerContext === "captain",
-          approvedSubmissions: APPROVED[idx % APPROVED.length],
-          totalSubmissions: TOTAL_SUBS[idx % TOTAL_SUBS.length],
+          approvedActivities: APPROVED[idx % APPROVED.length],
+          totalActivities: TOTAL_SUBS[idx % TOTAL_SUBS.length],
         }
       : undefined;
 

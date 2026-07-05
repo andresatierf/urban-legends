@@ -16,10 +16,9 @@ export function Sidebar({ data }: { data: UserDetails }) {
   const [manageRolesOpen, setManageRolesOpen] = useState(false);
 
   const approvalRate =
-    statistics.submissionCount > 0
+    statistics.activityCount > 0
       ? Math.round(
-          (statistics.approvedSubmissionCount / statistics.submissionCount) *
-            100,
+          (statistics.approvedActivityCount / statistics.activityCount) * 100,
         )
       : null;
 
@@ -34,7 +33,7 @@ export function Sidebar({ data }: { data: UserDetails }) {
       icon: CheckCircle,
       iconColor: "text-success",
       label: "Approved",
-      value: `${statistics.approvedSubmissionCount}/${statistics.submissionCount}`,
+      value: `${statistics.approvedActivityCount}/${statistics.activityCount}`,
     },
     {
       icon: Users,

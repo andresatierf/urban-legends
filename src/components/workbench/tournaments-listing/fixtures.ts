@@ -48,8 +48,8 @@ function team(
     name,
     points,
     isCaptain,
-    approvedSubmissions: approved,
-    totalSubmissions: total,
+    approvedActivities: approved,
+    totalActivities: total,
   };
 }
 

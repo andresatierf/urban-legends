@@ -41,10 +41,10 @@ export function AdminQuickActions() {
         </Button>
 
         <Button variant="outline" className="h-auto flex-1" asChild>
-          <Link to="/submissions/review">
+          <Link to="/activities/review">
             <FileText className="h-8 w-8" />
             <div className="text-center">
-              <div className="font-medium">View Submissions</div>
+              <div className="font-medium">View Activities</div>
               <div className="text-muted-foreground mt-1 text-xs">
                 Review and approve
               </div>

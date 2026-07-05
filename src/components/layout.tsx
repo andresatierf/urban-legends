@@ -3,10 +3,10 @@
 import { useUnreadCount } from "@/hooks/use-unread-count";
 import { useUser } from "@/hooks/useUser";
 
+import { ActivityDialogProvider } from "./activity-dialog-context";
 import { AppSidebar } from "./app-sidebar";
 import { FloatingSidebarActions } from "./floating-sidebar-actions";
 import { NotificationDropdown } from "./notifications/notification-dropdown";
-import { SubmissionDialogProvider } from "./submission-dialog-context";
 import { ThemeToggle } from "./theme-toggle";
 import { SidebarProvider } from "./ui/sidebar";
 
@@ -15,7 +15,7 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
   const unreadCount = useUnreadCount(user?._id);
 
   return (
-    <SubmissionDialogProvider>
+    <ActivityDialogProvider>
       <SidebarProvider>
         <AppSidebar />
         <FloatingSidebarActions />
@@ -31,6 +31,6 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
           </main>
         </div>
       </SidebarProvider>
-    </SubmissionDialogProvider>
+    </ActivityDialogProvider>
   );
 }

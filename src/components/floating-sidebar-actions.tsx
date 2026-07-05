@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useUser } from "@/hooks/useUser";
 
-import { useSubmissionDialog } from "./submission-dialog-context";
+import { useActivityDialog } from "./activity-dialog-context";
 
 export function FloatingSidebarActions() {
   const { state, isMobile } = useSidebar();
   const { user } = useUser({ shouldThrow: false });
-  const { isOpen, openSubmissionDialog, onOpenChange } = useSubmissionDialog();
+  const { isOpen, openActivityDialog, onOpenChange } = useActivityDialog();
 
   const isPlayer =
     (user?.roleNames as string[] | undefined)?.includes("player") ?? false;
@@ -34,7 +34,7 @@ export function FloatingSidebarActions() {
             variant="ghost"
             aria-label="New activity"
             className="z-10 size-6 transition-colors focus-visible:outline-hidden [&_svg]:size-4"
-            onClick={openSubmissionDialog}
+            onClick={openActivityDialog}
           >
             <Plus />
           </Button>

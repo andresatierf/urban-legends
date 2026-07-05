@@ -14,7 +14,6 @@ export type DashboardTeam =
 export type DashboardActivity = DashboardData["activities"][number];
 export type DashboardDeadline = DashboardData["deadlines"][number];
 export type DashboardInvitation = DashboardData["invitations"][number];
-export type DashboardSubmission = DashboardData["pendingSubmissions"][number];
 export type DashboardJoinRequest = DashboardData["joinRequests"][number];
 export type DashboardAdminStats = NonNullable<DashboardData["adminStats"]>;
 export type DashboardStandingsTimeline =

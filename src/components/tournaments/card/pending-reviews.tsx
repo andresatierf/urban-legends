@@ -21,8 +21,8 @@ export function PendingReviews({ data }: { data: TournamentCardData }) {
         </span>
         <span className="text-label-caps font-bold">
           {pendingReviewCount === 1
-            ? "submission to review"
-            : "submissions to review"}
+            ? "activity to review"
+            : "activities to review"}
         </span>
       </div>
       <div className="border-ink/20 flex items-center border-l px-3 transition-transform group-hover/queue:translate-x-0.5">

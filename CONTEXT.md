@@ -25,26 +25,28 @@ _Avoid_: Participant, player record.
 A **TeamMember** whose team-internal role is `captain` — responsible for the team's roster within their team.
 _Avoid_: Team leader, team admin (the latter conflicts with the system **Admin** role).
 
-**Submission**:
-An activity entry made by a **User** for their **Team** on a given date, in one of `pending`, `approved`, `rejected`, `deleted` states. May be `individual` or `team` typed.
+**Activity**:
+A scoring effort a **Team** records on a given date, in one of `incomplete`, `pending`, `approved`, `rejected`, `deleted` states. May be `individual` (one member) or `group` (a declared roster of members, each with their own **Participation** and **Evidence**). State lives on the Activity; scoring rolls up from fulfilled **Participations** at approve time.
+_Avoid_: Submission, entry, effort.
+
+**Participation**:
+A **User**'s per-Activity row: their declared spot in a group **Activity**'s roster and, once they upload **Evidence**, their fulfilment record. Carries the User's personal Evidence and the per-member `pointsEarned` share on approval. A solo Activity has exactly one Participation (the creator's).
+_Avoid_: contribution, member submission.
 
 **Evidence**:
-An image file attached to a **Submission**, required (1–5 per Submission) for review. Stored in Convex storage; re-encoded client-side before upload to drop EXIF metadata as a side effect of the canvas round-trip.
+An image file attached to a **Participation**, required (1–5 per Participation) for review. Stored in Convex storage; re-encoded client-side before upload to drop EXIF metadata as a side effect of the canvas round-trip.
 _Avoid_: photo, attachment, proof.
 
-**SubmissionGroup**:
-The aggregation of all **Submissions** by one **Team** on one date — used to compute team-exercise rollups.
-
 **View**:
-The composed read-model for one screen — bundles every entity, derived flag, enriched relation, and permission the screen needs so UI components consume the **View** whole instead of assembling it from many queries. A **View** is named after the screen it serves (`SubmissionView`, `AdminDashboardView`, `ReviewerQueueView`, …) and lives in `convex/views/`. Authority gating happens inside the **View** query; the **View** is the single seam between Convex and the screen.
+The composed read-model for one screen — bundles every entity, derived flag, enriched relation, and permission the screen needs so UI components consume the **View** whole instead of assembling it from many queries. A **View** is named after the screen it serves (`ActivityView`, `AdminDashboardView`, `ReviewerQueueView`, …) and lives in `convex/views/`. Authority gating happens inside the **View** query; the **View** is the single seam between Convex and the screen.
 _Avoid_: ViewModel, screen DTO, page data (the term **View** is the convention; instances are concrete).
 
-**SubmissionView**:
-A **View** — the composed read-model of a **Submission** as it appears on the detail screen — bundles the **Submission** with its **Team**, **Tournament**, **Submitter**, **Teammates** (for team-typed Submissions in non-terminal state), the **User** who managed the review (`managedBy`), the derived `isTeamExercise` flag, **Evidence** with resolved storage URLs, and the viewer's per-action permission flags.
-_Avoid_: SubmissionDetails, submission-with-context.
+**ActivityView**:
+A **View** — the composed read-model of an **Activity** as it appears on the detail screen — bundles the **Activity** with its **Team**, **Tournament**, creator, roster (each **Participation** with its **Evidence** URLs and `fulfilled` flag), the viewer's own Participation (if any), the **User** who managed the review (`managedBy`), the derived `isTeamExercise` flag, and the viewer's per-action permission flags.
+_Avoid_: ActivityDetails, activity-with-context.
 
 **DashboardView**:
-A **View** — the composed read-model of the home screen, scoped to a single **Tournament** that the viewer is a **TeamMember** of. Bundles the selected **Tournament** with its lifecycle state (`upcoming` / `active` / `ended-recent` / `ended-stale`) and timeline framing (day N of M, days-to-end); the viewer's **Team** in that tournament with its **rank**, **points**, and **gap** to the team directly above; the full ranked roster of competing **Teams** for the standings card; the viewer's submission count for today against `maxSubmissionsPerDay` (counting `pending` + `approved` only, never `rejected`) for the submit-today banner; the set of switchable tournaments the viewer participates in (active + ended within the grace window); and the viewer's actionable **JoinRequests** — `invite`-initiated requests addressed to them, plus `request`-initiated requests addressed to **Teams** they captain. Does _not_ include cross-tournament aggregates, personal-stat rollups (streaks, weekly approved), activity feeds, or operator stats — those are not the screen's job.
+A **View** — the composed read-model of the home screen, scoped to a single **Tournament** that the viewer is a **TeamMember** of. Bundles the selected **Tournament** with its lifecycle state (`upcoming` / `active` / `ended-recent` / `ended-stale`) and timeline framing (day N of M, days-to-end); the viewer's **Team** in that tournament with its **rank**, **points**, and **gap** to the team directly above; the full ranked roster of competing **Teams** for the standings card; the viewer team's Activity count for today against `maxActivitiesPerDay` (counting `incomplete` + `pending` + `approved`, never `rejected`) for the submit-today banner; the set of switchable tournaments the viewer participates in (active + ended within the grace window); and the viewer's actionable **JoinRequests** — `invite`-initiated requests addressed to them, plus `request`-initiated requests addressed to **Teams** they captain. Does _not_ include cross-tournament aggregates, personal-stat rollups (streaks, weekly approved), activity feeds, or operator stats — those are not the screen's job.
 _Avoid_: HomeView, PlayerDashboard (the screen is role-adaptive, not player-only — Operators see the same view when wearing their player hat).
 
 **JoinRequest**:
@@ -52,7 +54,7 @@ An outstanding intent for a **User** to become a **TeamMember** of a **Team**. C
 _Avoid_: invitation, application, membership offer (these described the two halves separately before unification).
 
 **NotificationEvent**:
-A value produced by a domain transition that warrants user-facing notification. A discriminated union over a fixed vocabulary of transitions (e.g. `submission.approved`, `joinRequest.accepted`, `role.granted`). Carries only the IDs needed to identify the transition; the **Notifier** reads everything else from the DB. Lifecycle modules return `{ result, events: NotificationEvent[] }` from mutating functions; public mutations forward `events` to the **Notifier**. Scope is intentionally narrow — this is _not_ a generic domain-event bus and has no subscribers other than the **Notifier**.
+A value produced by a domain transition that warrants user-facing notification. A discriminated union over a fixed vocabulary of transitions (e.g. `activity.approved`, `joinRequest.accepted`, `role.granted`). Carries only the IDs needed to identify the transition; the **Notifier** reads everything else from the DB. Lifecycle modules return `{ result, events: NotificationEvent[] }` from mutating functions; public mutations forward `events` to the **Notifier**. Scope is intentionally narrow — this is _not_ a generic domain-event bus and has no subscribers other than the **Notifier**.
 _Avoid_: DomainEvent (overstates scope), Trigger (overloads cron/db terminology), Notification (that name is taken by the persisted row).
 
 **Notifier**:
@@ -104,8 +106,8 @@ When an **Organizer** creates a **Tournament**, the **Authority** module grants 
 
 - A **Tournament** has many **Teams**.
 - A **Team** has many **TeamMembers**, exactly one of whom is its **Captain**.
-- A **Team** has many **Submissions**; each **Submission** belongs to exactly one **Team** and one **User**.
-- **Submissions** by one **Team** on one date are aggregated into a **SubmissionGroup**.
+- A **Team** has many **Activities**; each **Activity** belongs to exactly one **Team**.
+- An **Activity** has one **Participation** per declared roster member; each Participation belongs to exactly one **User** and carries their **Evidence**.
 - A **JoinRequest** links a **User** to a **Team**; on `accept` it produces a **TeamMember**.
 - A **User** may have any number of **System roles** and any number of **Tournament roles** (the latter scoped per **Tournament**).
 - A **User** is a **Player** of a **Tournament** iff they have a **TeamMember** in any of its **Teams**.
@@ -113,8 +115,8 @@ When an **Organizer** creates a **Tournament**, the **Authority** module grants 
 
 ## Example dialogue
 
-> **Dev:** "Can a **Reviewer** for Tournament A approve a **Submission** belonging to Tournament B?"
-> **Domain expert:** "No — **Tournament roles** apply only to the **Tournament** they were granted in. **Authority** must read the **Submission**'s tournament before checking."
+> **Dev:** "Can a **Reviewer** for Tournament A approve an **Activity** belonging to Tournament B?"
+> **Domain expert:** "No — **Tournament roles** apply only to the **Tournament** they were granted in. **Authority** must read the **Activity**'s tournament before checking."
 >
 > **Dev:** "What about an **Admin**?"
 > **Domain expert:** "Yes — **System roles** apply across all **Tournaments**."

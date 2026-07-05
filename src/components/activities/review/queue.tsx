@@ -5,9 +5,9 @@ import { useMutation, useQuery } from "convex/react";
 import { Check, FileCheck, X } from "lucide-react";
 import { useCallback, useState } from "react";
 
+import { RejectReasonDialog } from "@/components/activities/reject-reason-dialog";
 import { activityStateBadgeVariant } from "@/components/activities/state";
 import { SectionHeader } from "@/components/section-header";
-import { RejectReasonDialog } from "@/components/submissions/reject-reason-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

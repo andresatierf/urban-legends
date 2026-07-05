@@ -10,8 +10,8 @@ export function TeamMembership({ data }: { data: TournamentCardData }) {
   const team = data.authority.team;
   if (!team) return null;
 
-  const total = team.totalSubmissions;
-  const approved = team.approvedSubmissions;
+  const total = team.totalActivities;
+  const approved = team.approvedActivities;
   const ratio = total > 0 ? Math.round((approved / total) * 100) : 0;
 
   return (
@@ -60,7 +60,7 @@ export function TeamMembership({ data }: { data: TournamentCardData }) {
           </div>
         ) : (
           <span className="text-label-caps text-muted-foreground">
-            No submissions yet
+            No activities yet
           </span>
         )}
       </div>

@@ -99,41 +99,48 @@ export const getDashboardData = query({
     const standingsTimelines = await Promise.all(
       allTeamIds.map(async (teamId) => {
         const approved = await ctx.db
-          .query("submissions")
-          .withIndex("by_team", (q) => q.eq("teamId", teamId))
-          .filter((q) => q.eq(q.field("state"), "approved"))
+          .query("activities")
+          .withIndex("by_team_and_state", (q) =>
+            q.eq("teamId", teamId).eq("state", "approved"),
+          )
           .collect();
         return {
           teamId,
           events: approved
-            .map((s) => ({
-              timestamp: new Date(s.date).getTime(),
-              points: s.pointsEarned ?? 0,
+            .map((a) => ({
+              timestamp: new Date(a.date).getTime(),
+              points: a.pointsEarned ?? 0,
             }))
             .sort((a, b) => a.timestamp - b.timestamp),
         };
       }),
     );
 
-    const userSubmissions = await ctx.db
-      .query("submissions")
+    const userParticipations = await ctx.db
+      .query("participations")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
+    const userActivityIds = Array.from(
+      new Set(userParticipations.map((p) => p.activityId)),
+    );
+    const userActivities = (
+      await Promise.all(userActivityIds.map((id) => ctx.db.get(id)))
+    ).filter((a): a is NonNullable<typeof a> => a !== null);
 
     const teamById = new Map(
       [...validTeams, ...competingTeams].map((t) => [t.team._id, t]),
     );
 
-    const pendingSubmissionsList = userSubmissions
-      .filter((s) => s.state === "pending")
-      .map((s) => {
-        const t = teamById.get(s.teamId);
+    const pendingActivitiesList = userActivities
+      .filter((a) => a.state === "pending" || a.state === "incomplete")
+      .map((a) => {
+        const t = teamById.get(a.teamId);
         return {
-          id: s._id,
+          id: a._id,
           teamName: t?.team.name ?? "Unknown team",
           tournamentName: t?.tournament.name ?? "Unknown tournament",
-          date: s.date,
-          state: s.state as "pending" | "approved" | "rejected",
+          date: a.date,
+          state: a.state as "pending" | "incomplete" | "approved" | "rejected",
         };
       });
 
@@ -213,18 +220,18 @@ export const getDashboardData = query({
       link?: string;
     }> = [];
 
-    const recentUserSubs = [...userSubmissions]
+    const recentUserActs = [...userActivities]
       .sort((a, b) => b._creationTime - a._creationTime)
       .slice(0, 20);
-    for (const sub of recentUserSubs) {
-      if (sub.state === "approved" || sub.state === "rejected") {
-        const t = teamById.get(sub.teamId);
+    for (const act of recentUserActs) {
+      if (act.state === "approved" || act.state === "rejected") {
+        const t = teamById.get(act.teamId);
         activities.push({
-          type: `submission_${sub.state}`,
-          description: `Your submission for ${t?.team.name ?? "team"} was ${sub.state}`,
-          timestamp: sub._creationTime,
-          icon: sub.state === "approved" ? "check-circle" : "x-circle",
-          link: `/submissions/${sub._id}`,
+          type: `activity_${act.state}`,
+          description: `Your activity for ${t?.team.name ?? "team"} was ${act.state}`,
+          timestamp: act._creationTime,
+          icon: act.state === "approved" ? "check-circle" : "x-circle",
+          link: `/activities/${act._id}`,
         });
       }
     }
@@ -284,7 +291,7 @@ export const getDashboardData = query({
         ended: number;
       };
       teams: { total: number };
-      submissions: {
+      activities: {
         total: number;
         pending: number;
         approved: number;
@@ -293,11 +300,11 @@ export const getDashboardData = query({
     } | null = null;
 
     if (isAdmin) {
-      const [users, tournaments, teams, submissions] = await Promise.all([
+      const [users, tournaments, teams, activities] = await Promise.all([
         ctx.db.query("users").collect(),
         ctx.db.query("tournaments").collect(),
         ctx.db.query("teams").collect(),
-        ctx.db.query("submissions").collect(),
+        ctx.db.query("activities").collect(),
       ]);
       const oneWeekAgo = nowMs - sevenDaysMs;
       adminStats = {
@@ -314,11 +321,13 @@ export const getDashboardData = query({
           ended: tournaments.filter((t) => t.endDate < nowIso).length,
         },
         teams: { total: teams.length },
-        submissions: {
-          total: submissions.length,
-          pending: submissions.filter((s) => s.state === "pending").length,
-          approved: submissions.filter((s) => s.state === "approved").length,
-          rejected: submissions.filter((s) => s.state === "rejected").length,
+        activities: {
+          total: activities.length,
+          pending: activities.filter(
+            (a) => a.state === "pending" || a.state === "incomplete",
+          ).length,
+          approved: activities.filter((a) => a.state === "approved").length,
+          rejected: activities.filter((a) => a.state === "rejected").length,
         },
       };
     }
@@ -331,12 +340,12 @@ export const getDashboardData = query({
       competingTeams,
       activeTournaments,
       activeTournamentsCount,
-      pendingSubmissionsCount: pendingSubmissionsList.length,
+      pendingActivitiesCount: pendingActivitiesList.length,
       invitationsCount: invitations.length,
       activities: trimmedActivities,
       deadlines,
       invitations,
-      pendingSubmissions: pendingSubmissionsList,
+      pendingActivities: pendingActivitiesList,
       joinRequests: joinRequestsForCaptain,
       adminStats,
       standingsTimelines,

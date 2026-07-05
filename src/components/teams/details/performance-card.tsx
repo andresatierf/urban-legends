@@ -57,19 +57,19 @@ export function PerformanceCard({ teamId }: Props) {
             icon: CheckCircle,
             iconColor: "text-success",
             label: "Approved",
-            value: String(stats.approvedSubmissions),
+            value: String(stats.approvedActivities),
           },
           {
             icon: Activity,
             iconColor: "text-warning",
             label: "Pending",
-            value: String(stats.pendingSubmissions),
+            value: String(stats.pendingActivities),
           },
           {
             icon: Activity,
             iconColor: "text-destructive",
             label: "Rejected",
-            value: String(stats.rejectedSubmissions),
+            value: String(stats.rejectedActivities),
           },
         ],
       ]}

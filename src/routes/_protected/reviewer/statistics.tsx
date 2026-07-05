@@ -165,7 +165,7 @@ function ReviewStatistics() {
                     >
                       {review.type === "individual"
                         ? "Individual"
-                        : "Team Activity"}
+                        : "Group Activity"}
                     </Badge>
                     <Badge
                       className={cn({

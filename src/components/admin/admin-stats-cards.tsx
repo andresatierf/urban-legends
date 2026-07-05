@@ -7,7 +7,7 @@ interface AdminStatsCardsProps {
     totalUsers: number;
     totalTournaments: number;
     totalTeams: number;
-    totalSubmissions: number;
+    totalActivities: number;
   };
 }
 
@@ -38,10 +38,10 @@ const statCards: {
     statKey: "totalTeams",
   },
   {
-    label: "Submissions",
-    description: "Total submissions received",
+    label: "Activities",
+    description: "Total activities received",
     accent: "var(--primary)",
-    statKey: "totalSubmissions",
+    statKey: "totalActivities",
   },
 ];
 

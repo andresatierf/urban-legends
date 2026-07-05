@@ -16,7 +16,7 @@ export function DashboardSpecimens() {
       <SectionHeader
         as="h1"
         title="Dashboard"
-        description="Mock-driven sandbox of /dashboard. Toggle a view mode to walk the state space — submission cadence, urgent deadline, ended grace window, empty viewer."
+        description="Mock-driven sandbox of /dashboard. Toggle a view mode to walk the state space — activity cadence, urgent deadline, ended grace window, empty viewer."
       />
 
       <div className="border-ink bg-paper-deep flex flex-col gap-3 rounded-xl border-2 p-4 sm:p-5">

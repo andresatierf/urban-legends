@@ -26,9 +26,9 @@ export function MomentumCell({ data }: { data: TeamCardData }) {
       </div>
       <span className="text-muted-foreground text-[0.65rem]">
         {idleDays === 0
-          ? "Submitted today"
+          ? "Active today"
           : idleDays == null
-            ? "No submissions yet"
+            ? "No activities yet"
             : `${idleDays}d idle`}
       </span>
     </div>
@@ -36,8 +36,8 @@ export function MomentumCell({ data }: { data: TeamCardData }) {
 }
 
 // streak: consecutive days, walking back from today, with approved > 0.
-// idleDays: days since the most recent approved submission (0 if today,
-// null if never submitted in the window).
+// idleDays: days since the most recent approved activity (0 if today,
+// null if never active in the window).
 function computeStreakAndIdle(days: { approved: number }[]): {
   streak: number;
   idleDays: number | null;

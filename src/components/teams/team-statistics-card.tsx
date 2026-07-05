@@ -64,21 +64,21 @@ export function TeamStatisticsCard({ teamId }: Props) {
       title: "Total Points",
       value: team.points,
       icon: Award,
-      description: `From ${stats.approvedSubmissions} approved submissions`,
+      description: `From ${stats.approvedActivities} approved activities`,
       color: "text-warning",
     },
     {
       title: "Approval Rate",
       value: `${(stats.approvalRate * 100).toFixed(1)}%`,
       icon: CheckCircle,
-      description: `${stats.approvedSubmissions}/${stats.totalSubmissions} submissions approved`,
+      description: `${stats.approvedActivities}/${stats.totalActivities} activities approved`,
       color: "text-success",
     },
     {
       title: "Current Streak",
       value: `${stats.currentStreak} days`,
       icon: Flame,
-      description: "Consecutive days with submissions",
+      description: "Consecutive days with activities",
       color: "text-primary",
     },
     {
@@ -92,20 +92,20 @@ export function TeamStatisticsCard({ teamId }: Props) {
       title: "Completion Rate",
       value: `${(stats.completionRate * 100).toFixed(1)}%`,
       icon: Calendar,
-      description: `${Math.floor(stats.completionRate * stats.daysSoFar)}/${stats.daysSoFar} days with submissions`,
+      description: `${Math.floor(stats.completionRate * stats.daysSoFar)}/${stats.daysSoFar} days with activities`,
       description2: (() => {
-        const daysWithSubmissions = Math.floor(
+        const daysWithActivities = Math.floor(
           stats.completionRate * stats.daysSoFar,
         );
-        return `${daysWithSubmissions}/${stats.daysSoFar} days with submissions`;
+        return `${daysWithActivities}/${stats.daysSoFar} days with activities`;
       })(),
       color: "text-social",
     },
     {
-      title: "Total Submissions",
-      value: stats.totalSubmissions,
+      title: "Total Activities",
+      value: stats.totalActivities,
       icon: Activity,
-      description: `${stats.approvedSubmissions} approved, ${stats.pendingSubmissions ?? "unknown"} pending, ${stats.rejectedSubmissions ?? "unknown"} rejected`,
+      description: `${stats.approvedActivities} approved, ${stats.pendingActivities ?? "unknown"} pending, ${stats.rejectedActivities ?? "unknown"} rejected`,
       color: "text-info",
     },
   ];
@@ -151,8 +151,8 @@ export function TeamStatisticsCard({ teamId }: Props) {
                   const user = userMap?.[contribution.userId];
 
                   const percentage =
-                    stats.approvedSubmissions > 0
-                      ? (contribution.count / stats.approvedSubmissions) * 100
+                    stats.approvedActivities > 0
+                      ? (contribution.count / stats.approvedActivities) * 100
                       : 0;
 
                   return (
@@ -164,7 +164,7 @@ export function TeamStatisticsCard({ teamId }: Props) {
                             : contribution.userId}
                         </span>
                         <span className="text-muted-foreground">
-                          {contribution.count} submissions (
+                          {contribution.count} activities (
                           {percentage.toFixed(1)}%)
                         </span>
                       </div>

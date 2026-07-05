@@ -92,37 +92,37 @@ export const getLiveTournamentFeed = query({
 
     const activeTournamentIds = new Set(activeTournaments.map((t) => t._id));
 
-    const allSubmissions = await ctx.db
-      .query("submissions")
+    const allActivities = await ctx.db
+      .query("activities")
       .withIndex("by_state", (q) => q.eq("state", "approved"))
       .order("desc")
       .take(limit * 2);
 
-    const filteredSubmissions = allSubmissions
-      .filter((s) => activeTournamentIds.has(s.tournamentId))
+    const filteredActivities = allActivities
+      .filter((a) => activeTournamentIds.has(a.tournamentId))
       .slice(0, limit);
 
-    const enrichedSubmissions = await Promise.all(
-      filteredSubmissions.map(async (submission) => {
+    const enrichedActivities = await Promise.all(
+      filteredActivities.map(async (activity) => {
         const [user, team, tournament] = await Promise.all([
-          ctx.db.get(submission.userId),
-          ctx.db.get(submission.teamId),
-          ctx.db.get(submission.tournamentId),
+          ctx.db.get(activity.createdBy),
+          ctx.db.get(activity.teamId),
+          ctx.db.get(activity.tournamentId),
         ]);
 
         return {
-          id: submission._id,
+          id: activity._id,
           user: user ? { name: user.name } : null,
           team: team ? { name: team.name, points: team.points } : null,
           tournament: tournament ? { name: tournament.name } : null,
-          tier: submission.tier,
-          pointsEarned: submission.pointsEarned,
-          submissionType: submission.submissionType,
-          timestamp: new Date(submission._creationTime).toISOString(),
+          tier: activity.tier,
+          pointsEarned: activity.pointsEarned,
+          type: activity.type,
+          timestamp: new Date(activity._creationTime).toISOString(),
         };
       }),
     );
 
-    return enrichedSubmissions;
+    return enrichedActivities;
   },
 });

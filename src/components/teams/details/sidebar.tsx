@@ -78,7 +78,7 @@ export function Sidebar({ data }: { data: TeamDetails }) {
       label: "Members",
       value: `${statistics.memberCount}${team.maxMembers ? `/${team.maxMembers}` : ""}`,
     },
-    { label: "Submissions", value: String(statistics.submissionCount) },
+    { label: "Activities", value: String(statistics.activityCount) },
     {
       label: "Approval",
       value: `${(statistics.approvalRate * 100).toFixed(0)}%`,

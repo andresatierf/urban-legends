@@ -202,87 +202,62 @@ export const listRoles = query({
   },
 });
 
-/**
- * Get the count of all pending submissions system-wide.
- * This includes both individual submissions and submission groups.
- * Only accessible to admins.
- */
 export const getAllPendingCount = query({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
     await requireAdmin(ctx, user._id);
 
-    const pendingIndividual = await ctx.db
-      .query("submissions")
-      .withIndex("by_state", (q) => q.eq("state", "pending"))
-      .filter((q) => q.eq(q.field("submissionType"), "individual"))
-      .collect();
-
-    const pendingGroups = await ctx.db
-      .query("submissionGroups")
+    const pendingActivities = await ctx.db
+      .query("activities")
       .withIndex("by_state", (q) => q.eq("state", "pending"))
       .collect();
 
-    return pendingIndividual.length + pendingGroups.length;
+    return pendingActivities.length;
   },
 });
 
-/**
- * Get comprehensive dashboard data for admin.
- * Returns system-wide statistics, pending actions, and recent activity.
- */
 export const getDashboardData = query({
   args: {},
   handler: async (ctx) => {
     const user = await getCurrentUserOrThrow(ctx);
     await requireAdmin(ctx, user._id);
 
-    const [users, tournaments, teams, submissions] = await Promise.all([
+    const [users, tournaments, teams, activities] = await Promise.all([
       ctx.db.query("users").collect(),
       ctx.db.query("tournaments").collect(),
       ctx.db.query("teams").collect(),
-      ctx.db.query("submissions").collect(),
+      ctx.db.query("activities").collect(),
     ]);
 
-    const [pendingIndividual, pendingGroups] = await Promise.all([
-      ctx.db
-        .query("submissions")
-        .withIndex("by_state", (q) => q.eq("state", "pending"))
-        .filter((q) => q.eq(q.field("submissionType"), "individual"))
-        .collect(),
-      ctx.db
-        .query("submissionGroups")
-        .withIndex("by_state", (q) => q.eq("state", "pending"))
-        .collect(),
-    ]);
+    const pendingActivities = activities.filter((a) => a.state === "pending");
 
     const joinRequests = await ctx.db
       .query("joinRequests")
       .withIndex("by_status", (q) => q.eq("status", "pending"))
       .collect();
 
-    const recentSubmissions = await ctx.db
-      .query("submissions")
+    const recentActivities = await ctx.db
+      .query("activities")
       .order("desc")
       .take(20);
 
     const enrichedActivity = await Promise.all(
-      recentSubmissions.map(async (submission) => {
+      recentActivities.map(async (activity) => {
         const [submitter, team, tournament] = await Promise.all([
-          ctx.db.get(submission.userId),
-          ctx.db.get(submission.teamId),
-          ctx.db.get(submission.tournamentId),
+          ctx.db.get(activity.createdBy),
+          ctx.db.get(activity.teamId),
+          ctx.db.get(activity.tournamentId),
         ]);
 
         return {
-          id: submission._id,
-          type: "submission" as const,
-          state: submission.state,
+          id: activity._id,
+          type: "activity" as const,
+          state: activity.state,
           submitter,
           team,
           tournament,
-          createdAt: new Date(submission._creationTime).toISOString(),
+          createdAt: new Date(activity._creationTime).toISOString(),
         };
       }),
     );
@@ -292,10 +267,10 @@ export const getDashboardData = query({
         totalUsers: users.length,
         totalTournaments: tournaments.length,
         totalTeams: teams.length,
-        totalSubmissions: submissions.length,
+        totalActivities: activities.length,
       },
       pendingActions: {
-        pendingSubmissions: pendingIndividual.length + pendingGroups.length,
+        pendingActivities: pendingActivities.length,
         joinRequests: joinRequests.length,
       },
       recentActivity: enrichedActivity,
@@ -313,16 +288,16 @@ export const getSystemHealth = query({
     const user = await getCurrentUserOrThrow(ctx);
     await requireAdmin(ctx, user._id);
 
-    const [tournaments, teams, submissions, users, teamMembers] =
+    const [tournaments, teams, activities, users, teamMembers] =
       await Promise.all([
         ctx.db.query("tournaments").collect(),
         ctx.db.query("teams").collect(),
-        ctx.db.query("submissions").collect(),
+        ctx.db.query("activities").collect(),
         ctx.db.query("users").collect(),
         ctx.db.query("teamMembers").collect(),
       ]);
 
-    const { orphanedTeams, orphanedSubmissions, orphanedTeamMembers } =
+    const { orphanedTeams, orphanedActivities, orphanedTeamMembers } =
       await detectOrphanedRecords(ctx);
 
     return {
@@ -340,9 +315,9 @@ export const getSystemHealth = query({
           total: teams.length,
           orphaned: orphanedTeams.length,
         },
-        submissions: {
-          total: submissions.length,
-          orphaned: orphanedSubmissions.length,
+        activities: {
+          total: activities.length,
+          orphaned: orphanedActivities.length,
         },
         users: {
           total: users.length,
@@ -359,10 +334,10 @@ export const getSystemHealth = query({
           name: t.name,
           tournamentId: t.tournamentId,
         })),
-        submissions: orphanedSubmissions.map((s) => ({
-          id: s._id,
-          teamId: s.teamId,
-          tournamentId: s.tournamentId,
+        activities: orphanedActivities.map((a) => ({
+          id: a._id,
+          teamId: a.teamId,
+          tournamentId: a.tournamentId,
         })),
         teamMembers: orphanedTeamMembers.map((tm) => ({
           id: tm._id,
@@ -386,18 +361,18 @@ export const runIntegrityCheck = mutation({
     const user = await getCurrentUserOrThrow(ctx);
     await requireAdmin(ctx, user._id);
 
-    const { orphanedTeams, orphanedSubmissions, orphanedTeamMembers } =
+    const { orphanedTeams, orphanedActivities, orphanedTeamMembers } =
       await detectOrphanedRecords(ctx);
 
     const issuesFound = {
       orphanedTeams: orphanedTeams.length,
-      orphanedSubmissions: orphanedSubmissions.length,
+      orphanedActivities: orphanedActivities.length,
       orphanedTeamMembers: orphanedTeamMembers.length,
     };
 
     const totalIssues =
       issuesFound.orphanedTeams +
-      issuesFound.orphanedSubmissions +
+      issuesFound.orphanedActivities +
       issuesFound.orphanedTeamMembers;
 
     return {
@@ -423,7 +398,7 @@ export const cleanupOrphanedRecords = mutation({
     const user = await getCurrentUserOrThrow(ctx);
     await requireAdmin(ctx, user._id);
 
-    const { orphanedTeams, orphanedSubmissions, orphanedTeamMembers } =
+    const { orphanedTeams, orphanedActivities, orphanedTeamMembers } =
       await detectOrphanedRecords(ctx);
 
     let deletedCount = 0;
@@ -433,8 +408,8 @@ export const cleanupOrphanedRecords = mutation({
       deletedCount++;
     }
 
-    for (const s of orphanedSubmissions) {
-      await ctx.db.delete(s._id);
+    for (const a of orphanedActivities) {
+      await ctx.db.delete(a._id);
       deletedCount++;
     }
 

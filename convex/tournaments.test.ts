@@ -91,6 +91,37 @@ async function giveTournamentRole(
   await ctx.db.insert("tournamentRoles", { userId, tournamentId, role });
 }
 
+async function makeActivity(
+  ctx: Ctx,
+  args: {
+    teamId: Id<"teams">;
+    tournamentId: Id<"tournaments">;
+    createdBy: Id<"users">;
+    date: string;
+    state: "incomplete" | "pending" | "approved" | "rejected" | "deleted";
+    pointsEarned?: number;
+    tier?: "base" | "advanced";
+  },
+) {
+  const now = new Date().toISOString();
+  return ctx.db.insert("activities", {
+    teamId: args.teamId,
+    tournamentId: args.tournamentId,
+    createdBy: args.createdBy,
+    date: args.date,
+    type: "individual",
+    tier: args.tier ?? "base",
+    state: args.state,
+    pointsEarned: args.pointsEarned ?? 0,
+    participantCount: 1,
+    totalTeamMembers: 1,
+    participationRate: 1,
+    isTeamExercise: false,
+    createdAt: now,
+    updatedAt: now,
+  });
+}
+
 describe("tournaments.listWithAuthority", () => {
   describe("partition: yours vs discover", () => {
     test("viewer with no relationship sees tournament in discover, not yours", async () => {
@@ -349,7 +380,7 @@ describe("tournaments.listWithAuthority", () => {
   });
 
   describe("authority: team context", () => {
-    test("team context includes points, submission counts", async () => {
+    test("team context includes points, activity counts", async () => {
       const t = convexTest(schemaForTest);
       await t.run(async (ctx) => {
         const creatorId = await makeUser(ctx, "creator");
@@ -357,27 +388,20 @@ describe("tournaments.listWithAuthority", () => {
         const playerId = await makeUser(ctx, "player");
         const teamId = await makeTeam(ctx, tournamentId, creatorId);
         await addTeamMember(ctx, teamId, playerId, "member");
-        await ctx.db.insert("submissions", {
-          userId: playerId,
+        await makeActivity(ctx, {
           teamId,
           tournamentId,
-          date: "2024-06-01",
-          submissionType: "individual",
-          state: "approved",
-          tier: "base",
           createdBy: playerId,
+          date: "2024-06-01",
+          state: "approved",
           pointsEarned: 1,
         });
-        await ctx.db.insert("submissions", {
-          userId: playerId,
+        await makeActivity(ctx, {
           teamId,
           tournamentId,
-          date: "2024-06-02",
-          submissionType: "individual",
-          state: "pending",
-          tier: "base",
           createdBy: playerId,
-          pointsEarned: 0,
+          date: "2024-06-02",
+          state: "pending",
         });
       });
 
@@ -388,8 +412,8 @@ describe("tournaments.listWithAuthority", () => {
       const team = data.yours[0].authority.team;
       expect(team).toBeDefined();
       expect(team?.points).toBe(42);
-      expect(team?.totalSubmissions).toBe(2);
-      expect(team?.approvedSubmissions).toBe(1);
+      expect(team?.totalActivities).toBe(2);
+      expect(team?.approvedActivities).toBe(1);
     });
 
     test("pendingReviewCount is populated for tournament_manager", async () => {
@@ -405,27 +429,19 @@ describe("tournaments.listWithAuthority", () => {
           "tournament_manager",
         );
         const teamId = await makeTeam(ctx, tournamentId, creatorId);
-        await ctx.db.insert("submissions", {
-          userId: creatorId,
+        await makeActivity(ctx, {
           teamId,
           tournamentId,
+          createdBy: creatorId,
           date: "2024-06-01",
-          submissionType: "individual",
           state: "pending",
-          tier: "base",
-          createdBy: creatorId,
-          pointsEarned: 0,
         });
-        await ctx.db.insert("submissions", {
-          userId: creatorId,
+        await makeActivity(ctx, {
           teamId,
           tournamentId,
-          date: "2024-06-02",
-          submissionType: "individual",
-          state: "pending",
-          tier: "base",
           createdBy: creatorId,
-          pointsEarned: 0,
+          date: "2024-06-02",
+          state: "pending",
         });
       });
 
@@ -443,16 +459,12 @@ describe("tournaments.listWithAuthority", () => {
         const tournamentId = await makeTournament(ctx, creatorId);
         await makeUser(ctx, "viewer");
         const teamId = await makeTeam(ctx, tournamentId, creatorId);
-        await ctx.db.insert("submissions", {
-          userId: creatorId,
+        await makeActivity(ctx, {
           teamId,
           tournamentId,
-          date: "2024-06-01",
-          submissionType: "individual",
-          state: "pending",
-          tier: "base",
           createdBy: creatorId,
-          pointsEarned: 0,
+          date: "2024-06-01",
+          state: "pending",
         });
       });
 

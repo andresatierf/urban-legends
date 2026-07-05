@@ -106,22 +106,26 @@ export const getDashboardData = query({
         foreignKey: (team) => team.tournamentId,
       },
       members: { table: "teamMembers", foreignKeyField: "teamId" },
-      submissions: { table: "submissions", foreignKeyField: "teamId" },
+      activities: { table: "activities", foreignKeyField: "teamId" },
     });
 
     const teamsWithData = enrichedTeams.map((enrichedTeam) => {
-      const approvedSubmissions = enrichedTeam.submissions.filter(
-        (s) => s.state === "approved",
+      const activeActivities = enrichedTeam.activities.filter(
+        (a) => a.state !== "deleted",
+      );
+      const approvedActivities = activeActivities.filter(
+        (a) => a.state === "approved",
       );
 
-      const { tournament, members, submissions, ...team } = enrichedTeam;
+      const { tournament, members, activities, ...team } = enrichedTeam;
+      void activities;
 
       return {
         team,
         tournament,
         membersCount: members.length,
-        submissionsCount: submissions.length,
-        approvedCount: approvedSubmissions.length,
+        activitiesCount: activeActivities.length,
+        approvedCount: approvedActivities.length,
         points: team.points,
       };
     });
@@ -214,7 +218,7 @@ export const getTeamsComparison = query({
         foreignKey: (team) => team.tournamentId,
       },
       members: { table: "teamMembers", foreignKeyField: "teamId" },
-      submissions: { table: "submissions", foreignKeyField: "teamId" },
+      activities: { table: "activities", foreignKeyField: "teamId" },
     });
 
     const tournamentIds = Array.from(new Set(teams.map((t) => t.tournamentId)));
@@ -234,19 +238,22 @@ export const getTeamsComparison = query({
     );
 
     const teamsComparison = enrichedTeams.map((enrichedTeam) => {
-      const approvedSubmissions = enrichedTeam.submissions.filter(
-        (s) => s.state === "approved",
+      const activeActivities = enrichedTeam.activities.filter(
+        (a) => a.state !== "deleted",
       );
-      const pendingSubmissions = enrichedTeam.submissions.filter(
-        (s) => s.state === "pending",
+      const approvedActivities = activeActivities.filter(
+        (a) => a.state === "approved",
+      );
+      const pendingActivities = activeActivities.filter(
+        (a) => a.state === "pending" || a.state === "incomplete",
       );
 
       const totalReviewed =
-        approvedSubmissions.length +
-        enrichedTeam.submissions.filter((s) => s.state === "rejected").length;
+        approvedActivities.length +
+        activeActivities.filter((a) => a.state === "rejected").length;
       const approvalRate =
         totalReviewed > 0
-          ? Math.round((approvedSubmissions.length / totalReviewed) * 100)
+          ? Math.round((approvedActivities.length / totalReviewed) * 100)
           : 0;
 
       const allTeamsInTournament =
@@ -256,15 +263,16 @@ export const getTeamsComparison = query({
         allTeamsInTournament.filter((t) => t.points > enrichedTeam.points)
           .length + 1;
 
-      const { tournament, members, submissions, ...team } = enrichedTeam;
+      const { tournament, members, activities, ...team } = enrichedTeam;
+      void activities;
 
       return {
         team,
         tournament,
         membersCount: members.length,
-        totalSubmissions: submissions.length,
-        approvedSubmissions: approvedSubmissions.length,
-        pendingSubmissions: pendingSubmissions.length,
+        totalActivities: activeActivities.length,
+        approvedActivities: approvedActivities.length,
+        pendingActivities: pendingActivities.length,
         approvalRate,
         points: team.points,
         rank,

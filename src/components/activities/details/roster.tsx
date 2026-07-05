@@ -2,8 +2,8 @@ import { useMutation } from "convex/react";
 import { Check, Clock, Users, X } from "lucide-react";
 import { useState } from "react";
 
+import { EvidenceUploader } from "@/components/activities/evidence-uploader";
 import { SectionHeader } from "@/components/section-header";
-import { EvidenceUploader } from "@/components/submissions/evidence-uploader";
 import { Button } from "@/components/ui/button";
 import { getInitials } from "@/components/users/utils";
 import { tryMutate } from "@/lib/utils";

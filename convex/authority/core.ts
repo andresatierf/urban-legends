@@ -9,30 +9,6 @@ export class IllegalAccess extends Error {
   }
 }
 
-type SubmissionFacts = {
-  isOwner: boolean;
-  isTeamMember: boolean;
-  isCaptain: boolean;
-  systemRoles: SystemRoleName[];
-  tournamentRoles: TournamentRoleName[];
-  submissionState: "pending" | "approved" | "rejected" | "deleted";
-};
-
-export type SubmissionSubject = { submissionId: Id<"submissions"> };
-
-export type SubmissionRule = {
-  check(
-    ctx: QueryCtx,
-    userId: Id<"users">,
-    subject: SubmissionSubject,
-  ): Promise<boolean>;
-  require(
-    ctx: QueryCtx,
-    userId: Id<"users">,
-    subject: SubmissionSubject,
-  ): Promise<void>;
-};
-
 // ── Private helpers ─────────────────────────────────────────────────────────
 
 function isAdminOrDev(systemRoles: SystemRoleName[]): boolean {
@@ -80,150 +56,6 @@ async function loadTournamentRoles(
     )
     .collect();
   return rows.map((r) => r.role);
-}
-
-async function loadSubmissionFacts(
-  ctx: QueryCtx,
-  userId: Id<"users">,
-  submissionId: Id<"submissions">,
-): Promise<SubmissionFacts> {
-  const submission = await ctx.db.get(submissionId);
-  if (!submission) throw new Error("Submission not found");
-
-  const [systemRoles, tournamentRoles, membership] = await Promise.all([
-    loadSystemRoles(ctx, userId),
-    loadTournamentRoles(ctx, userId, submission.tournamentId),
-    ctx.db
-      .query("teamMembers")
-      .withIndex("by_team_and_user", (q) =>
-        q.eq("teamId", submission.teamId).eq("userId", userId),
-      )
-      .first(),
-  ]);
-
-  return {
-    isOwner: submission.userId === userId,
-    isTeamMember: !!membership,
-    isCaptain: membership?.role === "captain",
-    systemRoles,
-    tournamentRoles,
-    submissionState: submission.state,
-  };
-}
-
-// ── Rule factory ────────────────────────────────────────────────────────────
-
-function rule(
-  name: string,
-  decide: (facts: SubmissionFacts) => boolean,
-): SubmissionRule {
-  return {
-    async check(ctx, userId, subject) {
-      const facts = await loadSubmissionFacts(
-        ctx,
-        userId,
-        subject.submissionId,
-      );
-      return decide(facts);
-    },
-    async require(ctx, userId, subject) {
-      const allowed = await this.check(ctx, userId, subject);
-      if (!allowed) throw new IllegalAccess(name);
-    },
-  };
-}
-
-// ── Submission rules ────────────────────────────────────────────────────────
-
-export const canViewSubmission: SubmissionRule = rule(
-  "canViewSubmission",
-  (facts) => {
-    if (isAdminOrDev(facts.systemRoles)) return true;
-    if (facts.tournamentRoles.length > 0) return true;
-    return facts.isOwner || facts.isTeamMember;
-  },
-);
-
-export const canCreateSubmission: SubmissionRule = rule(
-  "canCreateSubmission",
-  (facts) => facts.isTeamMember,
-);
-
-export const canEditSubmission: SubmissionRule = rule(
-  "canEditSubmission",
-  (facts) => facts.isOwner && facts.submissionState === "pending",
-);
-
-export const canApproveSubmission: SubmissionRule = rule(
-  "canApproveSubmission",
-  (facts) => {
-    if (facts.submissionState !== "pending") return false;
-    if (isAdminOrDev(facts.systemRoles)) return true;
-    return hasReviewerOrAbove(facts.tournamentRoles);
-  },
-);
-
-export const canRejectSubmission: SubmissionRule = rule(
-  "canRejectSubmission",
-  (facts) => {
-    if (facts.submissionState !== "pending") return false;
-    if (isAdminOrDev(facts.systemRoles)) return true;
-    return hasReviewerOrAbove(facts.tournamentRoles);
-  },
-);
-
-export const canDeleteSubmission: SubmissionRule = rule(
-  "canDeleteSubmission",
-  (facts) => {
-    const nonTerminal =
-      facts.submissionState !== "deleted" &&
-      facts.submissionState !== "rejected";
-    if (isAdminOrDev(facts.systemRoles)) return nonTerminal;
-    if (facts.tournamentRoles.includes("tournament_manager"))
-      return nonTerminal;
-    return facts.isOwner && nonTerminal;
-  },
-);
-
-// ── computeSubmissionPermissions ─────────────────────────────────────────────
-
-export async function computeSubmissionPermissions(
-  ctx: QueryCtx,
-  userId: Id<"users">,
-  submissionId: Id<"submissions">,
-): Promise<{
-  canView: boolean;
-  canCreate: boolean;
-  canEdit: boolean;
-  canApprove: boolean;
-  canReject: boolean;
-  canDelete: boolean;
-}> {
-  const facts = await loadSubmissionFacts(ctx, userId, submissionId);
-  const nonTerminal =
-    facts.submissionState !== "deleted" && facts.submissionState !== "rejected";
-  return {
-    canView:
-      isAdminOrDev(facts.systemRoles) ||
-      facts.tournamentRoles.length > 0 ||
-      facts.isOwner ||
-      facts.isTeamMember,
-    canCreate: facts.isTeamMember,
-    canEdit: facts.isOwner && facts.submissionState === "pending",
-    canApprove:
-      facts.submissionState === "pending" &&
-      (isAdminOrDev(facts.systemRoles) ||
-        hasReviewerOrAbove(facts.tournamentRoles)),
-    canReject:
-      facts.submissionState === "pending" &&
-      (isAdminOrDev(facts.systemRoles) ||
-        hasReviewerOrAbove(facts.tournamentRoles)),
-    canDelete:
-      nonTerminal &&
-      (isAdminOrDev(facts.systemRoles) ||
-        facts.tournamentRoles.includes("tournament_manager") ||
-        facts.isOwner),
-  };
 }
 
 // ── Activity rules ──────────────────────────────────────────────────────────
@@ -489,7 +321,7 @@ export async function revokeTournamentRole(
   }
 }
 
-// ── Global access helpers (used by non-submission queries) ───────────────────
+// ── Global access helpers ────────────────────────────────────────────────────
 
 export async function requireAdmin(
   ctx: QueryCtx,

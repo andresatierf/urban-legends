@@ -153,20 +153,21 @@ export const getDashboardView = query({
           : 0
         : above.team.points - myTeamRow.team.points;
 
-    // ── timeline events for chart (approved submissions only) ────────────
+    // ── timeline events for chart (approved activities only) ─────────────
     const timeline = await Promise.all(
       teamsEnriched.map(async (row) => {
         const approved = await ctx.db
-          .query("submissions")
-          .withIndex("by_team", (q) => q.eq("teamId", row.team._id))
-          .filter((q) => q.eq(q.field("state"), "approved"))
+          .query("activities")
+          .withIndex("by_team_and_state", (q) =>
+            q.eq("teamId", row.team._id).eq("state", "approved"),
+          )
           .collect();
         return {
           teamId: row.team._id,
           events: approved
-            .map((s) => ({
-              timestamp: new Date(s.date).getTime(),
-              points: s.pointsEarned ?? 0,
+            .map((a) => ({
+              timestamp: new Date(a.date).getTime(),
+              points: a.pointsEarned ?? 0,
             }))
             .sort((a, b) => a.timestamp - b.timestamp),
         };

@@ -6,7 +6,6 @@ import { Inbox } from "@/components/dashboard/inbox";
 import { MyTeamHeader } from "@/components/dashboard/my-team-header";
 import { DashboardShell } from "@/components/dashboard/shell";
 import { StandingsCard } from "@/components/dashboard/standings-card";
-import { SubmitTodayBanner } from "@/components/dashboard/submit-today-banner";
 import { TournamentContextHeader } from "@/components/dashboard/tournament-context-header";
 import type {
   DashboardInboxItem,
@@ -38,7 +37,7 @@ export type MockViewModeConfig = {
 
 export const VIEW_MODES: MockViewModeConfig[] = [
   {
-    mode: "active-no-submission",
+    mode: "active-no-activity",
     label: "Active · unsubmitted",
     description: "Mid-tournament, no log today yet. Banner prompts to log.",
   },
@@ -46,7 +45,7 @@ export const VIEW_MODES: MockViewModeConfig[] = [
     mode: "active-default",
     label: "Active · 1 of 2 logged",
     description:
-      "Mid-tournament, one submission in, cap=2. Banner offers another.",
+      "Mid-tournament, one activity in, cap=2. Banner offers another.",
   },
   {
     mode: "active-at-limit",
@@ -79,7 +78,7 @@ type ResolvedMode = {
 
 function resolveMode(mode: MockViewMode): ResolvedMode {
   switch (mode) {
-    case "active-no-submission":
+    case "active-no-activity":
       return { tournamentIdx: 0, todayActivities: 0, isEmpty: false };
     case "active-default":
       return { tournamentIdx: 0, todayActivities: 1, isEmpty: false };
@@ -102,7 +101,7 @@ function isWithinGrace(endDate: string): boolean {
 // ─── main page ──────────────────────────────────────────────────────────────
 
 export function DashboardSandboxPage({
-  mode = "active-no-submission",
+  mode = "active-no-activity",
 }: {
   mode?: MockViewMode;
 }) {

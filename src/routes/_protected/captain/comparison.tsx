@@ -127,24 +127,24 @@ function TeamComparison() {
 
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">
-                      Total Submissions
+                      Total Activities
                     </span>
                     <span className="font-medium">
-                      {teamData.totalSubmissions}
+                      {teamData.totalActivities}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-green-600">Approved</span>
                     <span className="font-medium">
-                      {teamData.approvedSubmissions}
+                      {teamData.approvedActivities}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-yellow-600">Pending</span>
                     <span className="font-medium">
-                      {teamData.pendingSubmissions}
+                      {teamData.pendingActivities}
                     </span>
                   </div>
                 </div>

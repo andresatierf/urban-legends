@@ -35,15 +35,6 @@ type MappingEntry = {
 
 const SEMANTIC_MAPPINGS: { title: string; entries: MappingEntry[] }[] = [
   {
-    title: "Submission status mapping",
-    entries: [
-      { label: "Approved", variant: "success" },
-      { label: "Pending", variant: "warning" },
-      { label: "Rejected", variant: "error" },
-      { label: "Deleted", variant: "neutral" },
-    ],
-  },
-  {
     title: "Tournament states",
     entries: [
       { label: "Active", variant: "success" },
@@ -63,20 +54,6 @@ const SEMANTIC_MAPPINGS: { title: string; entries: MappingEntry[] }[] = [
     entries: [
       { label: "Open", variant: "success" },
       { label: "Closed", variant: "neutral" },
-    ],
-  },
-  {
-    title: "Submission types",
-    entries: [
-      { label: "Individual", variant: "neutral" },
-      { label: "Team Exercise", variant: "social" },
-    ],
-  },
-  {
-    title: "Submission tiers",
-    entries: [
-      { label: "Base Tier", variant: "info" },
-      { label: "Advanced Tier", variant: "social" },
     ],
   },
 ];

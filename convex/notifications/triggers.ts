@@ -89,72 +89,6 @@ export async function notifyJoinRequest(
   }
 }
 
-/**
- * Helper function to create submission approved notification
- */
-export async function notifySubmissionApproved(
-  ctx: MutationCtx,
-  params: {
-    recipientIds: Id<"users">[];
-    submissionId: Id<"submissions">;
-    teamName: string;
-    description?: string;
-    pointsEarned: number;
-  },
-) {
-  try {
-    await Promise.all(
-      params.recipientIds.map((userId) =>
-        ctx.scheduler.runAfter(0, internal.notifications.create, {
-          userId,
-          type: NOTIFICATION_TYPES.SUBMISSION_APPROVED,
-          title: "Submission approved",
-          body: `${params.description || "Your submission"} for ${params.teamName} earned ${params.pointsEarned} points`,
-          relatedEntityId: params.submissionId,
-          relatedEntityType: "submission",
-          // actionUrl: `/submissions/${params.submissionId}`,
-        }),
-      ),
-    );
-  } catch (error) {
-    console.error("Failed to create submission approved notification:", error);
-  }
-}
-
-/**
- * Helper function to create submission rejected notification
- */
-export async function notifySubmissionRejected(
-  ctx: MutationCtx,
-  params: {
-    recipientIds: Id<"users">[];
-    submissionId: Id<"submissions">;
-    teamName: string;
-    description?: string;
-    reason?: string;
-  },
-) {
-  try {
-    await Promise.all(
-      params.recipientIds.map((userId) =>
-        ctx.scheduler.runAfter(0, internal.notifications.create, {
-          userId,
-          type: NOTIFICATION_TYPES.SUBMISSION_REJECTED,
-          title: "Submission rejected",
-          body:
-            `${params.description || "Your submission"} for ${params.teamName} was not approved` +
-            (params.reason ? `: ${params.reason}` : ""),
-          relatedEntityId: params.submissionId,
-          relatedEntityType: "submission",
-          // actionUrl: `/submissions/${params.submissionId}`,
-        }),
-      ),
-    );
-  } catch (error) {
-    console.error("Failed to create submission rejected notification:", error);
-  }
-}
-
 export async function notifyActivityApproved(
   ctx: MutationCtx,
   params: {
@@ -244,38 +178,6 @@ export async function notifyActivityRejected(
     );
   } catch (error) {
     console.error("Failed to create activity rejected notification:", error);
-  }
-}
-
-/**
- * Helper function to create teammate submitted notification
- */
-export async function notifyTeammateSubmitted(
-  ctx: MutationCtx,
-  params: {
-    recipientIds: Id<"users">[];
-    submissionId: Id<"submissions">;
-    teamId: Id<"teams">;
-    submitterName: string;
-    description?: string;
-  },
-) {
-  try {
-    await Promise.all(
-      params.recipientIds.map((userId) =>
-        ctx.scheduler.runAfter(0, internal.notifications.create, {
-          userId,
-          type: NOTIFICATION_TYPES.TEAMMATE_SUBMITTED,
-          title: `${params.submitterName} submitted an activity`,
-          body: params.description || "Check out your team's progress",
-          relatedEntityId: params.teamId,
-          relatedEntityType: "team",
-          // actionUrl: `/teams/${params.teamId}`,
-        }),
-      ),
-    );
-  } catch (error) {
-    console.error("Failed to create teammate submitted notification:", error);
   }
 }
 

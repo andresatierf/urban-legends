@@ -104,11 +104,6 @@ export const get = query({
   },
 });
 
-/**
- * Get comprehensive tournament details with all related entities and permissions.
- * This query follows the pattern established by submissions.getDetails to provide
- * a single, efficient query for detail pages.
- */
 export const getDetails = query({
   args: {
     tournamentId: v.id("tournaments"),
@@ -590,15 +585,15 @@ export const getStatistics = query({
       )
       .collect();
 
-    const allSubmissions = await ctx.db
-      .query("submissions")
+    const allActivities = await ctx.db
+      .query("activities")
       .withIndex("by_tournament_and_date", (q) =>
         q.eq("tournamentId", args.tournamentId),
       )
       .collect();
 
-    const approvedSubmissions = allSubmissions.filter(
-      (s) => s.state === "approved",
+    const approvedActivities = allActivities.filter(
+      (a) => a.state === "approved",
     );
 
     const averageTeamScore =
@@ -609,31 +604,29 @@ export const getStatistics = query({
     const mostActiveTeam =
       teams.length > 0 ? teams.sort((a, b) => b.points - a.points)[0] : null;
 
-    const submissionsByDate = new Map<string, number>();
-    for (const submission of approvedSubmissions) {
-      submissionsByDate.set(
-        submission.date,
-        (submissionsByDate.get(submission.date) || 0) + 1,
-      );
+    const activitiesByDate = new Map<string, number>();
+    for (const activity of approvedActivities) {
+      const day = activity.date.slice(0, 10);
+      activitiesByDate.set(day, (activitiesByDate.get(day) || 0) + 1);
     }
 
-    let highestScoringDay: { date: string; submissions: number } | null = null;
-    for (const entry of Array.from(submissionsByDate.entries())) {
+    let highestScoringDay: { date: string; activities: number } | null = null;
+    for (const entry of Array.from(activitiesByDate.entries())) {
       const [date, count] = entry;
-      if (!highestScoringDay || count > highestScoringDay.submissions) {
-        highestScoringDay = { date, submissions: count };
+      if (!highestScoringDay || count > highestScoringDay.activities) {
+        highestScoringDay = { date, activities: count };
       }
     }
 
-    const teamsWithSubmissions = new Set(
-      approvedSubmissions.map((s) => s.teamId),
+    const teamsWithActivities = new Set(
+      approvedActivities.map((a) => a.teamId),
     );
     const participationRate =
-      teams.length > 0 ? teamsWithSubmissions.size / teams.length : 0;
+      teams.length > 0 ? teamsWithActivities.size / teams.length : 0;
 
     return {
       totalTeams: teams.length,
-      totalSubmissions: approvedSubmissions.length,
+      totalActivities: approvedActivities.length,
       averageTeamScore,
       mostActiveTeam: mostActiveTeam
         ? {
@@ -659,8 +652,8 @@ type AuthorityInfo = {
     name: string;
     points: number;
     isCaptain: boolean;
-    approvedSubmissions: number;
-    totalSubmissions: number;
+    approvedActivities: number;
+    totalActivities: number;
   };
 };
 
@@ -775,11 +768,10 @@ export const listWithAuthority = query({
       let pendingReviewCount = 0;
       if (canReview) {
         const pendingRows = await ctx.db
-          .query("submissions")
-          .withIndex("by_tournament_and_date", (q) =>
-            q.eq("tournamentId", tournament._id),
+          .query("activities")
+          .withIndex("by_tournament_and_state", (q) =>
+            q.eq("tournamentId", tournament._id).eq("state", "pending"),
           )
-          .filter((q) => q.eq(q.field("state"), "pending"))
           .collect();
         pendingReviewCount = pendingRows.length;
       }
@@ -787,20 +779,23 @@ export const listWithAuthority = query({
       let team: AuthorityInfo["team"];
       if (userTeamData) {
         const { team: teamDoc, membership } = userTeamData;
-        const teamSubmissions = await ctx.db
-          .query("submissions")
+        const teamActivities = await ctx.db
+          .query("activities")
           .withIndex("by_team", (q) => q.eq("teamId", teamDoc._id))
           .collect();
-        const approvedCount = teamSubmissions.filter(
-          (s) => s.state === "approved",
+        const activeActivities = teamActivities.filter(
+          (a) => a.state !== "deleted",
+        );
+        const approvedCount = activeActivities.filter(
+          (a) => a.state === "approved",
         ).length;
         team = {
           _id: teamDoc._id,
           name: teamDoc.name,
           points: teamDoc.points,
           isCaptain: membership.role === "captain",
-          approvedSubmissions: approvedCount,
-          totalSubmissions: teamSubmissions.length,
+          approvedActivities: approvedCount,
+          totalActivities: activeActivities.length,
         };
       }
 
