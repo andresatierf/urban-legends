@@ -21,15 +21,12 @@ type Props = {
 };
 
 export function SubmitEvidenceCard({ data }: Props) {
-  const { activity, roster, viewerParticipation } = data;
+  const { activity, viewerParticipation } = data;
   const [uploaderKey, setUploaderKey] = useState(0);
   const [pendingEvidence, setPendingEvidence] = useState<Id<"_storage">[]>([]);
   const submitEvidence = useMutation(api.activities.submitEvidence);
 
-  const viewerRosterEntry = viewerParticipation
-    ? roster.find((r) => r.participation._id === viewerParticipation._id)
-    : undefined;
-  const viewerFulfilled = viewerRosterEntry?.fulfilled ?? false;
+  const viewerFulfilled = !!viewerParticipation?.fulfilledAt;
 
   if (!data.canSubmitEvidence || viewerFulfilled) return null;
 
