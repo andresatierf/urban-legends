@@ -1,72 +1,20 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
+import { useQuery } from "convex/react";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface SystemDatabaseMetricsProps {
-  databaseMetrics: {
-    tournaments: { total: number; orphaned: number };
-    teams: { total: number; orphaned: number };
-    submissions: { total: number; orphaned: number };
-    users: { total: number; orphaned: number };
-    teamMembers: { total: number; orphaned: number };
-  };
-}
+import { api } from "../../../convex/_generated/api";
+import { SystemDatabaseMetricsView } from "./system-database-metrics-view";
 
-export function SystemDatabaseMetrics({
-  databaseMetrics,
-}: SystemDatabaseMetricsProps) {
-  const renderMetric = (label: string, total: number, orphaned: number) => {
-    return (
-      <div className="flex items-center justify-between rounded-lg border p-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{label}</span>
-          {orphaned > 0 && (
-            <Badge variant="error" className="gap-1">
-              <AlertTriangle className="h-3 w-3" />
-              {orphaned} orphaned
-            </Badge>
-          )}
-        </div>
-        <span className="text-muted-foreground text-sm">{total} total</span>
-      </div>
-    );
-  };
+export function SystemDatabaseMetrics() {
+  const systemHealth = useQuery(api.role.admin.getSystemHealth);
+
+  if (!systemHealth) {
+    return <Skeleton className="h-96" />;
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Database Metrics</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {renderMetric(
-          "Tournaments",
-          databaseMetrics.tournaments.total,
-          databaseMetrics.tournaments.orphaned,
-        )}
-        {renderMetric(
-          "Teams",
-          databaseMetrics.teams.total,
-          databaseMetrics.teams.orphaned,
-        )}
-        {renderMetric(
-          "Submissions",
-          databaseMetrics.submissions.total,
-          databaseMetrics.submissions.orphaned,
-        )}
-        {renderMetric(
-          "Users",
-          databaseMetrics.users.total,
-          databaseMetrics.users.orphaned,
-        )}
-        {renderMetric(
-          "Team Members",
-          databaseMetrics.teamMembers.total,
-          databaseMetrics.teamMembers.orphaned,
-        )}
-      </CardContent>
-    </Card>
+    <SystemDatabaseMetricsView databaseMetrics={systemHealth.databaseMetrics} />
   );
 }

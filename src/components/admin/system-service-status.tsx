@@ -1,50 +1,18 @@
 "use client";
 
-import { CheckCircle } from "lucide-react";
+import { useQuery } from "convex/react";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface SystemServiceStatusProps {
-  services: {
-    convex: string;
-    clerk: string;
-    database: string;
-  };
-}
+import { api } from "../../../convex/_generated/api";
+import { SystemServiceStatusView } from "./system-service-status-view";
 
-export function SystemServiceStatus({ services }: SystemServiceStatusProps) {
-  const getStatusBadge = (status: string) => {
-    if (status === "healthy") {
-      return (
-        <Badge variant="success" className="gap-1">
-          <CheckCircle className="h-3 w-3" />
-          Healthy
-        </Badge>
-      );
-    }
-    return <Badge variant="error">Unhealthy</Badge>;
-  };
+export function SystemServiceStatus() {
+  const systemHealth = useQuery(api.role.admin.getSystemHealth);
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Service Status</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center justify-between rounded-lg border p-3">
-          <span className="text-sm font-medium">Convex Backend</span>
-          {getStatusBadge(services.convex)}
-        </div>
-        <div className="flex items-center justify-between rounded-lg border p-3">
-          <span className="text-sm font-medium">Clerk Auth</span>
-          {getStatusBadge(services.clerk)}
-        </div>
-        <div className="flex items-center justify-between rounded-lg border p-3">
-          <span className="text-sm font-medium">Database</span>
-          {getStatusBadge(services.database)}
-        </div>
-      </CardContent>
-    </Card>
-  );
+  if (!systemHealth) {
+    return <Skeleton className="h-64" />;
+  }
+
+  return <SystemServiceStatusView services={systemHealth.services} />;
 }

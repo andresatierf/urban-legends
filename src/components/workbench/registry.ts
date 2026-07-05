@@ -138,6 +138,11 @@ export const WORKBENCH_ENTRIES: WorkbenchEntry[] = [
     group: "pages",
   },
   {
+    path: "/workbench/components/system-panels",
+    label: "System Panels",
+    group: "components",
+  },
+  {
     path: "/workbench/states/empty-loading",
     label: "Empty & Loading",
     group: "states",
