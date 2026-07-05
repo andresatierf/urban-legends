@@ -12,14 +12,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Image } from "@/components/ui/image";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
 export function ActivityReviewerQueue() {
-  const items = useQuery(api.activities.reviewerQueue, {});
+  const [includeIncomplete, setIncludeIncomplete] = useState(false);
+  const items = useQuery(api.activities.reviewerQueue, { includeIncomplete });
   const approve = useMutation(api.activities.approve);
   const reject = useMutation(api.activities.reject);
 
@@ -56,10 +59,26 @@ export function ActivityReviewerQueue() {
     [reject, rejectDialogFor],
   );
 
+  const header = (
+    <div className="flex items-center justify-between gap-2">
+      <SectionHeader title="Review Queue" Icon={FileCheck} />
+      <div className="flex items-center gap-2">
+        <Switch
+          id="include-incomplete"
+          checked={includeIncomplete}
+          onCheckedChange={setIncludeIncomplete}
+        />
+        <Label htmlFor="include-incomplete" className="text-sm font-normal">
+          Show incomplete
+        </Label>
+      </div>
+    </div>
+  );
+
   if (items === undefined) {
     return (
       <section className="space-y-4">
-        <SectionHeader title="Review Queue" Icon={FileCheck} />
+        {header}
         <Skeleton className="h-96 w-full rounded-lg" />
       </section>
     );
@@ -67,7 +86,7 @@ export function ActivityReviewerQueue() {
 
   return (
     <section className="space-y-4">
-      <SectionHeader title="Review Queue" Icon={FileCheck} />
+      {header}
 
       <RejectReasonDialog
         open={rejectDialogFor !== null}
@@ -81,7 +100,9 @@ export function ActivityReviewerQueue() {
       {items.length === 0 ? (
         <Card>
           <CardContent className="text-muted-foreground py-8 text-center text-sm">
-            No pending activities to review.
+            {includeIncomplete
+              ? "No pending or incomplete activities to review."
+              : "No pending activities to review."}
           </CardContent>
         </Card>
       ) : (
@@ -119,22 +140,26 @@ export function ActivityReviewerQueue() {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="default"
-                    onClick={() => handleApprove(item._id)}
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => setRejectDialogFor(item._id)}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                    Reject
-                  </Button>
+                  {item.state === "pending" && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => handleApprove(item._id)}
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => setRejectDialogFor(item._id)}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Reject
+                      </Button>
+                    </>
+                  )}
                   <Button size="sm" variant="outline" asChild>
                     <Link
                       to="/activities/$activityId"

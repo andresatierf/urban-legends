@@ -372,9 +372,12 @@ export const getDetails = query({
 });
 
 // ── Reviewer queue: pending Activities in tournaments the viewer can review ──
+// includeIncomplete surfaces `incomplete` Activities alongside pending ones
+// (view-only — approval remains blocked by the lifecycle for incomplete).
 export const reviewerQueue = query({
   args: {
     tournamentId: v.optional(v.id("tournaments")),
+    includeIncomplete: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
@@ -384,22 +387,28 @@ export const reviewerQueue = query({
     const canReviewAll = await hasSomeReviewAccess(ctx, user._id);
     if (!canReviewAll) return [];
 
-    let pendingActivities;
-    if (args.tournamentId) {
-      pendingActivities = await ctx.db
-        .query("activities")
-        .withIndex("by_tournament_and_state", (q) =>
-          q
-            .eq("tournamentId", args.tournamentId as Id<"tournaments">)
-            .eq("state", "pending"),
-        )
-        .collect();
-    } else {
-      pendingActivities = await ctx.db
-        .query("activities")
-        .withIndex("by_state", (q) => q.eq("state", "pending"))
-        .collect();
-    }
+    const states = args.includeIncomplete
+      ? (["pending", "incomplete"] as const)
+      : (["pending"] as const);
+
+    const perState = await Promise.all(
+      states.map((state) =>
+        args.tournamentId
+          ? ctx.db
+              .query("activities")
+              .withIndex("by_tournament_and_state", (q) =>
+                q
+                  .eq("tournamentId", args.tournamentId as Id<"tournaments">)
+                  .eq("state", state),
+              )
+              .collect()
+          : ctx.db
+              .query("activities")
+              .withIndex("by_state", (q) => q.eq("state", state))
+              .collect(),
+      ),
+    );
+    const queuedActivities = perState.flat();
 
     // Filter to tournaments the viewer has an explicit role in (or is dev/admin).
     const tournamentRoles = await ctx.db
@@ -424,8 +433,8 @@ export const reviewerQueue = query({
       systemRoles.includes("dev") || systemRoles.includes("admin");
 
     const filtered = isGlobal
-      ? pendingActivities
-      : pendingActivities.filter((a) =>
+      ? queuedActivities
+      : queuedActivities.filter((a) =>
           allowedTournamentIds.has(a.tournamentId as string),
         );
 
