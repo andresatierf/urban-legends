@@ -59,26 +59,26 @@ export function ActivityReviewerQueue() {
     [reject, rejectDialogFor],
   );
 
-  const toggle = (
-    <div className="flex items-center gap-2">
-      <Switch
-        id="include-incomplete"
-        checked={includeIncomplete}
-        onCheckedChange={setIncludeIncomplete}
-      />
-      <Label htmlFor="include-incomplete" className="text-sm font-normal">
-        Show incomplete
-      </Label>
+  const header = (
+    <div className="flex items-center justify-between gap-2">
+      <SectionHeader title="Review Queue" Icon={FileCheck} />
+      <div className="flex items-center gap-2">
+        <Switch
+          id="include-incomplete"
+          checked={includeIncomplete}
+          onCheckedChange={setIncludeIncomplete}
+        />
+        <Label htmlFor="include-incomplete" className="text-sm font-normal">
+          Show incomplete
+        </Label>
+      </div>
     </div>
   );
 
   if (items === undefined) {
     return (
       <section className="space-y-4">
-        <div className="flex items-center justify-between gap-2">
-          <SectionHeader title="Review Queue" Icon={FileCheck} />
-          {toggle}
-        </div>
+        {header}
         <Skeleton className="h-96 w-full rounded-lg" />
       </section>
     );
@@ -86,10 +86,7 @@ export function ActivityReviewerQueue() {
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <SectionHeader title="Review Queue" Icon={FileCheck} />
-        {toggle}
-      </div>
+      {header}
 
       <RejectReasonDialog
         open={rejectDialogFor !== null}

@@ -408,7 +408,7 @@ export const reviewerQueue = query({
               .collect(),
       ),
     );
-    const pendingActivities = perState.flat();
+    const queuedActivities = perState.flat();
 
     // Filter to tournaments the viewer has an explicit role in (or is dev/admin).
     const tournamentRoles = await ctx.db
@@ -433,8 +433,8 @@ export const reviewerQueue = query({
       systemRoles.includes("dev") || systemRoles.includes("admin");
 
     const filtered = isGlobal
-      ? pendingActivities
-      : pendingActivities.filter((a) =>
+      ? queuedActivities
+      : queuedActivities.filter((a) =>
           allowedTournamentIds.has(a.tournamentId as string),
         );
 
