@@ -37,6 +37,10 @@ _Avoid_: contribution, member submission.
 An image file attached to a **Participation**, required (1–5 per Participation) for review. Stored in Convex storage; re-encoded client-side before upload to drop EXIF metadata as a side effect of the canvas round-trip.
 _Avoid_: photo, attachment, proof.
 
+**Challenge**:
+A tournament-wide, organizer-run scoring opportunity. A `tournament_manager` creates one **Challenge** on a **Tournament** with a free description, a manager-set **individual amount**, a manager-set **team amount**, and a participation **threshold** (defaults to the whole team). The organizer records which **Users** participated — a single flat roster spanning any **Teams** — and approves the **Challenge** once; there is no per-participant evidence and no reviewer queue. On approval, each **Team** with at least one roster member is awarded, into its standing on the shared leaderboard: the **team amount** if its participation rate (its members on the roster ÷ its size) meets the **threshold**, otherwise the **individual amount** (awarded flat, once, not per head). Points are set by the organizer and are unrelated to the **Tournament**'s `scoringConfig`. Distinct from an **Activity**: no evidence, no per-participant submission, no reviewer queue, and a cross-team roster.
+_Avoid_: Event (reserved anti-term for **Tournament**), Activity (team-scoped, evidence-reviewed, `scoringConfig`-scored — a different concept), Bonus.
+
 **View**:
 The composed read-model for one screen — bundles every entity, derived flag, enriched relation, and permission the screen needs so UI components consume the **View** whole instead of assembling it from many queries. A **View** is named after the screen it serves (`ActivityView`, `AdminDashboardView`, `ReviewerQueueView`, …) and lives in `convex/views/`. Authority gating happens inside the **View** query; the **View** is the single seam between Convex and the screen.
 _Avoid_: ViewModel, screen DTO, page data (the term **View** is the convention; instances are concrete).
