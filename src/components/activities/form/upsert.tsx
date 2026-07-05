@@ -330,7 +330,10 @@ export function UpsertActivityFormDialog({
             ]}
           >
             {([isPristine, canSubmit, isSubmitting]) => {
-              const missingEvidence = evidenceStorageIds.length === 0;
+              // Evidence is optional at create (Activity lands in `incomplete`),
+              // but edits from a state that already has Evidence must keep 1–5.
+              const missingEvidence =
+                !!activity && evidenceStorageIds.length === 0;
               const initialIds = new Set(evidenceSeed?.map((e) => e._id) ?? []);
               const evidenceChanged =
                 evidenceStorageIds.length !== initialIds.size ||

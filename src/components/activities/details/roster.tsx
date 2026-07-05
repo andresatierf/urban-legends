@@ -20,22 +20,18 @@ type Props = {
   data: ActivityDetailsData;
 };
 
-export function ParticipationRoster({ data }: Props) {
+export function SubmitEvidenceCard({ data }: Props) {
   const { activity, roster, viewerParticipation } = data;
-  const canSubmit = data.canSubmitEvidence;
-  const canRemove = data.canRemoveParticipant;
   const [uploaderKey, setUploaderKey] = useState(0);
   const [pendingEvidence, setPendingEvidence] = useState<Id<"_storage">[]>([]);
-
   const submitEvidence = useMutation(api.activities.submitEvidence);
-  const removeParticipantMutation = useMutation(
-    api.activities.removeParticipant,
-  );
 
   const viewerRosterEntry = viewerParticipation
     ? roster.find((r) => r.participation._id === viewerParticipation._id)
     : undefined;
   const viewerFulfilled = viewerRosterEntry?.fulfilled ?? false;
+
+  if (!data.canSubmitEvidence || viewerFulfilled) return null;
 
   const handleSubmit = () => {
     if (pendingEvidence.length === 0) return;
@@ -54,6 +50,40 @@ export function ParticipationRoster({ data }: Props) {
     });
   };
 
+  const helper =
+    activity.type === "group"
+      ? "You were declared as a participant. Upload 1–5 photos to fulfil your Participation."
+      : "This Activity is awaiting Evidence. Upload 1–5 photos to complete it.";
+
+  return (
+    <Card>
+      <CardContent className="space-y-3 py-4">
+        <div className="text-sm font-medium">Upload your evidence</div>
+        <div className="text-muted-foreground text-xs">{helper}</div>
+        <EvidenceUploader
+          key={uploaderKey}
+          storageIds={pendingEvidence}
+          onStorageIdsChange={setPendingEvidence}
+        />
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={pendingEvidence.length === 0}
+        >
+          Submit evidence
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function ParticipationRoster({ data }: Props) {
+  const { activity, roster } = data;
+  const canRemove = data.canRemoveParticipant;
+  const removeParticipantMutation = useMutation(
+    api.activities.removeParticipant,
+  );
+
   const handleRemove = (userId: Id<"users">) => {
     void tryMutate({
       fn: () =>
@@ -69,29 +99,7 @@ export function ParticipationRoster({ data }: Props) {
   return (
     <>
       <SectionHeader as="h2" title="Roster" Icon={Users} />
-      {canSubmit && !viewerFulfilled && (
-        <Card>
-          <CardContent className="space-y-3 py-4">
-            <div className="text-sm font-medium">Upload your evidence</div>
-            <div className="text-muted-foreground text-xs">
-              You were declared as a participant. Upload 1–5 photos to fulfil
-              your Participation.
-            </div>
-            <EvidenceUploader
-              key={uploaderKey}
-              storageIds={pendingEvidence}
-              onStorageIdsChange={setPendingEvidence}
-            />
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={pendingEvidence.length === 0}
-            >
-              Submit evidence
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      <SubmitEvidenceCard data={data} />
       <div className="space-y-3">
         {roster.map((entry) => {
           const p = entry.participation;

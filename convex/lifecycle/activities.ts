@@ -113,6 +113,14 @@ function validateEvidenceCount(ids: Id<"_storage">[]): void {
   }
 }
 
+// At creation, Evidence can be deferred: an empty set lands the Activity in
+// `incomplete`, while a non-empty set must still respect the 1–5 bound.
+function validateOptionalEvidenceCount(ids: Id<"_storage">[]): void {
+  if (ids.length > 5) {
+    throw new Error("An Activity allows a maximum 5 Evidence images");
+  }
+}
+
 async function enforceDailyActivityCap(
   ctx: MutationCtx,
   teamId: Id<"teams">,
@@ -135,8 +143,9 @@ async function enforceDailyActivityCap(
   }
 }
 
-// Creates an individual Activity. The creator provides Evidence (1–5 images);
-// the Activity lands directly in `pending` (individual completeness = 1/1).
+// Creates an individual Activity. Evidence is optional at creation: with no
+// Evidence the Activity lands in `incomplete` (awaiting the creator's upload);
+// with 1–5 Evidence images it lands directly in `pending`.
 export async function create(
   ctx: MutationCtx,
   args: {
@@ -148,7 +157,8 @@ export async function create(
     evidenceStorageIds: Id<"_storage">[];
   },
 ): Promise<Id<"activities">> {
-  validateEvidenceCount(args.evidenceStorageIds);
+  validateOptionalEvidenceCount(args.evidenceStorageIds);
+  const hasEvidence = args.evidenceStorageIds.length > 0;
 
   const team = await ctx.db.get(args.teamId);
   if (!team) throw new Error("Team not found");
@@ -176,9 +186,8 @@ export async function create(
     .collect();
 
   const totalTeamMembers = teamMembers.length;
-  const participantCount = 1;
-  const participationRate =
-    totalTeamMembers > 0 ? participantCount / totalTeamMembers : 0;
+  const participantCount = hasEvidence ? 1 : 0;
+  const participationRate = totalTeamMembers > 0 ? 1 / totalTeamMembers : 0;
   const isTeamExercise =
     participationRate >= tournament.scoringConfig.teamExerciseThreshold;
   const tier = args.tier ?? "base";
@@ -192,7 +201,7 @@ export async function create(
     type: "individual",
     description: args.description,
     tier,
-    state: "pending",
+    state: hasEvidence ? "pending" : "incomplete",
     pointsEarned: 0,
     participantCount,
     totalTeamMembers,
@@ -208,12 +217,14 @@ export async function create(
     teamId: args.teamId,
     tournamentId: team.tournamentId,
     evidenceStorageIds: args.evidenceStorageIds,
-    fulfilledAt: now,
+    fulfilledAt: hasEvidence ? now : undefined,
     pointsEarned: 0,
     createdAt: now,
   });
 
-  await claimUploads(ctx, args.userId, args.evidenceStorageIds);
+  if (hasEvidence) {
+    await claimUploads(ctx, args.userId, args.evidenceStorageIds);
+  }
 
   await recomputeRecentActivity(ctx, args.teamId);
 
@@ -232,7 +243,8 @@ export async function createGroup(
     evidenceStorageIds: Id<"_storage">[];
   },
 ): Promise<Id<"activities">> {
-  validateEvidenceCount(args.evidenceStorageIds);
+  validateOptionalEvidenceCount(args.evidenceStorageIds);
+  const creatorHasEvidence = args.evidenceStorageIds.length > 0;
 
   const team = await ctx.db.get(args.teamId);
   if (!team) throw new Error("Team not found");
@@ -281,7 +293,8 @@ export async function createGroup(
   const now = nowUTC();
 
   const soloRoster = declaredCount === 1;
-  const initialState: ActivityState = soloRoster ? "pending" : "incomplete";
+  const initialState: ActivityState =
+    soloRoster && creatorHasEvidence ? "pending" : "incomplete";
 
   const activityId = await ctx.db.insert("activities", {
     teamId: args.teamId,
@@ -293,7 +306,7 @@ export async function createGroup(
     tier,
     state: initialState,
     pointsEarned: 0,
-    participantCount: 1,
+    participantCount: creatorHasEvidence ? 1 : 0,
     totalTeamMembers,
     participationRate,
     isTeamExercise,
@@ -309,13 +322,15 @@ export async function createGroup(
       teamId: args.teamId,
       tournamentId: team.tournamentId,
       evidenceStorageIds: isCreator ? args.evidenceStorageIds : [],
-      fulfilledAt: isCreator ? now : undefined,
+      fulfilledAt: isCreator && creatorHasEvidence ? now : undefined,
       pointsEarned: 0,
       createdAt: now,
     });
   }
 
-  await claimUploads(ctx, args.userId, args.evidenceStorageIds);
+  if (creatorHasEvidence) {
+    await claimUploads(ctx, args.userId, args.evidenceStorageIds);
+  }
 
   await recomputeRecentActivity(ctx, args.teamId);
 

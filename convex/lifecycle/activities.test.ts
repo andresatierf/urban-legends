@@ -130,20 +130,91 @@ describe("create", () => {
     });
   });
 
-  test("rejects when no Evidence is provided", async () => {
+  test("individual Activity with no Evidence lands in incomplete", async () => {
     const t = convexTest(schemaForTest);
     const { userId, teamId } = await t.run(seedWorld);
 
+    const activityId = await t.run((ctx) =>
+      create(ctx, {
+        userId,
+        teamId,
+        date: "2024-03-01",
+        evidenceStorageIds: [],
+      }),
+    );
+
+    await t.run(async (ctx) => {
+      const activity = await ctx.db.get(activityId);
+      expect(activity?.state).toBe("incomplete");
+      expect(activity?.type).toBe("individual");
+      expect(activity?.pointsEarned).toBe(0);
+      expect(activity?.participantCount).toBe(0);
+
+      const parts = await ctx.db
+        .query("participations")
+        .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+        .collect();
+      expect(parts).toHaveLength(1);
+      expect(parts[0].userId).toBe(userId);
+      expect(parts[0].evidenceStorageIds).toEqual([]);
+      expect(parts[0].fulfilledAt).toBeUndefined();
+    });
+  });
+
+  test("incomplete individual Activity cannot be approved until Evidence is added", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId } = await t.run(seedWorld);
+
+    const activityId = await t.run((ctx) =>
+      create(ctx, {
+        userId,
+        teamId,
+        date: "2024-03-01",
+        evidenceStorageIds: [],
+      }),
+    );
+
     await expect(
-      t.run((ctx) =>
-        create(ctx, {
-          userId,
-          teamId,
-          date: "2024-03-01",
-          evidenceStorageIds: [],
-        }),
-      ),
-    ).rejects.toThrow("at least 1 Evidence image");
+      t.run((ctx) => approve(ctx, activityId, userId)),
+    ).rejects.toThrow(IllegalTransition);
+  });
+
+  test("submitEvidence promotes an incomplete individual Activity to pending", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId } = await t.run(seedWorld);
+
+    const activityId = await t.run((ctx) =>
+      create(ctx, {
+        userId,
+        teamId,
+        date: "2024-03-01",
+        evidenceStorageIds: [],
+      }),
+    );
+
+    const storageId = fakeStorageId(42);
+    await t.run((ctx) => insertPendingUpload(ctx, userId, storageId));
+
+    const result = await t.run((ctx) =>
+      submitEvidence(ctx, {
+        activityId,
+        userId,
+        evidenceStorageIds: [storageId],
+      }),
+    );
+
+    expect(result.state).toBe("pending");
+    await t.run(async (ctx) => {
+      const activity = await ctx.db.get(activityId);
+      expect(activity?.state).toBe("pending");
+      expect(activity?.participantCount).toBe(1);
+      const parts = await ctx.db
+        .query("participations")
+        .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+        .collect();
+      expect(parts[0].evidenceStorageIds).toEqual([storageId]);
+      expect(parts[0].fulfilledAt).toBeDefined();
+    });
   });
 
   test("rejects when more than 5 Evidence images are provided", async () => {
@@ -782,6 +853,55 @@ describe("createGroup", () => {
       const userIds = parts.map((p) => p.userId as string);
       expect(userIds).toContain(captainId as string);
       expect(userIds).toContain(alice as string);
+    });
+  });
+
+  test("group Activity created without Evidence lands in incomplete with the creator awaiting", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, alice, teamId } = await t.run(seedGroupWorld);
+
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        participantUserIds: [alice],
+        evidenceStorageIds: [],
+      }),
+    );
+
+    await t.run(async (ctx) => {
+      const a = await ctx.db.get(activityId);
+      expect(a?.state).toBe("incomplete");
+      expect(a?.participantCount).toBe(0);
+      const parts = await ctx.db
+        .query("participations")
+        .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+        .collect();
+      expect(parts).toHaveLength(2);
+      const creator = parts.find((p) => p.userId === captainId);
+      expect(creator?.fulfilledAt).toBeUndefined();
+      expect(creator?.evidenceStorageIds).toEqual([]);
+    });
+  });
+
+  test("solo group Activity created without Evidence lands in incomplete", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, teamId } = await t.run(seedGroupWorld);
+
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        participantUserIds: [],
+        evidenceStorageIds: [],
+      }),
+    );
+
+    await t.run(async (ctx) => {
+      const a = await ctx.db.get(activityId);
+      expect(a?.state).toBe("incomplete");
     });
   });
 

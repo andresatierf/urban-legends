@@ -6,7 +6,7 @@ import { DetailsPageLayout } from "@/components/details-page-layout";
 import { Button } from "../../ui/button";
 import { DescriptionCard } from "./description-card";
 import { EvidenceGrid } from "./evidence-grid";
-import { ParticipationRoster } from "./roster";
+import { ParticipationRoster, SubmitEvidenceCard } from "./roster";
 import { Sidebar } from "./sidebar";
 import type { ActivityDetailsData } from "./types";
 
@@ -34,7 +34,10 @@ export function ActivityDetailsLayout({ data, backTo = "/activities" }: Props) {
       {data.activity.type === "group" ? (
         <ParticipationRoster data={data} />
       ) : (
-        <EvidenceGrid evidence={data.evidence} />
+        <>
+          <SubmitEvidenceCard data={data} />
+          <EvidenceGrid evidence={data.evidence} />
+        </>
       )}
     </DetailsPageLayout>
   );
