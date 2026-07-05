@@ -23,10 +23,9 @@ export function SubmitTodayBanner({
   if (hasLogged && limit === undefined) return null;
 
   const eyebrowText = hasLogged ? "Going strong" : "Today";
+  // limit is defined here when hasLogged (early return above handles the other case)
   const title = hasLogged
-    ? limit === undefined
-      ? `${todayActivities} logged today`
-      : `${todayActivities} of ${limit} logged today`
+    ? `${todayActivities} of ${limit} logged today`
     : `${teamName} hasn't logged today`;
   const subtitle = hasLogged
     ? `One more counts toward ${teamName}.`
