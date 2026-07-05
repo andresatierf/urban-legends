@@ -1,20 +1,13 @@
-// Shared execute + review building blocks for the sandcastle orchestrators
-// (`auto.ts` and `issues.ts`).
+// Building blocks for the sandcastle orchestrators (`auto.ts`, `issues.ts`,
+// `fix.ts`). Everything runs through `runPipelines(issues, phases)`; the shipped
+// phase list `issuePhases` (implement → gated review) drives `auto.ts`/
+// `issues.ts`, while `fix.ts` passes `[reviewPhase]`.
 //
-// These are small, independent functions meant to be composed. The default
-// composition — provision a worktree, implement, then review — is `runIssue`,
-// and `runIssues` fans that out concurrently. But the pieces (`implement`,
-// `review`, `reportResults`) stand alone so a caller can assemble a different
-// pipeline (implement-only, review an existing branch, custom reporting, etc.).
-//
-// There is no merge phase: each issue ends as a PR for human review.
-//
-// Worktree ownership: we use the two-step `createWorktree` + `worktree
-// .createSandbox` API so the sandbox handle's `close()` only tears down the
-// container. The worktree handle (which would remove a clean worktree on its
-// own `close()`) is intentionally never closed, so worktrees stay under
-// `.sandcastle/worktrees/` for inspection after the run. They survive
-// subsequent `pruneStale` calls because git still tracks them.
+// Worktree ownership: we create the sandbox via `createWorktree` +
+// `worktree.createSandbox` so `sandbox.close()` tears down only the container.
+// The worktree handle is never closed, so worktrees stay under
+// `.sandcastle/worktrees/` for inspection and survive `prune.ts` (git still
+// tracks them).
 
 import { execSync } from "node:child_process";
 
@@ -22,34 +15,70 @@ import * as sandcastle from "@ai-hero/sandcastle";
 
 import { copyToWorktree, hooks, sandbox } from "./sandbox";
 
-// Register a worktree with zoxide (best-effort) so it's `z`-jumpable for
-// inspection after a run. Worktrees are left on disk deliberately (see below),
-// and this makes them reachable by name without hunting under
-// `.sandcastle/worktrees/`. Never let a missing `zoxide` or a failed add abort
-// the run — this is a convenience, not a dependency.
+// Best-effort so a run's worktree is `z`-jumpable afterwards. A missing or
+// failing zoxide must never abort the run.
 function zoxideAdd(worktreePath: string): void {
   try {
     execSync(`zoxide add ${JSON.stringify(worktreePath)}`, { stdio: "ignore" });
-  } catch {
-    // zoxide not installed or add failed — ignore.
-  }
+  } catch {}
 }
 
 export type Issue = { id: string; title: string; branch: string };
+
+// Parse numeric CLI args: tolerate a leading `#` and comma/space separation,
+// require each to be numeric, and dedupe (a repeat would run two agents on one
+// branch). Prints usage and exits non-zero on empty/invalid input. `label` is
+// the noun ("issue", "PR") used in the messages.
+export function parseNumericArgs(
+  scriptPath: string,
+  label: string,
+  example: string,
+): string[] {
+  const ids = process.argv
+    .slice(2)
+    .flatMap((arg) => arg.split(/[,\s]+/))
+    .map((arg) => arg.replace(/^#/, "").trim())
+    .filter(Boolean);
+
+  if (ids.length === 0) {
+    console.error(
+      `Usage: bun ${scriptPath} <${label} number> [<${label} number> ...]`,
+    );
+    console.error(`Example: bun ${scriptPath} ${example}`);
+    process.exit(1);
+  }
+
+  for (const id of ids) {
+    if (!/^\d+$/.test(id)) {
+      console.error(`Not a valid ${label} number: "${id}"`);
+      process.exit(1);
+    }
+  }
+
+  return [...new Set(ids)];
+}
 
 type Sandbox = Awaited<
   ReturnType<
     Awaited<ReturnType<typeof sandcastle.createWorktree>>["createSandbox"]
   >
 >;
-type RunResult = Awaited<ReturnType<Sandbox["run"]>>;
+export type RunResult = Awaited<ReturnType<Sandbox["run"]>>;
 
-// Hard cap so a reviewer that keeps finding nits can't loop forever. Each
-// round is reviewer (1 iter) → break when it produces no commits.
-const MAX_REVIEW_ROUNDS = 3;
+// `soFar` is the result accumulated by earlier phases — lets a phase branch on
+// what came before (see `gate`).
+export type Phase = (
+  sb: Sandbox,
+  issue: Issue,
+  soFar: RunResult,
+) => Promise<RunResult>;
 
-// Run the implementer agent (Opus, up to 100 iters) for one issue inside an
-// already-provisioned sandbox: writes code, commits, pushes, opens a PR.
+const emptyResult: RunResult = { iterations: [], stdout: "", commits: [] };
+
+// Cap so a reviewer that keeps finding nits can't loop forever.
+const MAX_REVIEW_ROUNDS = 5;
+
+// Implementer agent: writes code, commits, pushes, opens a PR.
 export function implement(sb: Sandbox, issue: Issue): Promise<RunResult> {
   return sb.run({
     name: `impl-${issue.id}`,
@@ -66,9 +95,8 @@ export function implement(sb: Sandbox, issue: Issue): Promise<RunResult> {
   });
 }
 
-// Run the reviewer loop (Sonnet, 1 iter/round) for one issue inside an
-// already-provisioned sandbox, up to MAX_REVIEW_ROUNDS or until a round
-// produces no commits. Returns the commits it added across all rounds.
+// Reviewer loop (1 iter/round), up to MAX_REVIEW_ROUNDS or until a round adds no
+// commits. Returns the commits added across all rounds.
 export async function review(
   sb: Sandbox,
   issue: Issue,
@@ -86,19 +114,30 @@ export async function review(
       },
     });
 
-    if (result.commits.length === 0) {
-      // Reviewer converged — nothing left to fix.
-      break;
-    }
+    if (result.commits.length === 0) break; // converged
     reviewCommits.push(...result.commits);
   }
   return reviewCommits;
 }
 
-// The default per-issue pipeline: provision a worktree + sandbox, implement,
-// then (only if the implementer committed) review. The sandbox is always torn
-// down; the worktree is deliberately left on disk.
-export async function runIssue(issue: Issue): Promise<RunResult> {
+// Concatenate iterations/commits, join stdout, later phase wins optional fields.
+function mergeResults(acc: RunResult, next: RunResult): RunResult {
+  return {
+    iterations: [...acc.iterations, ...next.iterations],
+    stdout: acc.stdout ? `${acc.stdout}\n${next.stdout}` : next.stdout,
+    commits: [...acc.commits, ...next.commits],
+    completionSignal: next.completionSignal ?? acc.completionSignal,
+    logFilePath: next.logFilePath ?? acc.logFilePath,
+  };
+}
+
+// Run `phases` in order for one issue inside a single worktree + sandbox,
+// threading each result into the next. Provisions the worktree (existing branch
+// checked out, new one created off HEAD) and always tears the sandbox down.
+export async function runPipeline(
+  issue: Issue,
+  phases: Phase[],
+): Promise<RunResult> {
   const wt = await sandcastle.createWorktree({
     branchStrategy: { type: "branch", branch: issue.branch },
     copyToWorktree,
@@ -107,30 +146,40 @@ export async function runIssue(issue: Issue): Promise<RunResult> {
   const sb = await wt.createSandbox({ sandbox, hooks });
 
   try {
-    const implemented = await implement(sb, issue);
-
-    // Only review if the implementer produced commits.
-    if (implemented.commits.length === 0) {
-      return implemented;
+    let acc = emptyResult;
+    for (const phase of phases) {
+      acc = mergeResults(acc, await phase(sb, issue, acc));
     }
-
-    const reviewCommits = await review(sb, issue);
-    return {
-      ...implemented,
-      commits: [...implemented.commits, ...reviewCommits],
-    };
+    return acc;
   } finally {
     await sb.close();
   }
 }
 
-// Fan out `runIssue` across every issue concurrently. Never rejects — each
-// issue's outcome is captured as a settled result for `reportResults`.
-export function runIssues(issues: Issue[]) {
-  return Promise.allSettled(issues.map(runIssue));
+// Fan out concurrently. Never rejects — each outcome is a settled result.
+export function runPipelines(issues: Issue[], phases: Phase[]) {
+  return Promise.allSettled(issues.map((issue) => runPipeline(issue, phases)));
 }
 
-// Print a one-line-per-issue summary of settled results.
+export const implementPhase: Phase = (sb, issue) => implement(sb, issue);
+
+export const reviewPhase: Phase = async (sb, issue) => ({
+  ...emptyResult,
+  commits: await review(sb, issue),
+});
+
+// Run `phase` only when `when(soFar)` holds, else contribute nothing.
+export function gate(when: (soFar: RunResult) => boolean, phase: Phase): Phase {
+  return (sb, issue, soFar) =>
+    when(soFar) ? phase(sb, issue, soFar) : Promise.resolve(emptyResult);
+}
+
+// Implement, then review only if the implementer committed.
+export const issuePhases: Phase[] = [
+  implementPhase,
+  gate((soFar) => soFar.commits.length > 0, reviewPhase),
+];
+
 export function reportResults(
   issues: Issue[],
   settled: PromiseSettledResult<RunResult>[],

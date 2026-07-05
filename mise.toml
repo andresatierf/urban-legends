@@ -12,6 +12,7 @@
 #   mise run dev
 #   mise run test path/to/file.test.ts
 #   mise run sc:issues 42 57 61
+#   mise run sc:fix 304 305
 #   mise run sc:prune -- --orphans --dry-run
 
 # ---------------------------------------------------------------------------
@@ -92,6 +93,10 @@ run = "bun --bun .sandcastle/auto.ts"
 [tasks."sc:issues"]
 description = "Work specific issues by number; a resolver agent generates branches and checks dependencies"
 run = "bun --bun .sandcastle/issues.ts"
+
+[tasks."sc:fix"]
+description = "Review + fix open PRs by number (no implement phase); reviewer tightens the diff and pushes"
+run = "bun --bun .sandcastle/fix.ts"
 
 [tasks."sc:prune"]
 description = "Prune worktrees/branches whose PR has merged (flags: --orphans --dry-run --force --keep-branches)"

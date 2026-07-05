@@ -1,18 +1,8 @@
-// Prune sandcastle worktrees (and branches) whose PR has already merged.
-//
-// `auto.ts` / `issues.ts` deliberately leave each agent's worktree under
-// `.sandcastle/worktrees/` after a run so you can inspect it. Once that
-// worktree's branch has landed via a merged PR, it's just clutter — this script
-// removes those worktrees, deletes their local branches, and prunes git's
-// worktree admin files.
-//
-// With `--orphans` it additionally sweeps local `agent/*` branches that no
-// longer have a worktree (leftovers from earlier runs) and deletes the ones
-// whose PR has merged.
-//
-// A branch is considered mergeable-away when `gh` reports a MERGED PR for it.
-// Branches whose PR is still open, was closed without merging, or has no PR yet
-// are left untouched.
+// Prune sandcastle worktrees (and branches) whose PR has already merged — the
+// runs deliberately leave worktrees under `.sandcastle/worktrees/` for
+// inspection, and this clears the ones that have landed. A branch counts as
+// mergeable-away only when `gh` reports a MERGED PR for it; open, closed, or
+// PR-less branches are left alone.
 //
 // Run with:
 //   bun .sandcastle/prune.ts            # remove merged worktrees + branches
@@ -25,17 +15,14 @@ import { execSync } from "node:child_process";
 
 const sh = (cmd: string) => execSync(cmd, { encoding: "utf8" }).trim();
 
-// Drop a worktree from zoxide's db (best-effort) so removed worktrees don't
-// linger as dead `z` entries. Mirrors the `zoxide add` done when a worktree is
-// created in execute.ts. Never let a missing `zoxide` abort a prune.
+// Best-effort mirror of the `zoxide add` in execute.ts, so removed worktrees
+// don't linger as dead `z` entries. Never let a missing zoxide abort a prune.
 const zoxideRemove = (worktreePath: string): void => {
   try {
     execSync(`zoxide remove ${JSON.stringify(worktreePath)}`, {
       stdio: "ignore",
     });
-  } catch {
-    // zoxide not installed or entry absent — ignore.
-  }
+  } catch {}
 };
 
 const args = new Set(process.argv.slice(2));
@@ -44,13 +31,9 @@ const force = args.has("--force");
 const keepBranches = args.has("--keep-branches");
 const orphans = args.has("--orphans");
 
-// ---------------------------------------------------------------------------
-// Build a merged-PR lookup once (branch head name → PR number)
-// ---------------------------------------------------------------------------
-
-// One API call covers both phases — a per-branch `gh pr list` would be dozens
-// of round-trips in --orphans mode. Multiple merged PRs can share a head name
-// over time; keep the first (most recent, since gh lists newest-first).
+// Merged-PR lookup (head branch → PR number). One API call covers both phases;
+// a per-branch query would be dozens of round-trips in --orphans mode. When
+// several merged PRs share a head name, keep the first (gh lists newest-first).
 const mergedHeads = new Map<string, number>();
 for (const pr of JSON.parse(
   sh("gh pr list --state merged --limit 1000 --json number,headRefName"),
@@ -58,10 +41,6 @@ for (const pr of JSON.parse(
   if (!mergedHeads.has(pr.headRefName))
     mergedHeads.set(pr.headRefName, pr.number);
 }
-
-// ---------------------------------------------------------------------------
-// Enumerate sandcastle worktrees and their branches
-// ---------------------------------------------------------------------------
 
 type Worktree = { path: string; branch: string };
 
@@ -83,10 +62,7 @@ const parseWorktrees = (): Worktree[] => {
   return out;
 };
 
-// ---------------------------------------------------------------------------
-// Phase 1: prune merged worktrees (+ their branches)
-// ---------------------------------------------------------------------------
-
+// Prune merged worktrees (+ their branches).
 let removedWorktrees = 0;
 const worktrees = parseWorktrees();
 
@@ -141,10 +117,7 @@ if (merged.length === 0) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Phase 2 (--orphans): delete merged agent/* branches with no worktree
-// ---------------------------------------------------------------------------
-
+// --orphans: delete merged agent/* branches that have no worktree.
 let removedBranches = 0;
 if (orphans && keepBranches) {
   console.log("\n--orphans has no effect with --keep-branches; skipping.");
@@ -187,10 +160,6 @@ if (orphans && keepBranches) {
     }
   }
 }
-
-// ---------------------------------------------------------------------------
-// Summary
-// ---------------------------------------------------------------------------
 
 if (!dryRun && (removedWorktrees > 0 || removedBranches > 0)) {
   const parts = [`${removedWorktrees} worktree(s)`];

@@ -18,6 +18,7 @@
     "test": "vitest run",
     "sandcastle": "bun --bun .sandcastle/auto.ts",
     "sandcastle:issues": "bun --bun .sandcastle/issues.ts",
+    "sandcastle:fix": "bun --bun .sandcastle/fix.ts",
     "sandcastle:prune": "bun --bun .sandcastle/prune.ts",
     "fallow": "npx fallow",
     "fallow:ci": "npx fallow --ci"
