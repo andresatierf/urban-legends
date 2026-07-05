@@ -1,12 +1,89 @@
-# Sandcastle orchestration tasks.
+# Task runner for Urban Legends.
 #
-# Run with `mise run sc:<name>` (or the shorthand `mise sc:<name>`). Extra
-# arguments are forwarded to the underlying script; put flags after `--` so mise
-# doesn't try to parse them itself.
+# Two groups:
+#   - Application tasks mirror the package.json scripts (they delegate to
+#     `bun run <script>` so package.json stays the single source of truth).
+#   - Sandcastle tasks (`sc:*`) drive the agent orchestration under .sandcastle/.
 #
-#   mise run sc:auto
+# Run with `mise run <name>` (or the shorthand `mise <name>`). Extra arguments
+# are forwarded to the underlying command; put flags after `--` so mise doesn't
+# try to parse them itself.
+#
+#   mise run dev
+#   mise run test path/to/file.test.ts
 #   mise run sc:issues 42 57 61
 #   mise run sc:prune -- --orphans --dry-run
+
+# ---------------------------------------------------------------------------
+# Application
+# ---------------------------------------------------------------------------
+
+# The full dev stack: Vite and the Convex backend must both run. `dev` starts
+# them together (mise runs the two dependencies in parallel and keeps both
+# alive); run `dev:vite` or `dev:convex` to start just one.
+[tasks.dev]
+description = "Run the full dev stack: Vite dev server + Convex backend together"
+depends = ["dev:vite", "dev:convex"]
+
+[tasks."dev:vite"]
+description = "Vite dev server only (half of `dev`)"
+run = "bun run dev"
+
+[tasks."dev:convex"]
+description = "Convex backend in dev mode only (half of `dev`)"
+run = "bunx convex dev"
+
+[tasks.build]
+description = "Build for production (Vite)"
+run = "bun run build"
+
+[tasks.start]
+description = "Start the production server from the built output"
+run = "bun run start"
+
+[tasks.lint]
+description = "Lint with oxlint"
+run = "bun run lint"
+
+[tasks."lint:fix"]
+description = "Auto-fix lint issues with oxlint"
+run = "bun run lint:fix"
+
+[tasks.format]
+description = "Check formatting with oxfmt"
+run = "bun run format"
+
+[tasks."format:fix"]
+description = "Auto-format with oxfmt"
+run = "bun run format:fix"
+
+[tasks.typecheck]
+description = "Type-check with tsc (regenerates the route tree first)"
+run = "bun run typecheck"
+
+[tasks.test]
+description = "Run the test suite (vitest)"
+run = "bun run test"
+
+[tasks.ci]
+description = "Run lint + format checks (CI gate)"
+run = "bun run ci"
+
+[tasks."routes:generate"]
+description = "Regenerate the TanStack Router route tree"
+run = "bun run routes:generate"
+
+[tasks.fallow]
+description = "Run Fallow code-health analysis"
+run = "bun run fallow"
+
+[tasks."fallow:ci"]
+description = "Run Fallow with SARIF output for CI"
+run = "bun run fallow:ci"
+
+# ---------------------------------------------------------------------------
+# Sandcastle orchestration
+# ---------------------------------------------------------------------------
 
 [tasks."sc:auto"]
 description = "Autonomously plan a batch of ready-for-agent issues, then implement + review each as a PR"
