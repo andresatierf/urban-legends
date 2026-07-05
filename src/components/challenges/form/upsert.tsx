@@ -36,7 +36,7 @@ type Props = {
   onOpenChange?: (open: boolean) => void;
   tournamentId: Id<"tournaments">;
   challenge?: Doc<"challenges">;
-  children?: React.ReactNode;
+  children?: React.ReactElement;
 };
 
 export function UpsertChallengeFormDialog({
@@ -84,7 +84,7 @@ export function UpsertChallengeFormDialog({
       }}
     >
       {children ? (
-        <DialogTrigger render={children as React.ReactElement} />
+        <DialogTrigger render={children} />
       ) : (
         controlledOpen === undefined &&
         onOpenChange === undefined && (
