@@ -150,7 +150,9 @@ export function ChallengeRosterDialog({
                       size="sm"
                       variant={isOnRoster ? "outline" : "default"}
                       disabled={disabled || isPending}
-                      onClick={() => handleToggle(player.userId, isOnRoster)}
+                      onClick={() =>
+                        void handleToggle(player.userId, isOnRoster)
+                      }
                     >
                       {icon}
                       {isOnRoster ? "Remove" : "Add"}

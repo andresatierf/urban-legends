@@ -71,11 +71,12 @@ export const listByTournament = query({
       )
       .collect();
     const sorted = rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    const rosters = await Promise.all(sorted.map((c) => loadRoster(ctx, c)));
-    return sorted.map((challenge, i) => ({
-      ...challenge,
-      roster: rosters[i],
-    }));
+    return Promise.all(
+      sorted.map(async (challenge) => ({
+        ...challenge,
+        roster: await loadRoster(ctx, challenge),
+      })),
+    );
   },
 });
 
