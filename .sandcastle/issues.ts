@@ -1,8 +1,7 @@
 // Manual-selection sibling of `auto.ts`: you name issue numbers, a resolver
-// agent turns them into a plan (branch names + the same `## Blocked by` /
-// conflict checks the planner uses, dropping blocked or conflicting ones with
-// reasons), then each runs through `issuePhases` (implement → review). Each
-// issue ends as a PR.
+// agent turns them into a plan (branch names + conflict checks, dropping
+// conflicting ones with reasons), then each runs through `issuePhases`
+// (implement → review). Each issue ends as a PR.
 //
 // Run with:
 //   bun .sandcastle/issues.ts 42 57 61
@@ -25,9 +24,9 @@ const uniqueIds = parseNumericArgs(
   "42 57 61",
 );
 
-// Resolver inputs: each issue's body (for `## Blocked by` + conflict analysis)
-// and every open issue number (to tell which blockers are unresolved). `gh`
-// exits non-zero on a missing issue, surfacing a clear host-side error.
+// Resolver input: each selected issue's body (for conflict analysis). Only the
+// issues passed as arguments are validated. `gh` exits non-zero on a missing
+// issue, surfacing a clear host-side error.
 const selectedIssues = uniqueIds
   .map((id) => {
     const { number, title, body } = JSON.parse(
@@ -36,10 +35,6 @@ const selectedIssues = uniqueIds
     return `## Issue #${number}: ${title}\n\n${body || "(no body)"}\n`;
   })
   .join("\n---\n\n");
-
-const openNumbers = sh(
-  `gh issue list --state open --limit 200 --json number --jq '[.[].number | tostring] | join(", ")'`,
-);
 
 const plan = await sandcastle.run({
   hooks,
@@ -50,7 +45,6 @@ const plan = await sandcastle.run({
   promptFile: "./.sandcastle/resolve-prompt.md",
   promptArgs: {
     SELECTED_ISSUES: selectedIssues,
-    OPEN_NUMBERS: openNumbers,
   },
 });
 
