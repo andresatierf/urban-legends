@@ -276,11 +276,12 @@ export async function edit(
   const activity = await ctx.db.get(activityId);
   if (!activity) throw new Error("Activity not found");
 
-  if (activity.state === "approved" || activity.state === "rejected") {
+  if (
+    activity.state === "approved" ||
+    activity.state === "rejected" ||
+    activity.state === "deleted"
+  ) {
     throw new IllegalTransition(activity.state, "pending");
-  }
-  if (activity.state === "deleted") {
-    throw new IllegalTransition("deleted", "pending");
   }
 
   if (patch.evidenceStorageIds !== undefined) {

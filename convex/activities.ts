@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
 import type { Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import {
   canApproveActivity,
@@ -25,6 +26,19 @@ import {
   notifyActivityRejected,
 } from "./notifications/triggers";
 import { getCurrentUserOrThrow, getUser } from "./users";
+
+async function getTeamNotificationData(
+  ctx: MutationCtx,
+  teamId: Id<"teams">,
+): Promise<{ teamName: string; recipientIds: Id<"users">[] } | null> {
+  const team = await ctx.db.get(teamId);
+  if (!team) return null;
+  const members = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_team", (q) => q.eq("teamId", teamId))
+    .collect();
+  return { teamName: team.name, recipientIds: members.map((m) => m.userId) };
+}
 
 export const create = mutation({
   args: {
@@ -94,17 +108,13 @@ export const approve = mutation({
     const result = await lifecycleApprove(ctx, args.activityId, user._id);
 
     if (result.state === "approved") {
-      const team = await ctx.db.get(activity.teamId);
-      if (team) {
-        const teamMembers = await ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", activity.teamId))
-          .collect();
+      const notif = await getTeamNotificationData(ctx, activity.teamId);
+      if (notif) {
         const updated = await ctx.db.get(args.activityId);
         await notifyActivityApproved(ctx, {
-          recipientIds: teamMembers.map((m) => m.userId),
+          recipientIds: notif.recipientIds,
           activityId: args.activityId,
-          teamName: team.name,
+          teamName: notif.teamName,
           description: activity.description,
           pointsEarned: updated?.pointsEarned ?? 0,
         });
@@ -139,16 +149,12 @@ export const reject = mutation({
     });
 
     if (!wasRejected) {
-      const team = await ctx.db.get(activity.teamId);
-      if (team) {
-        const teamMembers = await ctx.db
-          .query("teamMembers")
-          .withIndex("by_team", (q) => q.eq("teamId", activity.teamId))
-          .collect();
+      const notif = await getTeamNotificationData(ctx, activity.teamId);
+      if (notif) {
         await notifyActivityRejected(ctx, {
-          recipientIds: teamMembers.map((m) => m.userId),
+          recipientIds: notif.recipientIds,
           activityId: args.activityId,
-          teamName: team.name,
+          teamName: notif.teamName,
           description: activity.description,
           reason,
         });
