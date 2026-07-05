@@ -51,6 +51,7 @@ export function NotificationList({
       case "submission":
         return (
           notifType.startsWith("submission_") ||
+          notifType.startsWith("activity_") ||
           notifType.startsWith("teammate_")
         );
       case "tournament":
