@@ -142,9 +142,11 @@ async function sumChallengeAwardsForTeam(
       .query("challengeRosterEntries")
       .withIndex("by_challenge", (q) => q.eq("challengeId", c._id))
       .collect();
-    const n = roster.filter((r) => memberUserIds.has(r.userId)).length;
-    if (n === 0) continue;
-    const rate = n / size;
+    const participantCount = roster.filter((r) =>
+      memberUserIds.has(r.userId),
+    ).length;
+    if (participantCount === 0) continue;
+    const rate = participantCount / size;
     total += rate >= c.threshold ? c.teamAmount : c.individualAmount;
   }
   return total;
