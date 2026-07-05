@@ -16,9 +16,24 @@
 // `.sandcastle/worktrees/` for inspection after the run. They survive
 // subsequent `pruneStale` calls because git still tracks them.
 
+import { execSync } from "node:child_process";
+
 import * as sandcastle from "@ai-hero/sandcastle";
 
 import { copyToWorktree, hooks, sandbox } from "./sandbox";
+
+// Register a worktree with zoxide (best-effort) so it's `z`-jumpable for
+// inspection after a run. Worktrees are left on disk deliberately (see below),
+// and this makes them reachable by name without hunting under
+// `.sandcastle/worktrees/`. Never let a missing `zoxide` or a failed add abort
+// the run — this is a convenience, not a dependency.
+function zoxideAdd(worktreePath: string): void {
+  try {
+    execSync(`zoxide add ${JSON.stringify(worktreePath)}`, { stdio: "ignore" });
+  } catch {
+    // zoxide not installed or add failed — ignore.
+  }
+}
 
 export type Issue = { id: string; title: string; branch: string };
 
@@ -88,6 +103,7 @@ export async function runIssue(issue: Issue): Promise<RunResult> {
     branchStrategy: { type: "branch", branch: issue.branch },
     copyToWorktree,
   });
+  zoxideAdd(wt.worktreePath);
   const sb = await wt.createSandbox({ sandbox, hooks });
 
   try {

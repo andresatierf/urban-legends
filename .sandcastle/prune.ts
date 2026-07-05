@@ -25,6 +25,19 @@ import { execSync } from "node:child_process";
 
 const sh = (cmd: string) => execSync(cmd, { encoding: "utf8" }).trim();
 
+// Drop a worktree from zoxide's db (best-effort) so removed worktrees don't
+// linger as dead `z` entries. Mirrors the `zoxide add` done when a worktree is
+// created in execute.ts. Never let a missing `zoxide` abort a prune.
+const zoxideRemove = (worktreePath: string): void => {
+  try {
+    execSync(`zoxide remove ${JSON.stringify(worktreePath)}`, {
+      stdio: "ignore",
+    });
+  } catch {
+    // zoxide not installed or entry absent — ignore.
+  }
+};
+
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 const force = args.has("--force");
@@ -100,12 +113,14 @@ if (merged.length === 0) {
       console.log(
         `      git worktree remove ${force ? "--force " : ""}${wt.path}`,
       );
+      console.log(`      zoxide remove ${wt.path}`);
       if (!keepBranches) console.log(`      git branch -D ${wt.branch}`);
       continue;
     }
 
     try {
       sh(`git worktree remove ${force ? "--force " : ""}${wt.path}`);
+      zoxideRemove(wt.path);
       // Branch commits landed via a (possibly squash) merge, so use -D — the
       // tips may not be ancestors of HEAD by name and -d would refuse.
       if (!keepBranches) sh(`git branch -D ${wt.branch}`);
