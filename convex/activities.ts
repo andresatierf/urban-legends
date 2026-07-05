@@ -73,11 +73,13 @@ export const create = mutation({
       });
 
       // Notify declared members (other than creator) to upload their proof.
-      const team = await ctx.db.get(args.teamId);
-      const parts = await ctx.db
-        .query("participations")
-        .withIndex("by_activity", (q) => q.eq("activityId", activityId))
-        .collect();
+      const [team, parts] = await Promise.all([
+        ctx.db.get(args.teamId),
+        ctx.db
+          .query("participations")
+          .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+          .collect(),
+      ]);
       const recipientIds = parts
         .filter((p) => p.userId !== user._id)
         .map((p) => p.userId);

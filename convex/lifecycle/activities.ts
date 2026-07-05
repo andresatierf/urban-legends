@@ -195,8 +195,7 @@ export async function createGroup(
     .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
     .collect();
 
-  // Roster must be non-empty, unique, and every declared member must be on
-  // the team. The creator is always among participants (auto-included).
+  // Every declared member must be on the team. Creator is always auto-included.
   const teamMemberIds = new Set(teamMembers.map((m) => m.userId as string));
   const rosterSet = new Set<string>(
     args.participantUserIds.map((u) => u as string),
@@ -208,9 +207,6 @@ export async function createGroup(
     }
   }
   const roster = Array.from(rosterSet) as Id<"users">[];
-  if (roster.length < 1) {
-    throw new Error("A group Activity requires at least one participant");
-  }
 
   const date = toUTCDateString(args.date);
 
@@ -232,7 +228,6 @@ export async function createGroup(
 
   const totalTeamMembers = teamMembers.length;
   const declaredCount = roster.length;
-  const participantCount = 1; // fulfilled so far (creator only)
   const participationRate =
     totalTeamMembers > 0 ? declaredCount / totalTeamMembers : 0;
   const isTeamExercise =
@@ -253,7 +248,7 @@ export async function createGroup(
     tier,
     state: initialState,
     pointsEarned: 0,
-    participantCount: soloRoster ? 1 : 1,
+    participantCount: 1,
     totalTeamMembers,
     participationRate,
     isTeamExercise,
@@ -336,18 +331,14 @@ export async function submitEvidence(
     .query("participations")
     .withIndex("by_activity", (q) => q.eq("activityId", args.activityId))
     .collect();
-  const allFulfilled = parts.every(
-    (p) => p._id === part._id || p.fulfilledAt !== undefined,
-  );
+  const allFulfilled = parts.every((p) => p.fulfilledAt !== undefined);
   let nextState: ActivityState = activity.state;
   if (allFulfilled && activity.state === "incomplete") {
     nextState = "pending";
   }
   await ctx.db.patch(args.activityId, {
     ...(nextState !== activity.state && { state: nextState }),
-    participantCount: parts.filter(
-      (p) => p._id === part._id || p.fulfilledAt !== undefined,
-    ).length,
+    participantCount: parts.filter((p) => p.fulfilledAt !== undefined).length,
     updatedAt: now,
   });
 
@@ -400,13 +391,15 @@ export async function removeParticipant(
   const parts = allParts.filter((p) => p._id !== part._id);
 
   const team = await ctx.db.get(activity.teamId);
-  const tournament = team ? await ctx.db.get(team.tournamentId) : null;
-  const teamMembers = team
-    ? await ctx.db
-        .query("teamMembers")
-        .withIndex("by_team", (q) => q.eq("teamId", activity.teamId))
-        .collect()
-    : [];
+  const [tournament, teamMembers] = team
+    ? await Promise.all([
+        ctx.db.get(team.tournamentId),
+        ctx.db
+          .query("teamMembers")
+          .withIndex("by_team", (q) => q.eq("teamId", activity.teamId))
+          .collect(),
+      ])
+    : [null, []];
   const totalTeamMembers = teamMembers.length;
   const declaredCount = parts.length;
   const fulfilledCount = parts.filter((p) => p.fulfilledAt).length;
