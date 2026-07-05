@@ -118,7 +118,7 @@ export function Sidebar({ data }: { data: ActivityDetailsData }) {
   }
   if (data.canReject) {
     actions.push({
-      label: "Reject",
+      label: activity.state === "approved" ? "Reopen" : "Reject",
       icon: X,
       variant: "destructive",
       onClick: () => setRejectDialogOpen(true),

@@ -962,4 +962,193 @@ describe("removeParticipant deadlock valve", () => {
       t.run((ctx) => removeParticipant(ctx, { activityId, userId: captainId })),
     ).rejects.toThrow("creator cannot be removed");
   });
+
+  test("removeParticipant is blocked once approved", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, alice, teamId } = await t.run(seedGroupWorld);
+    const s1 = fakeStorageId(81);
+    const s2 = fakeStorageId(82);
+    await t.run(async (ctx) => {
+      await insertPendingUpload(ctx, captainId, s1);
+      await insertPendingUpload(ctx, alice, s2);
+    });
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        participantUserIds: [alice],
+        evidenceStorageIds: [s1],
+      }),
+    );
+    await t.run((ctx) =>
+      submitEvidence(ctx, {
+        activityId,
+        userId: alice,
+        evidenceStorageIds: [s2],
+      }),
+    );
+    await t.run((ctx) => approve(ctx, activityId, captainId));
+
+    await expect(
+      t.run((ctx) => removeParticipant(ctx, { activityId, userId: alice })),
+    ).rejects.toThrow(IllegalTransition);
+
+    // Roster and score must be unchanged after the failed removal attempt.
+    await t.run(async (ctx) => {
+      const parts = await ctx.db
+        .query("participations")
+        .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+        .collect();
+      expect(parts).toHaveLength(2);
+      const a = await ctx.db.get(activityId);
+      expect(a?.state).toBe("approved");
+      expect(a?.pointsEarned).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe("edit reopens a rejected Activity (reject-to-reopen correction path)", () => {
+  test("editing a rejected individual Activity transitions back to pending", async () => {
+    const t = convexTest(schemaForTest);
+    const { userId, teamId } = await t.run(seedWorld);
+    const s1 = fakeStorageId(91);
+    await t.run((ctx) => insertPendingUpload(ctx, userId, s1));
+    const activityId = await t.run((ctx) =>
+      create(ctx, {
+        userId,
+        teamId,
+        date: "2024-03-01",
+        description: "old",
+        evidenceStorageIds: [s1],
+      }),
+    );
+    await t.run((ctx) => approve(ctx, activityId, userId));
+    await t.run((ctx) =>
+      reject(ctx, activityId, userId, { rejectionReason: "typo in caption" }),
+    );
+
+    await t.run((ctx) =>
+      edit(ctx, activityId, { description: "corrected" }, userId),
+    );
+
+    await t.run(async (ctx) => {
+      const a = await ctx.db.get(activityId);
+      expect(a?.state).toBe("pending");
+      expect(a?.description).toBe("corrected");
+      // rejectionReason is retained as historical record; state alone signals reopen.
+    });
+  });
+
+  test("editing a rejected group Activity with awaiting participations returns to incomplete", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, alice, bob, teamId } = await t.run(seedGroupWorld);
+    const s1 = fakeStorageId(101);
+    const s2 = fakeStorageId(102);
+    await t.run(async (ctx) => {
+      await insertPendingUpload(ctx, captainId, s1);
+      await insertPendingUpload(ctx, alice, s2);
+    });
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        participantUserIds: [alice, bob],
+        evidenceStorageIds: [s1],
+      }),
+    );
+    // Alice uploads → still incomplete (bob outstanding). Force rejected state.
+    await t.run((ctx) =>
+      submitEvidence(ctx, {
+        activityId,
+        userId: alice,
+        evidenceStorageIds: [s2],
+      }),
+    );
+    await t.run(async (ctx) => {
+      await ctx.db.patch(activityId, {
+        state: "rejected",
+        rejectionReason: "needs redo",
+      });
+    });
+
+    await t.run((ctx) =>
+      edit(ctx, activityId, { description: "fixed" }, captainId),
+    );
+
+    await t.run(async (ctx) => {
+      const a = await ctx.db.get(activityId);
+      // Bob is still awaiting → back to incomplete, not pending.
+      expect(a?.state).toBe("incomplete");
+      // rejectionReason is retained as historical record; state alone signals reopen.
+    });
+  });
+});
+
+describe("approved Activity is immutable except via reject", () => {
+  test("softDelete, edit, and removeParticipant all fail on approved", async () => {
+    const t = convexTest(schemaForTest);
+    const { captainId, alice, teamId } = await t.run(seedGroupWorld);
+    const s1 = fakeStorageId(111);
+    const s2 = fakeStorageId(112);
+    await t.run(async (ctx) => {
+      await insertPendingUpload(ctx, captainId, s1);
+      await insertPendingUpload(ctx, alice, s2);
+    });
+    const activityId = await t.run((ctx) =>
+      createGroup(ctx, {
+        userId: captainId,
+        teamId,
+        date: "2024-03-01",
+        participantUserIds: [alice],
+        evidenceStorageIds: [s1],
+      }),
+    );
+    await t.run((ctx) =>
+      submitEvidence(ctx, {
+        activityId,
+        userId: alice,
+        evidenceStorageIds: [s2],
+      }),
+    );
+    await t.run((ctx) => approve(ctx, activityId, captainId));
+
+    const before = await t.run(async (ctx) => {
+      const a = await ctx.db.get(activityId);
+      const parts = await ctx.db
+        .query("participations")
+        .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+        .collect();
+      return {
+        pointsEarned: a?.pointsEarned,
+        rosterSize: parts.length,
+        state: a?.state,
+      };
+    });
+
+    await expect(
+      t.run((ctx) => edit(ctx, activityId, { description: "x" }, captainId)),
+    ).rejects.toThrow(IllegalTransition);
+    await expect(
+      t.run((ctx) => softDelete(ctx, activityId, captainId)),
+    ).rejects.toThrow(IllegalTransition);
+    await expect(
+      t.run((ctx) => removeParticipant(ctx, { activityId, userId: alice })),
+    ).rejects.toThrow(IllegalTransition);
+
+    const after = await t.run(async (ctx) => {
+      const a = await ctx.db.get(activityId);
+      const parts = await ctx.db
+        .query("participations")
+        .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+        .collect();
+      return {
+        pointsEarned: a?.pointsEarned,
+        rosterSize: parts.length,
+        state: a?.state,
+      };
+    });
+    expect(after).toEqual(before);
+  });
 });

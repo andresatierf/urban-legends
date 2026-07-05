@@ -542,11 +542,7 @@ export async function edit(
   const activity = await ctx.db.get(activityId);
   if (!activity) throw new Error("Activity not found");
 
-  if (
-    activity.state === "approved" ||
-    activity.state === "rejected" ||
-    activity.state === "deleted"
-  ) {
+  if (activity.state === "approved" || activity.state === "deleted") {
     throw new IllegalTransition(activity.state, "pending");
   }
 
@@ -573,10 +569,23 @@ export async function edit(
 
   const newDate = patch.date ? toUTCDateString(patch.date) : activity.date;
 
+  // Editing after a reject reopens the Activity: transitions back to pending
+  // (or incomplete for a group with any awaiting Participations).
+  let nextState: ActivityState | undefined;
+  if (activity.state === "rejected") {
+    const parts = await ctx.db
+      .query("participations")
+      .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+      .collect();
+    const allFulfilled = parts.every((p) => p.fulfilledAt !== undefined);
+    nextState = allFulfilled ? "pending" : "incomplete";
+  }
+
   await ctx.db.patch(activityId, {
     ...(patch.date !== undefined && { date: newDate }),
     ...(patch.tier !== undefined && { tier: patch.tier }),
     ...(patch.description !== undefined && { description: patch.description }),
+    ...(nextState !== undefined && { state: nextState }),
     updatedAt: nowUTC(),
   });
 
@@ -595,8 +604,8 @@ export async function softDelete(
   if (activity.state === "deleted") {
     return { pointsDelta: 0 };
   }
-  if (activity.state === "rejected") {
-    throw new IllegalTransition("rejected", "deleted");
+  if (activity.state === "rejected" || activity.state === "approved") {
+    throw new IllegalTransition(activity.state, "deleted");
   }
 
   const oldTeamPoints = (await ctx.db.get(activity.teamId))?.points ?? 0;
