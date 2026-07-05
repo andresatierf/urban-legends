@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 
+import { ChallengesSection } from "@/components/challenges";
 import { DetailsPageLayout } from "@/components/details-page-layout";
 import { UpsertTeamFormDialog } from "@/components/teams/form";
 
@@ -47,6 +48,7 @@ export function TournamentDetailsLayout({ data, tournamentId }: Props) {
         }
       />
       <TeamRosters data={data} sortedTeams={sortedTeams} />
+      {data.canEdit && <ChallengesSection tournamentId={tournamentId} />}
     </DetailsPageLayout>
   );
 }

@@ -621,6 +621,19 @@ export async function computeTournamentPermissions(
   };
 }
 
+// ── Challenge rules ─────────────────────────────────────────────────────────
+
+// canManageChallenge grants create/edit/list on Challenges within a Tournament.
+// Subject is TournamentSubject: for create the caller passes the target
+// tournament directly; for edit/etc. the caller loads the Challenge first and
+// passes its tournamentId.
+export const canManageChallenge: TournamentRule = tournamentRule(
+  "canManageChallenge",
+  (facts) =>
+    isAdminOrDev(facts.systemRoles) ||
+    facts.tournamentRoles.includes("tournament_manager"),
+);
+
 // ── Join request rules ────────────────────────────────────────────────────────
 
 type JoinRequestFacts = {

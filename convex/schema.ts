@@ -204,6 +204,20 @@ export default defineSchema({
       "relatedEntityId",
     ]),
 
+  challenges: defineTable({
+    tournamentId: v.id("tournaments"),
+    createdBy: v.id("users"),
+    description: v.string(),
+    individualAmount: v.number(),
+    teamAmount: v.number(),
+    threshold: v.number(),
+    state: v.union(v.literal("pending"), v.literal("approved")),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_tournament", ["tournamentId"])
+    .index("by_tournament_and_state", ["tournamentId", "state"]),
+
   notificationPreferences: defineTable({
     userId: v.id("users"),
     enabledTypes: v.optional(v.array(v.string())),
