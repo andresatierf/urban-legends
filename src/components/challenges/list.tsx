@@ -24,7 +24,8 @@ export function ChallengesSection({ tournamentId }: Props) {
   });
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Doc<"challenges"> | null>(null);
-  const [rosterFor, setRosterFor] = useState<ChallengeWithRoster | null>(null);
+  const [rosterForId, setRosterForId] = useState<Id<"challenges"> | null>(null);
+  const rosterFor = challenges?.find((c) => c._id === rosterForId) ?? null;
 
   return (
     <>
@@ -51,7 +52,7 @@ export function ChallengesSection({ tournamentId }: Props) {
       {rosterFor && (
         <ChallengeRosterDialog
           open
-          onOpenChange={(o) => !o && setRosterFor(null)}
+          onOpenChange={(o) => !o && setRosterForId(null)}
           challenge={rosterFor}
         />
       )}
@@ -59,7 +60,7 @@ export function ChallengesSection({ tournamentId }: Props) {
       <ChallengeListBody
         challenges={challenges}
         onEdit={setEditing}
-        onManageRoster={setRosterFor}
+        onManageRoster={setRosterForId}
       />
     </>
   );
@@ -72,7 +73,7 @@ function ChallengeListBody({
 }: {
   challenges: ChallengeWithRoster[] | undefined;
   onEdit: (challenge: Doc<"challenges">) => void;
-  onManageRoster: (challenge: ChallengeWithRoster) => void;
+  onManageRoster: (challengeId: Id<"challenges">) => void;
 }) {
   if (challenges === undefined) {
     return <p className="text-body-md text-muted-foreground">Loading…</p>;
@@ -91,7 +92,7 @@ function ChallengeListBody({
           key={challenge._id}
           challenge={challenge}
           onEdit={() => onEdit(challenge)}
-          onManageRoster={() => onManageRoster(challenge)}
+          onManageRoster={() => onManageRoster(challenge._id)}
         />
       ))}
     </div>
