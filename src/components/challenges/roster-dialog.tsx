@@ -155,13 +155,9 @@ export function ChallengeRosterDialog({
                       disabled={disabled || isPending}
                       onClick={() => handleToggle(player.userId, isOnRoster)}
                     >
-                      {isPending ? (
-                        <Loader2 className="animate-spin" />
-                      ) : isOnRoster ? (
-                        <Minus />
-                      ) : (
-                        <Plus />
-                      )}
+                      {isPending && <Loader2 className="animate-spin" />}
+                      {!isPending && isOnRoster && <Minus />}
+                      {!isPending && !isOnRoster && <Plus />}
                       {isOnRoster ? "Remove" : "Add"}
                     </Button>
                   </li>

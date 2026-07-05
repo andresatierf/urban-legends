@@ -23,7 +23,7 @@ async function loadRoster(
     .query("challengeRosterEntries")
     .withIndex("by_challenge", (q) => q.eq("challengeId", challenge._id))
     .collect();
-  const teamMembers = await Promise.all(
+  const entryTeams = await Promise.all(
     entries.map(async (entry) => {
       const memberships = await ctx.db
         .query("teamMembers")
@@ -36,22 +36,22 @@ async function loadRoster(
     }),
   );
   const users = await Promise.all(entries.map((e) => ctx.db.get(e.userId)));
-  const members: RosterMember[] = [];
-  for (let i = 0; i < entries.length; i++) {
+  const members = entries.flatMap((entry, i) => {
     const user = users[i];
-    if (!user) continue;
-    const entry = entries[i];
-    const team = teamMembers[i];
-    members.push({
-      userId: entry.userId,
-      name: user.name,
-      email: user.email,
-      imageUrl: user.imageUrl,
-      teamId: team?._id,
-      teamName: team?.name,
-      addedAt: entry.createdAt,
-    });
-  }
+    if (!user) return [];
+    const team = entryTeams[i];
+    return [
+      {
+        userId: entry.userId,
+        name: user.name,
+        email: user.email,
+        imageUrl: user.imageUrl,
+        teamId: team?._id,
+        teamName: team?.name,
+        addedAt: entry.createdAt,
+      },
+    ];
+  });
   return members.sort((a, b) => a.addedAt.localeCompare(b.addedAt));
 }
 
