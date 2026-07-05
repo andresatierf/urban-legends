@@ -10,19 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { UpsertChallengeFormDialog } from "./form";
-import { ChallengeRosterDialog } from "./roster-dialog";
+import { ChallengeRosterDialog, type RosterMember } from "./roster-dialog";
 
-type ChallengeWithRoster = Doc<"challenges"> & {
-  roster: {
-    userId: Id<"users">;
-    name: string;
-    email: string;
-    imageUrl?: string;
-    teamId?: Id<"teams">;
-    teamName?: string;
-    addedAt: string;
-  }[];
-};
+type ChallengeWithRoster = Doc<"challenges"> & { roster: RosterMember[] };
 
 type Props = {
   tournamentId: Id<"tournaments">;

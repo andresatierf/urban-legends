@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
-import { mutation } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { type MutationCtx, mutation } from "./_generated/server";
 import { canManageChallenge } from "./authority/core";
 import { nowUTC } from "./lib/dates";
 import { getCurrentUserOrThrow } from "./users";
@@ -57,21 +58,32 @@ export const create = mutation({
   },
 });
 
+async function requirePendingChallenge(
+  ctx: MutationCtx,
+  challengeId: Id<"challenges">,
+) {
+  const user = await getCurrentUserOrThrow(ctx);
+  const challenge = await ctx.db.get(challengeId);
+  if (!challenge) throw new Error("Challenge not found");
+  await canManageChallenge.require(ctx, user._id, {
+    tournamentId: challenge.tournamentId,
+  });
+  if (challenge.state !== "pending") {
+    throw new Error("Only pending Challenges can be modified");
+  }
+  return { user, challenge };
+}
+
 export const addToRoster = mutation({
   args: {
     challengeId: v.id("challenges"),
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-    const challenge = await ctx.db.get(args.challengeId);
-    if (!challenge) throw new Error("Challenge not found");
-    await canManageChallenge.require(ctx, user._id, {
-      tournamentId: challenge.tournamentId,
-    });
-    if (challenge.state !== "pending") {
-      throw new Error("Only pending Challenges can be modified");
-    }
+    const { user, challenge } = await requirePendingChallenge(
+      ctx,
+      args.challengeId,
+    );
 
     const target = await ctx.db.get(args.userId);
     if (!target) throw new Error("User not found");
@@ -114,15 +126,7 @@ export const removeFromRoster = mutation({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-    const challenge = await ctx.db.get(args.challengeId);
-    if (!challenge) throw new Error("Challenge not found");
-    await canManageChallenge.require(ctx, user._id, {
-      tournamentId: challenge.tournamentId,
-    });
-    if (challenge.state !== "pending") {
-      throw new Error("Only pending Challenges can be modified");
-    }
+    await requirePendingChallenge(ctx, args.challengeId);
 
     const existing = await ctx.db
       .query("challengeRosterEntries")

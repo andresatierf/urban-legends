@@ -19,7 +19,7 @@ import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 
-type RosterMember = {
+export type RosterMember = {
   userId: Id<"users">;
   name: string;
   email: string;
