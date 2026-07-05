@@ -89,19 +89,65 @@ export function score(
     : scoringConfig.individualPoints[tier];
 }
 
-async function updateTeamPoints(
+export async function updateTeamPoints(
   ctx: MutationCtx,
   teamId: Id<"teams">,
 ): Promise<void> {
+  const team = await ctx.db.get(teamId);
+  if (!team) throw new Error("Team not found");
+
   const approved = await ctx.db
     .query("activities")
     .withIndex("by_team_and_state", (q) =>
       q.eq("teamId", teamId).eq("state", "approved"),
     )
     .collect();
-  const total = approved.reduce((sum, a) => sum + (a.pointsEarned ?? 0), 0);
-  await ctx.db.patch(teamId, { points: total, lastActivityAt: nowUTC() });
+  const activityPoints = approved.reduce(
+    (sum, a) => sum + (a.pointsEarned ?? 0),
+    0,
+  );
+
+  const challengePoints = await sumChallengeAwardsForTeam(ctx, team);
+
+  await ctx.db.patch(teamId, {
+    points: activityPoints + challengePoints,
+    lastActivityAt: nowUTC(),
+  });
   await recomputeRecentActivity(ctx, teamId);
+}
+
+async function sumChallengeAwardsForTeam(
+  ctx: MutationCtx,
+  team: { _id: Id<"teams">; tournamentId: Id<"tournaments"> },
+): Promise<number> {
+  const approvedChallenges = await ctx.db
+    .query("challenges")
+    .withIndex("by_tournament_and_state", (q) =>
+      q.eq("tournamentId", team.tournamentId).eq("state", "approved"),
+    )
+    .collect();
+  if (approvedChallenges.length === 0) return 0;
+
+  const members = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_team", (q) => q.eq("teamId", team._id))
+    .collect();
+  const size = members.length;
+  if (size === 0) return 0;
+  const memberUserIds = new Set(members.map((m) => m.userId));
+
+  let total = 0;
+  for (const c of approvedChallenges) {
+    const roster = await ctx.db
+      .query("challengeRosterEntries")
+      .withIndex("by_challenge", (q) => q.eq("challengeId", c._id))
+      .collect();
+    const n = roster.filter((r) => memberUserIds.has(r.userId)).length;
+    if (n === 0) continue;
+    const rate = n / size;
+    total += rate >= c.threshold ? c.teamAmount : c.individualAmount;
+  }
+  return total;
 }
 
 function validateEvidenceCount(ids: Id<"_storage">[]): void {
