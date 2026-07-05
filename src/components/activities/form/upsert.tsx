@@ -330,7 +330,13 @@ export function UpsertActivityFormDialog({
             ]}
           >
             {([isPristine, canSubmit, isSubmitting]) => {
-              const missingEvidence = evidenceStorageIds.length === 0;
+              // Block submission only when editing an activity that already had
+              // Evidence but the user has cleared it all — not for incomplete
+              // activities that were created without Evidence.
+              const missingEvidence =
+                !!activity &&
+                (evidenceSeed?.length ?? 0) > 0 &&
+                evidenceStorageIds.length === 0;
               const initialIds = new Set(evidenceSeed?.map((e) => e._id) ?? []);
               const evidenceChanged =
                 evidenceStorageIds.length !== initialIds.size ||
