@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
-import { mutation } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { type MutationCtx, mutation } from "./_generated/server";
 import { canManageChallenge } from "./authority/core";
 import { nowUTC } from "./lib/dates";
 import { getCurrentUserOrThrow } from "./users";
@@ -54,6 +55,86 @@ export const create = mutation({
       createdAt: now,
       updatedAt: now,
     });
+  },
+});
+
+async function requirePendingChallenge(
+  ctx: MutationCtx,
+  challengeId: Id<"challenges">,
+) {
+  const user = await getCurrentUserOrThrow(ctx);
+  const challenge = await ctx.db.get(challengeId);
+  if (!challenge) throw new Error("Challenge not found");
+  await canManageChallenge.require(ctx, user._id, {
+    tournamentId: challenge.tournamentId,
+  });
+  if (challenge.state !== "pending") {
+    throw new Error("Only pending Challenges can be modified");
+  }
+  return { user, challenge };
+}
+
+export const addToRoster = mutation({
+  args: {
+    challengeId: v.id("challenges"),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const { user, challenge } = await requirePendingChallenge(
+      ctx,
+      args.challengeId,
+    );
+
+    const target = await ctx.db.get(args.userId);
+    if (!target) throw new Error("User not found");
+
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+    const teamsInTournament = await Promise.all(
+      membership.map((m) => ctx.db.get(m.teamId)),
+    );
+    const isInTournament = teamsInTournament.some(
+      (t) => t?.tournamentId === challenge.tournamentId,
+    );
+    if (!isInTournament) {
+      throw new Error("User is not a Player of this Tournament");
+    }
+
+    const existing = await ctx.db
+      .query("challengeRosterEntries")
+      .withIndex("by_challenge_and_user", (q) =>
+        q.eq("challengeId", args.challengeId).eq("userId", args.userId),
+      )
+      .first();
+    if (existing) return existing._id;
+
+    return await ctx.db.insert("challengeRosterEntries", {
+      challengeId: args.challengeId,
+      userId: args.userId,
+      tournamentId: challenge.tournamentId,
+      addedBy: user._id,
+      createdAt: nowUTC(),
+    });
+  },
+});
+
+export const removeFromRoster = mutation({
+  args: {
+    challengeId: v.id("challenges"),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    await requirePendingChallenge(ctx, args.challengeId);
+
+    const existing = await ctx.db
+      .query("challengeRosterEntries")
+      .withIndex("by_challenge_and_user", (q) =>
+        q.eq("challengeId", args.challengeId).eq("userId", args.userId),
+      )
+      .first();
+    if (existing) await ctx.db.delete(existing._id);
   },
 });
 
