@@ -2,7 +2,7 @@
 
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
-import { Check, FileCheck, X } from "lucide-react";
+import { Check, FileCheck, User, Users, X } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { RejectReasonDialog } from "@/components/activities/reject-reason-dialog";
@@ -120,10 +120,25 @@ export function ActivityReviewerQueue() {
                 />
               )}
               <CardContent className="space-y-3 py-3">
-                <div className="flex items-center justify-between gap-2">
-                  <Badge variant={activityStateBadgeVariant(item.state)}>
-                    {item.state}
-                  </Badge>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={activityStateBadgeVariant(item.state)}>
+                      {item.state}
+                    </Badge>
+                    <Badge variant="neutral">
+                      {item.type === "group" ? (
+                        <>
+                          <Users data-icon="inline-start" />
+                          Group
+                        </>
+                      ) : (
+                        <>
+                          <User data-icon="inline-start" />
+                          Individual
+                        </>
+                      )}
+                    </Badge>
+                  </div>
                   <Badge variant={item.tier === "advanced" ? "social" : "info"}>
                     {item.tier}
                   </Badge>
