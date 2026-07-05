@@ -37,22 +37,21 @@ async function loadRoster(
   );
   const users = await Promise.all(entries.map((e) => ctx.db.get(e.userId)));
   return entries
-    .flatMap((entry, i) => {
+    .map((entry, i) => {
       const user = users[i];
-      if (!user) return [];
+      if (!user) return null;
       const team = entryTeams[i];
-      return [
-        {
-          userId: entry.userId,
-          name: user.name,
-          email: user.email,
-          imageUrl: user.imageUrl,
-          teamId: team?._id,
-          teamName: team?.name,
-          addedAt: entry.createdAt,
-        },
-      ];
+      return {
+        userId: entry.userId,
+        name: user.name,
+        email: user.email,
+        imageUrl: user.imageUrl,
+        teamId: team?._id,
+        teamName: team?.name,
+        addedAt: entry.createdAt,
+      };
     })
+    .filter((m): m is NonNullable<typeof m> => m !== null)
     .sort((a, b) => a.addedAt.localeCompare(b.addedAt));
 }
 
