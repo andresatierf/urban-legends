@@ -230,9 +230,7 @@ export async function reject(
   if (activity.state === "deleted") {
     throw new IllegalTransition("deleted", "rejected");
   }
-  if (activity.state === "approved") {
-    // ADR-0009: reject reopens and clears the score.
-  }
+  // When already approved, reject reopens the activity and clears its score (ADR-0009).
 
   const oldTeamPoints = (await ctx.db.get(activity.teamId))?.points ?? 0;
 

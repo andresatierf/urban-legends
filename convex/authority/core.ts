@@ -319,22 +319,20 @@ export const canEditActivity: ActivityRule = activityRule(
     (facts.activityState === "pending" || facts.activityState === "incomplete"),
 );
 
+function isPendingAndReviewable(facts: ActivityFacts): boolean {
+  if (facts.activityState !== "pending") return false;
+  if (isAdminOrDev(facts.systemRoles)) return true;
+  return hasReviewerOrAbove(facts.tournamentRoles);
+}
+
 export const canApproveActivity: ActivityRule = activityRule(
   "canApproveActivity",
-  (facts) => {
-    if (facts.activityState !== "pending") return false;
-    if (isAdminOrDev(facts.systemRoles)) return true;
-    return hasReviewerOrAbove(facts.tournamentRoles);
-  },
+  isPendingAndReviewable,
 );
 
 export const canRejectActivity: ActivityRule = activityRule(
   "canRejectActivity",
-  (facts) => {
-    if (facts.activityState !== "pending") return false;
-    if (isAdminOrDev(facts.systemRoles)) return true;
-    return hasReviewerOrAbove(facts.tournamentRoles);
-  },
+  isPendingAndReviewable,
 );
 
 export const canDeleteActivity: ActivityRule = activityRule(

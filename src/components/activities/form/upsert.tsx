@@ -1,8 +1,7 @@
 "use client";
 
 import { useNavigate } from "@tanstack/react-router";
-import { useMutation } from "convex/react";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useId, useMemo, useState } from "react";
 import { z } from "zod";
 

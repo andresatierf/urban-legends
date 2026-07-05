@@ -334,8 +334,8 @@ export const reviewerQueue = query({
             .withIndex("by_activity", (q) => q.eq("activityId", a._id))
             .collect(),
         ]);
-        const firstEvidenceId = parts.find((p) => p.userId === a.createdBy)
-          ?.evidenceStorageIds?.[0];
+        const creatorPart = parts.find((p) => p.userId === a.createdBy);
+        const firstEvidenceId = creatorPart?.evidenceStorageIds?.[0];
         const thumbnailUrl = firstEvidenceId
           ? await ctx.storage.getUrl(firstEvidenceId)
           : null;
@@ -344,9 +344,7 @@ export const reviewerQueue = query({
           teamName: team?.name ?? "",
           creatorName: creator?.name ?? creator?.email ?? "",
           thumbnailUrl,
-          evidenceCount:
-            parts.find((p) => p.userId === a.createdBy)?.evidenceStorageIds
-              ?.length ?? 0,
+          evidenceCount: creatorPart?.evidenceStorageIds?.length ?? 0,
         };
       }),
     );
