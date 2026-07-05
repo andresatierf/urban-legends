@@ -59,6 +59,26 @@ function validateEvidenceCount(ids: Id<"_storage">[]): void {
   }
 }
 
+async function enforceDailyActivityCap(
+  ctx: MutationCtx,
+  teamId: Id<"teams">,
+  date: string,
+  cap: number,
+): Promise<void> {
+  const existing = await ctx.db
+    .query("activities")
+    .withIndex("by_team_and_date", (q) =>
+      q.eq("teamId", teamId).eq("date", date),
+    )
+    .collect();
+  const active = existing.filter((a) => a.state !== "deleted");
+  if (active.length >= cap) {
+    throw new Error(
+      `Daily activity limit reached (${cap} per day). The team has already recorded ${active.length} activity(ies) today.`,
+    );
+  }
+}
+
 // Creates an individual Activity. The creator provides Evidence (1–5 images);
 // the Activity lands directly in `pending` (individual completeness = 1/1).
 export async function create(
@@ -92,20 +112,7 @@ export async function create(
 
   // Cap distinct Activities per (team, date) per ADR-0009.
   const cap = tournament.maxSubmissionsPerDay;
-  if (cap) {
-    const existing = await ctx.db
-      .query("activities")
-      .withIndex("by_team_and_date", (q) =>
-        q.eq("teamId", args.teamId).eq("date", date),
-      )
-      .collect();
-    const active = existing.filter((a) => a.state !== "deleted");
-    if (active.length >= cap) {
-      throw new Error(
-        `Daily activity limit reached (${cap} per day). The team has already recorded ${active.length} activity(ies) today.`,
-      );
-    }
-  }
+  if (cap) await enforceDailyActivityCap(ctx, args.teamId, date, cap);
 
   const teamMembers = await ctx.db
     .query("teamMembers")
@@ -206,20 +213,7 @@ export async function createGroup(
   const date = toUTCDateString(args.date);
 
   const cap = tournament.maxSubmissionsPerDay;
-  if (cap) {
-    const existing = await ctx.db
-      .query("activities")
-      .withIndex("by_team_and_date", (q) =>
-        q.eq("teamId", args.teamId).eq("date", date),
-      )
-      .collect();
-    const active = existing.filter((a) => a.state !== "deleted");
-    if (active.length >= cap) {
-      throw new Error(
-        `Daily activity limit reached (${cap} per day). The team has already recorded ${active.length} activity(ies) today.`,
-      );
-    }
-  }
+  if (cap) await enforceDailyActivityCap(ctx, args.teamId, date, cap);
 
   const totalTeamMembers = teamMembers.length;
   const declaredCount = roster.length;
