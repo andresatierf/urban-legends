@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { Check, Pencil, Target, Users } from "lucide-react";
 import { useState } from "react";
 
@@ -11,9 +12,11 @@ import { tryMutate } from "@/lib/utils";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { UpsertChallengeFormDialog } from "./form";
-import { ChallengeRosterDialog, type RosterMember } from "./roster-dialog";
+import { ChallengeRosterDialog } from "./roster-dialog";
 
-type ChallengeWithRoster = Doc<"challenges"> & { roster: RosterMember[] };
+type ChallengeWithRoster = FunctionReturnType<
+  typeof api.views.challenges.listByTournament
+>[number];
 
 type Props = {
   tournamentId: Id<"tournaments">;
