@@ -6,6 +6,7 @@ import { Inbox } from "@/components/dashboard/inbox";
 import { MyTeamHeader } from "@/components/dashboard/my-team-header";
 import { DashboardShell } from "@/components/dashboard/shell";
 import { StandingsCard } from "@/components/dashboard/standings-card";
+import { SubmitTodayBanner } from "@/components/dashboard/submit-today-banner";
 import { TournamentContextHeader } from "@/components/dashboard/tournament-context-header";
 import type {
   DashboardInboxItem,
