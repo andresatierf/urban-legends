@@ -26,6 +26,7 @@ export const sandbox = docker({
   mounts: [
     { hostPath: "~/.claude", sandboxPath: "~/.claude" },
     { hostPath: "~/.claude.json", sandboxPath: "~/.claude.json" },
+    { hostPath: "~/CLAUDE.md", sandboxPath: "~/CLAUDE.md" },
   ],
   env: {
     GH_TOKEN: ghToken,
