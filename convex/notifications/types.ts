@@ -21,6 +21,7 @@ export const NOTIFICATION_TYPES = {
   // Activity Events
   ACTIVITY_APPROVED: "activity_approved",
   ACTIVITY_REJECTED: "activity_rejected",
+  ACTIVITY_PARTICIPATION_REQUESTED: "activity_participation_requested",
 
   // Tournament Events (5 types)
   TOURNAMENT_STARTING_24H: "tournament_starting_24h",

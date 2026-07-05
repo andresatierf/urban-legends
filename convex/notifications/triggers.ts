@@ -184,6 +184,38 @@ export async function notifyActivityApproved(
   }
 }
 
+export async function notifyActivityParticipationRequested(
+  ctx: MutationCtx,
+  params: {
+    recipientIds: Id<"users">[];
+    activityId: Id<"activities">;
+    teamName: string;
+    creatorName: string;
+    description?: string;
+  },
+) {
+  try {
+    await Promise.all(
+      params.recipientIds.map((userId) =>
+        ctx.scheduler.runAfter(0, internal.notifications.create, {
+          userId,
+          type: NOTIFICATION_TYPES.ACTIVITY_PARTICIPATION_REQUESTED,
+          title: `${params.creatorName} needs your proof for a team activity`,
+          body: `${params.description || "An activity"} for ${params.teamName} — upload your evidence`,
+          relatedEntityId: params.activityId,
+          relatedEntityType: "activity",
+          actionUrl: `/activities/${params.activityId}`,
+        }),
+      ),
+    );
+  } catch (error) {
+    console.error(
+      "Failed to create activity participation-requested notification:",
+      error,
+    );
+  }
+}
+
 export async function notifyActivityRejected(
   ctx: MutationCtx,
   params: {

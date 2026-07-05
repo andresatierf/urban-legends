@@ -9,6 +9,8 @@ import {
   canDeleteActivity,
   canEditActivity,
   canRejectActivity,
+  canRemoveParticipant,
+  canSubmitEvidence,
   computeActivityPermissions,
   hasSomeReviewAccess,
   hasSomeTournamentManagerAccess,
@@ -16,13 +18,17 @@ import {
 import {
   approve as lifecycleApprove,
   create as lifecycleCreate,
+  createGroup as lifecycleCreateGroup,
   edit as lifecycleEdit,
   recompute as lifecycleRecompute,
   reject as lifecycleReject,
+  removeParticipant as lifecycleRemoveParticipant,
   softDelete as lifecycleSoftDelete,
+  submitEvidence as lifecycleSubmitEvidence,
 } from "./lifecycle/activities";
 import {
   notifyActivityApproved,
+  notifyActivityParticipationRequested,
   notifyActivityRejected,
 } from "./notifications/triggers";
 import { getCurrentUserOrThrow, getUser } from "./users";
@@ -46,12 +52,47 @@ export const create = mutation({
     date: v.string(),
     description: v.optional(v.string()),
     tier: v.optional(v.union(v.literal("base"), v.literal("advanced"))),
+    type: v.optional(v.union(v.literal("individual"), v.literal("group"))),
+    participantUserIds: v.optional(v.array(v.id("users"))),
     evidenceStorageIds: v.array(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
 
     await canCreateActivity.require(ctx, user._id, { teamId: args.teamId });
+
+    if (args.type === "group") {
+      const activityId = await lifecycleCreateGroup(ctx, {
+        userId: user._id,
+        teamId: args.teamId,
+        date: args.date,
+        tier: args.tier,
+        description: args.description,
+        participantUserIds: args.participantUserIds ?? [],
+        evidenceStorageIds: args.evidenceStorageIds,
+      });
+
+      // Notify declared members (other than creator) to upload their proof.
+      const team = await ctx.db.get(args.teamId);
+      const parts = await ctx.db
+        .query("participations")
+        .withIndex("by_activity", (q) => q.eq("activityId", activityId))
+        .collect();
+      const recipientIds = parts
+        .filter((p) => p.userId !== user._id)
+        .map((p) => p.userId);
+      if (recipientIds.length > 0 && team) {
+        await notifyActivityParticipationRequested(ctx, {
+          recipientIds,
+          activityId,
+          teamName: team.name,
+          creatorName: user.name ?? user.email ?? "A teammate",
+          description: args.description,
+        });
+      }
+
+      return activityId;
+    }
 
     return await lifecycleCreate(ctx, {
       userId: user._id,
@@ -60,6 +101,45 @@ export const create = mutation({
       tier: args.tier,
       description: args.description,
       evidenceStorageIds: args.evidenceStorageIds,
+    });
+  },
+});
+
+export const submitEvidence = mutation({
+  args: {
+    activityId: v.id("activities"),
+    evidenceStorageIds: v.array(v.id("_storage")),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    await canSubmitEvidence.require(ctx, user._id, {
+      activityId: args.activityId,
+    });
+
+    return await lifecycleSubmitEvidence(ctx, {
+      activityId: args.activityId,
+      userId: user._id,
+      evidenceStorageIds: args.evidenceStorageIds,
+    });
+  },
+});
+
+export const removeParticipant = mutation({
+  args: {
+    activityId: v.id("activities"),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    await canRemoveParticipant.require(ctx, user._id, {
+      activityId: args.activityId,
+    });
+
+    return await lifecycleRemoveParticipant(ctx, {
+      activityId: args.activityId,
+      userId: args.userId,
     });
   },
 });
@@ -230,24 +310,44 @@ export const getDetails = query({
     if (!team) throw new Error("Team not found");
     if (!tournament) throw new Error("Tournament not found");
 
-    const creatorParticipation = participations.find(
-      (p) => p.userId === activity.createdBy,
-    );
-
-    const evidenceStorageIds = creatorParticipation?.evidenceStorageIds ?? [];
-    const evidenceResolved = await Promise.all(
-      evidenceStorageIds.map(async (storageId, idx) => {
-        const url = await ctx.storage.getUrl(storageId);
-        if (!url) return null;
+    // Enriched roster: each declared member with their evidence URLs and
+    // fulfilled/outstanding status. Used by the group Activity detail view.
+    const roster = await Promise.all(
+      participations.map(async (p) => {
+        const [participant, evidenceResolved] = await Promise.all([
+          getUser(ctx, { userId: p.userId, throw: false }),
+          Promise.all(
+            (p.evidenceStorageIds ?? []).map(async (storageId, idx) => {
+              const url = await ctx.storage.getUrl(storageId);
+              if (!url) return null;
+              return {
+                _id: storageId,
+                url,
+                filename: `evidence-${idx + 1}.jpg`,
+              };
+            }),
+          ),
+        ]);
         return {
-          _id: storageId,
-          url,
-          filename: `evidence-${idx + 1}.jpg`,
+          participation: p,
+          user: participant,
+          evidence: evidenceResolved.filter(
+            (e): e is NonNullable<typeof e> => e !== null,
+          ),
+          fulfilled: !!p.fulfilledAt,
         };
       }),
     );
-    const evidence = evidenceResolved.filter(
-      (e): e is NonNullable<typeof e> => e !== null,
+
+    // The top-level `evidence` field mirrors the creator's Participation for
+    // the individual path; group callers should read from `roster`.
+    const creatorRoster = roster.find(
+      (r) => r.participation.userId === activity.createdBy,
+    );
+    const evidence = creatorRoster?.evidence ?? [];
+
+    const viewerParticipation = participations.find(
+      (p) => p.userId === user._id,
     );
 
     const managedByUser = activity.managedBy
@@ -260,12 +360,16 @@ export const getDetails = query({
       tournament,
       creator,
       participations,
+      roster,
+      viewerParticipation,
       managedByUser,
       evidence,
       canEdit: permissions.canEdit,
       canApprove: permissions.canApprove,
       canReject: permissions.canReject,
       canDelete: permissions.canDelete,
+      canSubmitEvidence: permissions.canSubmitEvidence,
+      canRemoveParticipant: permissions.canRemoveParticipant,
     };
   },
 });
