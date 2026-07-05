@@ -300,7 +300,7 @@ describe("views/challenges.listByTournament", () => {
         tournamentId,
         "tournament_manager",
       );
-      const first = await ctx.db.insert("challenges", {
+      await ctx.db.insert("challenges", {
         tournamentId,
         createdBy: manager,
         description: "first",
@@ -311,7 +311,7 @@ describe("views/challenges.listByTournament", () => {
         createdAt: "2024-01-01T00:00:00.000Z",
         updatedAt: "2024-01-01T00:00:00.000Z",
       });
-      const second = await ctx.db.insert("challenges", {
+      await ctx.db.insert("challenges", {
         tournamentId,
         createdBy: manager,
         description: "second",
@@ -322,8 +322,6 @@ describe("views/challenges.listByTournament", () => {
         createdAt: "2024-02-01T00:00:00.000Z",
         updatedAt: "2024-02-01T00:00:00.000Z",
       });
-      void first;
-      void second;
       return { tournamentId };
     });
 

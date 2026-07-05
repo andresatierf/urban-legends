@@ -100,7 +100,6 @@ export function UpsertChallengeFormDialog({
             e.preventDefault();
             form.handleSubmit();
           }}
-          className="flex"
         >
           <DialogHeader>
             <DialogTitle>
