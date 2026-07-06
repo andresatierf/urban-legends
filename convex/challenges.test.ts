@@ -946,3 +946,237 @@ describe("challenges.approve", () => {
     ).rejects.toThrow();
   });
 });
+
+describe("challenges.remove", () => {
+  async function setupApprovedWorld(t: ReturnType<typeof convexTest>) {
+    return t.run(async (ctx) => {
+      const creator = await makeUser(ctx, "creator");
+      const tournamentId = await makeTournament(ctx, creator);
+      const manager = await makeUser(ctx, "manager");
+      await giveTournamentRole(
+        ctx,
+        manager,
+        tournamentId,
+        "tournament_manager",
+      );
+      const teamA = await ctx.db.insert("teams", {
+        name: "A",
+        tournamentId,
+        createdBy: manager,
+        joinPolicy: "open",
+        points: 0,
+      });
+      const teamB = await ctx.db.insert("teams", {
+        name: "B",
+        tournamentId,
+        createdBy: manager,
+        joinPolicy: "open",
+        points: 0,
+      });
+      const alice = await makeUser(ctx, "alice");
+      const bob = await makeUser(ctx, "bob");
+      await ctx.db.insert("teamMembers", {
+        teamId: teamA,
+        userId: alice,
+        role: "member",
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId: teamB,
+        userId: bob,
+        role: "member",
+      });
+      return { tournamentId, manager, teamA, teamB, alice, bob };
+    });
+  }
+
+  test("deleting a pending Challenge removes it with no effect on standings", async () => {
+    const t = convexTest(schemaForTest);
+    const world = await setupApprovedWorld(t);
+    // Seed an approved activity worth 5 on teamA — establishes non-zero baseline.
+    await t.run(async (ctx) => {
+      await ctx.db.insert("activities", {
+        teamId: world.teamA,
+        tournamentId: world.tournamentId,
+        createdBy: world.manager,
+        date: "2024-06-01",
+        type: "individual",
+        tier: "base",
+        state: "approved",
+        pointsEarned: 5,
+        participantCount: 1,
+        totalTeamMembers: 1,
+        participationRate: 1,
+        isTeamExercise: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      await ctx.db.patch(world.teamA, { points: 5 });
+    });
+
+    const pendingId = await t.run((ctx) =>
+      ctx.db.insert("challenges", {
+        tournamentId: world.tournamentId,
+        createdBy: world.manager,
+        description: "pending",
+        individualAmount: 3,
+        teamAmount: 20,
+        threshold: 1,
+        state: "pending",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }),
+    );
+
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.remove, { challengeId: pendingId });
+
+    const [row, teamA] = await t.run(async (ctx) => [
+      await ctx.db.get(pendingId),
+      await ctx.db.get(world.teamA),
+    ]);
+    expect(row).toBeNull();
+    expect(teamA?.points).toBe(5);
+  });
+
+  test("deleting an approved Challenge rolls back its awarded points", async () => {
+    const t = convexTest(schemaForTest);
+    const world = await setupApprovedWorld(t);
+    // Seed approved Activity worth 7 on teamA (survives deletion).
+    await t.run(async (ctx) => {
+      await ctx.db.insert("activities", {
+        teamId: world.teamA,
+        tournamentId: world.tournamentId,
+        createdBy: world.manager,
+        date: "2024-06-01",
+        type: "individual",
+        tier: "base",
+        state: "approved",
+        pointsEarned: 7,
+        participantCount: 1,
+        totalTeamMembers: 1,
+        participationRate: 1,
+        isTeamExercise: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    });
+
+    // Challenge #1 (to be deleted): full team roster on A, awards teamAmount = 20.
+    const c1 = await t.run((ctx) =>
+      ctx.db.insert("challenges", {
+        tournamentId: world.tournamentId,
+        createdBy: world.manager,
+        description: "c1",
+        individualAmount: 3,
+        teamAmount: 20,
+        threshold: 1,
+        state: "pending",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }),
+    );
+    await t.run(async (ctx) => {
+      await ctx.db.insert("challengeRosterEntries", {
+        challengeId: c1,
+        userId: world.alice,
+        tournamentId: world.tournamentId,
+        addedBy: world.manager,
+        createdAt: new Date().toISOString(),
+      });
+      await ctx.db.insert("challengeRosterEntries", {
+        challengeId: c1,
+        userId: world.bob,
+        tournamentId: world.tournamentId,
+        addedBy: world.manager,
+        createdAt: new Date().toISOString(),
+      });
+    });
+
+    // Challenge #2 (kept): full roster on A only, awards teamAmount = 4.
+    const c2 = await t.run((ctx) =>
+      ctx.db.insert("challenges", {
+        tournamentId: world.tournamentId,
+        createdBy: world.manager,
+        description: "c2",
+        individualAmount: 1,
+        teamAmount: 4,
+        threshold: 1,
+        state: "pending",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }),
+    );
+    await t.run(async (ctx) => {
+      await ctx.db.insert("challengeRosterEntries", {
+        challengeId: c2,
+        userId: world.alice,
+        tournamentId: world.tournamentId,
+        addedBy: world.manager,
+        createdAt: new Date().toISOString(),
+      });
+    });
+
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.approve, { challengeId: c1 });
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.approve, { challengeId: c2 });
+
+    // Before delete: A = 7 (activity) + 20 (c1) + 4 (c2) = 31; B = 20 (c1).
+    let [teamA, teamB] = await t.run(async (ctx) => [
+      await ctx.db.get(world.teamA),
+      await ctx.db.get(world.teamB),
+    ]);
+    expect(teamA?.points).toBe(31);
+    expect(teamB?.points).toBe(20);
+
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.remove, { challengeId: c1 });
+
+    // After delete of c1: A = 7 + 4 = 11; B = 0.
+    [teamA, teamB] = await t.run(async (ctx) => [
+      await ctx.db.get(world.teamA),
+      await ctx.db.get(world.teamB),
+    ]);
+    expect(teamA?.points).toBe(11);
+    expect(teamB?.points).toBe(0);
+
+    // Roster entries for c1 are gone.
+    const remainingRoster = await t.run((ctx) =>
+      ctx.db
+        .query("challengeRosterEntries")
+        .withIndex("by_challenge", (q) => q.eq("challengeId", c1))
+        .collect(),
+    );
+    expect(remainingRoster).toHaveLength(0);
+    const gone = await t.run((ctx) => ctx.db.get(c1));
+    expect(gone).toBeNull();
+  });
+
+  test("non-manager cannot delete", async () => {
+    const t = convexTest(schemaForTest);
+    const world = await setupApprovedWorld(t);
+    const challengeId = await t.run((ctx) =>
+      ctx.db.insert("challenges", {
+        tournamentId: world.tournamentId,
+        createdBy: world.manager,
+        description: "c",
+        individualAmount: 1,
+        teamAmount: 2,
+        threshold: 1,
+        state: "pending",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }),
+    );
+
+    await expect(
+      t
+        .withIdentity({ subject: "alice" })
+        .mutation(api.challenges.remove, { challengeId }),
+    ).rejects.toThrow();
+  });
+});

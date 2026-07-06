@@ -176,6 +176,43 @@ export const edit = mutation({
   },
 });
 
+export const remove = mutation({
+  args: { challengeId: v.id("challenges") },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    const challenge = await ctx.db.get(args.challengeId);
+    if (!challenge) throw new Error("Challenge not found");
+    await canManageChallenge.require(ctx, user._id, {
+      tournamentId: challenge.tournamentId,
+    });
+
+    const roster = await ctx.db
+      .query("challengeRosterEntries")
+      .withIndex("by_challenge", (q) => q.eq("challengeId", args.challengeId))
+      .collect();
+    for (const entry of roster) {
+      await ctx.db.delete(entry._id);
+    }
+
+    const wasApproved = challenge.state === "approved";
+    await ctx.db.delete(args.challengeId);
+
+    if (wasApproved) {
+      const teams = await ctx.db
+        .query("teams")
+        .withIndex("by_tournament", (q) =>
+          q.eq("tournamentId", challenge.tournamentId),
+        )
+        .collect();
+      for (const team of teams) {
+        await updateTeamPoints(ctx, team._id, {
+          excludeChallengeId: args.challengeId,
+        });
+      }
+    }
+  },
+});
+
 export const approve = mutation({
   args: { challengeId: v.id("challenges") },
   handler: async (ctx, args) => {
