@@ -948,7 +948,7 @@ describe("challenges.approve", () => {
 });
 
 describe("challenges.remove", () => {
-  async function setupApprovedWorld(t: ReturnType<typeof convexTest>) {
+  async function setupWorld(t: ReturnType<typeof convexTest>) {
     return t.run(async (ctx) => {
       const creator = await makeUser(ctx, "creator");
       const tournamentId = await makeTournament(ctx, creator);
@@ -991,7 +991,7 @@ describe("challenges.remove", () => {
 
   test("deleting a pending Challenge removes it with no effect on standings", async () => {
     const t = convexTest(schemaForTest);
-    const world = await setupApprovedWorld(t);
+    const world = await setupWorld(t);
     // Seed an approved activity worth 5 on teamA — establishes non-zero baseline.
     await t.run(async (ctx) => {
       await ctx.db.insert("activities", {
@@ -1041,7 +1041,7 @@ describe("challenges.remove", () => {
 
   test("deleting an approved Challenge rolls back its awarded points", async () => {
     const t = convexTest(schemaForTest);
-    const world = await setupApprovedWorld(t);
+    const world = await setupWorld(t);
     // Seed approved Activity worth 7 on teamA (survives deletion).
     await t.run(async (ctx) => {
       await ctx.db.insert("activities", {
@@ -1158,7 +1158,7 @@ describe("challenges.remove", () => {
 
   test("non-manager cannot delete", async () => {
     const t = convexTest(schemaForTest);
-    const world = await setupApprovedWorld(t);
+    const world = await setupWorld(t);
     const challengeId = await t.run((ctx) =>
       ctx.db.insert("challenges", {
         tournamentId: world.tournamentId,
