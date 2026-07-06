@@ -627,3 +627,322 @@ describe("views/challenges.listByTournament", () => {
     ).rejects.toThrow();
   });
 });
+
+describe("challenges.approve", () => {
+  type World = {
+    tournamentId: Id<"tournaments">;
+    manager: Id<"users">;
+    teamSmall: Id<"teams">;
+    teamMid: Id<"teams">;
+    teamLarge: Id<"teams">;
+    teamEmpty: Id<"teams">;
+    small1: Id<"users">;
+    mid1: Id<"users">;
+    mid2: Id<"users">;
+    mid3: Id<"users">;
+    large1: Id<"users">;
+  };
+
+  async function seedMultiTeam(
+    t: ReturnType<typeof convexTest>,
+  ): Promise<World> {
+    return t.run(async (ctx) => {
+      const creator = await makeUser(ctx, "creator");
+      const tournamentId = await makeTournament(ctx, creator);
+      const manager = await makeUser(ctx, "manager");
+      await giveTournamentRole(
+        ctx,
+        manager,
+        tournamentId,
+        "tournament_manager",
+      );
+
+      const teamSmall = await ctx.db.insert("teams", {
+        name: "Small",
+        tournamentId,
+        createdBy: manager,
+        joinPolicy: "open",
+        points: 0,
+      });
+      const teamMid = await ctx.db.insert("teams", {
+        name: "Mid",
+        tournamentId,
+        createdBy: manager,
+        joinPolicy: "open",
+        points: 0,
+      });
+      const teamLarge = await ctx.db.insert("teams", {
+        name: "Large",
+        tournamentId,
+        createdBy: manager,
+        joinPolicy: "open",
+        points: 0,
+      });
+      const teamEmpty = await ctx.db.insert("teams", {
+        name: "Empty",
+        tournamentId,
+        createdBy: manager,
+        joinPolicy: "open",
+        points: 0,
+      });
+
+      const small1 = await makeUser(ctx, "small1");
+      await ctx.db.insert("teamMembers", {
+        teamId: teamSmall,
+        userId: small1,
+        role: "member",
+      });
+
+      const mid1 = await makeUser(ctx, "mid1");
+      const mid2 = await makeUser(ctx, "mid2");
+      const mid3 = await makeUser(ctx, "mid3");
+      for (const u of [mid1, mid2, mid3]) {
+        await ctx.db.insert("teamMembers", {
+          teamId: teamMid,
+          userId: u,
+          role: "member",
+        });
+      }
+
+      const large1 = await makeUser(ctx, "large1");
+      for (let i = 0; i < 5; i++) {
+        const uid = i === 0 ? large1 : await makeUser(ctx, `large${i + 1}`);
+        await ctx.db.insert("teamMembers", {
+          teamId: teamLarge,
+          userId: uid,
+          role: "member",
+        });
+      }
+
+      return {
+        tournamentId,
+        manager,
+        teamSmall,
+        teamMid,
+        teamLarge,
+        teamEmpty,
+        small1,
+        mid1,
+        mid2,
+        mid3,
+        large1,
+      };
+    });
+  }
+
+  async function insertChallenge(
+    t: ReturnType<typeof convexTest>,
+    tournamentId: Id<"tournaments">,
+    manager: Id<"users">,
+    individualAmount: number,
+    teamAmount: number,
+    threshold: number,
+  ): Promise<Id<"challenges">> {
+    return t.run((ctx) =>
+      ctx.db.insert("challenges", {
+        tournamentId,
+        createdBy: manager,
+        description: "c",
+        individualAmount,
+        teamAmount,
+        threshold,
+        state: "pending",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }),
+    );
+  }
+
+  test("awards team amount when roster rate ≥ threshold; individual amount otherwise; zero-roster teams unchanged", async () => {
+    const t = convexTest(schemaForTest);
+    const world = await seedMultiTeam(t);
+    const challengeId = await insertChallenge(
+      t,
+      world.tournamentId,
+      world.manager,
+      3, // individual
+      20, // team
+      1, // whole-team threshold
+    );
+
+    // Small: 1/1 → full → team amount
+    // Mid: 2/3 → 0.667 → individual amount
+    // Large: 1/5 → 0.2 → individual amount
+    // Empty: 0/0 → unchanged
+    await t.run(async (ctx) => {
+      await ctx.db.insert("challengeRosterEntries", {
+        challengeId,
+        userId: world.small1,
+        tournamentId: world.tournamentId,
+        addedBy: world.manager,
+        createdAt: new Date().toISOString(),
+      });
+      await ctx.db.insert("challengeRosterEntries", {
+        challengeId,
+        userId: world.mid1,
+        tournamentId: world.tournamentId,
+        addedBy: world.manager,
+        createdAt: new Date().toISOString(),
+      });
+      await ctx.db.insert("challengeRosterEntries", {
+        challengeId,
+        userId: world.mid2,
+        tournamentId: world.tournamentId,
+        addedBy: world.manager,
+        createdAt: new Date().toISOString(),
+      });
+      await ctx.db.insert("challengeRosterEntries", {
+        challengeId,
+        userId: world.large1,
+        tournamentId: world.tournamentId,
+        addedBy: world.manager,
+        createdAt: new Date().toISOString(),
+      });
+    });
+
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.approve, { challengeId });
+
+    const [small, mid, large, empty] = await t.run(async (ctx) => [
+      await ctx.db.get(world.teamSmall),
+      await ctx.db.get(world.teamMid),
+      await ctx.db.get(world.teamLarge),
+      await ctx.db.get(world.teamEmpty),
+    ]);
+    expect(small?.points).toBe(20);
+    expect(mid?.points).toBe(3);
+    expect(large?.points).toBe(3);
+    expect(empty?.points).toBe(0);
+
+    const challenge = await t.run((ctx) => ctx.db.get(challengeId));
+    expect(challenge?.state).toBe("approved");
+  });
+
+  test("custom threshold of 0.5 awards team amount at exactly that rate", async () => {
+    const t = convexTest(schemaForTest);
+    const world = await seedMultiTeam(t);
+    const challengeId = await insertChallenge(
+      t,
+      world.tournamentId,
+      world.manager,
+      2,
+      10,
+      0.5,
+    );
+
+    // Mid: 2/3 ≈ 0.667 ≥ 0.5 → team amount
+    // Large: 1/5 = 0.2 < 0.5 → individual amount
+    await t.run(async (ctx) => {
+      for (const uid of [world.mid1, world.mid2]) {
+        await ctx.db.insert("challengeRosterEntries", {
+          challengeId,
+          userId: uid,
+          tournamentId: world.tournamentId,
+          addedBy: world.manager,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      await ctx.db.insert("challengeRosterEntries", {
+        challengeId,
+        userId: world.large1,
+        tournamentId: world.tournamentId,
+        addedBy: world.manager,
+        createdAt: new Date().toISOString(),
+      });
+    });
+
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.approve, { challengeId });
+
+    const [mid, large] = await t.run(async (ctx) => [
+      await ctx.db.get(world.teamMid),
+      await ctx.db.get(world.teamLarge),
+    ]);
+    expect(mid?.points).toBe(10);
+    expect(large?.points).toBe(2);
+  });
+
+  test("challenge points stack on top of approved-Activity points", async () => {
+    const t = convexTest(schemaForTest);
+    const world = await seedMultiTeam(t);
+
+    // Seed one approved activity worth 7 on teamSmall.
+    await t.run(async (ctx) => {
+      await ctx.db.insert("activities", {
+        teamId: world.teamSmall,
+        tournamentId: world.tournamentId,
+        createdBy: world.manager,
+        date: "2024-06-01",
+        type: "individual",
+        tier: "base",
+        state: "approved",
+        pointsEarned: 7,
+        participantCount: 1,
+        totalTeamMembers: 1,
+        participationRate: 1,
+        isTeamExercise: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    });
+
+    const challengeId = await insertChallenge(
+      t,
+      world.tournamentId,
+      world.manager,
+      3,
+      20,
+      1,
+    );
+    await t.run(async (ctx) => {
+      await ctx.db.insert("challengeRosterEntries", {
+        challengeId,
+        userId: world.small1,
+        tournamentId: world.tournamentId,
+        addedBy: world.manager,
+        createdAt: new Date().toISOString(),
+      });
+    });
+
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.approve, { challengeId });
+
+    const small = await t.run((ctx) => ctx.db.get(world.teamSmall));
+    expect(small?.points).toBe(27);
+  });
+
+  test("cannot approve a non-pending Challenge; unauthorized users are rejected", async () => {
+    const t = convexTest(schemaForTest);
+    const world = await seedMultiTeam(t);
+    const challengeId = await insertChallenge(
+      t,
+      world.tournamentId,
+      world.manager,
+      1,
+      2,
+      1,
+    );
+    await t.run(async (ctx) => {
+      await makeUser(ctx, "outsider");
+    });
+
+    await expect(
+      t
+        .withIdentity({ subject: "outsider" })
+        .mutation(api.challenges.approve, { challengeId }),
+    ).rejects.toThrow();
+
+    await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.approve, { challengeId });
+
+    await expect(
+      t
+        .withIdentity({ subject: "manager" })
+        .mutation(api.challenges.approve, { challengeId }),
+    ).rejects.toThrow();
+  });
+});

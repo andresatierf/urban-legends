@@ -1,18 +1,22 @@
-import { useQuery } from "convex/react";
-import { Pencil, Target, Users } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
+import { Check, Pencil, Target, Users } from "lucide-react";
 import { useState } from "react";
 
 import { SectionHeader } from "@/components/section-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { UpsertChallengeFormDialog } from "./form";
-import { ChallengeRosterDialog, type RosterMember } from "./roster-dialog";
+import { ChallengeRosterDialog } from "./roster-dialog";
 
-type ChallengeWithRoster = Doc<"challenges"> & { roster: RosterMember[] };
+type ChallengeWithRoster = FunctionReturnType<
+  typeof api.views.challenges.listByTournament
+>[number];
 
 type Props = {
   tournamentId: Id<"tournaments">;
@@ -109,6 +113,16 @@ function ChallengeCard({
   onManageRoster: () => void;
 }) {
   const canEdit = challenge.state === "pending";
+  const approve = useMutation(api.challenges.approve);
+  const [approving, setApproving] = useState(false);
+  const handleApprove = () => {
+    setApproving(true);
+    void tryMutate({
+      fn: () => approve({ challengeId: challenge._id }),
+      successToast: "Challenge approved",
+      onFinally: () => setApproving(false),
+    });
+  };
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-2">
@@ -143,10 +157,16 @@ function ChallengeCard({
             Roster
           </Button>
           {canEdit && (
-            <Button size="sm" variant="outline" onClick={onEdit}>
-              <Pencil />
-              Edit
-            </Button>
+            <>
+              <Button size="sm" variant="outline" onClick={onEdit}>
+                <Pencil />
+                Edit
+              </Button>
+              <Button size="sm" onClick={handleApprove} disabled={approving}>
+                <Check />
+                Approve
+              </Button>
+            </>
           )}
         </div>
       </CardContent>

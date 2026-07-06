@@ -4,6 +4,7 @@ import type { Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation } from "./_generated/server";
 import { canManageChallenge } from "./authority/core";
 import { nowUTC } from "./lib/dates";
+import { updateTeamPoints } from "./lifecycle/activities";
 import { getCurrentUserOrThrow } from "./users";
 
 const DEFAULT_THRESHOLD = 1;
@@ -147,15 +148,7 @@ export const edit = mutation({
     threshold: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-    const challenge = await ctx.db.get(args.challengeId);
-    if (!challenge) throw new Error("Challenge not found");
-    await canManageChallenge.require(ctx, user._id, {
-      tournamentId: challenge.tournamentId,
-    });
-    if (challenge.state !== "pending") {
-      throw new Error("Only pending Challenges can be edited");
-    }
+    const { challenge } = await requirePendingChallenge(ctx, args.challengeId);
 
     const patch: Partial<typeof challenge> = {};
     if (args.description !== undefined) {
@@ -179,6 +172,29 @@ export const edit = mutation({
     }
     patch.updatedAt = nowUTC();
     await ctx.db.patch(args.challengeId, patch);
+    return args.challengeId;
+  },
+});
+
+export const approve = mutation({
+  args: { challengeId: v.id("challenges") },
+  handler: async (ctx, args) => {
+    const { challenge } = await requirePendingChallenge(ctx, args.challengeId);
+
+    await ctx.db.patch(args.challengeId, {
+      state: "approved",
+      updatedAt: nowUTC(),
+    });
+
+    const teams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", challenge.tournamentId),
+      )
+      .collect();
+    for (const team of teams) {
+      await updateTeamPoints(ctx, team._id);
+    }
     return args.challengeId;
   },
 });

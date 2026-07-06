@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { Loader2, Minus, Plus, Search, Users } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 
@@ -17,22 +18,16 @@ import { getInitials } from "@/components/users/utils";
 import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../convex/_generated/api";
-import type { Doc, Id } from "../../../convex/_generated/dataModel";
+import type { Id } from "../../../convex/_generated/dataModel";
 
-export type RosterMember = {
-  userId: Id<"users">;
-  name: string;
-  email: string;
-  imageUrl?: string;
-  teamId?: Id<"teams">;
-  teamName?: string;
-  addedAt: string;
-};
+type ChallengeItem = FunctionReturnType<
+  typeof api.views.challenges.listByTournament
+>[number];
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  challenge: Doc<"challenges"> & { roster: RosterMember[] };
+  challenge: ChallengeItem;
 };
 
 export function ChallengeRosterDialog({
@@ -96,12 +91,10 @@ export function ChallengeRosterDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center gap-2">
-          <Badge variant="neutral">
-            {challenge.roster.length}{" "}
-            {challenge.roster.length === 1 ? "participant" : "participants"}
-          </Badge>
-        </div>
+        <Badge variant="neutral">
+          {challenge.roster.length}{" "}
+          {challenge.roster.length === 1 ? "participant" : "participants"}
+        </Badge>
 
         <div className="relative">
           <Search className="text-muted-foreground absolute top-2.5 left-2 size-4" />
@@ -157,7 +150,9 @@ export function ChallengeRosterDialog({
                       size="sm"
                       variant={isOnRoster ? "outline" : "default"}
                       disabled={disabled || isPending}
-                      onClick={() => handleToggle(player.userId, isOnRoster)}
+                      onClick={() =>
+                        void handleToggle(player.userId, isOnRoster)
+                      }
                     >
                       {icon}
                       {isOnRoster ? "Remove" : "Add"}

@@ -23,24 +23,23 @@ async function loadRoster(
     .query("challengeRosterEntries")
     .withIndex("by_challenge", (q) => q.eq("challengeId", challenge._id))
     .collect();
-  const entryTeams = await Promise.all(
+
+  const members = await Promise.all(
     entries.map(async (entry) => {
-      const memberships = await ctx.db
-        .query("teamMembers")
-        .withIndex("by_user", (q) => q.eq("userId", entry.userId))
-        .collect();
+      const [user, memberships] = await Promise.all([
+        ctx.db.get(entry.userId),
+        ctx.db
+          .query("teamMembers")
+          .withIndex("by_user", (q) => q.eq("userId", entry.userId))
+          .collect(),
+      ]);
+      if (!user) return null;
       const teams = await Promise.all(
         memberships.map((m) => ctx.db.get(m.teamId)),
       );
-      return teams.find((t) => t?.tournamentId === challenge.tournamentId);
-    }),
-  );
-  const users = await Promise.all(entries.map((e) => ctx.db.get(e.userId)));
-  return entries
-    .map((entry, i) => {
-      const user = users[i];
-      if (!user) return null;
-      const team = entryTeams[i];
+      const team = teams.find(
+        (t) => t?.tournamentId === challenge.tournamentId,
+      );
       return {
         userId: entry.userId,
         name: user.name,
@@ -50,7 +49,10 @@ async function loadRoster(
         teamName: team?.name,
         addedAt: entry.createdAt,
       };
-    })
+    }),
+  );
+
+  return members
     .filter((m): m is NonNullable<typeof m> => m !== null)
     .sort((a, b) => a.addedAt.localeCompare(b.addedAt));
 }
@@ -69,11 +71,12 @@ export const listByTournament = query({
       )
       .collect();
     const sorted = rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    const rosters = await Promise.all(sorted.map((c) => loadRoster(ctx, c)));
-    return sorted.map((challenge, i) => ({
-      ...challenge,
-      roster: rosters[i],
-    }));
+    return Promise.all(
+      sorted.map(async (challenge) => ({
+        ...challenge,
+        roster: await loadRoster(ctx, challenge),
+      })),
+    );
   },
 });
 
