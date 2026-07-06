@@ -3,9 +3,6 @@ import { query } from "../_generated/server";
 import { computeChallengeAward } from "../lifecycle/challengeAwards";
 import { getCurrentUserOrThrow } from "../users";
 
-// One discriminated feed for the My Activities page: the viewer's Activities
-// (via their Participations) plus every Challenge they're rostered in, sorted
-// by a comparable timestamp so both kinds interleave deterministically.
 // Award amounts on Challenges are computed on read — no per-team award is stored.
 export type MyFeedItem =
   | {
@@ -32,7 +29,6 @@ export const myFeed = query({
   handler: async (ctx): Promise<MyFeedItem[]> => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Activities — via the viewer's Participation rows.
     const parts = await ctx.db
       .query("participations")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -50,7 +46,6 @@ export const myFeed = query({
       activity,
     }));
 
-    // Challenges — only those the viewer is rostered in.
     const rosterEntries = await ctx.db
       .query("challengeRosterEntries")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -76,22 +71,23 @@ export const myFeed = query({
       );
       if (!team) continue;
 
-      const award =
-        challenge.state === "approved"
-          ? await computeChallengeAward(ctx, challenge, team)
-          : null;
+      const isApproved = challenge.state === "approved";
+      let award: { amount: number; isTeamAward: boolean } | null = null;
+      if (isApproved) {
+        const { amount, isTeamAward } = await computeChallengeAward(
+          ctx,
+          challenge,
+          team,
+        );
+        award = { amount, isTeamAward };
+      }
 
       challengeItems.push({
         kind: "challenge",
-        sortDate:
-          challenge.state === "approved"
-            ? challenge.updatedAt
-            : challenge.createdAt,
+        sortDate: isApproved ? challenge.updatedAt : challenge.createdAt,
         challenge,
         team: { _id: team._id, name: team.name },
-        award: award
-          ? { amount: award.amount, isTeamAward: award.isTeamAward }
-          : null,
+        award,
       });
     }
 

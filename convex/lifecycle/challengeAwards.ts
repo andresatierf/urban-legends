@@ -8,10 +8,7 @@ export type ChallengeAward = {
   isTeamAward: boolean;
 };
 
-// Computes what a single Challenge awards to a specific Team, using the same
-// rule as challenge approval: rate = rostered team members / team size, and
-// rate ≥ threshold → team amount, otherwise individual amount. Returns
-// amount = 0 when no rostered users are on the team or the team is empty.
+// Uses the same award rule as challenge approval (rate = rostered members / team size).
 export async function computeChallengeAward(
   ctx: QueryCtx | MutationCtx,
   challenge: Doc<"challenges">,
@@ -54,8 +51,7 @@ export async function computeChallengeAward(
   };
 }
 
-// Sums awards from all approved Challenges for a team, optionally excluding
-// one Challenge to account for soft-deletions not yet visible in the same tx.
+// excludeChallengeId: accounts for soft-deletions not yet visible in the same tx.
 export async function sumChallengeAwardsForTeam(
   ctx: QueryCtx | MutationCtx,
   team: Pick<Doc<"teams">, "_id" | "tournamentId">,
