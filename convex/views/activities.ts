@@ -57,23 +57,23 @@ export const myFeed = query({
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
 
+    // Fetch the viewer's team memberships once — reused for every roster entry.
+    const memberships = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+    const userTeams = (
+      await Promise.all(memberships.map((m) => ctx.db.get(m.teamId)))
+    ).filter((t): t is NonNullable<typeof t> => t !== null);
+
     const challengeItems: MyFeedItem[] = [];
     for (const entry of rosterEntries) {
       const challenge = await ctx.db.get(entry.challengeId);
       if (!challenge) continue;
 
-      // Find the viewer's team in this Challenge's tournament. A user only
-      // belongs to at most one team per tournament (see teams rules), so
-      // pick the first match.
-      const memberships = await ctx.db
-        .query("teamMembers")
-        .withIndex("by_user", (q) => q.eq("userId", user._id))
-        .collect();
-      const teams = await Promise.all(
-        memberships.map((m) => ctx.db.get(m.teamId)),
-      );
-      const team = teams.find(
-        (t) => t?.tournamentId === challenge.tournamentId,
+      // A user belongs to at most one team per tournament (see teams rules).
+      const team = userTeams.find(
+        (t) => t.tournamentId === challenge.tournamentId,
       );
       if (!team) continue;
 
