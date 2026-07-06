@@ -204,6 +204,8 @@ export const remove = mutation({
           q.eq("tournamentId", challenge.tournamentId),
         )
         .collect();
+      // Snapshot isolation: the deleted challenge is still visible to reads
+      // within this transaction, so exclude it explicitly when recomputing.
       for (const team of teams) {
         await updateTeamPoints(ctx, team._id, {
           excludeChallengeId: args.challengeId,
