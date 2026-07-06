@@ -92,6 +92,7 @@ export function score(
 export async function updateTeamPoints(
   ctx: MutationCtx,
   teamId: Id<"teams">,
+  options: { excludeChallengeId?: Id<"challenges"> } = {},
 ): Promise<void> {
   const team = await ctx.db.get(teamId);
   if (!team) throw new Error("Team not found");
@@ -107,7 +108,7 @@ export async function updateTeamPoints(
     0,
   );
 
-  const challengePoints = await sumChallengeAwardsForTeam(ctx, team);
+  const challengePoints = await sumChallengeAwardsForTeam(ctx, team, options);
 
   await ctx.db.patch(teamId, {
     points: activityPoints + challengePoints,
@@ -119,13 +120,17 @@ export async function updateTeamPoints(
 async function sumChallengeAwardsForTeam(
   ctx: MutationCtx,
   team: { _id: Id<"teams">; tournamentId: Id<"tournaments"> },
+  options: { excludeChallengeId?: Id<"challenges"> } = {},
 ): Promise<number> {
-  const approvedChallenges = await ctx.db
+  const allApproved = await ctx.db
     .query("challenges")
     .withIndex("by_tournament_and_state", (q) =>
       q.eq("tournamentId", team.tournamentId).eq("state", "approved"),
     )
     .collect();
+  const approvedChallenges = options.excludeChallengeId
+    ? allApproved.filter((c) => c._id !== options.excludeChallengeId)
+    : allApproved;
   if (approvedChallenges.length === 0) return 0;
 
   const members = await ctx.db

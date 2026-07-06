@@ -1,9 +1,20 @@
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { Check, Pencil, Target, Users } from "lucide-react";
+import { Check, Pencil, Target, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 
 import { SectionHeader } from "@/components/section-header";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -114,7 +125,9 @@ function ChallengeCard({
 }) {
   const canEdit = challenge.state === "pending";
   const approve = useMutation(api.challenges.approve);
+  const remove = useMutation(api.challenges.remove);
   const [approving, setApproving] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const handleApprove = () => {
     setApproving(true);
     void tryMutate({
@@ -123,6 +136,21 @@ function ChallengeCard({
       onFinally: () => setApproving(false),
     });
   };
+  const handleDelete = () => {
+    setRemoving(true);
+    void tryMutate({
+      fn: () => remove({ challengeId: challenge._id }),
+      successToast:
+        challenge.state === "approved"
+          ? "Challenge deleted and standings updated"
+          : "Challenge deleted",
+      onFinally: () => setRemoving(false),
+    });
+  };
+  const deleteWarning =
+    challenge.state === "approved"
+      ? "This Challenge is approved. Deleting it will remove its awarded points from every team in the tournament."
+      : "This Challenge is pending and has no impact on standings.";
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-2">
@@ -168,6 +196,26 @@ function ChallengeCard({
               </Button>
             </>
           )}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="sm" variant="outline" disabled={removing}>
+                <Trash2 />
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this Challenge?</AlertDialogTitle>
+                <AlertDialogDescription>{deleteWarning}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </CardContent>
     </Card>
