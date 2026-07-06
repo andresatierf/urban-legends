@@ -6,8 +6,7 @@ import { getCurrentUserOrThrow } from "../users";
 // One discriminated feed for the My Activities page: the viewer's Activities
 // (via their Participations) plus every Challenge they're rostered in, sorted
 // by a comparable timestamp so both kinds interleave deterministically.
-// Award amounts on Challenges are computed on read using the shared helper —
-// no per-team award is stored (self-healing per #313).
+// Award amounts on Challenges are computed on read — no per-team award is stored.
 export type MyFeedItem =
   | {
       kind: "activity";
@@ -33,7 +32,7 @@ export const myFeed = query({
   handler: async (ctx): Promise<MyFeedItem[]> => {
     const user = await getCurrentUserOrThrow(ctx);
 
-    // Activities — via the viewer's Participation rows (matches listMine).
+    // Activities — via the viewer's Participation rows.
     const parts = await ctx.db
       .query("participations")
       .withIndex("by_user", (q) => q.eq("userId", user._id))

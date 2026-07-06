@@ -55,8 +55,7 @@ export async function computeChallengeAward(
 }
 
 // Sums awards from all approved Challenges for a team, optionally excluding
-// one Challenge (used by remove after soft-deletion to bypass snapshot
-// isolation).
+// one Challenge to account for soft-deletions not yet visible in the same tx.
 export async function sumChallengeAwardsForTeam(
   ctx: QueryCtx | MutationCtx,
   team: Pick<Doc<"teams">, "_id" | "tournamentId">,
