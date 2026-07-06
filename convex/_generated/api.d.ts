@@ -22,6 +22,7 @@ import type * as joinRequests from "../joinRequests.js";
 import type * as lib_dates from "../lib/dates.js";
 import type * as lib_helpers from "../lib/helpers.js";
 import type * as lifecycle_activities from "../lifecycle/activities.js";
+import type * as lifecycle_challengeAwards from "../lifecycle/challengeAwards.js";
 import type * as lifecycle_joinRequests from "../lifecycle/joinRequests.js";
 import type * as migrations from "../migrations.js";
 import type * as notifications from "../notifications.js";
@@ -37,6 +38,7 @@ import type * as seed from "../seed.js";
 import type * as teams from "../teams.js";
 import type * as tournaments from "../tournaments.js";
 import type * as users from "../users.js";
+import type * as views_activities from "../views/activities.js";
 import type * as views_challenges from "../views/challenges.js";
 import type * as views_dashboard from "../views/dashboard.js";
 
@@ -61,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   "lib/dates": typeof lib_dates;
   "lib/helpers": typeof lib_helpers;
   "lifecycle/activities": typeof lifecycle_activities;
+  "lifecycle/challengeAwards": typeof lifecycle_challengeAwards;
   "lifecycle/joinRequests": typeof lifecycle_joinRequests;
   migrations: typeof migrations;
   notifications: typeof notifications;
@@ -76,6 +79,7 @@ declare const fullApi: ApiFromModules<{
   teams: typeof teams;
   tournaments: typeof tournaments;
   users: typeof users;
+  "views/activities": typeof views_activities;
   "views/challenges": typeof views_challenges;
   "views/dashboard": typeof views_dashboard;
 }>;

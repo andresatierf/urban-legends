@@ -497,38 +497,3 @@ export const getAuthority = query({
     return { canReview, canManage, isPlayer, pendingReviewCount };
   },
 });
-
-// Lightweight list of the current user's Activities (for personal listing).
-export const listMine = query({
-  args: {
-    state: v.optional(
-      v.union(
-        v.literal("incomplete"),
-        v.literal("pending"),
-        v.literal("approved"),
-        v.literal("rejected"),
-        v.literal("deleted"),
-      ),
-    ),
-  },
-  handler: async (ctx, args) => {
-    const user = await getCurrentUserOrThrow(ctx);
-
-    const parts = await ctx.db
-      .query("participations")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-    const activityIds = Array.from(new Set(parts.map((p) => p.activityId)));
-
-    const activities = await Promise.all(
-      activityIds.map((id) => ctx.db.get(id)),
-    );
-    const nonNull = activities.filter(
-      (a): a is NonNullable<typeof a> => a !== null,
-    );
-
-    return args.state
-      ? nonNull.filter((a) => a.state === args.state)
-      : nonNull.filter((a) => a.state !== "deleted");
-  },
-});
