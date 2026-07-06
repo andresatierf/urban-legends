@@ -122,14 +122,15 @@ async function sumChallengeAwardsForTeam(
   team: { _id: Id<"teams">; tournamentId: Id<"tournaments"> },
   options: { excludeChallengeId?: Id<"challenges"> } = {},
 ): Promise<number> {
-  const approvedChallenges = (
-    await ctx.db
-      .query("challenges")
-      .withIndex("by_tournament_and_state", (q) =>
-        q.eq("tournamentId", team.tournamentId).eq("state", "approved"),
-      )
-      .collect()
-  ).filter((c) => c._id !== options.excludeChallengeId);
+  const allApproved = await ctx.db
+    .query("challenges")
+    .withIndex("by_tournament_and_state", (q) =>
+      q.eq("tournamentId", team.tournamentId).eq("state", "approved"),
+    )
+    .collect();
+  const approvedChallenges = options.excludeChallengeId
+    ? allApproved.filter((c) => c._id !== options.excludeChallengeId)
+    : allApproved;
   if (approvedChallenges.length === 0) return 0;
 
   const members = await ctx.db
