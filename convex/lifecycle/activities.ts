@@ -2,6 +2,7 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { claimUploads, releaseUploads } from "../evidenceStorage";
 import { nowUTC, toUTCDateString } from "../lib/dates";
+import { sumChallengeAwardsForTeam } from "./challengeAwards";
 
 export function last7Dates(today: Date = new Date()): string[] {
   const base = new Date(today);
@@ -115,46 +116,6 @@ export async function updateTeamPoints(
     lastActivityAt: nowUTC(),
   });
   await recomputeRecentActivity(ctx, teamId);
-}
-
-async function sumChallengeAwardsForTeam(
-  ctx: MutationCtx,
-  team: { _id: Id<"teams">; tournamentId: Id<"tournaments"> },
-  options: { excludeChallengeId?: Id<"challenges"> } = {},
-): Promise<number> {
-  const allApproved = await ctx.db
-    .query("challenges")
-    .withIndex("by_tournament_and_state", (q) =>
-      q.eq("tournamentId", team.tournamentId).eq("state", "approved"),
-    )
-    .collect();
-  const approvedChallenges = options.excludeChallengeId
-    ? allApproved.filter((c) => c._id !== options.excludeChallengeId)
-    : allApproved;
-  if (approvedChallenges.length === 0) return 0;
-
-  const members = await ctx.db
-    .query("teamMembers")
-    .withIndex("by_team", (q) => q.eq("teamId", team._id))
-    .collect();
-  const size = members.length;
-  if (size === 0) return 0;
-  const memberUserIds = new Set(members.map((m) => m.userId));
-
-  let total = 0;
-  for (const c of approvedChallenges) {
-    const roster = await ctx.db
-      .query("challengeRosterEntries")
-      .withIndex("by_challenge", (q) => q.eq("challengeId", c._id))
-      .collect();
-    const participantCount = roster.filter((r) =>
-      memberUserIds.has(r.userId),
-    ).length;
-    if (participantCount === 0) continue;
-    const rate = participantCount / size;
-    total += rate >= c.threshold ? c.teamAmount : c.individualAmount;
-  }
-  return total;
 }
 
 function validateEvidenceCount(ids: Id<"_storage">[]): void {
