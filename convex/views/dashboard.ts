@@ -253,39 +253,37 @@ async function loadRecentActivity(
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, RECENT_ACTIVITY_LIMIT);
 
-  const teamCache = new Map<Id<"teams">, Doc<"teams"> | null>();
-  const userCache = new Map<Id<"users">, Doc<"users"> | null>();
-  const getTeam = async (id: Id<"teams">) => {
-    if (!teamCache.has(id)) teamCache.set(id, await ctx.db.get(id));
-    return teamCache.get(id) ?? null;
-  };
-  const getUser = async (id: Id<"users">) => {
-    if (!userCache.has(id)) userCache.set(id, await ctx.db.get(id));
-    return userCache.get(id) ?? null;
-  };
+  const teamIds = [...new Set(ranked.map(({ activity }) => activity.teamId))];
+  const userIds = [
+    ...new Set(ranked.map(({ activity }) => activity.createdBy)),
+  ];
 
-  return Promise.all(
-    ranked.map(async ({ activity, timestamp }) => {
-      const [team, actor] = await Promise.all([
-        getTeam(activity.teamId),
-        getUser(activity.createdBy),
-      ]);
-      return {
-        id: activity._id,
-        team: {
-          _id: activity.teamId,
-          name: team?.name ?? "Unknown team",
-        },
-        isViewerTeam: activity.teamId === viewerTeamId,
-        actorName: actor?.name ?? null,
-        description: activity.description ?? null,
-        tier: activity.tier,
-        type: activity.type,
-        pointsEarned: Math.round(activity.pointsEarned ?? 0),
-        timestamp,
-      };
-    }),
-  );
+  const [teamDocs, userDocs] = await Promise.all([
+    Promise.all(teamIds.map((id) => ctx.db.get(id))),
+    Promise.all(userIds.map((id) => ctx.db.get(id))),
+  ]);
+
+  const teamMap = new Map(teamIds.map((id, i) => [id, teamDocs[i]]));
+  const userMap = new Map(userIds.map((id, i) => [id, userDocs[i]]));
+
+  return ranked.map(({ activity, timestamp }) => {
+    const team = teamMap.get(activity.teamId);
+    const actor = userMap.get(activity.createdBy);
+    return {
+      id: activity._id,
+      team: {
+        _id: activity.teamId,
+        name: team?.name ?? "Unknown team",
+      },
+      isViewerTeam: activity.teamId === viewerTeamId,
+      actorName: actor?.name ?? null,
+      description: activity.description ?? null,
+      tier: activity.tier,
+      type: activity.type,
+      pointsEarned: Math.round(activity.pointsEarned ?? 0),
+      timestamp,
+    };
+  });
 }
 
 // ── inbox loader ───────────────────────────────────────────────────────
