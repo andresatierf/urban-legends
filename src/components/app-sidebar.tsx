@@ -43,13 +43,17 @@ import { useActivityDialog } from "./activity-dialog-context";
 import { NavUser } from "./nav-user";
 import { getHighestRankingRole } from "./users/utils";
 
+type SidebarContext = {
+  captainedTeamsCount: number;
+  isPlayer: boolean;
+};
+
+const isPlayerCondition = (ctx: SidebarContext) => ctx.isPlayer;
+
 type SidebarItem = {
   title: string;
   roles?: string[];
-  condition?: (context: {
-    captainedTeamsCount: number;
-    isPlayer: boolean;
-  }) => boolean;
+  condition?: (context: SidebarContext) => boolean;
   publicAccess?: boolean;
   exact?: boolean;
   badge?: {
@@ -81,25 +85,25 @@ function useSidebarItems(
           {
             title: "Tournaments",
             href: "/tournaments",
-            condition: ({ isPlayer }) => isPlayer,
+            condition: isPlayerCondition,
             icon: Trophy,
           },
           {
             title: "Teams",
             href: "/teams",
-            condition: ({ isPlayer }) => isPlayer,
+            condition: isPlayerCondition,
             icon: Users,
           },
           {
             title: "My Activities",
             href: "/activities/mine",
-            condition: ({ isPlayer }) => isPlayer,
+            condition: isPlayerCondition,
             icon: ClipboardList,
             exact: true,
           },
           {
             title: "Submit Activity",
-            condition: ({ isPlayer }) => isPlayer,
+            condition: isPlayerCondition,
             onClick: openActivityDialog,
             icon: PlusCircle,
           },
@@ -286,7 +290,7 @@ function renderItem(
   item: SidebarItem,
   user: { roleNames: string[] } | null | undefined,
   userRoles: string[],
-  context: { captainedTeamsCount: number; isPlayer: boolean },
+  context: SidebarContext,
   isActive: (href: string, exact?: boolean) => boolean,
 ) {
   if (item.roles && !userRoles.some((role) => item.roles?.includes(role))) {
