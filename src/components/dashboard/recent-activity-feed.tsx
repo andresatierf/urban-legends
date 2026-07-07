@@ -66,12 +66,7 @@ function RecentActivityRow({ item }: { item: DashboardRecentActivityItem }) {
         </p>
         <p className="text-mute text-body-sm truncate">
           {summary}
-          {item.actorName && (
-            <>
-              {" · "}
-              <span>{item.actorName}</span>
-            </>
-          )}
+          {item.actorName && ` · ${item.actorName}`}
         </p>
       </div>
       <div className="flex items-center gap-3 sm:shrink-0">
