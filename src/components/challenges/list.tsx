@@ -156,11 +156,9 @@ function ChallengeCard({
       onFinally: () => setRemoving(false),
     });
   };
-  const deleteWarning =
-    challenge.state === "approved"
-      ? "This Challenge is approved. Deleting it will remove its awarded points from every team in the tournament."
-      : "This Challenge is pending and has no impact on standings.";
-  const rosterCount = challenge.roster.length;
+  const deleteWarning = isPending
+    ? "This Challenge is pending and has no impact on standings."
+    : "This Challenge is approved. Deleting it will remove its awarded points from every team in the tournament.";
   return (
     <EdgeOverlay
       bottomLeft={
@@ -256,7 +254,7 @@ function ChallengeCard({
               label: "Threshold",
               value: `${Math.round(challenge.threshold * 100)}%`,
             },
-            { label: "Roster", value: rosterCount },
+            { label: "Roster", value: challenge.roster.length },
           ]}
         />
       </ComposedCard>
