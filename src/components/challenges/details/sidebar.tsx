@@ -32,7 +32,7 @@ export function Sidebar({ data }: { data: ChallengeDetailsData }) {
   const [editOpen, setEditOpen] = useState(false);
   const [rosterOpen, setRosterOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [pending, setPending] = useState(false);
+  const [isMutating, setIsMutating] = useState(false);
 
   const approve = useMutation(api.challenges.approve);
   const remove = useMutation(api.challenges.remove);
@@ -55,16 +55,16 @@ export function Sidebar({ data }: { data: ChallengeDetailsData }) {
   ];
 
   const handleApprove = () => {
-    setPending(true);
+    setIsMutating(true);
     void tryMutate({
       fn: () => approve({ challengeId: challenge._id }),
       successToast: "Challenge approved",
-      onFinally: () => setPending(false),
+      onFinally: () => setIsMutating(false),
     });
   };
 
   const handleDelete = () => {
-    setPending(true);
+    setIsMutating(true);
     void tryMutate({
       fn: () => remove({ challengeId: challenge._id }),
       successToast: isApproved
@@ -76,7 +76,7 @@ export function Sidebar({ data }: { data: ChallengeDetailsData }) {
           params: { tournamentId: challenge.tournamentId },
         });
       },
-      onFinally: () => setPending(false),
+      onFinally: () => setIsMutating(false),
     });
   };
 
@@ -97,7 +97,7 @@ export function Sidebar({ data }: { data: ChallengeDetailsData }) {
         label: "Approve",
         icon: Check,
         variant: "default",
-        disabled: pending,
+        disabled: isMutating,
         onClick: handleApprove,
       });
     }
@@ -105,7 +105,7 @@ export function Sidebar({ data }: { data: ChallengeDetailsData }) {
       label: "Delete",
       icon: Trash2,
       variant: "outline",
-      disabled: pending,
+      disabled: isMutating,
       onClick: () => setDeleteOpen(true),
     });
   }

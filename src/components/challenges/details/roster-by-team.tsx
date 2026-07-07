@@ -13,16 +13,17 @@ export function RosterByTeam({ data }: { data: ChallengeDetailsData }) {
   const groups = new Map<
     string,
     {
+      teamId: string;
       teamName: string;
       members: ChallengeDetailsData["roster"];
     }
   >();
   for (const entry of data.roster) {
-    const key = entry.teamId ?? UNASSIGNED;
+    const teamId = entry.teamId ?? UNASSIGNED;
     const teamName = entry.teamName ?? "No team";
-    const bucket = groups.get(key) ?? { teamName, members: [] };
+    const bucket = groups.get(teamId) ?? { teamId, teamName, members: [] };
     bucket.members.push(entry);
-    groups.set(key, bucket);
+    groups.set(teamId, bucket);
   }
   const sortedGroups = Array.from(groups.values()).sort((a, b) =>
     a.teamName.localeCompare(b.teamName),
@@ -47,7 +48,7 @@ export function RosterByTeam({ data }: { data: ChallengeDetailsData }) {
           </p>
         ) : (
           sortedGroups.map((group) => (
-            <div key={group.teamName} className="space-y-2">
+            <div key={group.teamId} className="space-y-2">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">{group.teamName}</p>
                 <span className="text-muted-foreground text-xs">
