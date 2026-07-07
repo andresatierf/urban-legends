@@ -149,10 +149,9 @@ function ChallengeCard({
     setRemoving(true);
     void tryMutate({
       fn: () => remove({ challengeId: challenge._id }),
-      successToast:
-        challenge.state === "approved"
-          ? "Challenge deleted and standings updated"
-          : "Challenge deleted",
+      successToast: isPending
+        ? "Challenge deleted"
+        : "Challenge deleted and standings updated",
       onFinally: () => setRemoving(false),
     });
   };
