@@ -68,11 +68,7 @@ export const getCaptainedTeamsCount = query({
   },
 });
 
-/**
- * Whether the current user is a Player — i.e. a member of any team.
- * "player" is derived from team membership, not a stored role, so the
- * sidebar gates its compete items on this signal.
- */
+// "player" is derived from team membership, not a stored role
 export const getIsPlayer = query({
   args: {},
   handler: async (ctx) => {
