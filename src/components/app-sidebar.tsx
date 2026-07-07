@@ -11,6 +11,7 @@ import {
   type LucideIcon,
   PlusCircle,
   Shield,
+  Swords,
   TrendingUp,
   Trophy,
   UserCog,
@@ -31,6 +32,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
 } from "@/components/ui/sidebar";
 import { SidebarBadge } from "@/components/ui/sidebar-badge";
 import { useActiveRoute } from "@/hooks/useActiveRoute";
@@ -225,8 +227,28 @@ export function AppSidebar() {
   const context = { captainedTeamsCount };
 
   return (
-    <Sidebar collapsible="offcanvas">
-      <SidebarHeader className="h-10" />
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              size="lg"
+              tooltip="BoolLegends"
+              className="group-data-[collapsible=icon]:p-0!"
+            >
+              <Link to="/">
+                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <Swords className="size-4" />
+                </div>
+                <span className="text-body-sm truncate font-semibold">
+                  BoolLegends
+                </span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
       <SidebarContent>
         {sidebarItems.map((item) =>
           renderItem(item, user, user?.roleNames || [], context, isActive),
@@ -251,6 +273,7 @@ export function AppSidebar() {
           />
         </SidebarFooter>
       )}
+      <SidebarRail />
     </Sidebar>
   );
 }
@@ -294,17 +317,11 @@ function renderItem(
   if ("onClick" in item) {
     return (
       <SidebarMenuItem key={item.title}>
-        <SidebarMenuButton onClick={item.onClick}>
+        <SidebarMenuButton onClick={item.onClick} tooltip={item.title}>
           <item.icon />
-          {item.title}
-          {item.badge && (
-            <SidebarBadge
-              query={item.badge.query}
-              color={item.badge.color}
-              tooltip={item.badge.tooltip}
-            />
-          )}
+          <span>{item.title}</span>
         </SidebarMenuButton>
+        {item.badge && <SidebarBadge {...item.badge} />}
       </SidebarMenuItem>
     );
   }
@@ -313,19 +330,13 @@ function renderItem(
 
   return (
     <SidebarMenuItem key={item.title}>
-      <SidebarMenuButton asChild isActive={active}>
+      <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
         <Link to={item.href} aria-current={active ? "page" : undefined}>
           <item.icon />
           <span>{item.title}</span>
-          {item.badge && (
-            <SidebarBadge
-              query={item.badge.query}
-              color={item.badge.color}
-              tooltip={item.badge.tooltip}
-            />
-          )}
         </Link>
       </SidebarMenuButton>
+      {item.badge && <SidebarBadge {...item.badge} />}
     </SidebarMenuItem>
   );
 }

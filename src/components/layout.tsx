@@ -1,33 +1,23 @@
 "use client";
 
-import { useUnreadCount } from "@/hooks/use-unread-count";
-import { useUser } from "@/hooks/useUser";
-
 import { ActivityDialogProvider } from "./activity-dialog-context";
 import { AppSidebar } from "./app-sidebar";
-import { FloatingSidebarActions } from "./floating-sidebar-actions";
-import { NotificationDropdown } from "./notifications/notification-dropdown";
-import { SidebarProvider } from "./ui/sidebar";
+import { SiteHeader } from "./site-header";
+import { SidebarInset, SidebarProvider } from "./ui/sidebar";
 
 export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const { user } = useUser();
-  const unreadCount = useUnreadCount(user?._id);
-
   return (
     <ActivityDialogProvider>
       <SidebarProvider>
         <AppSidebar />
-        <FloatingSidebarActions />
-        {user && (
-          <div className="pointer-events-auto fixed top-2 right-2 z-50 flex items-center gap-1">
-            <NotificationDropdown userId={user._id} unreadCount={unreadCount} />
+        <SidebarInset className="bg-muted/30">
+          <SiteHeader />
+          <div className="flex w-full flex-1 flex-col items-center">
+            <main className="flex w-full flex-1 flex-col gap-4 p-4">
+              {children}
+            </main>
           </div>
-        )}
-        <div className="bg-muted/30 flex min-h-screen w-full flex-col items-center">
-          <main className="mt-8 flex w-full flex-1 flex-col gap-4 p-4">
-            {children}
-          </main>
-        </div>
+        </SidebarInset>
       </SidebarProvider>
     </ActivityDialogProvider>
   );

@@ -41,7 +41,7 @@ export function PageShellSpecimens() {
     <div className="space-y-16">
       <DataTableSectionSpecimen />
       <DetailsPageLayoutSpecimen />
-      <FloatingSidebarActionsSpecimen />
+      <SiteHeaderSpecimen />
     </div>
   );
 }
@@ -122,18 +122,18 @@ function DetailsPageLayoutSpecimen() {
   );
 }
 
-function FloatingSidebarActionsSpecimen() {
+function SiteHeaderSpecimen() {
   return (
     <section className="space-y-6">
       <SectionHeader
         as="h2"
-        title="FloatingSidebarActions"
-        description="Top-left floating toolbar with the sidebar trigger plus a player-only quick action. Renders into the protected layout’s sidebar context; the live instance is visible in the top-left corner of this page."
+        title="SiteHeader"
+        description="Sticky inset header at the top of the content area with the sidebar trigger, a player-only quick action, and the theme/notification controls. Renders into the protected layout’s sidebar context; the live instance is the header at the top of this page."
       />
       <p className="text-body-sm text-muted-foreground">
-        Re-mounting it inline would duplicate the sidebar trigger and floating
-        layer. The live instance is rendered by the protected layout; look at
-        the top-left corner of this page.
+        Re-mounting it inline would duplicate the sidebar trigger and header
+        controls. The live instance is rendered by the protected layout; look at
+        the header at the top of this page.
       </p>
     </section>
   );
