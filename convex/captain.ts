@@ -68,6 +68,22 @@ export const getCaptainedTeamsCount = query({
   },
 });
 
+// "player" is derived from team membership, not a stored role
+export const getIsPlayer = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx, { throw: false });
+    if (!user) return false;
+
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .first();
+
+    return membership !== null;
+  },
+});
+
 /**
  * Get comprehensive dashboard data for the captain.
  * Returns all teams user captains with pending actions and statistics.

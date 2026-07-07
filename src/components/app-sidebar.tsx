@@ -43,10 +43,17 @@ import { useActivityDialog } from "./activity-dialog-context";
 import { NavUser } from "./nav-user";
 import { getHighestRankingRole } from "./users/utils";
 
+type SidebarContext = {
+  captainedTeamsCount: number;
+  isPlayer: boolean;
+};
+
+const isPlayerCondition = (ctx: SidebarContext) => ctx.isPlayer;
+
 type SidebarItem = {
   title: string;
   roles?: string[];
-  condition?: (context: { captainedTeamsCount: number }) => boolean;
+  condition?: (context: SidebarContext) => boolean;
   publicAccess?: boolean;
   exact?: boolean;
   badge?: {
@@ -78,25 +85,25 @@ function useSidebarItems(
           {
             title: "Tournaments",
             href: "/tournaments",
-            roles: ["player"],
+            condition: isPlayerCondition,
             icon: Trophy,
           },
           {
             title: "Teams",
             href: "/teams",
-            roles: ["player"],
+            condition: isPlayerCondition,
             icon: Users,
           },
           {
             title: "My Activities",
             href: "/activities/mine",
-            roles: ["player"],
+            condition: isPlayerCondition,
             icon: ClipboardList,
             exact: true,
           },
           {
             title: "Submit Activity",
-            roles: ["player"],
+            condition: isPlayerCondition,
             onClick: openActivityDialog,
             icon: PlusCircle,
           },
@@ -218,13 +225,14 @@ export function AppSidebar() {
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
 
   const captainedTeamsCount = useQuery(api.captain.getCaptainedTeamsCount) ?? 0;
+  const isPlayer = useQuery(api.captain.getIsPlayer) ?? false;
 
   const { items: sidebarItems } = useSidebarItems(
     openActivityDialog,
     setInviteMemberDialogOpen,
   );
 
-  const context = { captainedTeamsCount };
+  const context = { captainedTeamsCount, isPlayer };
 
   return (
     <Sidebar collapsible="icon">
@@ -282,7 +290,7 @@ function renderItem(
   item: SidebarItem,
   user: { roleNames: string[] } | null | undefined,
   userRoles: string[],
-  context: { captainedTeamsCount: number },
+  context: SidebarContext,
   isActive: (href: string, exact?: boolean) => boolean,
 ) {
   if (item.roles && !userRoles.some((role) => item.roles?.includes(role))) {
