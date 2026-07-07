@@ -22,10 +22,8 @@ export function SidebarBadge({
   color = "neutral",
   tooltip,
 }: SidebarBadgeProps) {
-  // query is already a valid FunctionReference<"query">
   const count = useQuery(query);
 
-  // Early returns after all hooks have been called
   if (!count || count === 0) return null;
 
   const InnerBadge = (
