@@ -1,37 +1,18 @@
 import { Link } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import {
-  Check,
-  ExternalLink,
-  Pencil,
-  Target,
-  Trash2,
-  Users,
-} from "lucide-react";
+import { ExternalLink, Target } from "lucide-react";
 import { useState } from "react";
 
+import { ComposedCard } from "@/components/common/card/composed-card";
+import { EdgeOverlay } from "@/components/common/card/edge-overlay";
+import { StatsGrid } from "@/components/common/card/stats-grid";
 import { SectionHeader } from "@/components/section-header";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../convex/_generated/api";
-import type { Doc, Id } from "../../../convex/_generated/dataModel";
+import type { Id } from "../../../convex/_generated/dataModel";
 import { UpsertChallengeFormDialog } from "./form";
-import { ChallengeRosterDialog } from "./roster-dialog";
 
 type ChallengeWithRoster = FunctionReturnType<
   typeof api.views.challenges.listByTournament
@@ -46,9 +27,6 @@ export function ChallengesSection({ tournamentId }: Props) {
     tournamentId,
   });
   const [createOpen, setCreateOpen] = useState(false);
-  const [editing, setEditing] = useState<Doc<"challenges"> | null>(null);
-  const [rosterForId, setRosterForId] = useState<Id<"challenges"> | null>(null);
-  const rosterFor = challenges?.find((c) => c._id === rosterForId) ?? null;
 
   return (
     <>
@@ -63,40 +41,16 @@ export function ChallengesSection({ tournamentId }: Props) {
         onOpenChange={setCreateOpen}
         tournamentId={tournamentId}
       />
-      {editing && (
-        <UpsertChallengeFormDialog
-          open
-          onOpenChange={(o) => !o && setEditing(null)}
-          tournamentId={tournamentId}
-          challenge={editing}
-        />
-      )}
 
-      {rosterFor && (
-        <ChallengeRosterDialog
-          open
-          onOpenChange={(o) => !o && setRosterForId(null)}
-          challenge={rosterFor}
-        />
-      )}
-
-      <ChallengeListBody
-        challenges={challenges}
-        onEdit={setEditing}
-        onManageRoster={setRosterForId}
-      />
+      <ChallengeListBody challenges={challenges} />
     </>
   );
 }
 
 function ChallengeListBody({
   challenges,
-  onEdit,
-  onManageRoster,
 }: {
   challenges: ChallengeWithRoster[] | undefined;
-  onEdit: (challenge: Doc<"challenges">) => void;
-  onManageRoster: (challengeId: Id<"challenges">) => void;
 }) {
   if (challenges === undefined) {
     return <p className="text-body-md text-muted-foreground">Loading…</p>;
@@ -109,132 +63,52 @@ function ChallengeListBody({
     );
   }
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-x-3 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
       {challenges.map((challenge) => (
-        <ChallengeCard
-          key={challenge._id}
-          challenge={challenge}
-          onEdit={() => onEdit(challenge)}
-          onManageRoster={() => onManageRoster(challenge._id)}
-        />
+        <ChallengeCard key={challenge._id} challenge={challenge} />
       ))}
     </div>
   );
 }
 
-function ChallengeCard({
-  challenge,
-  onEdit,
-  onManageRoster,
-}: {
-  challenge: ChallengeWithRoster;
-  onEdit: () => void;
-  onManageRoster: () => void;
-}) {
-  const canEdit = challenge.state === "pending";
-  const approve = useMutation(api.challenges.approve);
-  const remove = useMutation(api.challenges.remove);
-  const [approving, setApproving] = useState(false);
-  const [removing, setRemoving] = useState(false);
-  const handleApprove = () => {
-    setApproving(true);
-    void tryMutate({
-      fn: () => approve({ challengeId: challenge._id }),
-      successToast: "Challenge approved",
-      onFinally: () => setApproving(false),
-    });
-  };
-  const handleDelete = () => {
-    setRemoving(true);
-    void tryMutate({
-      fn: () => remove({ challengeId: challenge._id }),
-      successToast:
-        challenge.state === "approved"
-          ? "Challenge deleted and standings updated"
-          : "Challenge deleted",
-      onFinally: () => setRemoving(false),
-    });
-  };
-  const deleteWarning =
-    challenge.state === "approved"
-      ? "This Challenge is approved. Deleting it will remove its awarded points from every team in the tournament."
-      : "This Challenge is pending and has no impact on standings.";
+function ChallengeCard({ challenge }: { challenge: ChallengeWithRoster }) {
+  const isPending = challenge.state === "pending";
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-2">
-        <CardTitle className="text-body-md leading-tight">
-          {challenge.description}
-        </CardTitle>
-        <Badge variant={canEdit ? "info" : "success"}>{challenge.state}</Badge>
-      </CardHeader>
-      <CardContent className="space-y-2 text-xs">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Individual</span>
-          <span>{challenge.individualAmount}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Team</span>
-          <span>{challenge.teamAmount}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Threshold</span>
-          <span>{Math.round(challenge.threshold * 100)}%</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Roster</span>
-          <span>
-            {challenge.roster.length}{" "}
-            {challenge.roster.length === 1 ? "participant" : "participants"}
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-2 pt-1">
-          <Button size="sm" variant="outline" asChild>
-            <Link
-              to="/challenges/$challengeId"
-              params={{ challengeId: challenge._id }}
-            >
-              <ExternalLink />
-              Details
-            </Link>
-          </Button>
-          <Button size="sm" variant="outline" onClick={onManageRoster}>
-            <Users />
-            Roster
-          </Button>
-          {canEdit && (
-            <>
-              <Button size="sm" variant="outline" onClick={onEdit}>
-                <Pencil />
-                Edit
-              </Button>
-              <Button size="sm" onClick={handleApprove} disabled={approving}>
-                <Check />
-                Approve
-              </Button>
-            </>
-          )}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button size="sm" variant="outline" disabled={removing}>
-                <Trash2 />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete this Challenge?</AlertDialogTitle>
-                <AlertDialogDescription>{deleteWarning}</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </CardContent>
-    </Card>
+    <EdgeOverlay
+      bottomRight={
+        <Button size="sm" asChild className="shadow-sm">
+          <Link
+            to="/challenges/$challengeId"
+            params={{ challengeId: challenge._id }}
+          >
+            <ExternalLink className="size-3.5" />
+            Details
+          </Link>
+        </Button>
+      }
+    >
+      <ComposedCard
+        className="pb-2"
+        title={challenge.description}
+        badge={{
+          variant: isPending ? "info" : "success",
+          children: challenge.state,
+        }}
+      >
+        <StatsGrid
+          className="grid-cols-4"
+          variant="strip"
+          items={[
+            { label: "Individual", value: challenge.individualAmount },
+            { label: "Team", value: challenge.teamAmount },
+            {
+              label: "Threshold",
+              value: `${Math.round(challenge.threshold * 100)}%`,
+            },
+            { label: "Roster", value: challenge.roster.length },
+          ]}
+        />
+      </ComposedCard>
+    </EdgeOverlay>
   );
 }
