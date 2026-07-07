@@ -1,10 +1,8 @@
-import { useClerk } from "@clerk/tanstack-react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { Calendar } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 
 import { SectionHeader } from "@/components/section-header";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ComposedSelect } from "@/components/ui/composed-select";
 import {
@@ -34,8 +32,6 @@ const WEEKDAY_LABELS_FULL = [
 const WEEK_START_STORAGE_KEY = "calendarWeekStartsOn";
 
 function SettingsPage() {
-  const { signOut } = useClerk();
-
   const [weekStartsOn, setWeekStartsOn] = useState<number>(0);
   const [dateFormatShort, setDateFormatShort] = useState<string>("MM/dd/yyyy");
   const [dateFormatLong, setDateFormatLong] = useState<string>("MMM dd, yyyy");
@@ -97,11 +93,7 @@ function SettingsPage() {
 
   return (
     <>
-      <SectionHeader as="h1" title="Settings">
-        <Button variant="outline" onClick={() => signOut()}>
-          Sign out
-        </Button>
-      </SectionHeader>
+      <SectionHeader as="h1" title="Settings" />
 
       <div className="space-y-8">
         <section>

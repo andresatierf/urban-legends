@@ -7,7 +7,6 @@ import { ActivityDialogProvider } from "./activity-dialog-context";
 import { AppSidebar } from "./app-sidebar";
 import { FloatingSidebarActions } from "./floating-sidebar-actions";
 import { NotificationDropdown } from "./notifications/notification-dropdown";
-import { ThemeToggle } from "./theme-toggle";
 import { SidebarProvider } from "./ui/sidebar";
 
 export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -19,12 +18,11 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
       <SidebarProvider>
         <AppSidebar />
         <FloatingSidebarActions />
-        <div className="pointer-events-auto fixed top-2 right-2 z-50 flex items-center gap-1">
-          <ThemeToggle />
-          {user && (
+        {user && (
+          <div className="pointer-events-auto fixed top-2 right-2 z-50 flex items-center gap-1">
             <NotificationDropdown userId={user._id} unreadCount={unreadCount} />
-          )}
-        </div>
+          </div>
+        )}
         <div className="bg-muted/30 flex min-h-screen w-full flex-col items-center">
           <main className="mt-8 flex w-full flex-1 flex-col gap-4 p-4">
             {children}
