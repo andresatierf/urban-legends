@@ -69,6 +69,26 @@ export const getCaptainedTeamsCount = query({
 });
 
 /**
+ * Whether the current user is a Player — i.e. a member of any team.
+ * "player" is derived from team membership, not a stored role, so the
+ * sidebar gates its compete items on this signal.
+ */
+export const getIsPlayer = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx, { throw: false });
+    if (!user) return false;
+
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .first();
+
+    return membership !== null;
+  },
+});
+
+/**
  * Get comprehensive dashboard data for the captain.
  * Returns all teams user captains with pending actions and statistics.
  */
