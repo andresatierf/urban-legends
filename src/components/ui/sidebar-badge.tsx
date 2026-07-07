@@ -3,6 +3,8 @@
 import { useQuery } from "convex/react";
 import type { FunctionReference } from "convex/server";
 
+import { cn } from "@/lib/utils";
+
 import { Badge } from "./badge";
 import {
   Tooltip,
@@ -29,7 +31,10 @@ export function SidebarBadge({
   const InnerBadge = (
     <Badge
       variant={color}
-      className="pointer-events-none absolute top-1/2 right-1.5 flex h-5 min-w-5 -translate-y-1/2 items-center justify-center rounded-full px-1.5 text-xs tracking-normal select-none group-data-[collapsible=icon]:top-0.5 group-data-[collapsible=icon]:right-0.5 group-data-[collapsible=icon]:h-3.5 group-data-[collapsible=icon]:min-w-3.5 group-data-[collapsible=icon]:translate-y-0 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:text-[9px]"
+      className={cn(
+        "pointer-events-none absolute top-1/2 right-1.5 flex h-5 min-w-5 -translate-y-1/2 items-center justify-center rounded-full px-1.5 text-xs tracking-normal select-none",
+        "group-data-[collapsible=icon]:top-0.5 group-data-[collapsible=icon]:right-0.5 group-data-[collapsible=icon]:h-3.5 group-data-[collapsible=icon]:min-w-3.5 group-data-[collapsible=icon]:translate-y-0 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:text-[9px]",
+      )}
     >
       {count > 99 ? "99+" : count}
     </Badge>
