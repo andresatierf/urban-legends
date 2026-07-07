@@ -33,11 +33,14 @@ export function RecentActivityFeed({ items }: RecentActivityFeedProps) {
 }
 
 function RecentActivityRow({ item }: { item: DashboardRecentActivityItem }) {
-  const summary = item.description
-    ? item.description
-    : item.type === "group"
-      ? `${tierLabel(item.tier)} team activity`
-      : `${tierLabel(item.tier)} activity`;
+  let summary: string;
+  if (item.description) {
+    summary = item.description;
+  } else {
+    const label = tierLabel(item.tier);
+    summary =
+      item.type === "group" ? `${label} team activity` : `${label} activity`;
+  }
 
   return (
     <li
