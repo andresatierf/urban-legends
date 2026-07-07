@@ -321,13 +321,7 @@ function renderItem(
           <item.icon />
           <span>{item.title}</span>
         </SidebarMenuButton>
-        {item.badge && (
-          <SidebarBadge
-            query={item.badge.query}
-            color={item.badge.color}
-            tooltip={item.badge.tooltip}
-          />
-        )}
+        {item.badge && <SidebarBadge {...item.badge} />}
       </SidebarMenuItem>
     );
   }
@@ -342,13 +336,7 @@ function renderItem(
           <span>{item.title}</span>
         </Link>
       </SidebarMenuButton>
-      {item.badge && (
-        <SidebarBadge
-          query={item.badge.query}
-          color={item.badge.color}
-          tooltip={item.badge.tooltip}
-        />
-      )}
+      {item.badge && <SidebarBadge {...item.badge} />}
     </SidebarMenuItem>
   );
 }
