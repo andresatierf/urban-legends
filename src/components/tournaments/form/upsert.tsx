@@ -133,7 +133,7 @@ export function UpsertTournamentFormDialog({
             e.preventDefault();
             form.handleSubmit();
           }}
-          className="flex"
+          className="flex flex-col gap-4"
         >
           <DialogHeader>
             <DialogTitle>
@@ -145,7 +145,7 @@ export function UpsertTournamentFormDialog({
                 : "Create a new tournament"}
             </DialogDescription>
           </DialogHeader>
-          <FieldGroup className="max-w-[640px]">
+          <FieldGroup>
             <form.AppField name="name">
               {(field) => (
                 <field.TextField
