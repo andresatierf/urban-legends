@@ -119,12 +119,8 @@ function ActivityFeedCard({ item }: { item: ActivityItem }) {
 
 function ChallengeFeedCard({ item }: { item: ChallengeItem }) {
   const { format } = useFormattedDate();
-  const { challenge, award, team } = item;
+  const { challenge, award, team, sortDate } = item;
   const isApproved = challenge.state === "approved";
-  const eyebrowDate = format(
-    isApproved ? challenge.updatedAt : challenge.createdAt,
-    "long",
-  );
 
   return (
     <EdgeOverlay
@@ -143,7 +139,7 @@ function ChallengeFeedCard({ item }: { item: ChallengeItem }) {
       <ComposedCard
         className="pb-2"
         title={challenge.description}
-        eyebrow={eyebrowDate}
+        eyebrow={format(sortDate, "long")}
         badge={[
           {
             variant: "social",
