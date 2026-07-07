@@ -101,14 +101,12 @@ export const getDetails = query({
     const challenge = await ctx.db.get(args.challengeId);
     if (!challenge) throw new Error("Challenge not found");
 
-    const canManage = await canManageChallenge.check(ctx, user._id, {
-      tournamentId: challenge.tournamentId,
-    });
-    const isPlayer = await isPlayerOfTournament(
-      ctx,
-      user._id,
-      challenge.tournamentId,
-    );
+    const [canManage, isPlayer] = await Promise.all([
+      canManageChallenge.check(ctx, user._id, {
+        tournamentId: challenge.tournamentId,
+      }),
+      isPlayerOfTournament(ctx, user._id, challenge.tournamentId),
+    ]);
     if (!canManage && !isPlayer) {
       throw new Error("Access denied");
     }
