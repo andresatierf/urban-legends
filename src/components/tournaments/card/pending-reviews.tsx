@@ -9,7 +9,7 @@ export function PendingReviews({ data }: { data: TournamentCardData }) {
 
   return (
     <Link
-      to="/reviewer"
+      to="/activities/review"
       className="border-ink bg-primary text-primary-foreground hover:bg-primary/90 group/queue flex items-stretch gap-0 overflow-hidden rounded-xl border-2 shadow-sm transition-colors"
     >
       <div className="border-ink/20 bg-primary/80 flex items-center justify-center border-r px-3">

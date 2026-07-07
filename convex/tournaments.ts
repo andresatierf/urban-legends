@@ -832,12 +832,7 @@ export const listWithAuthority = query({
   },
 });
 
-// ── listManaged ──────────────────────────────────────────────────────────────
-// Tournaments the current user directly manages via a `tournament_manager`
-// tournamentRole. Feeds the sidebar's operator entry points — global admin/dev
-// authority is intentionally excluded so admins/devs don't see every tournament
-// pinned to their sidebar.
-
+// Excludes global admin/dev authority so admins don't see every tournament pinned to their sidebar.
 export const listManaged = query({
   args: {},
   handler: async (ctx) => {

@@ -8,7 +8,6 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/admin": "Admin",
   "/admin/system": "System Health",
   "/users": "Users",
-  "/reviewer": "Reviewer",
   "/reviewer/statistics": "Review Stats",
   "/captain": "My Teams",
   "/captain/comparison": "Team Comparison",
@@ -18,8 +17,6 @@ export const ROUTE_LABELS: Record<string, string> = {
   "/public": "Discover",
   "/public/leaderboards": "Public Leaderboards",
   "/workbench": "Workbench",
-  "/tournament-manager": "Tournament Manager",
-  "/viewer": "Viewer",
 };
 
 export const SEGMENT_LABELS: Record<string, string> = {
