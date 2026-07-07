@@ -503,3 +503,74 @@ describe("tournaments.listWithAuthority", () => {
     });
   });
 });
+
+describe("tournaments.listManaged", () => {
+  test("returns only tournaments where the user has tournament_manager role", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const creatorId = await makeUser(ctx, "creator");
+      const managerId = await makeUser(ctx, "manager");
+      const managed = await makeTournament(ctx, creatorId, { name: "Managed" });
+      const reviewed = await makeTournament(ctx, creatorId, {
+        name: "Reviewed",
+      });
+      await makeTournament(ctx, creatorId, { name: "Unrelated" });
+      await giveTournamentRole(ctx, managerId, managed, "tournament_manager");
+      await giveTournamentRole(ctx, managerId, reviewed, "reviewer");
+    });
+
+    const list = await t
+      .withIdentity({ subject: "manager" })
+      .query(api.tournaments.listManaged, {});
+
+    expect(list.map((x) => x.name)).toEqual(["Managed"]);
+  });
+
+  test("returns empty for admins with no direct tournament_manager role", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const creatorId = await makeUser(ctx, "creator");
+      await makeTournament(ctx, creatorId);
+      const adminId = await makeUser(ctx, "admin");
+      await giveSystemRole(ctx, adminId, "admin");
+    });
+
+    const list = await t
+      .withIdentity({ subject: "admin" })
+      .query(api.tournaments.listManaged, {});
+
+    expect(list).toEqual([]);
+  });
+
+  test("returns multiple managed tournaments sorted active > upcoming > ended", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const creatorId = await makeUser(ctx, "creator");
+      const managerId = await makeUser(ctx, "manager");
+      const ended = await makeTournament(ctx, creatorId, {
+        startDate: ENDED_START,
+        endDate: ENDED_END,
+        name: "Ended",
+      });
+      const upcoming = await makeTournament(ctx, creatorId, {
+        startDate: UPCOMING_START,
+        endDate: UPCOMING_END,
+        name: "Upcoming",
+      });
+      const active = await makeTournament(ctx, creatorId, {
+        startDate: ACTIVE_START,
+        endDate: ACTIVE_END,
+        name: "Active",
+      });
+      await giveTournamentRole(ctx, managerId, ended, "tournament_manager");
+      await giveTournamentRole(ctx, managerId, upcoming, "tournament_manager");
+      await giveTournamentRole(ctx, managerId, active, "tournament_manager");
+    });
+
+    const list = await t
+      .withIdentity({ subject: "manager" })
+      .query(api.tournaments.listManaged, {});
+
+    expect(list.map((x) => x.name)).toEqual(["Active", "Upcoming", "Ended"]);
+  });
+});

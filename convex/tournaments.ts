@@ -831,3 +831,28 @@ export const listWithAuthority = query({
     };
   },
 });
+
+// ── listManaged ──────────────────────────────────────────────────────────────
+// Tournaments the current user directly manages via a `tournament_manager`
+// tournamentRole. Feeds the sidebar's operator entry points — global admin/dev
+// authority is intentionally excluded so admins/devs don't see every tournament
+// pinned to their sidebar.
+
+export const listManaged = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    const managerRoles = await ctx.db
+      .query("tournamentRoles")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("role"), "tournament_manager"))
+      .collect();
+
+    const tournaments = (
+      await Promise.all(managerRoles.map((r) => ctx.db.get(r.tournamentId)))
+    ).filter((t): t is Doc<"tournaments"> => t !== null);
+
+    return sortTournamentsByStatus(tournaments, nowUTC());
+  },
+});

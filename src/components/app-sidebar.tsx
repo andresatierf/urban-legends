@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   type LucideIcon,
   PlusCircle,
+  Settings,
   Shield,
   Swords,
   TrendingUp,
@@ -21,6 +22,7 @@ import {
 import { useMemo, useState } from "react";
 
 import { InviteMemberFormDialog } from "@/components/teams/form";
+import { UpsertTournamentFormDialog } from "@/components/tournaments/form";
 import {
   Sidebar,
   SidebarContent,
@@ -46,6 +48,8 @@ import { getHighestRankingRole } from "./users/utils";
 type SidebarContext = {
   captainedTeamsCount: number;
   isPlayer: boolean;
+  canCreateTournament: boolean;
+  managedTournamentsCount: number;
 };
 
 const isPlayerCondition = (ctx: SidebarContext) => ctx.isPlayer;
@@ -69,6 +73,8 @@ type SidebarItem = {
 function useSidebarItems(
   openActivityDialog: () => void,
   setInviteMemberDialogOpen: (state: boolean) => void,
+  setCreateTournamentDialogOpen: (state: boolean) => void,
+  managedTournaments: Array<{ _id: string; name: string }>,
 ) {
   const sidebar: SidebarItem[] = useMemo(
     () => [
@@ -187,6 +193,28 @@ function useSidebarItems(
       },
 
       {
+        title: "Manage",
+        condition: ({ canCreateTournament, managedTournamentsCount }) =>
+          canCreateTournament || managedTournamentsCount > 0,
+        items: [
+          {
+            title: "Create Tournament",
+            onClick: () => setCreateTournamentDialogOpen(true),
+            icon: PlusCircle,
+            condition: ({ canCreateTournament }) => canCreateTournament,
+          },
+          ...managedTournaments.map(
+            (t): SidebarItem => ({
+              title: t.name,
+              href: `/tournaments/${t._id}`,
+              icon: Settings,
+              exact: true,
+            }),
+          ),
+        ],
+      },
+
+      {
         title: "Discover",
         publicAccess: true,
         items: [
@@ -211,28 +239,46 @@ function useSidebarItems(
         ],
       },
     ],
-    [openActivityDialog, setInviteMemberDialogOpen],
+    [
+      openActivityDialog,
+      setInviteMemberDialogOpen,
+      setCreateTournamentDialogOpen,
+      managedTournaments,
+    ],
   );
 
   return { items: sidebar };
 }
 
 export function AppSidebar() {
-  const { user } = useUser({ shouldThrow: false });
+  const { user, canCreateTournament } = useUser({ shouldThrow: false });
   const { isActive } = useActiveRoute();
   const { openActivityDialog } = useActivityDialog();
 
   const [inviteMemberDialogOpen, setInviteMemberDialogOpen] = useState(false);
+  const [createTournamentDialogOpen, setCreateTournamentDialogOpen] =
+    useState(false);
 
   const captainedTeamsCount = useQuery(api.captain.getCaptainedTeamsCount) ?? 0;
   const isPlayer = useQuery(api.captain.getIsPlayer) ?? false;
+  const managedTournaments = useQuery(
+    api.tournaments.listManaged,
+    user ? {} : "skip",
+  );
 
   const { items: sidebarItems } = useSidebarItems(
     openActivityDialog,
     setInviteMemberDialogOpen,
+    setCreateTournamentDialogOpen,
+    managedTournaments ?? [],
   );
 
-  const context = { captainedTeamsCount, isPlayer };
+  const context: SidebarContext = {
+    captainedTeamsCount,
+    isPlayer,
+    canCreateTournament,
+    managedTournamentsCount: managedTournaments?.length ?? 0,
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -265,6 +311,12 @@ export function AppSidebar() {
           <InviteMemberFormDialog
             open={inviteMemberDialogOpen}
             onOpenChange={setInviteMemberDialogOpen}
+          />
+        )}
+        {canCreateTournament && (
+          <UpsertTournamentFormDialog
+            open={createTournamentDialogOpen}
+            onOpenChange={setCreateTournamentDialogOpen}
           />
         )}
       </SidebarContent>
