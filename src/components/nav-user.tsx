@@ -1,5 +1,6 @@
+import { useClerk } from "@clerk/tanstack-react-start";
 import { Link } from "@tanstack/react-router";
-import { ChevronsUpDown, Settings, User } from "lucide-react";
+import { ChevronsUpDown, LogOut, Palette, Settings, User } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -8,7 +9,12 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -17,6 +23,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { type Theme, useTheme } from "@/hooks/use-theme";
+import { THEME_OPTIONS } from "@/lib/theme-config";
 
 import type { Id } from "../../convex/_generated/dataModel";
 import { getInitials } from "./users/utils";
@@ -31,6 +39,8 @@ export type NavUserData = {
 
 export function NavUser({ user }: { user: NavUserData }) {
   const { isMobile } = useSidebar();
+  const { signOut } = useClerk();
+  const { theme, setTheme } = useTheme();
   const initials = getInitials(user.name);
 
   return (
@@ -98,7 +108,39 @@ export function NavUser({ user }: { user: NavUserData }) {
                   Settings
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Palette />
+                  Theme
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup
+                    value={theme}
+                    onValueChange={(value) => setTheme(value as Theme)}
+                  >
+                    {(
+                      Object.entries(THEME_OPTIONS) as [
+                        Theme,
+                        (typeof THEME_OPTIONS)[Theme],
+                      ][]
+                    ).map(([key, config]) => {
+                      const Icon = config.icon;
+                      return (
+                        <DropdownMenuRadioItem key={key} value={key}>
+                          <Icon />
+                          {config.label}
+                        </DropdownMenuRadioItem>
+                      );
+                    })}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
             </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => signOut()}>
+              <LogOut />
+              Sign out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

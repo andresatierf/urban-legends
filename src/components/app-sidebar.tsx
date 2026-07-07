@@ -31,7 +31,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { SidebarBadge } from "@/components/ui/sidebar-badge";
 import { useActiveRoute } from "@/hooks/useActiveRoute";
@@ -239,7 +238,6 @@ export function AppSidebar() {
           />
         )}
       </SidebarContent>
-      <SidebarSeparator />
       {user && (
         <SidebarFooter>
           <NavUser
