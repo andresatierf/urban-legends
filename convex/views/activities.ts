@@ -4,11 +4,21 @@ import { computeChallengeAward } from "../lifecycle/challengeAwards";
 import { getCurrentUserOrThrow } from "../users";
 
 // Award amounts on Challenges are computed on read — no per-team award is stored.
+export type FeedParticipant = {
+  userId: Id<"users">;
+  name: string;
+  imageUrl?: string;
+  hasEvidence: boolean;
+  fulfilled: boolean;
+  isCreator: boolean;
+};
+
 export type MyFeedItem =
   | {
       kind: "activity";
       sortDate: string;
       activity: Doc<"activities">;
+      participants: FeedParticipant[];
     }
   | {
       kind: "challenge";
@@ -40,11 +50,40 @@ export const myFeed = query({
       (a): a is NonNullable<typeof a> => a !== null && a.state !== "deleted",
     );
 
-    const activityItems: MyFeedItem[] = activities.map((activity) => ({
-      kind: "activity",
-      sortDate: activity.date,
-      activity,
-    }));
+    const activityItems: MyFeedItem[] = await Promise.all(
+      activities.map(async (activity) => {
+        const parts = await ctx.db
+          .query("participations")
+          .withIndex("by_activity", (q) => q.eq("activityId", activity._id))
+          .collect();
+        const participants: FeedParticipant[] = await Promise.all(
+          parts.map(async (p) => {
+            const u = await ctx.db.get(p.userId);
+            return {
+              userId: p.userId,
+              name: u?.name ?? u?.email ?? "Unknown",
+              imageUrl: u?.imageUrl,
+              hasEvidence: (p.evidenceStorageIds ?? []).length > 0,
+              fulfilled: !!p.fulfilledAt,
+              isCreator: p.userId === activity.createdBy,
+            };
+          }),
+        );
+        // Creator first, then fulfilled, then the rest — stable, readable order.
+        participants.sort(
+          (a, b) =>
+            Number(b.isCreator) - Number(a.isCreator) ||
+            Number(b.fulfilled) - Number(a.fulfilled) ||
+            a.name.localeCompare(b.name),
+        );
+        return {
+          kind: "activity" as const,
+          sortDate: activity.date,
+          activity,
+          participants,
+        };
+      }),
+    );
 
     const rosterEntries = await ctx.db
       .query("challengeRosterEntries")
