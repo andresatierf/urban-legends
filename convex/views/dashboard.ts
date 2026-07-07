@@ -195,6 +195,12 @@ export const getDashboardView = query({
     );
     const daysRemaining = Math.max(Math.ceil((endMs - Date.now()) / DAY_MS), 0);
 
+    const recentActivity = await loadRecentActivity(
+      ctx,
+      selectedTournament._id,
+      myTeamRow.team._id,
+    );
+
     return {
       viewer: { firstName: firstName(user.name) },
       isOnAnyTeam: true,
@@ -219,11 +225,68 @@ export const getDashboardView = query({
           comparedToName: comparedTo?.team.name ?? null,
         },
         todayActivityCount,
+        recentActivity,
       },
       inbox: await loadInbox(ctx, user._id, teamMemberships),
     } as const;
   },
 });
+
+// ── recent activity loader ─────────────────────────────────────────────
+
+const RECENT_ACTIVITY_LIMIT = 15;
+
+async function loadRecentActivity(
+  ctx: QueryCtx,
+  tournamentId: Id<"tournaments">,
+  viewerTeamId: Id<"teams">,
+) {
+  const approved = await ctx.db
+    .query("activities")
+    .withIndex("by_tournament_and_state", (q) =>
+      q.eq("tournamentId", tournamentId).eq("state", "approved"),
+    )
+    .collect();
+
+  const ranked = approved
+    .map((a) => ({ activity: a, timestamp: a.reviewedAt ?? a._creationTime }))
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, RECENT_ACTIVITY_LIMIT);
+
+  const teamCache = new Map<Id<"teams">, Doc<"teams"> | null>();
+  const userCache = new Map<Id<"users">, Doc<"users"> | null>();
+  const getTeam = async (id: Id<"teams">) => {
+    if (!teamCache.has(id)) teamCache.set(id, await ctx.db.get(id));
+    return teamCache.get(id) ?? null;
+  };
+  const getUser = async (id: Id<"users">) => {
+    if (!userCache.has(id)) userCache.set(id, await ctx.db.get(id));
+    return userCache.get(id) ?? null;
+  };
+
+  return Promise.all(
+    ranked.map(async ({ activity, timestamp }) => {
+      const [team, actor] = await Promise.all([
+        getTeam(activity.teamId),
+        getUser(activity.createdBy),
+      ]);
+      return {
+        id: activity._id,
+        team: {
+          _id: activity.teamId,
+          name: team?.name ?? "Unknown team",
+        },
+        isViewerTeam: activity.teamId === viewerTeamId,
+        actorName: actor?.name ?? null,
+        description: activity.description ?? null,
+        tier: activity.tier,
+        type: activity.type,
+        pointsEarned: Math.round(activity.pointsEarned ?? 0),
+        timestamp,
+      };
+    }),
+  );
+}
 
 // ── inbox loader ───────────────────────────────────────────────────────
 

@@ -43,6 +43,21 @@ export type DashboardMyTeam = {
   comparedToTeamName: string | null;
 };
 
+export type DashboardRecentActivityItem = {
+  id: string;
+  team: {
+    _id: string;
+    name: string;
+  };
+  isViewerTeam: boolean;
+  actorName: string | null;
+  description: string | null;
+  tier: "base" | "advanced";
+  type: "individual" | "group";
+  pointsEarned: number;
+  timestamp: number;
+};
+
 export type DashboardInboxItem =
   | {
       kind: "invitation";

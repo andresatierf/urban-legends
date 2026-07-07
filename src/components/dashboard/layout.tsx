@@ -10,6 +10,7 @@ import { buildChartData, formatEndDate } from "./chart-data";
 import { EmptyState } from "./empty-state";
 import { Inbox } from "./inbox";
 import { MyTeamHeader } from "./my-team-header";
+import { RecentActivityFeed } from "./recent-activity-feed";
 import { DashboardShell } from "./shell";
 import { StandingsCard } from "./standings-card";
 import { SubmitTodayBanner } from "./submit-today-banner";
@@ -176,6 +177,8 @@ function DashboardLoaded({
             isEnded={selected.lifecycleState === "ended"}
           />
         )}
+
+        <RecentActivityFeed items={selected.recentActivity} />
 
         <Inbox
           items={data.inbox}
