@@ -9,6 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
 import { ROUTE_LABELS, SEGMENT_LABELS } from "@/lib/route-labels";
 
 type Crumb = {
@@ -37,23 +38,29 @@ export function HeaderBreadcrumbs() {
   if (crumbs.length === 0) return null;
 
   return (
-    <Breadcrumb>
-      <BreadcrumbList>
-        {crumbs.map((crumb) => (
-          <Fragment key={crumb.href}>
-            <BreadcrumbItem>
-              {crumb.isLast ? (
-                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-              ) : (
-                <BreadcrumbLink asChild>
-                  <Link to={crumb.href}>{crumb.label}</Link>
-                </BreadcrumbLink>
-              )}
-            </BreadcrumbItem>
-            {!crumb.isLast && <BreadcrumbSeparator />}
-          </Fragment>
-        ))}
-      </BreadcrumbList>
-    </Breadcrumb>
+    <>
+      <Separator
+        orientation="vertical"
+        className="mx-1 data-[orientation=vertical]:h-4"
+      />
+      <Breadcrumb>
+        <BreadcrumbList>
+          {crumbs.map((crumb) => (
+            <Fragment key={crumb.href}>
+              <BreadcrumbItem>
+                {crumb.isLast ? (
+                  <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link to={crumb.href}>{crumb.label}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+              {!crumb.isLast && <BreadcrumbSeparator />}
+            </Fragment>
+          ))}
+        </BreadcrumbList>
+      </Breadcrumb>
+    </>
   );
 }
