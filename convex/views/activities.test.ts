@@ -311,4 +311,74 @@ describe("views.activities.myFeed", () => {
     expect(feed).toHaveLength(1);
     expect(feed[0].kind).toBe("activity");
   });
+
+  test("group activity reports participants and who has provided evidence", async () => {
+    const t = convexTest(schemaForTest);
+    await t.run(async (ctx) => {
+      const creator = await makeUser(ctx, "viewer");
+      const mate = await makeUser(ctx, "mate");
+      const tournamentId = await makeTournament(ctx, creator);
+      const teamId = await makeTeam(ctx, tournamentId, creator, "Team");
+      await addToTeam(ctx, teamId, creator);
+      await addToTeam(ctx, teamId, mate);
+
+      const activityId = await ctx.db.insert("activities", {
+        teamId,
+        tournamentId,
+        createdBy: creator,
+        date: "2024-06-15T00:00:00.000Z",
+        type: "group",
+        tier: "base",
+        state: "pending",
+        pointsEarned: 3,
+        participantCount: 2,
+        totalTeamMembers: 2,
+        participationRate: 1,
+        isTeamExercise: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      // Creator provided evidence; teammate has not yet.
+      await ctx.db.insert("participations", {
+        activityId,
+        userId: creator,
+        teamId,
+        tournamentId,
+        evidenceStorageIds: ["kg2abcdef123" as Id<"_storage">],
+        fulfilledAt: new Date().toISOString(),
+        pointsEarned: 3,
+        createdAt: new Date().toISOString(),
+      });
+      await ctx.db.insert("participations", {
+        activityId,
+        userId: mate,
+        teamId,
+        tournamentId,
+        evidenceStorageIds: [],
+        pointsEarned: 0,
+        createdAt: new Date().toISOString(),
+      });
+    });
+
+    const feed = await t
+      .withIdentity({ subject: "viewer" })
+      .query(api.views.activities.myFeed, {});
+    expect(feed).toHaveLength(1);
+    const item = feed[0];
+    if (item.kind !== "activity") throw new Error("expected activity");
+    expect(item.participants).toHaveLength(2);
+    // Creator sorts first and is flagged as such.
+    expect(item.participants[0]).toMatchObject({
+      name: "viewer",
+      isCreator: true,
+      hasEvidence: true,
+      fulfilled: true,
+    });
+    expect(item.participants[1]).toMatchObject({
+      name: "mate",
+      isCreator: false,
+      hasEvidence: false,
+      fulfilled: false,
+    });
+  });
 });
