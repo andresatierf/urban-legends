@@ -4,11 +4,13 @@ import { Plus } from "lucide-react";
 
 import { UpsertActivityFormDialog } from "@/components/activities/form";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useUnreadCount } from "@/hooks/use-unread-count";
 import { useUser } from "@/hooks/useUser";
 
 import { useActivityDialog } from "./activity-dialog-context";
+import { HeaderBreadcrumbs } from "./header-breadcrumbs";
 import { NotificationDropdown } from "./notifications/notification-dropdown";
 
 export function SiteHeader() {
@@ -35,6 +37,11 @@ export function SiteHeader() {
           <Plus />
         </Button>
       )}
+      <Separator
+        orientation="vertical"
+        className="mx-1 data-[orientation=vertical]:h-4"
+      />
+      <HeaderBreadcrumbs />
       {user && (
         <div className="ml-auto flex items-center gap-1">
           <NotificationDropdown userId={user._id} unreadCount={unreadCount} />
