@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { ComposedCard } from "@/components/common/card/composed-card";
+import { EdgeOverlay } from "@/components/common/card/edge-overlay";
+import { StatsGrid } from "@/components/common/card/stats-grid";
 import { SectionHeader } from "@/components/section-header";
 import {
   AlertDialog,
@@ -23,9 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { tryMutate } from "@/lib/utils";
 
 import { api } from "../../../convex/_generated/api";
@@ -109,7 +110,7 @@ function ChallengeListBody({
     );
   }
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-x-3 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
       {challenges.map((challenge) => (
         <ChallengeCard
           key={challenge._id}
@@ -131,7 +132,7 @@ function ChallengeCard({
   onEdit: () => void;
   onManageRoster: () => void;
 }) {
-  const canEdit = challenge.state === "pending";
+  const isPending = challenge.state === "pending";
   const approve = useMutation(api.challenges.approve);
   const remove = useMutation(api.challenges.remove);
   const [approving, setApproving] = useState(false);
@@ -159,64 +160,43 @@ function ChallengeCard({
     challenge.state === "approved"
       ? "This Challenge is approved. Deleting it will remove its awarded points from every team in the tournament."
       : "This Challenge is pending and has no impact on standings.";
+  const rosterCount = challenge.roster.length;
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-2">
-        <CardTitle className="text-body-md leading-tight">
-          {challenge.description}
-        </CardTitle>
-        <Badge variant={canEdit ? "info" : "success"}>{challenge.state}</Badge>
-      </CardHeader>
-      <CardContent className="space-y-2 text-xs">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Individual</span>
-          <span>{challenge.individualAmount}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Team</span>
-          <span>{challenge.teamAmount}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Threshold</span>
-          <span>{Math.round(challenge.threshold * 100)}%</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Roster</span>
-          <span>
-            {challenge.roster.length}{" "}
-            {challenge.roster.length === 1 ? "participant" : "participants"}
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-2 pt-1">
-          <Button size="sm" variant="outline" asChild>
-            <Link
-              to="/challenges/$challengeId"
-              params={{ challengeId: challenge._id }}
-            >
-              <ExternalLink />
-              Details
-            </Link>
-          </Button>
-          <Button size="sm" variant="outline" onClick={onManageRoster}>
-            <Users />
-            Roster
-          </Button>
-          {canEdit && (
+    <EdgeOverlay
+      bottomLeft={
+        <div className="flex items-center gap-2">
+          {isPending && (
             <>
-              <Button size="sm" variant="outline" onClick={onEdit}>
-                <Pencil />
+              <Button
+                size="sm"
+                variant="secondary"
+                className="shadow-sm"
+                onClick={onEdit}
+              >
+                <Pencil className="size-3.5" />
                 Edit
               </Button>
-              <Button size="sm" onClick={handleApprove} disabled={approving}>
-                <Check />
+              <Button
+                size="sm"
+                variant="grass"
+                className="shadow-sm"
+                onClick={handleApprove}
+                disabled={approving}
+              >
+                <Check className="size-3.5" />
                 Approve
               </Button>
             </>
           )}
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="outline" disabled={removing}>
-                <Trash2 />
+              <Button
+                size="sm"
+                variant="destructive"
+                className="shadow-sm"
+                disabled={removing}
+              >
+                <Trash2 className="size-3.5" />
                 Delete
               </Button>
             </AlertDialogTrigger>
@@ -234,7 +214,52 @@ function ChallengeCard({
             </AlertDialogContent>
           </AlertDialog>
         </div>
-      </CardContent>
-    </Card>
+      }
+      bottomRight={
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            className="shadow-sm"
+            onClick={onManageRoster}
+          >
+            <Users className="size-3.5" />
+            Roster
+          </Button>
+          <Button size="sm" asChild className="shadow-sm">
+            <Link
+              to="/challenges/$challengeId"
+              params={{ challengeId: challenge._id }}
+            >
+              <ExternalLink className="size-3.5" />
+              Details
+            </Link>
+          </Button>
+        </div>
+      }
+    >
+      <ComposedCard
+        className="pb-2"
+        title={challenge.description}
+        badge={{
+          variant: isPending ? "info" : "success",
+          children: challenge.state,
+        }}
+      >
+        <StatsGrid
+          className="grid-cols-4"
+          variant="strip"
+          items={[
+            { label: "Individual", value: challenge.individualAmount },
+            { label: "Team", value: challenge.teamAmount },
+            {
+              label: "Threshold",
+              value: `${Math.round(challenge.threshold * 100)}%`,
+            },
+            { label: "Roster", value: rosterCount },
+          ]}
+        />
+      </ComposedCard>
+    </EdgeOverlay>
   );
 }
