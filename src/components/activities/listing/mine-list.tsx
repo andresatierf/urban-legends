@@ -82,35 +82,43 @@ export function MyActivitiesList() {
             </Card>
           </Link>
         ) : (
-          <Card key={`challenge-${item.challenge._id}`}>
-            <CardContent className="space-y-3 py-4">
-              <div className="flex items-center justify-between gap-2">
-                <Badge variant="social">
-                  <Trophy className="size-3" />
-                  Challenge
-                </Badge>
-                <Badge
-                  variant={
-                    item.challenge.state === "approved" ? "success" : "warning"
-                  }
-                >
-                  {item.challenge.state === "approved"
-                    ? "approved"
-                    : "awaiting approval"}
-                </Badge>
-              </div>
-              <div className="space-y-1">
-                <p className="text-muted-foreground line-clamp-2 text-xs">
-                  {item.challenge.description}
-                </p>
-              </div>
-              <div className="text-muted-foreground text-xs">
-                {item.award
-                  ? `+${item.award.amount} pts to ${item.team.name}`
-                  : "Awaiting approval"}
-              </div>
-            </CardContent>
-          </Card>
+          <Link
+            key={`challenge-${item.challenge._id}`}
+            to="/challenges/$challengeId"
+            params={{ challengeId: item.challenge._id }}
+          >
+            <Card className="hover:border-primary/50 transition-colors">
+              <CardContent className="space-y-3 py-4">
+                <div className="flex items-center justify-between gap-2">
+                  <Badge variant="social">
+                    <Trophy className="size-3" />
+                    Challenge
+                  </Badge>
+                  <Badge
+                    variant={
+                      item.challenge.state === "approved"
+                        ? "success"
+                        : "warning"
+                    }
+                  >
+                    {item.challenge.state === "approved"
+                      ? "approved"
+                      : "awaiting approval"}
+                  </Badge>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground line-clamp-2 text-xs">
+                    {item.challenge.description}
+                  </p>
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  {item.award
+                    ? `+${item.award.amount} pts to ${item.team.name}`
+                    : "Awaiting approval"}
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         ),
       )}
     </div>

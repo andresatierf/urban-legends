@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { type QueryCtx, query } from "../_generated/server";
 import { canManageChallenge } from "../authority/core";
+import { computeChallengeAward } from "../lifecycle/challengeAwards";
 import { getCurrentUserOrThrow } from "../users";
 
 type RosterMember = {
@@ -77,6 +78,72 @@ export const listByTournament = query({
         roster: await loadRoster(ctx, challenge),
       })),
     );
+  },
+});
+
+async function isPlayerOfTournament(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  tournamentId: Id<"tournaments">,
+): Promise<boolean> {
+  const memberships = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .collect();
+  const teams = await Promise.all(memberships.map((m) => ctx.db.get(m.teamId)));
+  return teams.some((t) => t?.tournamentId === tournamentId);
+}
+
+export const getDetails = query({
+  args: { challengeId: v.id("challenges") },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    const challenge = await ctx.db.get(args.challengeId);
+    if (!challenge) throw new Error("Challenge not found");
+
+    const canManage = await canManageChallenge.check(ctx, user._id, {
+      tournamentId: challenge.tournamentId,
+    });
+    const isPlayer = await isPlayerOfTournament(
+      ctx,
+      user._id,
+      challenge.tournamentId,
+    );
+    if (!canManage && !isPlayer) {
+      throw new Error("Access denied");
+    }
+
+    const roster = await loadRoster(ctx, challenge);
+
+    const teams = await ctx.db
+      .query("teams")
+      .withIndex("by_tournament", (q) =>
+        q.eq("tournamentId", challenge.tournamentId),
+      )
+      .collect();
+    const sortedTeams = [...teams].sort((a, b) => a.name.localeCompare(b.name));
+
+    const isApproved = challenge.state === "approved";
+    const teamAwards = await Promise.all(
+      sortedTeams.map(async (team) => {
+        const award = await computeChallengeAward(ctx, challenge, team);
+        return {
+          teamId: team._id,
+          teamName: team.name,
+          participantCount: award.participantCount,
+          teamSize: award.teamSize,
+          isTeamAward: award.isTeamAward,
+          amount: isApproved ? award.amount : 0,
+        };
+      }),
+    );
+
+    return {
+      challenge,
+      roster,
+      teamAwards,
+      canManage,
+    };
   },
 });
 

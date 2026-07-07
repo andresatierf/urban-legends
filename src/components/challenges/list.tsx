@@ -1,6 +1,14 @@
+import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { Check, Pencil, Target, Trash2, Users } from "lucide-react";
+import {
+  Check,
+  ExternalLink,
+  Pencil,
+  Target,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 
 import { SectionHeader } from "@/components/section-header";
@@ -179,7 +187,16 @@ function ChallengeCard({
             {challenge.roster.length === 1 ? "participant" : "participants"}
           </span>
         </div>
-        <div className="flex gap-2 pt-1">
+        <div className="flex flex-wrap gap-2 pt-1">
+          <Button size="sm" variant="outline" asChild>
+            <Link
+              to="/challenges/$challengeId"
+              params={{ challengeId: challenge._id }}
+            >
+              <ExternalLink />
+              Details
+            </Link>
+          </Button>
           <Button size="sm" variant="outline" onClick={onManageRoster}>
             <Users />
             Roster
