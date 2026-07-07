@@ -9,6 +9,7 @@ import { useUnreadCount } from "@/hooks/use-unread-count";
 import { useUser } from "@/hooks/useUser";
 
 import { useActivityDialog } from "./activity-dialog-context";
+import { HeaderBreadcrumbs } from "./header-breadcrumbs";
 import { NotificationDropdown } from "./notifications/notification-dropdown";
 
 export function SiteHeader() {
@@ -35,6 +36,7 @@ export function SiteHeader() {
           <Plus />
         </Button>
       )}
+      <HeaderBreadcrumbs />
       {user && (
         <div className="ml-auto flex items-center gap-1">
           <NotificationDropdown userId={user._id} unreadCount={unreadCount} />
