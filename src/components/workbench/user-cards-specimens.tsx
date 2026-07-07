@@ -1,5 +1,6 @@
-import { LoggedUserCard } from "@/components/logged-user-card";
+import { NavUser, type NavUserData } from "@/components/nav-user";
 import { SectionHeader } from "@/components/section-header";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { ProfileCard } from "@/components/users/details/profile-card";
 import type { UserDetails } from "@/components/users/details/types";
 import { RolesBadgeListView } from "@/components/users/roles-badge-list";
@@ -151,7 +152,7 @@ export function UserCardsSpecimens() {
     <div className="space-y-16">
       <ProfileCardSection />
       <RolesBadgeListSection />
-      <LoggedUserCardSection />
+      <NavUserSection />
     </div>
   );
 }
@@ -199,20 +200,63 @@ function RolesBadgeListSection() {
   );
 }
 
-function LoggedUserCardSection() {
+const NAV_USER_VARIANTS: Array<{ label: string; data: NavUserData }> = [
+  {
+    label: "Player · with avatar",
+    data: {
+      userId: "demo-user-1" as Id<"users">,
+      name: "Andrea Silva",
+      email: "andrea@urbanlegends.dev",
+      imageUrl: "",
+      roleLabel: "Player",
+    },
+  },
+  {
+    label: "Admin · initials fallback",
+    data: {
+      userId: "demo-user-2" as Id<"users">,
+      name: "Captain Booldozer",
+      email: "captain.booldozer@urbanlegends.dev",
+      roleLabel: "Admin",
+    },
+  },
+  {
+    label: "Long name and email · truncation",
+    data: {
+      userId: "demo-user-3" as Id<"users">,
+      name: "Alexander Maximilian Von-Longenberger the Third",
+      email: "alexander.maximilian@a-very-long-email-address.example.com",
+      roleLabel: "Tournament Manager",
+    },
+  },
+  {
+    label: "No role label",
+    data: {
+      userId: "demo-user-4" as Id<"users">,
+      name: "Newcomer",
+      email: "new@urbanlegends.dev",
+    },
+  },
+];
+
+function NavUserSection() {
   return (
     <section className="space-y-6">
       <SectionHeader
         as="h2"
-        title="Logged User Card"
-        description="Sidebar identity card. Renders the signed-in user from Convex; the expanded/collapsed forms are driven by the surrounding SidebarProvider."
+        title="Nav User"
+        description="Sidebar footer identity menu (shadcn sidebar-16 pattern). A menu button opens a dropdown with Profile and Settings actions."
       />
-      <p className="text-body-sm text-muted-foreground">
-        Binds to the signed-in user via <code>useUser()</code>; cannot be
-        fixtured today. Rendered here against the live session.
-      </p>
-      <div className="bg-paper max-w-sm rounded-lg p-6">
-        <LoggedUserCard />
+      <div className="grid gap-6 sm:grid-cols-2">
+        {NAV_USER_VARIANTS.map((v) => (
+          <Specimen key={v.label} label={v.label}>
+            <SidebarProvider className="min-h-0 w-full">
+              <div className="bg-sidebar w-full max-w-sm rounded-lg p-2">
+                <NavUser user={v.data} />
+              </div>
+            </SidebarProvider>
+          </Specimen>
+        ))}
       </div>
     </section>
   );

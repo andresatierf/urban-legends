@@ -39,7 +39,8 @@ import { useUser } from "@/hooks/useUser";
 
 import { api } from "../../convex/_generated/api";
 import { useActivityDialog } from "./activity-dialog-context";
-import { LoggedUserCard } from "./logged-user-card";
+import { NavUser } from "./nav-user";
+import { getHighestRankingRole } from "./users/utils";
 
 type SidebarItem = {
   title: string;
@@ -241,7 +242,15 @@ export function AppSidebar() {
       <SidebarSeparator />
       {user && (
         <SidebarFooter>
-          <LoggedUserCard />
+          <NavUser
+            user={{
+              userId: user._id,
+              name: user.name,
+              email: user.email,
+              imageUrl: user.imageUrl,
+              roleLabel: getHighestRankingRole(user.roles),
+            }}
+          />
         </SidebarFooter>
       )}
     </Sidebar>
