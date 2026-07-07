@@ -79,9 +79,22 @@ function useSidebarItems(
   const sidebar: SidebarItem[] = useMemo(
     () => [
       {
-        title: "Player",
+        title: "Compete",
         publicAccess: true,
         items: [
+          {
+            title: "Submit Activity",
+            condition: isPlayerCondition,
+            onClick: openActivityDialog,
+            icon: PlusCircle,
+          },
+          {
+            title: "My Activities",
+            href: "/activities/mine",
+            condition: isPlayerCondition,
+            icon: ClipboardList,
+            exact: true,
+          },
           {
             title: "Dashboard",
             href: "/dashboard",
@@ -99,45 +112,6 @@ function useSidebarItems(
             href: "/teams",
             condition: isPlayerCondition,
             icon: Users,
-          },
-          {
-            title: "My Activities",
-            href: "/activities/mine",
-            condition: isPlayerCondition,
-            icon: ClipboardList,
-            exact: true,
-          },
-          {
-            title: "Submit Activity",
-            condition: isPlayerCondition,
-            onClick: openActivityDialog,
-            icon: PlusCircle,
-          },
-        ],
-      },
-
-      {
-        title: "Admin",
-        roles: ["admin"],
-        items: [
-          {
-            title: "Admin Dashboard",
-            href: "/admin",
-            icon: Shield,
-            roles: ["admin"],
-            exact: true,
-          },
-          {
-            title: "Users",
-            href: "/users",
-            icon: UserCog,
-            roles: ["admin"],
-          },
-          {
-            title: "System Health",
-            href: "/admin/system",
-            icon: Activity,
-            roles: ["admin"],
           },
         ],
       },
@@ -223,6 +197,32 @@ function useSidebarItems(
             href: "/public/leaderboards",
             icon: Trophy,
             publicAccess: true,
+          },
+        ],
+      },
+
+      {
+        title: "Admin",
+        roles: ["admin"],
+        items: [
+          {
+            title: "Admin Dashboard",
+            href: "/admin",
+            icon: Shield,
+            roles: ["admin"],
+            exact: true,
+          },
+          {
+            title: "Users",
+            href: "/users",
+            icon: UserCog,
+            roles: ["admin"],
+          },
+          {
+            title: "System Health",
+            href: "/admin/system",
+            icon: Activity,
+            roles: ["admin"],
           },
         ],
       },
