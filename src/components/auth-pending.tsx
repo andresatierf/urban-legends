@@ -7,7 +7,6 @@ import { Loader2 } from "lucide-react";
  */
 export function AuthPending() {
   return (
-    // biome-ignore lint/a11y/useSemanticElements: div with role="status" is the correct ARIA pattern for loading states
     <div
       className="flex min-h-screen w-full items-center justify-center"
       role="status"

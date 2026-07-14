@@ -151,10 +151,13 @@ export const upsertFromClerk = internalMutation({
     };
 
     const user = await userByExternalId(ctx, data.id);
-    const userId =
-      user === null
-        ? await ctx.db.insert("users", userAttributes)
-        : (await ctx.db.patch(user._id, userAttributes), user._id);
+    let userId: Id<"users">;
+    if (user === null) {
+      userId = await ctx.db.insert("users", userAttributes);
+    } else {
+      await ctx.db.patch(user._id, userAttributes);
+      userId = user._id;
+    }
 
     await ensurePlayerRole(ctx, userId);
   },
