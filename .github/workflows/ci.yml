@@ -58,6 +58,7 @@ jobs:
 
       - name: Run Fallow
         uses: fallow-rs/fallow@v2
+        continue-on-error: true
         with:
           fail-on-issues: false
           annotations: true

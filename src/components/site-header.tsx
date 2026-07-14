@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "convex/react";
 import { Plus } from "lucide-react";
 
 import { UpsertActivityFormDialog } from "@/components/activities/form";
@@ -8,6 +9,7 @@ import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useUnreadCount } from "@/hooks/use-unread-count";
 import { useUser } from "@/hooks/useUser";
 
+import { api } from "../../convex/_generated/api";
 import { useActivityDialog } from "./activity-dialog-context";
 import { HeaderBreadcrumbs } from "./header-breadcrumbs";
 import { NotificationDropdown } from "./notifications/notification-dropdown";
@@ -18,8 +20,10 @@ export function SiteHeader() {
   const { isOpen, openActivityDialog, onOpenChange } = useActivityDialog();
   const unreadCount = useUnreadCount(user?._id);
 
+  // Quick-add is only useful for users who can actually submit activities —
+  // that requires team membership, not the stored player identity role.
   const isPlayer =
-    (user?.roleNames as string[] | undefined)?.includes("player") ?? false;
+    useQuery(api.captain.getIsPlayer, user ? {} : "skip") ?? false;
   const showPlus = isPlayer && (state === "collapsed" || isMobile);
 
   return (

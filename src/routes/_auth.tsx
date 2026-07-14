@@ -9,8 +9,7 @@ export const Route = createFileRoute("/_auth")({
 });
 
 function AuthLayout() {
-  // Client-side counterpart to the protected gate: once Clerk has hydrated,
-  // bounce already-signed-in users away from the sign-in/up screens.
+  // Bounce already-signed-in users; SPA mode has no server-side beforeLoad.
   const { isLoaded, isSignedIn } = useAuth();
 
   if (!isLoaded) {

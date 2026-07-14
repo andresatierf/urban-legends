@@ -2,7 +2,12 @@ import type { UserJSON } from "@clerk/backend";
 import { type Validator, v } from "convex/values";
 
 import type { Doc, Id } from "./_generated/dataModel";
-import { type QueryCtx, internalMutation, query } from "./_generated/server";
+import {
+  type MutationCtx,
+  type QueryCtx,
+  internalMutation,
+  query,
+} from "./_generated/server";
 import { batchGetDocuments } from "./lib/helpers";
 import type { RoleName } from "./roles";
 
@@ -146,13 +151,45 @@ export const upsertFromClerk = internalMutation({
     };
 
     const user = await userByExternalId(ctx, data.id);
+    let userId: Id<"users">;
     if (user === null) {
-      await ctx.db.insert("users", userAttributes);
+      userId = await ctx.db.insert("users", userAttributes);
     } else {
       await ctx.db.patch(user._id, userAttributes);
+      userId = user._id;
     }
+
+    await ensurePlayerRole(ctx, userId);
   },
 });
+
+async function ensurePlayerRole(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+): Promise<void> {
+  const playerRole = await ctx.db
+    .query("roles")
+    .withIndex("by_name", (q) => q.eq("name", "player"))
+    .first();
+  if (!playerRole) {
+    throw new Error(
+      'Role "player" not found in roles table. Ensure roles are seeded before syncing users.',
+    );
+  }
+  const existing = await ctx.db
+    .query("userRoles")
+    .withIndex("by_user_role", (q) =>
+      q.eq("userId", userId).eq("roleId", playerRole._id),
+    )
+    .first();
+  if (existing) return;
+
+  await ctx.db.insert("userRoles", {
+    userId,
+    roleId: playerRole._id,
+    assignedAt: new Date().toISOString(),
+  });
+}
 
 export const deleteFromClerk = internalMutation({
   args: { clerkUserId: v.string() },

@@ -10,10 +10,7 @@ export const Route = createFileRoute("/_protected")({
 });
 
 function ProtectedLayout() {
-  // Client-side auth gate: in SPA mode there is no server request to run a
-  // `beforeLoad` redirect against, so we wait for Clerk to hydrate and then
-  // send unauthenticated users to sign-in. Convex still enforces auth on the
-  // backend, so this is a UX gate, not the security boundary.
+  // UX gate only (Convex enforces auth); SPA mode has no server-side beforeLoad.
   const { isLoaded, isSignedIn } = useAuth();
 
   if (!isLoaded) {

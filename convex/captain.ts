@@ -68,7 +68,7 @@ export const getCaptainedTeamsCount = query({
   },
 });
 
-// "player" is derived from team membership, not a stored role
+// Capability check (team membership), not the stored "player" identity role.
 export const getIsPlayer = query({
   args: {},
   handler: async (ctx) => {
