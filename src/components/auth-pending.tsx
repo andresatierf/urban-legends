@@ -1,10 +1,6 @@
 import { Loader2 } from "lucide-react";
 
-/**
- * Full-screen spinner shown while Clerk resolves auth state on the client.
- * In SPA mode the auth check happens after hydration (there is no server
- * redirect), so layouts render this until `useAuth().isLoaded` is true.
- */
+// Shown by layouts while Clerk resolves auth state; SPA mode has no server redirect.
 export function AuthPending() {
   return (
     <div
