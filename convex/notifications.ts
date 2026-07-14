@@ -3,6 +3,8 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { enrichWithRelations } from "./lib/helpers";
+import { notificationEventValidator } from "./notifications/events";
+import { handleEvent } from "./notifications/notifier";
 import { isValidNotificationType } from "./notifications/types";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -125,6 +127,18 @@ export const get = query({
 
     return notification;
   },
+});
+
+/**
+ * Internal Mutation: Dispatch a NotificationEvent.
+ *
+ * Runs in its own scheduled mutation, so payload reads and `create` fan-out
+ * happen outside the originating user action's failure domain. Failures here
+ * surface in Convex logs rather than being swallowed at the publish site.
+ */
+export const dispatch = internalMutation({
+  args: { event: notificationEventValidator },
+  handler: (ctx, args) => handleEvent(ctx, args.event),
 });
 
 /**
