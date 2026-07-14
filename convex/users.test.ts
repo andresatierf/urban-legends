@@ -33,6 +33,14 @@ async function playerRoleId(ctx: Ctx) {
   return roles.find((r) => r.name === "player")?._id ?? null;
 }
 
+async function getUserRoleIds(ctx: Ctx, externalId: string) {
+  const users = await ctx.db.query("users").collect();
+  const user = users.find((u) => u.externalId === externalId);
+  if (!user) return [];
+  const userRoles = await ctx.db.query("userRoles").collect();
+  return userRoles.filter((r) => r.userId === user._id).map((r) => r.roleId);
+}
+
 describe("users.upsertFromClerk", () => {
   test("grants the player role to a newly created user", async () => {
     const t = convexTest(schemaForTest);
@@ -43,23 +51,10 @@ describe("users.upsertFromClerk", () => {
       data: clerkUser() as any,
     });
 
-    const { userRoles, playerId } = await t.run(async (ctx) => {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_external_id", (q) =>
-          q.eq("externalId", "clerk_new_user"),
-        )
-        .unique();
-      const rows = user
-        ? await ctx.db
-            .query("userRoles")
-            .withIndex("by_user", (q) => q.eq("userId", user._id))
-            .collect()
-        : [];
-      return { userRoles: rows, playerId: await playerRoleId(ctx) };
-    });
+    const roleIds = await t.run((ctx) => getUserRoleIds(ctx, "clerk_new_user"));
+    const pid = await t.run(playerRoleId);
 
-    expect(userRoles.map((r) => r.roleId)).toEqual([playerId]);
+    expect(roleIds).toEqual([pid]);
   });
 
   test("is idempotent: repeated upserts do not add duplicate player rows", async () => {
@@ -71,22 +66,9 @@ describe("users.upsertFromClerk", () => {
     await t.mutation(internal.users.upsertFromClerk, { data });
     await t.mutation(internal.users.upsertFromClerk, { data });
 
-    const rows = await t.run(async (ctx) => {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_external_id", (q) =>
-          q.eq("externalId", "clerk_new_user"),
-        )
-        .unique();
-      return user
-        ? await ctx.db
-            .query("userRoles")
-            .withIndex("by_user", (q) => q.eq("userId", user._id))
-            .collect()
-        : [];
-    });
+    const roleIds = await t.run((ctx) => getUserRoleIds(ctx, "clerk_new_user"));
 
-    expect(rows).toHaveLength(1);
+    expect(roleIds).toHaveLength(1);
   });
 
   test("backfills the player role on update for a pre-existing user without it", async () => {
@@ -110,22 +92,9 @@ describe("users.upsertFromClerk", () => {
       }) as any,
     });
 
-    const rows = await t.run(async (ctx) => {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_external_id", (q) =>
-          q.eq("externalId", "clerk_existing"),
-        )
-        .unique();
-      return user
-        ? await ctx.db
-            .query("userRoles")
-            .withIndex("by_user", (q) => q.eq("userId", user._id))
-            .collect()
-        : [];
-    });
-
+    const roleIds = await t.run((ctx) => getUserRoleIds(ctx, "clerk_existing"));
     const pid = await t.run(playerRoleId);
-    expect(rows.map((r) => r.roleId)).toEqual([pid]);
+
+    expect(roleIds).toEqual([pid]);
   });
 });
