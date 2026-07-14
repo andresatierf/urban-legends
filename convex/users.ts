@@ -171,8 +171,11 @@ async function ensurePlayerRole(
     .query("roles")
     .withIndex("by_name", (q) => q.eq("name", "player"))
     .first();
-  if (!playerRole) return;
-
+  if (!playerRole) {
+    throw new Error(
+      'Role "player" not found in roles table. Ensure roles are seeded before syncing users.',
+    );
+  }
   const existing = await ctx.db
     .query("userRoles")
     .withIndex("by_user_role", (q) =>
