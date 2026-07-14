@@ -23,7 +23,7 @@ import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
 const formSchema = z.object({
   description: z.string().min(1, "Description can't be empty"),
-  date: z.string().min(1, "You must select a date."),
+  date: z.string().min(1, "You must select a date"),
   individualAmount: z.number().min(0, "Amount must be non-negative"),
   teamAmount: z.number().min(0, "Amount must be non-negative"),
   threshold: z
@@ -109,7 +109,7 @@ export function UpsertChallengeFormDialog({
             </DialogTitle>
             <DialogDescription>
               {challenge
-                ? "Update the challenge's description, amounts, and threshold."
+                ? "Update the challenge's date, description, amounts, and threshold."
                 : "Define a tournament-wide scoring opportunity."}
             </DialogDescription>
           </DialogHeader>
