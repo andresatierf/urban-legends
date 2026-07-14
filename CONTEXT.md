@@ -74,7 +74,7 @@ _Avoid_: NotificationDispatcher, NotificationOrchestrator (longer without adding
 Roles split on **two axes**: where they're stored, and the kind of authority they grant.
 
 **System role**:
-A role granting platform-wide authority, stored in `userRoles`. Today: `dev`, `admin`, `organizer`.
+A role granting platform-wide authority, stored in `userRoles`. Today: `dev`, `admin`, `organizer`, `player`.
 
 **Organizer**:
 A **System role** whose sole privilege is creating new **Tournaments**. An **Organizer** does not gain authority over **Tournaments** they did not create.
@@ -85,7 +85,11 @@ A role granting authority over exactly one **Tournament**, stored in `tournament
 _Avoid_: scoped role, per-tournament role (use **Tournament role** consistently).
 
 **Player**:
-A **User** who has at least one **TeamMember** record in some team belonging to a given **Tournament**. Derived from `teamMembers`, never stored as a role.
+Two related notions share this name:
+
+1. The `player` **System role** — a default identity label auto-granted to every **User** at signup (see `upsertFromClerk`). Present in `userRoles` for the ProfileCard and role listings; on its own it grants no capabilities.
+2. A **Player of a Tournament** — a **User** who has at least one **TeamMember** record in some team belonging to that **Tournament**. Derived from `teamMembers`. Player-facing surfaces (submit activity, dashboard, quick-add) gate on this derivation, not on the stored role.
+
 _Avoid_: participant (the term "participant" overlaps with **TeamMember**).
 
 **Authority**:
@@ -138,6 +142,6 @@ Convex test files live alongside their source file in the same directory — not
 
 ## Flagged ambiguities
 
-- The legacy roles `player` and `viewer` were stored in `userRoles` but expressed nothing the system needed: `player` is now derived from **TeamMember**; `viewer` is the absence of any role and was deleted. Legacy rows of either type are deleted on migration.
+- `player` was previously derived-only, then reinstated as a stored **System role** auto-granted at signup (identity label; does not gate capabilities — Player-of-a-Tournament capabilities remain derived from **TeamMember**). `viewer` was the absence of any role and was deleted; legacy `viewer` rows are removed on migration.
 - Pre-migration `tournament_manager` and `reviewer` rows in `userRoles` are deleted — not promoted into `tournamentRoles` — because the application has no production users yet.
 - "Authentication" (Clerk identity) and "**Authority**" (permission decisions) are distinct — never collapse them under "auth".

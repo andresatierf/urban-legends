@@ -11,7 +11,7 @@ export interface RoleDefinition {
 }
 
 /** System roles — stored in `userRoles`, grant platform-wide authority. */
-export type SystemRoleName = "dev" | "admin" | "organizer";
+export type SystemRoleName = "dev" | "admin" | "organizer" | "player";
 
 /** Tournament roles — stored in `tournamentRoles`, scoped to a single Tournament. */
 export type TournamentRoleName = "tournament_manager" | "reviewer";
@@ -37,6 +37,13 @@ const systemRoles = [
     description:
       "Can create new tournaments. Does not grant management authority over created tournaments.",
     hierarchy: 2,
+  },
+  {
+    name: "player" as const,
+    displayName: "Player",
+    description:
+      "Default identity role granted to every user on signup. Does not gate capabilities on its own — playing in a tournament still requires being a member of one of its teams.",
+    hierarchy: 5,
   },
 ] satisfies RoleDefinition[];
 

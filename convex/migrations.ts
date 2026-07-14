@@ -1,20 +1,14 @@
 import { internalMutation } from "./_generated/server";
 
 // Deletes legacy role rows from userRoles:
-// - player and viewer: expressed nothing the system needed; player is now derived
-//   from teamMembers, viewer was the absence of any role
+// - viewer: expressed nothing the system needed — it was the absence of any role
 // - tournament_manager and reviewer: moved to tournamentRoles (per-Tournament axis);
 //   global rows in userRoles are deleted rather than promoted because the application
 //   has no production users
 export const deleteLegacyRoleAssignments = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const legacyRoleNames = [
-      "player",
-      "viewer",
-      "tournament_manager",
-      "reviewer",
-    ];
+    const legacyRoleNames = ["viewer", "tournament_manager", "reviewer"];
 
     const legacyRoles = await Promise.all(
       legacyRoleNames.map((name) =>
