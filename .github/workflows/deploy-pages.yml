@@ -1,0 +1,78 @@
+name: Deploy to GitHub Pages
+
+# Ships the client-only SPA build (see docs/adr / spa-mode in vite.config.ts) to
+# GitHub Pages. The Convex backend and Clerk are hosted separately — this only
+# publishes the static front-end and points it at them via build-time env vars.
+#
+# Required repository *Variables* (Settings → Secrets and variables → Actions →
+# Variables) — these are all public, client-embedded values, so they are
+# variables, not secrets:
+#   NEXT_PUBLIC_CONVEX_URL       e.g. https://<deployment>.convex.cloud
+#   VITE_CLERK_PUBLISHABLE_KEY   Clerk publishable key (pk_live_… for prod)
+#   VITE_BASE_PATH               "/urban-legends/" for a project page, or "/"
+#                                for a user/org page or custom domain
+#
+# One-time setup: Settings → Pages → Build and deployment → Source = "GitHub
+# Actions". Also add the deployed origin (e.g. https://<user>.github.io) to
+# Clerk's allowed origins and to the Convex JWT/CORS config.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+# Allow one concurrent deployment; don't cancel an in-progress one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - name: Resolve build-time public env
+        run: |
+          BASE="${{ vars.VITE_BASE_PATH || '/urban-legends/' }}"
+          {
+            echo "VITE_BASE_PATH=$BASE"
+            echo "NEXT_PUBLIC_CONVEX_URL=${{ vars.NEXT_PUBLIC_CONVEX_URL }}"
+            echo "VITE_CLERK_PUBLISHABLE_KEY=${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}"
+            # Clerk routes must include the base path when served from a subpath.
+            echo "VITE_CLERK_SIGN_IN_URL=${BASE}sign-in"
+            echo "VITE_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=${BASE}"
+            echo "VITE_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=${BASE}"
+          } >> "$GITHUB_ENV"
+
+      - name: Build static SPA
+        run: bun run build:pages
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./.output/public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
