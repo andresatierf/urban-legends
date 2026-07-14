@@ -26,6 +26,14 @@ import { UpsertChallengeFormDialog } from "../form";
 import { ChallengeRosterDialog } from "../roster-dialog";
 import type { ChallengeDetailsData } from "./types";
 
+function formatChallengeDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export function Sidebar({ data }: { data: ChallengeDetailsData }) {
   const { challenge, canManage } = data;
   const navigate = useNavigate();
@@ -48,6 +56,7 @@ export function Sidebar({ data }: { data: ChallengeDetailsData }) {
   ];
 
   const stats: SidebarCardStat[] = [
+    { label: "Date", value: formatChallengeDate(challenge.date) },
     { label: "Individual", value: `${challenge.individualAmount}` },
     { label: "Team", value: `${challenge.teamAmount}` },
     { label: "Threshold", value: `${Math.round(challenge.threshold * 100)}%` },

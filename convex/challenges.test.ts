@@ -75,6 +75,7 @@ describe("challenges.create", () => {
       .mutation(api.challenges.create, {
         tournamentId,
         description: "Do the thing",
+        date: "2024-06-01",
         individualAmount: 5,
         teamAmount: 20,
       });
@@ -107,6 +108,7 @@ describe("challenges.create", () => {
       .mutation(api.challenges.create, {
         tournamentId,
         description: "d",
+        date: "2024-06-01",
         individualAmount: 1,
         teamAmount: 2,
       });
@@ -128,6 +130,7 @@ describe("challenges.create", () => {
       t.withIdentity({ subject: "player" }).mutation(api.challenges.create, {
         tournamentId,
         description: "d",
+        date: "2024-06-01",
         individualAmount: 1,
         teamAmount: 2,
       }),
@@ -149,6 +152,7 @@ describe("challenges.create", () => {
       t.withIdentity({ subject: "manager" }).mutation(api.challenges.create, {
         tournamentId: tournamentA,
         description: "d",
+        date: "2024-06-01",
         individualAmount: 1,
         teamAmount: 2,
       }),
@@ -170,10 +174,59 @@ describe("challenges.create", () => {
       .mutation(api.challenges.create, {
         tournamentId,
         description: "d",
+        date: "2024-06-01",
         individualAmount: 1,
         teamAmount: 2,
       });
     expect(id).toBeDefined();
+  });
+
+  test("date is stored and rejected when outside the tournament window", async () => {
+    const t = convexTest(schemaForTest);
+    const { tournamentId } = await t.run(async (ctx) => {
+      const creator = await makeUser(ctx, "creator");
+      const tournamentId = await makeTournament(ctx, creator);
+      const manager = await makeUser(ctx, "manager");
+      await giveTournamentRole(
+        ctx,
+        manager,
+        tournamentId,
+        "tournament_manager",
+      );
+      return { tournamentId };
+    });
+
+    const id = await t
+      .withIdentity({ subject: "manager" })
+      .mutation(api.challenges.create, {
+        tournamentId,
+        description: "d",
+        date: "2024-06-15",
+        individualAmount: 1,
+        teamAmount: 2,
+      });
+    const row = await t.run((ctx) => ctx.db.get(id));
+    expect(row?.date?.slice(0, 10)).toBe("2024-06-15");
+
+    await expect(
+      t.withIdentity({ subject: "manager" }).mutation(api.challenges.create, {
+        tournamentId,
+        description: "d",
+        date: "2023-12-31",
+        individualAmount: 1,
+        teamAmount: 2,
+      }),
+    ).rejects.toThrow(/tournament window/);
+
+    await expect(
+      t.withIdentity({ subject: "manager" }).mutation(api.challenges.create, {
+        tournamentId,
+        description: "d",
+        date: "",
+        individualAmount: 1,
+        teamAmount: 2,
+      }),
+    ).rejects.toThrow(/required/);
   });
 
   test("rejects negative amounts and out-of-range thresholds", async () => {
@@ -195,6 +248,7 @@ describe("challenges.create", () => {
       t.withIdentity({ subject: "manager" }).mutation(api.challenges.create, {
         tournamentId,
         description: "d",
+        date: "2024-06-01",
         individualAmount: -1,
         teamAmount: 2,
       }),
@@ -204,6 +258,7 @@ describe("challenges.create", () => {
       t.withIdentity({ subject: "manager" }).mutation(api.challenges.create, {
         tournamentId,
         description: "d",
+        date: "2024-06-01",
         individualAmount: 1,
         teamAmount: 2,
         threshold: 1.5,
@@ -228,6 +283,7 @@ describe("challenges.edit", () => {
         tournamentId,
         createdBy: manager,
         description: "orig",
+        date: "2024-06-01",
         individualAmount: 1,
         teamAmount: 2,
         threshold: 1,
@@ -343,6 +399,7 @@ describe("challenges roster", () => {
         tournamentId,
         createdBy: manager,
         description: "c",
+        date: "2024-06-01",
         individualAmount: 1,
         teamAmount: 2,
         threshold: 1,
@@ -581,6 +638,7 @@ describe("views/challenges.listByTournament", () => {
         tournamentId,
         createdBy: manager,
         description: "first",
+        date: "2024-06-01",
         individualAmount: 1,
         teamAmount: 2,
         threshold: 1,
@@ -592,6 +650,7 @@ describe("views/challenges.listByTournament", () => {
         tournamentId,
         createdBy: manager,
         description: "second",
+        date: "2024-06-01",
         individualAmount: 1,
         teamAmount: 2,
         threshold: 1,
@@ -743,6 +802,7 @@ describe("challenges.approve", () => {
         tournamentId,
         createdBy: manager,
         description: "c",
+        date: "2024-06-01",
         individualAmount,
         teamAmount,
         threshold,
@@ -1018,6 +1078,7 @@ describe("challenges.remove", () => {
         tournamentId: world.tournamentId,
         createdBy: world.manager,
         description: "pending",
+        date: "2024-06-01",
         individualAmount: 3,
         teamAmount: 20,
         threshold: 1,
@@ -1068,6 +1129,7 @@ describe("challenges.remove", () => {
         tournamentId: world.tournamentId,
         createdBy: world.manager,
         description: "c1",
+        date: "2024-06-01",
         individualAmount: 3,
         teamAmount: 20,
         threshold: 1,
@@ -1099,6 +1161,7 @@ describe("challenges.remove", () => {
         tournamentId: world.tournamentId,
         createdBy: world.manager,
         description: "c2",
+        date: "2024-06-01",
         individualAmount: 1,
         teamAmount: 4,
         threshold: 1,
@@ -1164,6 +1227,7 @@ describe("challenges.remove", () => {
         tournamentId: world.tournamentId,
         createdBy: world.manager,
         description: "c",
+        date: "2024-06-01",
         individualAmount: 1,
         teamAmount: 2,
         threshold: 1,

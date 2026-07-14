@@ -247,3 +247,48 @@ describe("views.dashboard.getDashboardView recentActivity", () => {
     expect(points).toEqual([3, 2, 1]);
   });
 });
+
+describe("views.dashboard.getDashboardView timeline with challenges", () => {
+  test("approved challenges contribute an event at their own date, not the last day", async () => {
+    const t = convexTest(schemaForTest);
+    const challengeDate = "2024-06-01";
+    const { teamId } = await t.run(async (ctx) => {
+      const viewer = await makeUser(ctx, "viewer");
+      const tournamentId = await makeTournament(ctx, viewer);
+      const teamId = await makeTeam(ctx, tournamentId, viewer, "Mine");
+      await addMember(ctx, teamId, viewer);
+      const challengeId = await ctx.db.insert("challenges", {
+        tournamentId,
+        createdBy: viewer,
+        description: "c",
+        date: challengeDate,
+        individualAmount: 3,
+        teamAmount: 20,
+        threshold: 1,
+        state: "approved",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      await ctx.db.insert("challengeRosterEntries", {
+        challengeId,
+        userId: viewer,
+        tournamentId,
+        addedBy: viewer,
+        createdAt: new Date().toISOString(),
+      });
+      return { teamId };
+    });
+
+    const view = await t
+      .withIdentity({ subject: "viewer" })
+      .query(api.views.dashboard.getDashboardView, {});
+    if (view.selected === null) throw new Error("expected selected tournament");
+    const myTimeline = view.selected.timeline.find((t) => t.teamId === teamId);
+    if (!myTimeline) throw new Error("expected timeline for viewer team");
+    expect(myTimeline.events).toHaveLength(1);
+    expect(myTimeline.events[0].timestamp).toBe(
+      new Date(challengeDate).getTime(),
+    );
+    expect(myTimeline.events[0].points).toBe(20);
+  });
+});

@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation } from "./_generated/server";
 import { canManageChallenge } from "./authority/core";
-import { nowUTC } from "./lib/dates";
+import { extractDateFromISO, nowUTC, toUTCDateString } from "./lib/dates";
 import { updateTeamPoints } from "./lifecycle/activities";
 import { getCurrentUserOrThrow } from "./users";
 
@@ -21,10 +21,37 @@ function validateThreshold(value: number): void {
   }
 }
 
+async function normalizeChallengeDate(
+  ctx: MutationCtx,
+  tournamentId: Id<"tournaments">,
+  date: string,
+): Promise<string> {
+  const trimmed = date.trim();
+  if (trimmed.length === 0) {
+    throw new Error("Date is required");
+  }
+  let normalized: string;
+  try {
+    normalized = toUTCDateString(trimmed);
+  } catch {
+    throw new Error("Date is invalid");
+  }
+  const tournament = await ctx.db.get(tournamentId);
+  if (!tournament) throw new Error("Tournament not found");
+  const dateOnly = extractDateFromISO(normalized);
+  const startOnly = extractDateFromISO(tournament.startDate);
+  const endOnly = extractDateFromISO(tournament.endDate);
+  if (dateOnly < startOnly || dateOnly > endOnly) {
+    throw new Error("Date must be within the tournament window");
+  }
+  return normalized;
+}
+
 export const create = mutation({
   args: {
     tournamentId: v.id("tournaments"),
     description: v.string(),
+    date: v.string(),
     individualAmount: v.number(),
     teamAmount: v.number(),
     threshold: v.optional(v.number()),
@@ -43,12 +70,18 @@ export const create = mutation({
     validateAmount(args.teamAmount, "Team amount");
     const threshold = args.threshold ?? DEFAULT_THRESHOLD;
     validateThreshold(threshold);
+    const date = await normalizeChallengeDate(
+      ctx,
+      args.tournamentId,
+      args.date,
+    );
 
     const now = nowUTC();
     return await ctx.db.insert("challenges", {
       tournamentId: args.tournamentId,
       createdBy: user._id,
       description,
+      date,
       individualAmount: args.individualAmount,
       teamAmount: args.teamAmount,
       threshold,
@@ -143,6 +176,7 @@ export const edit = mutation({
   args: {
     challengeId: v.id("challenges"),
     description: v.optional(v.string()),
+    date: v.optional(v.string()),
     individualAmount: v.optional(v.number()),
     teamAmount: v.optional(v.number()),
     threshold: v.optional(v.number()),
@@ -157,6 +191,13 @@ export const edit = mutation({
         throw new Error("Description can't be empty");
       }
       patch.description = description;
+    }
+    if (args.date !== undefined) {
+      patch.date = await normalizeChallengeDate(
+        ctx,
+        challenge.tournamentId,
+        args.date,
+      );
     }
     if (args.individualAmount !== undefined) {
       validateAmount(args.individualAmount, "Individual amount");
