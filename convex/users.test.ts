@@ -17,7 +17,8 @@ async function seedRoles(ctx: Ctx) {
   }
 }
 
-function clerkUser(overrides: Partial<Record<string, unknown>> = {}) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function clerkUser(overrides: Partial<Record<string, unknown>> = {}): any {
   return {
     id: "clerk_new_user",
     first_name: "New",
@@ -46,9 +47,8 @@ describe("users.upsertFromClerk", () => {
     const t = convexTest(schemaForTest);
     await t.run(seedRoles);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await t.mutation(internal.users.upsertFromClerk, {
-      data: clerkUser() as any,
+      data: clerkUser(),
     });
 
     const roleIds = await t.run((ctx) => getUserRoleIds(ctx, "clerk_new_user"));
@@ -61,8 +61,7 @@ describe("users.upsertFromClerk", () => {
     const t = convexTest(schemaForTest);
     await t.run(seedRoles);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = clerkUser() as any;
+    const data = clerkUser();
     await t.mutation(internal.users.upsertFromClerk, { data });
     await t.mutation(internal.users.upsertFromClerk, { data });
 
@@ -82,14 +81,13 @@ describe("users.upsertFromClerk", () => {
       });
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await t.mutation(internal.users.upsertFromClerk, {
       data: clerkUser({
         id: "clerk_existing",
         email_addresses: [{ email_address: "existing@example.com" }],
         first_name: "Existing",
         last_name: "User",
-      }) as any,
+      }),
     });
 
     const roleIds = await t.run((ctx) => getUserRoleIds(ctx, "clerk_existing"));
