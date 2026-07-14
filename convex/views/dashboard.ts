@@ -174,20 +174,21 @@ export const getDashboardView = query({
           timestamp: new Date(a.date).getTime(),
           points: a.pointsEarned ?? 0,
         }));
-        const challengeEvents = (
-          await Promise.all(
-            approvedChallenges.map(async (challenge) => {
-              const { amount } = await computeChallengeAward(ctx, challenge, {
-                _id: row.team._id,
-              });
-              if (amount === 0) return null;
-              return {
-                timestamp: new Date(challenge.date).getTime(),
-                points: amount,
-              };
-            }),
-          )
-        ).filter((e): e is NonNullable<typeof e> => e !== null);
+        const challengeAwards = await Promise.all(
+          approvedChallenges.map(async (challenge) => {
+            const { amount } = await computeChallengeAward(ctx, challenge, {
+              _id: row.team._id,
+            });
+            if (amount === 0) return null;
+            return {
+              timestamp: new Date(challenge.date).getTime(),
+              points: amount,
+            };
+          }),
+        );
+        const challengeEvents = challengeAwards.filter(
+          (e): e is NonNullable<typeof e> => e !== null,
+        );
         return {
           teamId: row.team._id,
           events: [...activityEvents, ...challengeEvents].sort(
