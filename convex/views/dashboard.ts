@@ -4,6 +4,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { query } from "../_generated/server";
 import { extractDateFromISO, nowUTC } from "../lib/dates";
+import { computeChallengeAward } from "../lifecycle/challengeAwards";
 import { getCurrentUserOrThrow } from "../users";
 
 const DAY_MS = 86_400_000;
@@ -153,7 +154,14 @@ export const getDashboardView = query({
           : 0
         : above.team.points - myTeamRow.team.points;
 
-    // ── timeline events for chart (approved activities only) ─────────────
+    // ── timeline events for chart (approved activities + challenges) ─────
+    const approvedChallenges = await ctx.db
+      .query("challenges")
+      .withIndex("by_tournament_and_state", (q) =>
+        q.eq("tournamentId", selectedTournament._id).eq("state", "approved"),
+      )
+      .collect();
+
     const timeline = await Promise.all(
       teamsEnriched.map(async (row) => {
         const approved = await ctx.db
@@ -162,14 +170,29 @@ export const getDashboardView = query({
             q.eq("teamId", row.team._id).eq("state", "approved"),
           )
           .collect();
+        const activityEvents = approved.map((a) => ({
+          timestamp: new Date(a.date).getTime(),
+          points: a.pointsEarned ?? 0,
+        }));
+        const challengeEvents = (
+          await Promise.all(
+            approvedChallenges.map(async (challenge) => {
+              const { amount } = await computeChallengeAward(ctx, challenge, {
+                _id: row.team._id,
+              });
+              if (amount === 0) return null;
+              return {
+                timestamp: new Date(challenge.date).getTime(),
+                points: amount,
+              };
+            }),
+          )
+        ).filter((e): e is NonNullable<typeof e> => e !== null);
         return {
           teamId: row.team._id,
-          events: approved
-            .map((a) => ({
-              timestamp: new Date(a.date).getTime(),
-              points: a.pointsEarned ?? 0,
-            }))
-            .sort((a, b) => a.timestamp - b.timestamp),
+          events: [...activityEvents, ...challengeEvents].sort(
+            (a, b) => a.timestamp - b.timestamp,
+          ),
         };
       }),
     );

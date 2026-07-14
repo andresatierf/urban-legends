@@ -69,6 +69,7 @@ async function insertChallenge(
   tournamentId: Id<"tournaments">,
   createdBy: Id<"users">,
   args: {
+    date: string;
     individualAmount: number;
     teamAmount: number;
     threshold: number;
@@ -79,6 +80,7 @@ async function insertChallenge(
     tournamentId,
     createdBy,
     description: "c",
+    date: args.date,
     individualAmount: args.individualAmount,
     teamAmount: args.teamAmount,
     threshold: args.threshold,
@@ -121,6 +123,7 @@ describe("views/challenges.getDetails", () => {
       const team = await makeTeam(ctx, tournamentId, manager, "Red");
       await addToTeam(ctx, team, player);
       const challengeId = await insertChallenge(ctx, tournamentId, manager, {
+        date: "2024-06-01",
         individualAmount: 3,
         teamAmount: 20,
         threshold: 1,
@@ -150,6 +153,7 @@ describe("views/challenges.getDetails", () => {
       );
       await makeUser(ctx, "outsider");
       const challengeId = await insertChallenge(ctx, tournamentId, manager, {
+        date: "2024-06-01",
         individualAmount: 3,
         teamAmount: 20,
         threshold: 1,
@@ -191,6 +195,7 @@ describe("views/challenges.getDetails", () => {
       }
 
       const challengeId = await insertChallenge(ctx, tournamentId, manager, {
+        date: "2024-06-01",
         individualAmount: 3,
         teamAmount: 20,
         threshold: 1,
@@ -235,6 +240,7 @@ describe("views/challenges.getDetails", () => {
       await addToTeam(ctx, teamSmall, small1);
 
       const challengeId = await insertChallenge(ctx, tournamentId, manager, {
+        date: "2024-06-01",
         individualAmount: 3,
         teamAmount: 20,
         threshold: 1,

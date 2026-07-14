@@ -208,6 +208,7 @@ export default defineSchema({
     tournamentId: v.id("tournaments"),
     createdBy: v.id("users"),
     description: v.string(),
+    date: v.string(),
     individualAmount: v.number(),
     teamAmount: v.number(),
     threshold: v.number(),
@@ -216,7 +217,8 @@ export default defineSchema({
     updatedAt: v.string(),
   })
     .index("by_tournament", ["tournamentId"])
-    .index("by_tournament_and_state", ["tournamentId", "state"]),
+    .index("by_tournament_and_state", ["tournamentId", "state"])
+    .index("by_tournament_and_date", ["tournamentId", "date"]),
 
   challengeRosterEntries: defineTable({
     challengeId: v.id("challenges"),

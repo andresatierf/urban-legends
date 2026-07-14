@@ -60,6 +60,7 @@ async function insertChallenge(
   tournamentId: Id<"tournaments">,
   createdBy: Id<"users">,
   args: {
+    date: string;
     individualAmount: number;
     teamAmount: number;
     threshold: number;
@@ -70,6 +71,7 @@ async function insertChallenge(
     tournamentId,
     createdBy,
     description: "c",
+    date: args.date,
     individualAmount: args.individualAmount,
     teamAmount: args.teamAmount,
     threshold: args.threshold,
@@ -105,6 +107,7 @@ describe("views.activities.myFeed", () => {
       const teamId = await makeTeam(ctx, tournamentId, creator, "Small");
       await addToTeam(ctx, teamId, viewer);
       const challengeId = await insertChallenge(ctx, tournamentId, creator, {
+        date: "2024-06-01",
         individualAmount: 3,
         teamAmount: 20,
         threshold: 1,
@@ -139,6 +142,7 @@ describe("views.activities.myFeed", () => {
       await addToTeam(ctx, teamId, other1);
       await addToTeam(ctx, teamId, other2);
       const challengeId = await insertChallenge(ctx, tournamentId, creator, {
+        date: "2024-06-01",
         individualAmount: 3,
         teamAmount: 20,
         threshold: 1,
@@ -165,6 +169,7 @@ describe("views.activities.myFeed", () => {
       const teamId = await makeTeam(ctx, tournamentId, creator, "Small");
       await addToTeam(ctx, teamId, viewer);
       const challengeId = await insertChallenge(ctx, tournamentId, creator, {
+        date: "2024-06-01",
         individualAmount: 3,
         teamAmount: 20,
         threshold: 1,
@@ -194,6 +199,7 @@ describe("views.activities.myFeed", () => {
       await addToTeam(ctx, teamId, viewer);
       await addToTeam(ctx, teamId, rostered);
       const challengeId = await insertChallenge(ctx, tournamentId, creator, {
+        date: "2024-06-01",
         individualAmount: 3,
         teamAmount: 20,
         threshold: 1,
@@ -244,18 +250,18 @@ describe("views.activities.myFeed", () => {
         createdAt: new Date().toISOString(),
       });
 
-      // Challenge approved later than the activity date, so it sorts first.
-      const later = "2024-08-01T12:00:00.000Z";
+      // Challenge dated later than the activity, so it sorts first.
       const challengeId = await ctx.db.insert("challenges", {
         tournamentId,
         createdBy: creator,
         description: "c",
+        date: "2024-08-01",
         individualAmount: 3,
         teamAmount: 20,
         threshold: 1,
         state: "approved",
         createdAt: "2024-07-01T00:00:00.000Z",
-        updatedAt: later,
+        updatedAt: "2024-08-01T12:00:00.000Z",
       });
       await addRosterEntry(ctx, challengeId, viewer, tournamentId, creator);
     });

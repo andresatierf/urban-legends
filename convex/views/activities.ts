@@ -123,7 +123,7 @@ export const myFeed = query({
 
       challengeItems.push({
         kind: "challenge",
-        sortDate: isApproved ? challenge.updatedAt : challenge.createdAt,
+        sortDate: challenge.date,
         challenge,
         team: { _id: team._id, name: team.name },
         award,
